@@ -1,14 +1,8 @@
-# KOTORModSync
-A flexible multi-mod installer for KOTOR games.
+KOTORModSync
+KOTORModSync is a multi-mod installer for KOTOR games that makes it easier to install and manage mods. I created this the day that in 3 separate attempts I failed a different step in a modbuild install. Going through the manual install and getting anxious when an instruction could be ambiguous or have multiple meanings. I usually install the modbuild every year or so. the last time I did so I made a mistake on a single different step 3 times in a row and had to start over for each. So I decided to build a tool to simplify the process.
 
-I got tired of reinstalling all of these mods on the modbuild page one by one every few years, so one day after failing arbitrary steps late in the install process multiple times, I decided to build a C# program that will do it all and handle/validate the dependencies automatically.
+Goals
+The main goal of this project is to not be some dead attempt that requires significant changes to a hard-to-understand configuration file. In order to do that, KOTORModSync can create and load a configuration file which provides instructions and specific mods dynamically. It also will include SHA1 validation to prevent errors during installation.
 
-This project is unfinished.
-This program is aimed to install multiple mods with complex dependencies and provide a flexible and easy-to-manage configuration file.
-
-## Goals:
-Instructions/specific mods are loaded from a configuration file, which the program uses to determine what to install and how to install it precisely and accurately.
-The program utilizes SHA1 validation to validate each instruction before completing another so the user can determine if they've made a mistake anywhere in the process.
-
-## Target platforms
-Windows7-11, ubuntu, and mac, anything supported by .net standard 2.0.
+Platforms
+KOTORModSync is compatible with Windows7-11, Ubuntu, and Mac, as well as anything supported by .net standard 2.0.

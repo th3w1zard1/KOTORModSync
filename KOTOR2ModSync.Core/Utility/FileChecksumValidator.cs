@@ -1,18 +1,12 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Security.Cryptography;
-using System.Threading.Tasks;
 
-namespace KOTORModSync.Core
+namespace KOTORModSync.Core.Utility
 {
     using Newtonsoft.Json;
     using System.Collections.Generic;
     using System.IO;
     using System.Linq;
     using System.Security.Cryptography;
-    using System.Text;
     using System.Threading.Tasks;
 
     public class FileChecksumValidator
@@ -29,6 +23,7 @@ namespace KOTORModSync.Core
         }
 
         public static string SHA1ToString(SHA1 sha1) => string.Concat(sha1.Hash.Select(b => b.ToString("x2")));
+
         public static string StringToSHA1(string s) => string.Concat(SHA1.Create().ComputeHash(Enumerable.Range(0, s.Length)
                                         .Where(x => x % 2 == 0)
                                         .Select(x => Convert.ToByte(s.Substring(x, 2), 16))
@@ -120,6 +115,7 @@ namespace KOTORModSync.Core
                 }
             }
         }
+
         public static async Task SaveChecksumsToFileAsync(string filePath, Dictionary<DirectoryInfo, SHA1> checksums)
         {
             string json = JsonConvert.SerializeObject(checksums);
@@ -128,6 +124,7 @@ namespace KOTORModSync.Core
                 await writer.WriteAsync(json);
             }
         }
+
         public static Task<Dictionary<FileInfo, SHA1>> LoadChecksumsFromFileAsync(FileInfo filePath)
         {
             if (!File.Exists(filePath.FullName))

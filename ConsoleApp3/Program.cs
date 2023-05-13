@@ -1,14 +1,15 @@
-﻿using System;
+﻿using KOTORModSync.Core;
+using KOTORModSync.Core.Utility;
+using System;
 using System.IO;
-using System.Security.Cryptography.X509Certificates;
-using KOTOR2ModSync.Core;
 
-namespace KOTOR2ModSync
+namespace KOTORModSync
 {
     internal static class Program
     {
         public static MainConfig mainConfig;
-        static void Main(string[] args)
+
+        private static void Main(string[] args)
         {
             if (args is null)
             {
@@ -73,10 +74,19 @@ namespace KOTOR2ModSync
                         Console.WriteLine("Set directory paths...");
                         mainConfig.UpdateConfig(modDownloads, kotorInstallDir);
                         break;
+
                     case "2":
                         break;
+
                     case "3":
+                        Console.WriteLine("(not implemented yet)");
+                        Console.WriteLine("Press any key to continue");
+                        Console.ReadKey();
+                        KOTOR2ModSync.Core.Read(DirectoryInfo MainConfig.LastOutputDirectory);
+                        KOTOR2ModSync.Core.OutputConfigFile(DirectoryInfo MainConfig.LastOutputDirectory);
+
                         break;
+
                     case "4":
                         if (MainConfig.DestinationPath == null || MainConfig.SourcePath == null)
                         {
@@ -102,6 +112,7 @@ namespace KOTOR2ModSync
                         Console.WriteLine("Press any key to continue...");
                         Console.ReadKey();
                         break;
+
                     case "5":
                         if (MainConfig.DestinationPath == null)
                         {
@@ -124,16 +135,21 @@ namespace KOTOR2ModSync
                         }
                         outputPath = Path.Combine(MainConfig.LastOutputDirectory.FullName, "kotor_checksums.json");
                         break;
+
                     case "6":
                         break;
+
                     case "7":
                         break;
+
                     case "8":
                         break;
+
                     case "9":
                         // Exit the app
                         exit = true;
                         break;
+
                     default:
                         Console.WriteLine("Invalid command");
                         Console.ReadKey();
@@ -141,5 +157,7 @@ namespace KOTOR2ModSync
                 }
             }
         }
+
+        public static void WriteToLegacyConsole(string message) => Console.WriteLine(message);
     }
 }

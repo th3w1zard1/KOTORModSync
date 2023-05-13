@@ -1,12 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Text;
 using System.Threading.Tasks;
-using System.Xml;
 
-namespace KOTOR2ModSync.Core
+namespace KOTORModSync.Core.Utility
 {
     public static class Utility
     {
@@ -36,6 +33,7 @@ namespace KOTOR2ModSync.Core
             }
             return false;
         }
+
         public static async Task WaitForProcessExitAsync(Process process, string processName)
         {
             // Wait for the process to exit
@@ -50,6 +48,7 @@ namespace KOTOR2ModSync.Core
                 throw new Exception($"The process {processName} exited with code {process.ExitCode}.");
             }
         }
+
         public static async Task<bool> ExecuteProcessAsync(string fileName, string arguments, Func<Process, Task<bool>> onExited)
         {
             var process = new Process();
@@ -80,6 +79,7 @@ namespace KOTOR2ModSync.Core
 
             return isInstallSuccessful;
         }
+
         public static DirectoryInfo ChooseDirectory()
         {
             Console.Write("Enter the path: ");

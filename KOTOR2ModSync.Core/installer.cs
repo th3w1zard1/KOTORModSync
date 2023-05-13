@@ -1,17 +1,14 @@
-﻿using System;
+﻿using KOTORModSync.Core.Utility;
+using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Newtonsoft.Json;
-using System.IO;
 using System.Diagnostics;
-using System.ComponentModel;
-using KOTOR2ModSync.Core;
-using Tomlyn.Model;
-using Tomlyn;
-using Tomlyn.Syntax;
+using System.IO;
+using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
+using Tomlyn;
+using Tomlyn.Model;
+using Tomlyn.Syntax;
 
 namespace KOTORModSync.Core
 {
@@ -54,7 +51,7 @@ namespace KOTORModSync.Core
             try
             {
                 // Check if we have permission to write to the Destination directory
-                if (!Utility.CanWriteToDirectory(MainConfig.DestinationPath))
+                if (!Utility.Utility.CanWriteToDirectory(MainConfig.DestinationPath))
                 {
                     throw new Exception("Cannot write to the destination directory.");
                 }
@@ -106,8 +103,6 @@ namespace KOTORModSync.Core
             }
         }
 
-
-
         public static bool VerifyInstall(Component component)
         {
             // Verify if the destination directory has been modified
@@ -142,8 +137,8 @@ namespace KOTORModSync.Core
 
             return true;
         }
-
     }
+
     public class Component
     {
         public string Name { get; set; }
@@ -152,31 +147,132 @@ namespace KOTORModSync.Core
         public List<string> Dependencies { get; set; }
         public List<Instruction> Instructions { get; set; }
 
-        public List<Component> ReadComponentsFromFile(string filePath)
+        public class ComponentSerializer : Utility.Serializer.FileHandler
         {
-            // Read the contents of the file into a string
-            string tomlString = File.ReadAllText(filePath);
-
-            // Parse the TOML syntax into a TomlTable
-            DocumentSyntax tomlDocument = Toml.Parse(tomlString);
-            TomlTable tomlTable = tomlDocument.ToModel();
-
-            // Get the array of Component tables
-            TomlTableArray componentTables = tomlTable["Component"] as TomlTableArray;
-
-            // Deserialize each TomlTable into a Component object
-            List<Component> components = componentTables.Select(x => DeserializeComponent(x)).ToList();
-
-            // Set the ParentComponent property of each Instruction
-            foreach (var component in components)
+            public void OutputConfigFile(DirectoryInfo directory, string outputPath)
             {
-                foreach (var instruction in component.Instructions)
+                // Create a list to store the mod lists
+                var modListToml = new List<TomlTable>();
+
+                // Iterate over each mod list
+                foreach (var thisMod in Components)
                 {
-                    instruction.ParentComponent = component;
+                    // Create a TOML table to store the mod list
+                    var modListTable = new TomlTable();
+
+                    // Add the name, guid, dependencies, and installOrder to the mod list table
+                    modListTable.Add("name", thisMod.name);
+                    modListTable.Add("guid", thisMod.guid);
+                    modListTable.Add("dependencies", thisMod.dependencies);
+                    modListTable.Add("installOrder", thisMod.installOrder);
+
+                    // Create a list to store the instructions
+                    var instructionsToml = new List<TomlTable>();
+
+                    // Iterate over each instruction in the mod list
+                    foreach (var instruction in modList.instructions)
+                    {
+                        // Create a TOML table to store the instruction
+                        var instructionTable = new TomlTable();
+
+                        // Add the type, source, destination, and overwrite fields to the instruction table
+                        instructionTable.Add("type", instruction.type);
+                        instructionTable.Add("source", instruction.source);
+                        instructionTable.Add("destination", instruction.destination);
+                        instructionTable.Add("overwrite", instruction.overwrite);
+
+                        // If the instruction is of type "delete", add the paths field to the instruction table
+                        if (instruction.type == "delete")
+                        {
+                            instructionTable.Add("paths", instruction.paths);
+                        }
+
+                        // Add the instruction table to the list of instructions
+                        instructionsToml.Add(instructionTable);
+                    }
+
+                    // Add the list of instructions to the mod list table
+                    modListTable.Add("instructions", instructionsToml);
+
+                    // Add the mod list table to the list of mod lists
+                    modListToml.Add(modListTable);
                 }
+
+                // Create a TOML table to store the mod list and write it to the file
+                var tomlTable = new TomlTable();
+                tomlTable.Add("modList", modListToml);
+                Toml.WriteFile(tomlTable, path);
             }
 
-            return components;
+            public static List<Component> ReadComponentsFromFile(string filePath)
+            {
+                // Read the contents of the file into a string
+                string tomlString = File.ReadAllText(filePath);
+
+                // Parse the TOML syntax into a TomlTable
+                DocumentSyntax tomlDocument = Toml.Parse(tomlString);
+                TomlTable tomlTable = tomlDocument.ToModel();
+
+                // Get the array of Component tables
+                TomlTableArray componentTables = tomlTable["Component"] as TomlTableArray;
+
+                // Deserialize each TomlTable into a Component object
+                List<Component> components = componentTables.Select(x => DeserializeComponent(x)).ToList();
+
+                // Set the ParentComponent property of each Instruction
+                foreach (var component in components)
+                {
+                    foreach (var instruction in component.Instructions)
+                    {
+                        instruction.ParentComponent = component;
+                    }
+                }
+
+                return components;
+            }
+
+
+            private Component DeserializeComponent(TomlObject tomlObject)
+            {
+                if (!(tomlObject is TomlTable componentTable))
+                    throw new ArgumentException("Expected a TOML table for component data.");
+
+                var componentDict = ConvertTomlTableToDictionary(componentTable);
+
+                var component = new Component
+                {
+                    Name = GetRequiredValue<string>(componentDict, "Name"),
+                    Guid = GetRequiredValue<string>(componentDict, "Guid"),
+                    InstallOrder = GetValueOrDefault<int>(componentDict, "InstallOrder"),
+                    Dependencies = GetValueOrDefault<List<object>>(componentDict, "Dependencies")?.Select(x => x.ToString()).ToList(),
+                    Instructions = GetValueOrDefault<List<TomlObject>>(componentDict, "Instructions")?.Select(x => DeserializeInstruction(x)).ToList()
+                };
+                component.Instructions?.ForEach(instruction => instruction.ParentComponent = component);
+
+                return component;
+            }
+
+            private Instruction DeserializeInstruction(TomlObject tomlObject)
+            {
+                if (!(tomlObject is TomlTable instructionTable))
+                    throw new ArgumentException("Expected a TOML table for instruction data.");
+
+                var instructionDict = ConvertTomlTableToDictionary(instructionTable);
+
+                var instruction = new Instruction
+                {
+                    Type = GetRequiredValue<string>(instructionDict, "Type"),
+                    Source = GetRequiredValue<string>(instructionDict, "Source"),
+                    Destination = GetRequiredValue<string>(instructionDict, "Destination"),
+                    Overwrite = GetValueOrDefault<bool>(instructionDict, "Overwrite"),
+                    Path = GetValueOrDefault<string>(instructionDict, "Path"),
+                    Arguments = GetValueOrDefault<string>(instructionDict, "Arguments"),
+                    ParentComponent = null
+                };
+
+                return instruction;
+            }
+
         }
 
         private static Dictionary<string, object> ConvertTomlTableToDictionary(TomlTable tomlTable)
@@ -192,47 +288,6 @@ namespace KOTORModSync.Core
             }
 
             return dict;
-        }
-
-        private Component DeserializeComponent(TomlObject tomlObject)
-        {
-            if (!(tomlObject is TomlTable componentTable))
-                throw new ArgumentException("Expected a TOML table for component data.");
-
-            var componentDict = ConvertTomlTableToDictionary(componentTable);
-
-            var component = new Component
-            {
-                Name = GetRequiredValue<string>(componentDict, "Name"),
-                Guid = GetRequiredValue<string>(componentDict, "Guid"),
-                InstallOrder = GetValueOrDefault<int>(componentDict, "InstallOrder"),
-                Dependencies = GetValueOrDefault<List<object>>(componentDict, "Dependencies")?.Select(x => x.ToString()).ToList(),
-                Instructions = GetValueOrDefault<List<TomlObject>>(componentDict, "Instructions")?.Select(x => DeserializeInstruction(x)).ToList()
-            };
-            component.Instructions?.ForEach(instruction => instruction.ParentComponent = component);
-
-            return component;
-        }
-
-        private Instruction DeserializeInstruction(TomlObject tomlObject)
-        {
-            if (!(tomlObject is TomlTable instructionTable))
-                throw new ArgumentException("Expected a TOML table for instruction data.");
-
-            var instructionDict = ConvertTomlTableToDictionary(instructionTable);
-
-            var instruction = new Instruction
-            {
-                Type = GetRequiredValue<string>(instructionDict, "Type"),
-                Source = GetRequiredValue<string>(instructionDict, "Source"),
-                Destination = GetRequiredValue<string>(instructionDict, "Destination"),
-                Overwrite = GetValueOrDefault<bool>(instructionDict, "Overwrite"),
-                Path = GetValueOrDefault<string>(instructionDict, "Path"),
-                Arguments = GetValueOrDefault<string>(instructionDict, "Arguments"),
-                ParentComponent = null
-            };
-
-            return instruction;
         }
 
         private T GetRequiredValue<T>(Dictionary<string, object> dict, string key)
@@ -290,15 +345,19 @@ namespace KOTORModSync.Core
                         case "extract":
                             success = await instruction.ExtractFileAsync(instruction, component);
                             break;
+
                         case "delete":
                             success = await instruction.DeleteFileAsync(instruction, component);
                             break;
+
                         case "move":
                             success = await instruction.MoveFileAsync(instruction, component);
                             break;
+
                         case "tslpatcher":
                             success = await instruction.ExecuteTSLPatcherAsync(instruction, component);
                             break;
+
                         default:
                             // Handle unknown instruction type here
                             break;
@@ -323,21 +382,16 @@ namespace KOTORModSync.Core
                         {
                             Console.WriteLine($"Instruction {instruction.Type} succeeded but modified files have unexpected checksums.");
                         }
-
-
-
-
                     }
                     else
                     {
                         Console.WriteLine($"Instruction {instruction.Type} failed to install the mod correctly.");
                     }
                 }
+                string outModConfig = Path.Combine(MainConfig.ModConfigPath.FullName, "modpack_new.toml");
             }
 
             return true;
         }
-
     }
-
 }

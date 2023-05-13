@@ -1,4 +1,7 @@
-﻿using System;
+﻿// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+
+using System;
 using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
@@ -24,7 +27,7 @@ namespace KOTORModSync.Core.Utility
             catch (PathTooLongException ex)
             {
                 Console.WriteLine($"Your pathname is too long: '{directory.FullName}'");
-                Console.WriteLine($"Please utilize the registry patch that increases windows legacy pathlimit of 260, or move your KOTOR2 installation to another directory.");
+                Console.WriteLine("Please utilize the registry patch that increases windows legacy pathlimit of 260, or move your KOTOR2 installation to another directory.");
                 Console.WriteLine($"Failed to access files in destination directory: {ex.Message}");
             }
             catch (Exception ex)
@@ -64,8 +67,8 @@ namespace KOTORModSync.Core.Utility
 
             process.Exited += async (sender, e) =>
             {
-                var output = await process.StandardOutput.ReadToEndAsync();
-                var error = await process.StandardError.ReadToEndAsync();
+                string output = await process.StandardOutput.ReadToEndAsync();
+                string error = await process.StandardError.ReadToEndAsync();
 
                 // Call the provided 'onExited' method and set the 'isInstallSuccessful' variable accordingly
                 isInstallSuccessful = await onExited(process);
@@ -73,7 +76,7 @@ namespace KOTORModSync.Core.Utility
                 process.Dispose();
             };
 
-            process.Start();
+            _ = process.Start();
 
             await Task.Run(() => process.WaitForExit());
 

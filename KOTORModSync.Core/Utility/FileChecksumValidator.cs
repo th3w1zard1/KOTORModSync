@@ -1,14 +1,16 @@
-﻿using System;
+﻿// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Security.Cryptography;
+using System.Threading.Tasks;
+using Newtonsoft.Json;
 
 namespace KOTORModSync.Core.Utility
 {
-    using System.Collections.Generic;
-    using System.IO;
-    using System.Linq;
-    using System.Security.Cryptography;
-    using System.Threading.Tasks;
-    using Newtonsoft.Json;
-
     public class FileChecksumValidator
     {
         private readonly string _destinationPath;
@@ -23,7 +25,6 @@ namespace KOTORModSync.Core.Utility
         }
 
         public static string SHA1ToString(SHA1 sha1) => string.Concat(sha1.Hash.Select(b => b.ToString("x2")));
-
         public static string StringToSHA1(string s) => string.Concat(SHA1.Create().ComputeHash(Enumerable.Range(0, s.Length)
                                         .Where(x => x % 2 == 0)
                                         .Select(x => Convert.ToByte(s.Substring(x, 2), 16))
@@ -41,7 +42,7 @@ namespace KOTORModSync.Core.Utility
                     continue;
                 }
 
-                var sha1 = await CalculateSHA1Async(fileInfo);
+                SHA1 sha1 = await CalculateSHA1Async(fileInfo);
                 actualChecksums[fileInfo.Name] = BitConverter.ToString(sha1.Hash).Replace("-", "");
             }
 
@@ -53,14 +54,14 @@ namespace KOTORModSync.Core.Utility
             if (!allChecksumsMatch)
             {
                 Console.WriteLine("Checksum validation failed for the following files:");
-                foreach (var expectedChecksum in _expectedChecksums)
+                foreach (KeyValuePair<FileInfo, SHA1> expectedChecksum in _expectedChecksums)
                 {
-                    var expectedFileInfo = expectedChecksum.Key;
-                    var expectedSha1 = expectedChecksum.Value;
-                    var expectedSha1String = BitConverter.ToString(expectedSha1.Hash).Replace("-", "");
+                    FileInfo expectedFileInfo = expectedChecksum.Key;
+                    SHA1 expectedSha1 = expectedChecksum.Value;
+                    string expectedSha1String = BitConverter.ToString(expectedSha1.Hash).Replace("-", "");
 
-                    var actualSha1String = "";
-                    if (actualChecksums.TryGetValue(expectedFileInfo.Name, out var actualSha1))
+                    string actualSha1String = "";
+                    if (actualChecksums.TryGetValue(expectedFileInfo.Name, out string actualSha1))
                     {
                         actualSha1String = actualSha1;
                     }
@@ -95,7 +96,7 @@ namespace KOTORModSync.Core.Utility
                             Task.Run(
                                 () =>
                                 {
-                                    sha1.TransformBlock(buffer, 0, bytesRead, null, 0);
+                                    _ = sha1.TransformBlock(buffer, 0, bytesRead, null, 0);
                                 }
                             )
                         );
@@ -107,7 +108,7 @@ namespace KOTORModSync.Core.Utility
                         }
                     }
 
-                    sha1.TransformFinalBlock(buffer, 0, 0);
+                    _ = sha1.TransformFinalBlock(buffer, 0, 0);
 
                     await Task.WhenAll(tasks);
 

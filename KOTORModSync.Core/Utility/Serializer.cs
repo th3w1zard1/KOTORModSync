@@ -1,4 +1,7 @@
-﻿using System;
+﻿// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -7,9 +10,9 @@ using Newtonsoft.Json.Serialization;
 using SharpCompress.Archives;
 using SharpCompress.Archives.Rar;
 using SharpCompress.Archives.SevenZip;
+using Tomlyn;
 using Tomlyn.Model;
 using Tomlyn.Syntax;
-using Tomlyn;
 using static KOTORModSync.Core.ModDirectory;
 
 namespace KOTORModSync.Core.Utility
@@ -27,7 +30,7 @@ namespace KOTORModSync.Core.Utility
 
             try
             {
-                foreach (var file in directory.EnumerateFiles("*.*", SearchOption.TopDirectoryOnly))
+                foreach (FileInfo file in directory.EnumerateFiles("*.*", SearchOption.TopDirectoryOnly))
                 {
                     if (ArchiveHelper.IsArchive(file.Extension))
                     {
@@ -36,7 +39,7 @@ namespace KOTORModSync.Core.Utility
                             { "Name", file.Name },
                             { "Type", "file" }
                         };
-                        var archiveEntries = ArchiveHelper.TraverseArchiveEntries(file.FullName);
+                        List<ArchiveEntry> archiveEntries = ArchiveHelper.TraverseArchiveEntries(file.FullName);
                         var archiveRoot = new Dictionary<string, object>
                         {
                             { "Name", file.Name },
@@ -86,34 +89,36 @@ namespace KOTORModSync.Core.Utility
                 var modListToml = new List<TomlTable>();
 
                 // Iterate over each mod list
-                foreach (var thisMod in MainConfig.Components)
+                foreach (Component thisMod in MainConfig.Components)
                 {
                     // Create a TOML table to store the mod list
-                    var modListTable = new TomlTable();
-
-                    // Add the name, guid, dependencies, and installOrder to the mod list table
-                    modListTable.Add("name", thisMod.Name);
-                    modListTable.Add("guid", thisMod.Guid);
-                    modListTable.Add("dependencies", thisMod.Dependencies);
-                    modListTable.Add("installOrder", thisMod.InstallOrder);
+                    var modListTable = new TomlTable
+                    {
+                        // Add the name, guid, dependencies, and installOrder to the mod list table
+                        { "name", thisMod.Name },
+                        { "guid", thisMod.Guid },
+                        { "dependencies", thisMod.Dependencies },
+                        { "installOrder", thisMod.InstallOrder }
+                    };
 
                     // Create a list to store the instructions
                     var instructionsToml = new List<TomlTable>();
 
                     // Iterate over each instruction in the mod list
-                    foreach (var instruction in thisMod.Instructions)
+                    foreach (Instruction instruction in thisMod.Instructions)
                     {
                         // Create a TOML table to store the instruction
-                        var instructionTable = new TomlTable();
-
-                        // Add the type, source, destination, and overwrite fields to the instruction table
-                        instructionTable.Add("Type", instruction.Type);
-                        instructionTable.Add("Source", instruction.Source);
-                        instructionTable.Add("Destination", instruction.Destination);
-                        instructionTable.Add("Overwrite", instruction.Overwrite);
+                        var instructionTable = new TomlTable
+                        {
+                            // Add the type, source, destination, and overwrite fields to the instruction table
+                            { "Type", instruction.Type },
+                            { "Source", instruction.Source },
+                            { "Destination", instruction.Destination },
+                            { "Overwrite", instruction.Overwrite }
+                        };
 
                         // If the instruction is of type "delete", add the paths field to the instruction table
-                        if (instruction.Type.ToLowerInvariant() == "delete")
+                        if (string.Equals(instruction.Type, "delete", StringComparison.InvariantCultureIgnoreCase))
                         {
                             instructionTable.Add("Path", instruction.Path);
                         }
@@ -130,8 +135,10 @@ namespace KOTORModSync.Core.Utility
                 }
 
                 // Create a TOML table to store the mod list
-                var tomlTable = new TomlTable();
-                tomlTable.Add("modList", modListToml);
+                var tomlTable = new TomlTable
+                {
+                    { "modList", modListToml }
+                };
                 File.WriteAllText(MainConfig.DestinationPath.FullName, tomlTable.ToString());
             }
 
@@ -153,10 +160,10 @@ namespace KOTORModSync.Core.Utility
                 foreach (TomlObject tomlComponent in componentTables)
                 {
                     Component component = new Component();
-                    component.DeserializeComponent(tomlComponent);
+                    _ = Component.DeserializeComponent(tomlComponent);
                     components.Add(component);
 
-                    foreach (var instruction in component.Instructions)
+                    foreach (Instruction instruction in component.Instructions)
                     {
                         instruction.ParentComponent = component;
                     }
@@ -166,23 +173,17 @@ namespace KOTORModSync.Core.Utility
             }
 
 
-            public static bool IsDirectoryWithName(object directory, string name)
-            {
-                return directory is Dictionary<string, object> dict &&
+            public static bool IsDirectoryWithName(object directory, string name) => directory is Dictionary<string, object> dict &&
                     dict.ContainsKey("Name") &&
                     dict["Name"] is string directoryName &&
                     directoryName.Equals(name, StringComparison.OrdinalIgnoreCase);
-            }
 
-            private static Dictionary<string, object> CreateNewDirectory(string name, bool isDirectory)
-            {
-                return new Dictionary<string, object>
+            private static Dictionary<string, object> CreateNewDirectory(string name, bool isDirectory) => new Dictionary<string, object>
                 {
                     { "Name", name },
                     { "Type", isDirectory ? "directory" : "file" },
                     { "Contents", new List<object>() }
                 };
-            }
         }
 
         public static class ArchiveHelper
@@ -192,7 +193,7 @@ namespace KOTORModSync.Core.Utility
                 Dictionary<string, object> root = GenerateArchiveTreeJson(directory);
                 try
                 {
-                    var json = JsonConvert.SerializeObject(root, Formatting.Indented, new JsonSerializerSettings
+                    string json = JsonConvert.SerializeObject(root, Formatting.Indented, new JsonSerializerSettings
                     {
                         ContractResolver = new CamelCasePropertyNamesContractResolver()
                     });
@@ -205,10 +206,7 @@ namespace KOTORModSync.Core.Utility
                 }
             }
 
-            public static bool IsArchive(string extension)
-            {
-                return extension == ".zip" || extension == ".rar" || extension == ".7z";
-            }
+            public static bool IsArchive(string extension) => extension == ".zip" || extension == ".rar" || extension == ".7z";
 
             public static List<ArchiveEntry> TraverseArchiveEntries(string archivePath)
             {
@@ -216,7 +214,7 @@ namespace KOTORModSync.Core.Utility
 
                 try
                 {
-                    using (var stream = File.OpenRead(archivePath))
+                    using (FileStream stream = File.OpenRead(archivePath))
                     {
                         IArchive archive = null;
 
@@ -238,7 +236,7 @@ namespace KOTORModSync.Core.Utility
                             return archiveEntries;
                         }
 
-                        foreach (var entry in archive.Entries.Where(e => !e.IsDirectory))
+                        foreach (IArchiveEntry entry in archive.Entries.Where(e => !e.IsDirectory))
                         {
                             string[] pathParts;
                             if (archivePath.EndsWith(".rar"))
@@ -264,17 +262,17 @@ namespace KOTORModSync.Core.Utility
 
             private static void ProcessArchiveEntry(IArchiveEntry entry, Dictionary<string, object> currentDirectory)
             {
-                var pathParts = entry.Key.Split('/');
-                var isFile = !entry.IsDirectory;
+                string[] pathParts = entry.Key.Split('/');
+                bool isFile = !entry.IsDirectory;
 
-                for (var i = 0; i < pathParts.Length; i++)
+                for (int i = 0; i < pathParts.Length; i++)
                 {
-                    var name = pathParts[i];
+                    string name = pathParts[i];
 
-                    var existingDirectory = currentDirectory["Contents"] as List<object>
+                    List<object> existingDirectory = currentDirectory["Contents"] as List<object>
                         ?? throw new InvalidDataException($"Unexpected data type for directory contents: {currentDirectory["Contents"]?.GetType()}");
 
-                    var existingChild = existingDirectory.FirstOrDefault(c => c is Dictionary<string, object> && FileHandler.IsDirectoryWithName(c, name));
+                    object existingChild = existingDirectory.FirstOrDefault(c => c is Dictionary<string, object> && FileHandler.IsDirectoryWithName(c, name));
 
                     if (existingChild != null)
                     {

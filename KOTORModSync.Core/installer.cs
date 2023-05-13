@@ -1,4 +1,7 @@
-﻿using System;
+﻿// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
@@ -7,9 +10,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using KOTORModSync.Core.Utility;
-using Tomlyn;
 using Tomlyn.Model;
-using Tomlyn.Syntax;
 
 namespace KOTORModSync.Core
 {
@@ -24,28 +25,19 @@ namespace KOTORModSync.Core
         public Component ParentComponent { get; set; }
         public Dictionary<FileInfo, System.Security.Cryptography.SHA1> ExpectedChecksums { get; set; }
 
-        public async Task<bool> ExecuteInstructionAsync(Func<Task<bool>> instructionMethod)
-        {
-            return await instructionMethod().ConfigureAwait(false);
-        }
+        public static async Task<bool> ExecuteInstructionAsync(Func<Task<bool>> instructionMethod) => await instructionMethod().ConfigureAwait(false);
 
-        public async Task<bool> ExtractFileAsync(Instruction thisStep, Component component)
-        {
+        public bool ExtractFile(Instruction thisStep, Component component) =>
             // Implement extraction logic here
-            return true;
-        }
+            true;
 
-        public async Task<bool> DeleteFileAsync(Instruction thisStep, Component component)
-        {
+        public bool DeleteFile(Instruction thisStep, Component component) =>
             // Implement deletion logic here
-            return true;
-        }
+            true;
 
-        public async Task<bool> MoveFileAsync(Instruction thisStep, Component component)
-        {
+        public bool MoveFile(Instruction thisStep, Component component) =>
             // Implement moving logic here
-            return true;
-        }
+            true;
 
         public async Task<bool> ExecuteTSLPatcherAsync(Instruction thisStep, Component component)
         {
@@ -60,16 +52,21 @@ namespace KOTORModSync.Core
                 var cancellationTokenSource = new CancellationTokenSource();
                 cancellationTokenSource.CancelAfter(TimeSpan.FromSeconds(30));
 
-                var process = new Process();
-                process.StartInfo.FileName = thisStep.Path;
-                process.StartInfo.Arguments = thisStep.Arguments;
-                process.StartInfo.RedirectStandardOutput = true;
-                process.StartInfo.UseShellExecute = false;
-                process.StartInfo.CreateNoWindow = true;
+                var startInfo = new ProcessStartInfo
+                {
+                    FileName = thisStep.Path,
+                    Arguments = thisStep.Arguments,
+                    RedirectStandardOutput = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true
+                };
+                var process = new Process
+                {
+                    StartInfo = startInfo
+                };
+                _ = process.Start();
 
-                process.Start();
-
-                var outputTask = process.StandardOutput.ReadToEndAsync();
+                Task<string> outputTask = process.StandardOutput.ReadToEndAsync();
 
                 while (!process.HasExited && !cancellationTokenSource.IsCancellationRequested)
                 {
@@ -82,21 +79,13 @@ namespace KOTORModSync.Core
                     throw new Exception("TSLPatcher timed out after 30 seconds.");
                 }
 
-                var output = await outputTask;
+                string output = await outputTask;
 
-                if (process.ExitCode != 0)
-                {
-                    throw new Exception($"TSLPatcher failed with exit code {process.ExitCode}. Output:\n{output}");
-                }
-
-                if (!VerifyInstall(component))
-                {
-                    throw new Exception("TSLPatcher failed to install the mod correctly.");
-                }
-
-                return true;
+                return process.ExitCode != 0
+                    ? throw new Exception($"TSLPatcher failed with exit code {process.ExitCode}. Output:\n{output}")
+                    : !VerifyInstall(component) ? throw new Exception("TSLPatcher failed to install the mod correctly.") : true;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 // Handle any exceptions that occurred
                 // Log the exception or display it to the user as appropriate
@@ -109,11 +98,11 @@ namespace KOTORModSync.Core
             // Verify if the destination directory has been modified
             DateTime destinationDirectoryLastModified = Directory.GetLastWriteTime(MainConfig.DestinationPath.FullName);
 
-            /*if (destinationDirectoryLastModified < component.SourceLastModified)
+            if (destinationDirectoryLastModified < component.SourceLastModified)
             {
                 Console.WriteLine("Destination directory has not been modified.");
                 return false;
-            }*/
+            }
 
             // Verify if any error or warning message is present in the install.rtf file
             string installLogFile = System.IO.Path.Combine(MainConfig.DestinationPath.FullName, "install.rtf");
@@ -142,37 +131,37 @@ namespace KOTORModSync.Core
 
     public class Component
     {
-        private bool isChecked;
+        private bool _isChecked;
 
         public bool IsChecked
         {
-            get { return isChecked; }
+            get => _isChecked;
             set
             {
-                isChecked = value;
+                _isChecked = value;
                 OnPropertyChanged(nameof(IsChecked));
             }
         }
 
-        public event PropertyChangedEventHandler PropertyChanged;
+        public event EventHandler<PropertyChangedEventArgs> PropertyChanged;
 
-        protected virtual void OnPropertyChanged(string propertyName)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-        }
+        protected virtual void OnPropertyChanged(string propertyName) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
 
         public string Name { get; set; }
         public string Guid { get; set; }
         public int InstallOrder { get; set; }
         public List<string> Dependencies { get; set; }
         public List<Instruction> Instructions { get; set; }
+        public DateTime SourceLastModified { get; internal set; }
 
-        public Component DeserializeComponent(TomlObject tomlObject)
+        public static Component DeserializeComponent(TomlObject tomlObject)
         {
             if (!(tomlObject is TomlTable componentTable))
+            {
                 throw new ArgumentException("Expected a TOML table for component data.");
+            }
 
-            var componentDict = ConvertTomlTableToDictionary(componentTable);
+            Dictionary<string, object> componentDict = ConvertTomlTableToDictionary(componentTable);
 
             var component = new Component
             {
@@ -187,12 +176,14 @@ namespace KOTORModSync.Core
             return component;
         }
 
-        private Instruction DeserializeInstruction(TomlObject tomlObject)
+        private static Instruction DeserializeInstruction(TomlObject tomlObject)
         {
             if (!(tomlObject is TomlTable instructionTable))
+            {
                 throw new ArgumentException("Expected a TOML table for instruction data.");
+            }
 
-            var instructionDict = ConvertTomlTableToDictionary(instructionTable);
+            Dictionary<string, object> instructionDict = ConvertTomlTableToDictionary(instructionTable);
 
             var instruction = new Instruction
             {
@@ -212,9 +203,9 @@ namespace KOTORModSync.Core
         {
             Dictionary<string, object> dict = new Dictionary<string, object>();
 
-            foreach (var kvp in tomlTable)
+            foreach (KeyValuePair<string, object> kvp in tomlTable)
             {
-                string key = kvp.Key.ToString();
+                string key = kvp.Key;
                 object value = kvp.Value;
 
                 dict.Add(key, value);
@@ -223,80 +214,65 @@ namespace KOTORModSync.Core
             return dict;
         }
 
-        private T GetRequiredValue<T>(Dictionary<string, object> dict, string key)
+        private static T GetRequiredValue<T>(Dictionary<string, object> dict, string key) => !dict.TryGetValue(key, out object value) || !(value is T)
+                ? throw new ArgumentException($"Missing or invalid '{key}' field.")
+                : (T)value;
+
+        private static T GetValueOrDefault<T>(Dictionary<string, object> dict, string key) => dict.TryGetValue(key, out object value) && value is T ? (T)value : default;
+
+        public static async Task<bool> ExecuteInstructions()
         {
-            if (!dict.TryGetValue(key, out object value) || !(value is T))
-                throw new ArgumentException($"Missing or invalid '{key}' field.");
-
-            return (T)value;
-        }
-
-        private T GetValueOrDefault<T>(Dictionary<string, object> dict, string key)
-        {
-            if (dict.TryGetValue(key, out object value) && value is T)
-                return (T)value;
-
-            return default(T);
-        }
-
-        public async Task<bool> ExecuteInstructions()
-        {
-            // Check if we have permission to write to the Destination directory
-            if (!Utility.Utility.CanWriteToDirectory(MainConfig.DestinationPath))
+            try
             {
-                throw new Exception("Cannot write to the destination directory.");
-            }
-
-            string modConfigFile = Path.Combine(MainConfig.ModConfigPath.FullName, "modpack.toml");
-            List<Component> components = Utility.Serializer.FileHandler.ReadComponentsFromFile(modConfigFile);
-
-            foreach (Component component in components)
-            {
-                foreach (Instruction instruction in component.Instructions)
+                // Check if we have permission to write to the Destination directory
+                if (!Utility.Utility.CanWriteToDirectory(MainConfig.DestinationPath))
                 {
-                    // Get the original checksums before making any modifications
-                    var originalPathsToChecksum = new Dictionary<FileInfo, System.Security.Cryptography.SHA1>();
-                    try
+                    throw new Exception("Cannot write to the destination directory.");
+                }
+
+                async Task<bool> ProcessComponentAsync(Component component)
+                {
+                    foreach (Instruction instruction in component.Instructions)
                     {
-                        foreach (var file in MainConfig.DestinationPath.GetFiles("*.*", SearchOption.AllDirectories))
+                        // Get the original checksums before making any modifications
+                        var originalPathsToChecksum = new Dictionary<FileInfo, System.Security.Cryptography.SHA1>();
+                        foreach (FileInfo file in MainConfig.DestinationPath.GetFiles("*.*", SearchOption.AllDirectories))
                         {
                             System.Security.Cryptography.SHA1 sha1 = await FileChecksumValidator.CalculateSHA1Async(file);
                             originalPathsToChecksum[file] = sha1;
                         }
-                    }
-                    catch (IOException ex)
-                    {
-                        Console.WriteLine($"Failed to access files in destination directory: {ex.Message}");
-                        return false;
-                    }
 
-                    bool success = false;
+                        bool success = false;
 
-                    switch (instruction.Type.ToLower())
-                    {
-                        case "extract":
-                            success = await instruction.ExtractFileAsync(instruction, component);
-                            break;
+                        switch (instruction.Type.ToLower())
+                        {
+                            case "extract":
+                                success = instruction.ExtractFile(instruction, component);
+                                break;
 
-                        case "delete":
-                            success = await instruction.DeleteFileAsync(instruction, component);
-                            break;
+                            case "delete":
+                                success = instruction.DeleteFile(instruction, component);
+                                break;
 
-                        case "move":
-                            success = await instruction.MoveFileAsync(instruction, component);
-                            break;
+                            case "move":
+                                success = instruction.MoveFile(instruction, component);
+                                break;
 
-                        case "tslpatcher":
-                            success = await instruction.ExecuteTSLPatcherAsync(instruction, component);
-                            break;
+                            case "tslpatcher":
+                                success = await instruction.ExecuteTSLPatcherAsync(instruction, component);
+                                break;
 
-                        default:
-                            // Handle unknown instruction type here
-                            break;
-                    }
+                            default:
+                                // Handle unknown instruction type here
+                                break;
+                        }
 
-                    if (success)
-                    {
+                        if (!success)
+                        {
+                            Console.WriteLine($"Instruction {instruction.Type} failed to install the mod correctly.");
+                            return false;
+                        }
+
                         // Get the new checksums after the modifications
                         var validator = new FileChecksumValidator(
                             destinationPath: MainConfig.DestinationPath.FullName,
@@ -304,7 +280,7 @@ namespace KOTORModSync.Core
                             originalChecksums: originalPathsToChecksum
                         );
 
-                        var checksumsMatch = await validator.ValidateChecksumsAsync();
+                        bool checksumsMatch = await validator.ValidateChecksumsAsync();
 
                         if (checksumsMatch)
                         {
@@ -315,15 +291,33 @@ namespace KOTORModSync.Core
                             Console.WriteLine($"Instruction {instruction.Type} succeeded but modified files have unexpected checksums.");
                         }
                     }
-                    else
+
+                    _ = Path.Combine(MainConfig.ModConfigPath.FullName, "modpack_new.toml");
+
+                    return true;
+                }
+
+                string modConfigFile = Path.Combine(MainConfig.ModConfigPath.FullName, "modpack.toml");
+                List<Component> components = Utility.Serializer.FileHandler.ReadComponentsFromFile(modConfigFile);
+
+                foreach (Component component in components)
+                {
+                    bool result = await ProcessComponentAsync(component);
+
+                    if (!result)
                     {
-                        Console.WriteLine($"Instruction {instruction.Type} failed to install the mod correctly.");
+                        Console.WriteLine($"Component {component.Name} failed to install the mod correctly.");
+                        return false;
                     }
                 }
-                string outModConfig = Path.Combine(MainConfig.ModConfigPath.FullName, "modpack_new.toml");
-            }
 
-            return true;
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"An exception occurred: {ex.Message}");
+                return false;
+            }
         }
     }
 }

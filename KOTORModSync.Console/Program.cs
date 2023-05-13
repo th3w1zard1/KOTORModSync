@@ -1,5 +1,7 @@
-﻿using System;
-using System.IdentityModel.Tokens.Jwt;
+﻿// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+
+using System;
 using System.IO;
 using KOTORModSync.Core;
 using KOTORModSync.Core.Utility;
@@ -59,8 +61,8 @@ namespace KOTORModSync.ConsoleApp
                         {
                             Console.WriteLine($"  {Path.GetFileName(modFile)}");
                         }
+                        Console.WriteLine("Define KOTOR2 now? (y/N)");
                         key = Console.ReadKey().KeyChar;
-                        Console.WriteLine("Define KOTOR2 directly? (y/N)");
                         if (char.ToLower(key) == 'n')
                         {
                             break;
@@ -73,7 +75,7 @@ namespace KOTORModSync.ConsoleApp
                             break;
                         }
                         Console.WriteLine("Set directory paths...");
-                        mainConfig.UpdateConfig(modDownloads, kotorInstallDir);
+                        MainConfig.UpdateConfig(modDownloads, kotorInstallDir);
                         break;
 
                     case "2":
@@ -82,7 +84,7 @@ namespace KOTORModSync.ConsoleApp
                     case "3":
                         Console.WriteLine("(not implemented yet)");
                         Console.WriteLine("Press any key to continue");
-                        Console.ReadKey();
+                        _ = Console.ReadKey();
                         //Utility.Serializer.FileHandler.OutputConfigFile(MainConfig.LastOutputDirectory);
                         //Utility.Serializer.FileHandler.ReadComponentsFromFile(MainConfig.LastOutputDirectory);
                         break;
@@ -110,7 +112,7 @@ namespace KOTORModSync.ConsoleApp
                         outputPath = Path.Combine(MainConfig.LastOutputDirectory.FullName, "modtreeoutput.json");
                         Core.Utility.Serializer.ArchiveHelper.OutputModTree(MainConfig.SourcePath, outputPath);
                         Console.WriteLine("Press any key to continue...");
-                        Console.ReadKey();
+                        _ = Console.ReadKey();
                         break;
 
                     case "5":
@@ -133,7 +135,7 @@ namespace KOTORModSync.ConsoleApp
                             Console.WriteLine("Please specify the path to the output file.");
                             MainConfig.LastOutputDirectory = Utility.ChooseDirectory();
                         }
-                        outputPath = Path.Combine(MainConfig.LastOutputDirectory.FullName, "kotor_checksums.json");
+                        _ = Path.Combine(MainConfig.LastOutputDirectory.FullName, "kotor_checksums.json");
                         break;
 
                     case "6":
@@ -152,7 +154,7 @@ namespace KOTORModSync.ConsoleApp
 
                     default:
                         Console.WriteLine("Invalid command");
-                        Console.ReadKey();
+                        _ = Console.ReadKey();
                         break;
                 }
             }

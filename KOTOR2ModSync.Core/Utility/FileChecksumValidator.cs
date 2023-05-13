@@ -2,12 +2,12 @@
 
 namespace KOTORModSync.Core.Utility
 {
-    using Newtonsoft.Json;
     using System.Collections.Generic;
     using System.IO;
     using System.Linq;
     using System.Security.Cryptography;
     using System.Threading.Tasks;
+    using Newtonsoft.Json;
 
     public class FileChecksumValidator
     {

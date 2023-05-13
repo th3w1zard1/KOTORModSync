@@ -1,17 +1,20 @@
-﻿using Newtonsoft.Json;
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using SharpCompress.Archives;
 using SharpCompress.Archives.Rar;
 using SharpCompress.Archives.SevenZip;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
+using Tomlyn.Model;
+using Tomlyn.Syntax;
+using Tomlyn;
 using static KOTORModSync.Core.ModDirectory;
 
 namespace KOTORModSync.Core.Utility
 {
-    internal class Serializer
+    public static class Serializer
     {
         private static Dictionary<string, object> GenerateArchiveTreeJson(DirectoryInfo directory)
         {
@@ -26,14 +29,14 @@ namespace KOTORModSync.Core.Utility
             {
                 foreach (var file in directory.EnumerateFiles("*.*", SearchOption.TopDirectoryOnly))
                 {
-                    if (IsArchive(file.Extension))
+                    if (ArchiveHelper.IsArchive(file.Extension))
                     {
                         var fileInfo = new Dictionary<string, object>
                         {
                             { "Name", file.Name },
                             { "Type", "file" }
                         };
-                        var archiveEntries = TraverseArchiveEntries(file.FullName);
+                        var archiveEntries = ArchiveHelper.TraverseArchiveEntries(file.FullName);
                         var archiveRoot = new Dictionary<string, object>
                         {
                             { "Name", file.Name },
@@ -77,7 +80,93 @@ namespace KOTORModSync.Core.Utility
                 return mergedList;
             }
 
-            private static bool IsDirectoryWithName(object directory, string name)
+            public static void OutputConfigFile(DirectoryInfo directory, string outputPath)
+            {
+                // Create a list to store the mod lists
+                var modListToml = new List<TomlTable>();
+
+                // Iterate over each mod list
+                foreach (var thisMod in MainConfig.Components)
+                {
+                    // Create a TOML table to store the mod list
+                    var modListTable = new TomlTable();
+
+                    // Add the name, guid, dependencies, and installOrder to the mod list table
+                    modListTable.Add("name", thisMod.Name);
+                    modListTable.Add("guid", thisMod.Guid);
+                    modListTable.Add("dependencies", thisMod.Dependencies);
+                    modListTable.Add("installOrder", thisMod.InstallOrder);
+
+                    // Create a list to store the instructions
+                    var instructionsToml = new List<TomlTable>();
+
+                    // Iterate over each instruction in the mod list
+                    foreach (var instruction in thisMod.Instructions)
+                    {
+                        // Create a TOML table to store the instruction
+                        var instructionTable = new TomlTable();
+
+                        // Add the type, source, destination, and overwrite fields to the instruction table
+                        instructionTable.Add("Type", instruction.Type);
+                        instructionTable.Add("Source", instruction.Source);
+                        instructionTable.Add("Destination", instruction.Destination);
+                        instructionTable.Add("Overwrite", instruction.Overwrite);
+
+                        // If the instruction is of type "delete", add the paths field to the instruction table
+                        if (instruction.Type.ToLowerInvariant() == "delete")
+                        {
+                            instructionTable.Add("Path", instruction.Path);
+                        }
+
+                        // Add the instruction table to the list of instructions
+                        instructionsToml.Add(instructionTable);
+                    }
+
+                    // Add the list of instructions to the mod list table
+                    modListTable.Add("instructions", instructionsToml);
+
+                    // Add the mod list table to the list of mod lists
+                    modListToml.Add(modListTable);
+                }
+
+                // Create a TOML table to store the mod list
+                var tomlTable = new TomlTable();
+                tomlTable.Add("modList", modListToml);
+                File.WriteAllText(MainConfig.DestinationPath.FullName, tomlTable.ToString());
+            }
+
+            public static List<Component> ReadComponentsFromFile(string filePath)
+            {
+                // Read the contents of the file into a string
+                string tomlString = File.ReadAllText(filePath);
+
+                // Parse the TOML syntax into a TomlTable
+                DocumentSyntax tomlDocument = Toml.Parse(tomlString);
+                TomlTable tomlTable = tomlDocument.ToModel();
+
+                // Get the array of Component tables
+                TomlTableArray componentTables = tomlTable["Component"] as TomlTableArray;
+
+                List<Component> components = new List<Component>();
+
+                // Deserialize each TomlTable into a Component object
+                foreach (TomlObject tomlComponent in componentTables)
+                {
+                    Component component = new Component();
+                    component.DeserializeComponent(tomlComponent);
+                    components.Add(component);
+
+                    foreach (var instruction in component.Instructions)
+                    {
+                        instruction.ParentComponent = component;
+                    }
+                }
+
+                return components;
+            }
+
+
+            public static bool IsDirectoryWithName(object directory, string name)
             {
                 return directory is Dictionary<string, object> dict &&
                     dict.ContainsKey("Name") &&
@@ -88,126 +177,127 @@ namespace KOTORModSync.Core.Utility
             private static Dictionary<string, object> CreateNewDirectory(string name, bool isDirectory)
             {
                 return new Dictionary<string, object>
-            {
-                { "Name", name },
-                { "Type", isDirectory ? "directory" : "file" },
-                { "Contents", new List<object>() }
-            };
-
+                {
+                    { "Name", name },
+                    { "Type", isDirectory ? "directory" : "file" },
+                    { "Contents", new List<object>() }
+                };
+            }
+        }
 
         public static class ArchiveHelper
+        {
+            public static void OutputModTree(DirectoryInfo directory, string outputPath)
             {
-                public static void OutputModTree(DirectoryInfo directory, string outputPath)
+                Dictionary<string, object> root = GenerateArchiveTreeJson(directory);
+                try
                 {
-                    Dictionary<string, object> root = GenerateArchiveTreeJson(directory);
-                    try
+                    var json = JsonConvert.SerializeObject(root, Formatting.Indented, new JsonSerializerSettings
                     {
-                        var json = JsonConvert.SerializeObject(root, Formatting.Indented, new JsonSerializerSettings
-                        {
-                            ContractResolver = new CamelCasePropertyNamesContractResolver()
-                        });
+                        ContractResolver = new CamelCasePropertyNamesContractResolver()
+                    });
 
-                        File.WriteAllText(outputPath, json);
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine($"Error writing output file {outputPath}: {ex.Message}");
-                    }
+                    File.WriteAllText(outputPath, json);
                 }
-
-                private static bool IsArchive(string extension)
+                catch (Exception ex)
                 {
-                    return extension == ".zip" || extension == ".rar" || extension == ".7z";
+                    Console.WriteLine($"Error writing output file {outputPath}: {ex.Message}");
                 }
+            }
 
-                public static List<ArchiveEntry> TraverseArchiveEntries(string archivePath)
+            public static bool IsArchive(string extension)
+            {
+                return extension == ".zip" || extension == ".rar" || extension == ".7z";
+            }
+
+            public static List<ArchiveEntry> TraverseArchiveEntries(string archivePath)
+            {
+                var archiveEntries = new List<ArchiveEntry>();
+
+                try
                 {
-                    var archiveEntries = new List<ArchiveEntry>();
-
-                    try
+                    using (var stream = File.OpenRead(archivePath))
                     {
-                        using (var stream = File.OpenRead(archivePath))
+                        IArchive archive = null;
+
+                        if (archivePath.EndsWith(".zip"))
                         {
-                            IArchive archive = null;
-
-                            if (archivePath.EndsWith(".zip"))
-                            {
-                                archive = SharpCompress.Archives.Zip.ZipArchive.Open(stream);
-                            }
-                            else if (archivePath.EndsWith(".rar"))
-                            {
-                                archive = RarArchive.Open(stream);
-                            }
-                            else if (archivePath.EndsWith(".7z"))
-                            {
-                                archive = SevenZipArchive.Open(stream);
-                            }
-                            else
-                            {
-                                Console.WriteLine($"Unsupported archive format: {Path.GetExtension(archivePath)}");
-                                return archiveEntries;
-                            }
-
-                            foreach (var entry in archive.Entries.Where(e => !e.IsDirectory))
-                            {
-                                string[] pathParts;
-                                if (archivePath.EndsWith(".rar"))
-                                {
-                                    pathParts = entry.Key.Split('\\'); // Use backslash as separator for RAR files
-                                }
-                                else
-                                {
-                                    pathParts = entry.Key.Split('/'); // Use forward slash as separator for ZIP and 7z files
-                                }
-                                var archiveEntry = new ArchiveEntry { Name = pathParts[pathParts.Length - 1], Path = entry.Key };
-                                archiveEntries.Add(archiveEntry);
-                            }
+                            archive = SharpCompress.Archives.Zip.ZipArchive.Open(stream);
                         }
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine($"Error reading archive {archivePath}: {ex.Message}");
-                    }
-
-                    return archiveEntries;
-                }
-
-                private static void ProcessArchiveEntry(IArchiveEntry entry, Dictionary<string, object> currentDirectory)
-                {
-                    var pathParts = entry.Key.Split('/');
-                    var isFile = !entry.IsDirectory;
-
-                    for (var i = 0; i < pathParts.Length; i++)
-                    {
-                        var name = pathParts[i];
-
-                        var existingDirectory = currentDirectory["Contents"] as List<object>
-                            ?? throw new InvalidDataException($"Unexpected data type for directory contents: {currentDirectory["Contents"]?.GetType()}");
-
-                        var existingChild = existingDirectory.FirstOrDefault(c => c is Dictionary<string, object> && IsDirectoryWithName(c, name));
-
-                        if (existingChild != null)
+                        else if (archivePath.EndsWith(".rar"))
                         {
-                            if (isFile)
-                            {
-                                ((Dictionary<string, object>)existingChild)["Type"] = "file";
-                            }
-
-                            currentDirectory = (Dictionary<string, object>)existingChild;
+                            archive = RarArchive.Open(stream);
+                        }
+                        else if (archivePath.EndsWith(".7z"))
+                        {
+                            archive = SevenZipArchive.Open(stream);
                         }
                         else
                         {
-                            var child = new Dictionary<string, object>
+                            Console.WriteLine($"Unsupported archive format: {Path.GetExtension(archivePath)}");
+                            return archiveEntries;
+                        }
+
+                        foreach (var entry in archive.Entries.Where(e => !e.IsDirectory))
+                        {
+                            string[] pathParts;
+                            if (archivePath.EndsWith(".rar"))
+                            {
+                                pathParts = entry.Key.Split('\\'); // Use backslash as separator for RAR files
+                            }
+                            else
+                            {
+                                pathParts = entry.Key.Split('/'); // Use forward slash as separator for ZIP and 7z files
+                            }
+                            var archiveEntry = new ArchiveEntry { Name = pathParts[pathParts.Length - 1], Path = entry.Key };
+                            archiveEntries.Add(archiveEntry);
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error reading archive {archivePath}: {ex.Message}");
+                }
+
+                return archiveEntries;
+            }
+
+            private static void ProcessArchiveEntry(IArchiveEntry entry, Dictionary<string, object> currentDirectory)
+            {
+                var pathParts = entry.Key.Split('/');
+                var isFile = !entry.IsDirectory;
+
+                for (var i = 0; i < pathParts.Length; i++)
+                {
+                    var name = pathParts[i];
+
+                    var existingDirectory = currentDirectory["Contents"] as List<object>
+                        ?? throw new InvalidDataException($"Unexpected data type for directory contents: {currentDirectory["Contents"]?.GetType()}");
+
+                    var existingChild = existingDirectory.FirstOrDefault(c => c is Dictionary<string, object> && FileHandler.IsDirectoryWithName(c, name));
+
+                    if (existingChild != null)
+                    {
+                        if (isFile)
+                        {
+                            ((Dictionary<string, object>)existingChild)["Type"] = "file";
+                        }
+
+                        currentDirectory = (Dictionary<string, object>)existingChild;
+                    }
+                    else
+                    {
+                        var child = new Dictionary<string, object>
                 {
                     { "Name", name },
                     { "Type", isFile ? "file" : "directory" },
                     { "Contents", new List<object>() }
                 };
-                            existingDirectory.Add(child);
-                            currentDirectory = child;
-                        }
+                        existingDirectory.Add(child);
+                        currentDirectory = child;
                     }
                 }
             }
         }
     }
+}

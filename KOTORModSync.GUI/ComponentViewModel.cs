@@ -9,7 +9,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace KOTORModSync.GUI
+namespace KOTORModSync.GUI_old
 {
     public class ComponentViewModel : INotifyPropertyChanged
     {

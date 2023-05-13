@@ -1,7 +1,8 @@
-﻿using KOTORModSync.Core;
-using KOTORModSync.Core.Utility;
-using System;
+﻿using System;
+using System.IdentityModel.Tokens.Jwt;
 using System.IO;
+using KOTORModSync.Core;
+using KOTORModSync.Core.Utility;
 
 namespace KOTORModSync
 {
@@ -39,7 +40,7 @@ namespace KOTORModSync
                 {
                     case "1":
                         Console.WriteLine("In order for this installer to work, you must download all of the mods you'd like to use into one folder.");
-                        Console.WriteLine("VERY IMPORTANT: Do not extract any mod files or rename them.");
+                        Console.WriteLine("VERY IMPORTANT: Do not extract rename any mod archives.");
                         Console.WriteLine("Please specify the directory your mods are downloaded in (e.g. \"%UserProfile%\\Documents\\tslmods\")");
                         DirectoryInfo modDownloads = Utility.ChooseDirectory();
                         if (modDownloads == null)
@@ -82,9 +83,8 @@ namespace KOTORModSync
                         Console.WriteLine("(not implemented yet)");
                         Console.WriteLine("Press any key to continue");
                         Console.ReadKey();
-                        KOTOR2ModSync.Core.Read(DirectoryInfo MainConfig.LastOutputDirectory);
-                        KOTOR2ModSync.Core.OutputConfigFile(DirectoryInfo MainConfig.LastOutputDirectory);
-
+                        //Utility.Serializer.FileHandler.OutputConfigFile(MainConfig.LastOutputDirectory);
+                        //Utility.Serializer.FileHandler.ReadComponentsFromFile(MainConfig.LastOutputDirectory);
                         break;
 
                     case "4":
@@ -108,7 +108,7 @@ namespace KOTORModSync
                             MainConfig.LastOutputDirectory = Utility.ChooseDirectory();
                         }
                         outputPath = Path.Combine(MainConfig.LastOutputDirectory.FullName, "modtreeoutput.json");
-                        MainConfig.OutputModTree(MainConfig.SourcePath, outputPath);
+                        Core.Utility.Serializer.ArchiveHelper.OutputModTree(MainConfig.SourcePath, outputPath);
                         Console.WriteLine("Press any key to continue...");
                         Console.ReadKey();
                         break;

@@ -1,88 +1,88 @@
 {
-  "modList": [
-    {
-      "name": "Ultimate Dantooine",
-      "guid": "{6A58FE3D-DA55-4075-9C45-05E4C2E9C3FB}",
-      "dependencies": [
-        "{C5418549-6B7E-4A8C-8B8E-4AA1BC63C732}",
-        "{D0F371DA-5C69-4A26-8A37-76E3A6A2A50D}"
-      ],
-      "installOrder": 3,
-      "instructions": [
+    "modList": [
         {
-          "type": "extract",
-          "source": "Ultimate Dantooine High Resolution - TPC Version-1103-2-1-1670680013.rar",
-          "destination": "%temp%\\mod_files\\Dantooine HR",
-          "overwrite": true
+            "name": "Ultimate Dantooine",
+            "guid": "{6A58FE3D-DA55-4075-9C45-05E4C2E9C3FB}",
+            "dependencies": [
+                "{C5418549-6B7E-4A8C-8B8E-4AA1BC63C732}",
+                "{D0F371DA-5C69-4A26-8A37-76E3A6A2A50D}"
+            ],
+            "installOrder": 3,
+            "instructions": [
+                {
+                    "type": "extract",
+                    "source": "Ultimate Dantooine High Resolution - TPC Version-1103-2-1-1670680013.rar",
+                    "destination": "%temp%\\mod_files\\Dantooine HR",
+                    "overwrite": true
+                },
+                {
+                    "type": "delete",
+                    "paths": [
+                        "%temp%\\mod_files\\Dantooine HR\\DAN_wall03.tpc",
+                        "%temp%\\mod_files\\Dantooine HR\\DAN_NEW1.tpc",
+                        "%temp%\\mod_files\\Dantooine HR\\DAN_MWFl.tpc"
+                    ]
+                },
+                {
+                    "type": "move",
+                    "source": "%temp%\\mod_files\\Dantooine HR\\",
+                    "destination": "%temp%\\Override"
+                }
+            ]
         },
         {
-          "type": "delete",
-          "paths": [
-            "%temp%\\mod_files\\Dantooine HR\\DAN_wall03.tpc",
-            "%temp%\\mod_files\\Dantooine HR\\DAN_NEW1.tpc",
-            "%temp%\\mod_files\\Dantooine HR\\DAN_MWFl.tpc"
-          ]
-        },
-        {
-          "type": "move",
-          "source": "%temp%\\mod_files\\Dantooine HR\\",
-          "destination": "%temp%\\Override"
+            "name": "TSLRCM Tweak Pack",
+            "guid": "{C5418549-6B7E-4A8C-8B8E-4AA1BC63C732}",
+            "installOrder": 1,
+            "dependencies": [],
+            "instructions": [
+                {
+                    "type": "extract",
+                    "source": "URCMTP 1.3.rar",
+                    "destination": "%temp%\\mod_files\\TSLRCM Tweak Pack",
+                    "overwrite": true
+                },
+                {
+                    "type": "run",
+                    "path": "%temp%\\mod_files\\TSLPatcher.exe",
+                    "arguments": "/s /v&quot;/qn&quot;"
+                },
+                {
+                    "type": "run",
+                    "path": "%temp%\\mod_files\\TSLPatcher.exe",
+                    "arguments": "/s /v&quot;/qn Kaevee Removal Parts 1&quot;"
+                },
+                {
+                    "type": "run",
+                    "path": "%temp%\\mod_files\\TSLPatcher.exe",
+                    "arguments": "/s /v&quot;/qn Kaevee Removal Parts 2&quot;"
+                },
+                {
+                    "type": "run",
+                    "path": "%temp%\\mod_files\\TSLPatcher.exe",
+                    "arguments": "/s /v&quot;/qn Saedhe's Head&quot;"
+                },
+                {
+                    "type": "run",
+                    "path": "%temp%\\mod_files\\TSLPatcher.exe",
+                    "arguments": "/s /v&quot;/qn Atton at the End&quot;"
+                },
+                {
+                    "type": "run",
+                    "path": "%temp%\\mod_files\\TSLPatcher.exe",
+                    "arguments": "/s /v&quot;/qn Kreia-Atris Dialogue Tweak&quot;"
+                },
+                {
+                    "type": "run",
+                    "path": "%temp%\\mod_files\\TSLPatcher.exe",
+                    "arguments": "/s /v&quot;/qn Trayus Mandalore Conversation&quot;"
+                },
+                {
+                    "type": "run",
+                    "path": "%temp%\\mod_files\\TSLPatcher.exe",
+                    "arguments": "/s /v&quot;/qn Trayus Sith Lord Masks&quot;"
+                }
+            ]
         }
-      ]
-    },
-    {
-      "name": "TSLRCM Tweak Pack",
-      "guid": "{C5418549-6B7E-4A8C-8B8E-4AA1BC63C732}",
-      "installOrder": 1,
-      "dependencies": [],
-      "instructions": [
-        {
-          "type": "extract",
-          "source": "URCMTP 1.3.rar",
-          "destination": "%temp%\\mod_files\\TSLRCM Tweak Pack",
-          "overwrite": true
-        },
-        {
-          "type": "run",
-          "path": "%temp%\\mod_files\\TSLPatcher.exe",
-          "arguments": "/s /v&quot;/qn&quot;"
-        },
-        {
-          "type": "run",
-          "path": "%temp%\\mod_files\\TSLPatcher.exe",
-          "arguments": "/s /v&quot;/qn Kaevee Removal Parts 1&quot;"
-        },
-        {
-          "type": "run",
-          "path": "%temp%\\mod_files\\TSLPatcher.exe",
-          "arguments": "/s /v&quot;/qn Kaevee Removal Parts 2&quot;"
-        },
-        {
-          "type": "run",
-          "path": "%temp%\\mod_files\\TSLPatcher.exe",
-          "arguments": "/s /v&quot;/qn Saedhe's Head&quot;"
-        },
-        {
-          "type": "run",
-          "path": "%temp%\\mod_files\\TSLPatcher.exe",
-          "arguments": "/s /v&quot;/qn Atton at the End&quot;"
-        },
-        {
-          "type": "run",
-          "path": "%temp%\\mod_files\\TSLPatcher.exe",
-          "arguments": "/s /v&quot;/qn Kreia-Atris Dialogue Tweak&quot;"
-        },
-        {
-          "type": "run",
-          "path": "%temp%\\mod_files\\TSLPatcher.exe",
-          "arguments": "/s /v&quot;/qn Trayus Mandalore Conversation&quot;"
-        },
-        {
-          "type": "run",
-          "path": "%temp%\\mod_files\\TSLPatcher.exe",
-          "arguments": "/s /v&quot;/qn Trayus Sith Lord Masks&quot;"
-        }
-      ]
-    }
-  ]
+    ]
 }

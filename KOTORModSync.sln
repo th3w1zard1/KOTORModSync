@@ -12,7 +12,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		.editorconfig = .editorconfig
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KOTORModSync.GUI", "KOTORModSync.GUI\KOTORModSync.GUI.csproj", "{BD7AED08-9CC5-490F-B1EF-7BB83129EDFB}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KOTORModSync.GUI", "KOTORModSync.GUI_new\KOTORModSync.GUI.csproj", "{1DDB76C5-6D1D-4BEF-8823-1D2731CBD56D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -28,10 +28,10 @@ Global
 		{33369F03-7C1D-4D53-A82B-FB82EF06BCEB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{33369F03-7C1D-4D53-A82B-FB82EF06BCEB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{33369F03-7C1D-4D53-A82B-FB82EF06BCEB}.Release|Any CPU.Build.0 = Release|Any CPU
-		{BD7AED08-9CC5-490F-B1EF-7BB83129EDFB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{BD7AED08-9CC5-490F-B1EF-7BB83129EDFB}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{BD7AED08-9CC5-490F-B1EF-7BB83129EDFB}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{BD7AED08-9CC5-490F-B1EF-7BB83129EDFB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1DDB76C5-6D1D-4BEF-8823-1D2731CBD56D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1DDB76C5-6D1D-4BEF-8823-1D2731CBD56D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1DDB76C5-6D1D-4BEF-8823-1D2731CBD56D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1DDB76C5-6D1D-4BEF-8823-1D2731CBD56D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -2,11 +2,9 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using System;
-using System.Collections.ObjectModel;
-using System.ComponentModel;
 using Avalonia;
 
-namespace KOTORModSync.GUI_old
+namespace KOTORModSync.GUI
 {
     internal class Program
     {

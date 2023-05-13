@@ -3,16 +3,16 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.5.33627.172
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "KOTORModSync", "ConsoleApp3\KOTORModSync.csproj", "{7DF4D851-E74F-4DC6-8542-34A4E81FF2A1}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "KOTORModSync.ConsoleApp", "KOTORModSync.Console\KOTORModSync.ConsoleApp.csproj", "{7DF4D851-E74F-4DC6-8542-34A4E81FF2A1}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "KOTORModSync.Core", "KOTOR2ModSync.Core\KOTORModSync.Core.csproj", "{33369F03-7C1D-4D53-A82B-FB82EF06BCEB}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "KOTORModSync.Core", "KOTORModSync.Core\KOTORModSync.Core.csproj", "{33369F03-7C1D-4D53-A82B-FB82EF06BCEB}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{9F65FCCE-2210-4FAA-9D60-362FCD21A8BE}"
 	ProjectSection(SolutionItems) = preProject
 		.editorconfig = .editorconfig
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KOTORModSync.GUI", "KOTORModSync.GUI_new\KOTORModSync.GUI.csproj", "{1DDB76C5-6D1D-4BEF-8823-1D2731CBD56D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "KOTORModSync.GUI", "KOTORModSync.GUI\KOTORModSync.GUI.csproj", "{1DDB76C5-6D1D-4BEF-8823-1D2731CBD56D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

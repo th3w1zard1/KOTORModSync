@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel;
-using KOTORModSync.GUI_old.Models;
+using KOTORModSync.GUI.Models;
 
-namespace KOTORModSync.GUI_old.ViewModels
+namespace KOTORModSync.GUI.ViewModels
 {
     public class TemplateDataViewModel : INotifyPropertyChanged
     {

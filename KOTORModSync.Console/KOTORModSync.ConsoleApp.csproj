@@ -5,18 +5,14 @@
     <ImplicitUsings>disable</ImplicitUsings>
     <Nullable>disable</Nullable>
     <OutputType>Exe</OutputType>
-    <StartupObject>KOTORModSync.Program</StartupObject>
+    <StartupObject>KOTORModSync.ConsoleApp.Program</StartupObject>
     <AssemblyName>$(MSBuildProjectName)</AssemblyName>
   </PropertyGroup>
 
   <ProjectExtensions><VisualStudio><UserProperties /></VisualStudio></ProjectExtensions>
 
   <ItemGroup>
-    <PackageReference Include="prism.core" Version="8.1.97" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\KOTOR2ModSync.Core\KOTORModSync.Core.csproj" />
+    <ProjectReference Include="..\KOTORModSync.Core\KOTORModSync.Core.csproj" />
   </ItemGroup>
 
 </Project>

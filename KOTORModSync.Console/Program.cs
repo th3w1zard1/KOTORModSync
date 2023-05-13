@@ -4,7 +4,7 @@ using System.IO;
 using KOTORModSync.Core;
 using KOTORModSync.Core.Utility;
 
-namespace KOTORModSync
+namespace KOTORModSync.ConsoleApp
 {
     internal static class Program
     {

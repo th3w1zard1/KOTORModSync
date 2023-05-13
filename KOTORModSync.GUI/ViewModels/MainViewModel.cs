@@ -3,43 +3,31 @@
 
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Linq;
-using Avalonia.Controls;
-using KOTORModSync.GUI.Models;
-using CommunityToolkit.Mvvm;
-using Prism.Commands;
 
-namespace KOTORModSync.GUI_old.ViewModels
+namespace KOTORModSync.GUI.ViewModels
 {
-    public class MainWindowViewModel : ViewModelBase
+    public class MainViewModel : ViewModelBase
     {
-        public ObservableCollection<TemplateDataViewModel> TemplateDataList { get; set; }
+        public ObservableCollection<Component> Components { get; } = new ObservableCollection<Component>();
 
-        public DelegateCommand<IEnumerable<object>> SubmitSelectedTemplatesCommand { get; }
-
-        public MainWindowViewModel()
+        public MainViewModel()
         {
-            TemplateDataList = new ObservableCollection<TemplateDataViewModel>
-            {
-                new TemplateDataViewModel(new TemplateData("Template 1", TemplateDependencies.Template1Dependencies)),
-                new TemplateDataViewModel(new TemplateData("Template 2", TemplateDependencies.Template2Dependencies)),
-                new TemplateDataViewModel(new TemplateData("Template 3", TemplateDependencies.Template3Dependencies)),
-                new TemplateDataViewModel(new TemplateData("Template 4", TemplateDependencies.Template4Dependencies)),
-                new TemplateDataViewModel(new TemplateData("Template 5", TemplateDependencies.Template5Dependencies))
-            };
+            var componentA = new Component { Name = "Component A" };
+            var componentB = new Component { Name = "Component B" };
+            var componentC = new Component { Name = "Component C" };
+            var componentD = new Component { Name = "Component D" };
+            var componentE = new Component { Name = "Component E" };
 
-            SubmitSelectedTemplatesCommand = new DelegateCommand<IEnumerable<object>>(SubmitSelectedTemplates);
-        }
+            componentB.Dependencies = new List<Component> { componentA };
+            componentC.Dependencies = new List<Component> { componentA, componentB };
+            componentD.Dependencies = new List<Component> { componentB };
+            componentE.Dependencies = new List<Component> { componentD };
 
-        private void SubmitSelectedTemplates(IEnumerable<object> items)
-        {
-            var selectedTemplates = items.Cast<TemplateDataViewModel>()
-                                         .Where(x => x.IsSelected)
-                                         .Select(x => x.TemplateData)
-                                         .ToList();
-
-            // Do something with selected templates...
+            Components.Add(componentA);
+            Components.Add(componentB);
+            Components.Add(componentC);
+            Components.Add(componentD);
+            Components.Add(componentE);
         }
     }
-
 }

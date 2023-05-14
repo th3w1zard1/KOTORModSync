@@ -1,0 +1,1 @@
+Files that differ from the legacypc and the Aspyr version:

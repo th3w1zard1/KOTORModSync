@@ -12,4 +12,8 @@
     <PackageReference Include="Tomlyn" Version="0.16.2" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Data\test data and notes\" />
+  </ItemGroup>
+
 </Project>

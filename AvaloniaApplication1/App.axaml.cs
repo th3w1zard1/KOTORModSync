@@ -5,7 +5,7 @@ using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 
-namespace KOTORModSync.GUI
+namespace AvaloniaApplication1
 {
     public partial class App : Application
     {
@@ -18,15 +18,10 @@ namespace KOTORModSync.GUI
         {
             if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
             {
-                var mainWindow = new MainWindow();
-                desktop.MainWindow = mainWindow;
-
-                var outputWindow = new OutputWindow();
-                outputWindow.Show();
+                desktop.MainWindow = new MainWindow();
             }
 
             base.OnFrameworkInitializationCompleted();
         }
-
     }
 }

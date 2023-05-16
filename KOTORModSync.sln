@@ -13,7 +13,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		kotor2 specific dev notes.txt = kotor2 specific dev notes.txt
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KOTORModSync.GUI", "KOTORModSync.GUI\KOTORModSync.GUI.csproj", "{F952446E-CAC3-419F-BB4D-5DAB36656F92}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "KOTORModSync.GUI", "KOTORModSync.GUI\KOTORModSync.GUI.csproj", "{E3B5CB94-DA74-4F77-B769-B9D872495916}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -29,10 +29,10 @@ Global
 		{33369F03-7C1D-4D53-A82B-FB82EF06BCEB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{33369F03-7C1D-4D53-A82B-FB82EF06BCEB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{33369F03-7C1D-4D53-A82B-FB82EF06BCEB}.Release|Any CPU.Build.0 = Release|Any CPU
-		{F952446E-CAC3-419F-BB4D-5DAB36656F92}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{F952446E-CAC3-419F-BB4D-5DAB36656F92}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{F952446E-CAC3-419F-BB4D-5DAB36656F92}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{F952446E-CAC3-419F-BB4D-5DAB36656F92}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E3B5CB94-DA74-4F77-B769-B9D872495916}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E3B5CB94-DA74-4F77-B769-B9D872495916}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E3B5CB94-DA74-4F77-B769-B9D872495916}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E3B5CB94-DA74-4F77-B769-B9D872495916}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -27,8 +27,7 @@ namespace KOTORModSync.Core.Utility
             catch (PathTooLongException ex)
             {
                 Console.WriteLine($"Your pathname is too long: '{directory.FullName}'");
-                Console.WriteLine("Please utilize the registry patch that increases windows legacy pathlimit of 260, or move your KOTOR2 installation to another directory.");
-                Console.WriteLine($"Failed to access files in destination directory: {ex.Message}");
+                Console.WriteLine("Please utilize the registry patch that increases windows legacy pathlimit of 260, or move your KOTOR2 installation to a shorter directory.");
             }
             catch (Exception ex)
             {
@@ -42,7 +41,7 @@ namespace KOTORModSync.Core.Utility
             // Wait for the process to exit
             while (!process.HasExited)
             {
-                await Task.Delay(1000); // Wait for 1 second
+                await Task.Delay(1000); // 1 second is the recommended default
             }
 
             // Make sure the process exited correctly

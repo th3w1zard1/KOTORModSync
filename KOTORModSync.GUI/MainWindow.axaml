@@ -3,7 +3,7 @@
         xmlns:local="clr-namespace:KOTORModSync.GUI"
         x:Class="KOTORModSync.GUI.MainWindow"
         Title="KOTORModSync"
-        Width="600"
+        Width="1200"
         Height="600">
 
     <Grid>
@@ -23,34 +23,26 @@
             </Grid.ColumnDefinitions>
 
             <ScrollViewer Grid.Column="0" VerticalScrollBarVisibility="Auto">
-                <TreeView Name="leftTreeView" Margin="10" Items="{Binding Components}">
+                <TreeView Name="leftTreeView" Margin="10">
                     <TreeView.ItemTemplate>
                         <DataTemplate>
-                            <TextBlock Text="{Binding Name}" />
+                            <StackPanel Orientation="Horizontal">
+                                <CheckBox IsChecked="{Binding IsChecked}" />
+                                <TextBlock Text="{Binding Name}"
+                                           local:AttachedProperties.ItemClickCommand="{Binding DataContext.ItemClickCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Window}}"
+                                           local:AttachedProperties.ItemClickCommandParameter="{Binding}" />
+                            </StackPanel>
                         </DataTemplate>
                     </TreeView.ItemTemplate>
                 </TreeView>
             </ScrollViewer>
+            <ListBox x:Name="rightListBox" Grid.Column="1" Margin="10" />
 
-
-            <StackPanel Grid.Column="1" Orientation="Vertical" HorizontalAlignment="Center">
-                <Button Content="Load Mods from Directory" Margin="0 10" Click="Button1_Click" />
+            <StackPanel Grid.Column="2" Orientation="Vertical" HorizontalAlignment="Center">
+                <Button Content="Load Installation File" Margin="0 10" Click="Button1_Click" />
                 <Button Content="Define Custom Steps" Margin="0 10" />
                 <Button Content="Start new install" Margin="0 10" />
             </StackPanel>
-
-            <ListBox Grid.Column="2" Name="rightListBox" Margin="10">
-                <ListBoxItem>
-                    <CheckBox Content="Checkbox A" />
-                </ListBoxItem>
-                <ListBoxItem>
-                    <CheckBox Content="Checkbox B" />
-                </ListBoxItem>
-                <ListBoxItem>
-                    <CheckBox Content="Checkbox C" />
-                </ListBoxItem>
-            </ListBox>
         </Grid>
     </Grid>
-
 </Window>

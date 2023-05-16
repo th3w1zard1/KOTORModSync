@@ -10,12 +10,12 @@ using Avalonia.Collections;
 using Avalonia.Controls;
 using Avalonia.Controls.Templates;
 using Avalonia.Controls.ApplicationLifetimes;
+using Avalonia.Interactivity;
+using Avalonia.Markup.Xaml;
 using Avalonia.Threading;
 using Avalonia.Controls.Primitives;
 using Avalonia.Input;
 using Avalonia.Data;
-using Avalonia.Interactivity;
-using Avalonia.Markup.Xaml;
 using Avalonia.VisualTree;
 using Microsoft.VisualStudio.Services.CircuitBreaker;
 using System.Diagnostics;
@@ -24,6 +24,8 @@ using KOTORModSync.Core;
 using KOTORModSync.Core.Utility;
 using Avalonia.Media;
 using static System.Net.WebRequestMethods;
+using System.Collections.ObjectModel;
+using Microsoft.VisualStudio.Services.Common;
 
 namespace KOTORModSync.GUI
 {
@@ -32,6 +34,8 @@ namespace KOTORModSync.GUI
         private Window _outputWindow;
         private TextBox _logTextBox;
         private StringBuilder _logBuilder;
+        private List<Component> components;
+        private ObservableCollection<Component> selectedComponents;
 
         public MainWindow()
         {
@@ -43,6 +47,7 @@ namespace KOTORModSync.GUI
             AvaloniaXamlLoader.Load(this);
             // Find the leftTreeView control and assign it to the member variable
             leftTreeView = this.FindControl<TreeView>("leftTreeView");
+            rightListBox = this.FindControl<ListBox>("rightListBox");
         }
 
         public static IControl Build(object data)
@@ -134,7 +139,7 @@ namespace KOTORModSync.GUI
                         leftTreeView.Items = new AvaloniaList<object>();
 
                         // Load components dynamically
-                        List<Component> components = Serializer.FileHandler.ReadComponentsFromFile(filePath);
+                        components = Serializer.FileHandler.ReadComponentsFromFile(filePath);
                         if (components != null && components.Count > 0)
                         {
                             // Create a dictionary to store components by their GUIDs
@@ -163,10 +168,37 @@ namespace KOTORModSync.GUI
             }
         }
 
+        private ICommand itemClickCommand;
 
+        public ICommand ItemClickCommand
+        {
+            get { return itemClickCommand ?? (itemClickCommand = new RelayCommand(ItemClick)); }
+        }
 
+        private void ItemClick(object parameter)
+        {
+            if (parameter is Component component)
+            {
+                // Handle the item click event here
+                PopulateRightListBox(component);
+            }
+        }
+        private void PopulateRightListBox(Component selectedComponent)
+        {
+            if (selectedComponent != null && rightListBox != null)
+            {
+                var properties = selectedComponent.GetType().GetProperties();
+                var data = new List<object>();
 
+                foreach (var property in properties)
+                {
+                    var value = property.GetValue(selectedComponent);
+                    data.Add(value);
+                }
 
+                rightListBox.Items = data;
+            }
+        }
         private void CreateTreeViewItem(Component component, Dictionary<Guid, Component> componentDictionary, TreeViewItem parentItem)
         {
             try
@@ -178,7 +210,14 @@ namespace KOTORModSync.GUI
                 // Create a new tree view item for the component
                 var componentItem = new TreeViewItem
                 {
-                    Header = component.Name
+                    Header = component.Name,
+                    Tag = component // this allows us to access the item later
+                };
+
+                // Assign the ItemClickCommand to the componentItem
+                componentItem.DoubleTapped += (sender, e) =>
+                {
+                    ItemClickCommand.Execute(component);
                 };
 
                 // Add the component item to the parent item
@@ -205,5 +244,49 @@ namespace KOTORModSync.GUI
                 Console.WriteLine($"Error creating tree view item: {ex.Message}");
             }
         }
+        private void SaveButton_Click(object sender, RoutedEventArgs e)
+        {
+            // Save the new values from the rightDataGrid
+
+            // Access the modified components from the selectedComponents ObservableCollection
+            foreach (Component component in selectedComponents)
+            {
+                // Access the modified fields of the component and save them to the desired location
+                // For example:
+                // component.Name contains the updated name value
+                // component.SomeField contains the updated value of SomeField
+            }
+
+            // Perform any other necessary actions after saving the values
+        }
+
+        private void RightDataGrid_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            // Handle the selection changed event, if needed
+        }
     }
+    public class RelayCommand : ICommand
+    {
+        private readonly Action<object> execute;
+        private readonly Func<object, bool> canExecute;
+
+        public RelayCommand(Action<object> execute, Func<object, bool> canExecute = null)
+        {
+            this.execute = execute ?? throw new ArgumentNullException(nameof(execute));
+            this.canExecute = canExecute;
+        }
+
+        public bool CanExecute(object parameter)
+        {
+            return canExecute == null || canExecute(parameter);
+        }
+
+        public void Execute(object parameter)
+        {
+            execute(parameter);
+        }
+
+        public event EventHandler CanExecuteChanged;
+    }
+
 }

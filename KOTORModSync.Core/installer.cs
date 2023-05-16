@@ -168,36 +168,46 @@ namespace KOTORModSync.Core
                 Name = GetRequiredValue<string>(componentDict, "Name"),
                 Guid = GetRequiredValue<string>(componentDict, "Guid"),
                 InstallOrder = GetValueOrDefault<int>(componentDict, "InstallOrder"),
-                Dependencies = GetValueOrDefault<List<object>>(componentDict, "Dependencies")?.Select(x => x.ToString()).ToList(),
-                Instructions = GetValueOrDefault<List<TomlObject>>(componentDict, "Instructions")?.Select(x => DeserializeInstruction(x)).ToList()
+                Dependencies = GetValueOrDefault<List<string>>(componentDict, "Dependencies"),
+                Instructions = DeserializeInstructions(GetRequiredValue<TomlTableArray>(componentDict, "Instructions"))
             };
             component.Instructions?.ForEach(instruction => instruction.ParentComponent = component);
 
             return component;
         }
 
-        private static Instruction DeserializeInstruction(TomlObject tomlObject)
+        private static List<Instruction> DeserializeInstructions(TomlObject tomlObject)
         {
-            if (!(tomlObject is TomlTable instructionTable))
+            if (!(tomlObject is TomlTableArray instructionsArray))
             {
-                throw new ArgumentException("Expected a TOML table for instruction data.");
+                throw new ArgumentException("Expected a TOML table array for instructions data.");
             }
 
-            Dictionary<string, object> instructionDict = ConvertTomlTableToDictionary(instructionTable);
+            var instructions = new List<Instruction>();
 
-            var instruction = new Instruction
+            foreach (var item in instructionsArray)
             {
-                Type = GetRequiredValue<string>(instructionDict, "Type"),
-                Source = GetRequiredValue<string>(instructionDict, "Source"),
-                Destination = GetRequiredValue<string>(instructionDict, "Destination"),
-                Overwrite = GetValueOrDefault<bool>(instructionDict, "Overwrite"),
-                Path = GetValueOrDefault<string>(instructionDict, "Path"),
-                Arguments = GetValueOrDefault<string>(instructionDict, "Arguments"),
-                ParentComponent = null
-            };
+                if (item is TomlTable instructionTable)
+                {
+                    Dictionary<string, object> instructionDict = ConvertTomlTableToDictionary(instructionTable);
+                    var instruction = new Instruction
+                    {
+                        Type = GetRequiredValue<string>(instructionDict, "Type"),
+                        Source = GetValueOrDefault<string>(instructionDict, "Source"),
+                        Destination = GetValueOrDefault<string>(instructionDict, "Destination"),
+                        Overwrite = GetValueOrDefault<bool>(instructionDict, "Overwrite"),
+                        Path = GetValueOrDefault<string>(instructionDict, "Path"),
+                        Arguments = GetValueOrDefault<string>(instructionDict, "Arguments"),
+                        ParentComponent = null
+                    };
 
-            return instruction;
+                    instructions.Add(instruction);
+                }
+            }
+
+            return instructions;
         }
+
 
         private static Dictionary<string, object> ConvertTomlTableToDictionary(TomlTable tomlTable)
         {
@@ -208,20 +218,37 @@ namespace KOTORModSync.Core
                 string key = kvp.Key;
                 object value = kvp.Value;
 
-                dict.Add(key, value);
+                if (value is TomlTable nestedTable)
+                {
+                    dict.Add(key, ConvertTomlTableToDictionary(nestedTable));
+                }
+                else
+                {
+                    dict.Add(key, value);
+                }
             }
 
             return dict;
         }
+        private static T GetRequiredValue<T>(Dictionary<string, object> dict, string key) => GetValue<T>(dict, key, true);
 
-        private static T GetRequiredValue<T>(Dictionary<string, object> dict, string key)
+        private static T GetValueOrDefault<T>(Dictionary<string, object> dict, string key) => GetValue<T>(dict, key, false);
+
+        private static T GetValue<T>(Dictionary<string, object> dict, string key, bool required)
         {
             if (!dict.TryGetValue(key, out object value))
             {
                 var caseInsensitiveKey = dict.Keys.FirstOrDefault(k => k.Equals(key, StringComparison.OrdinalIgnoreCase));
                 if (caseInsensitiveKey == null)
                 {
-                    throw new ArgumentException($"Missing or invalid '{key}' field.");
+                    if (required)
+                    {
+                        throw new ArgumentException($"Missing or invalid '{key}' field.");
+                    }
+                    else
+                    {
+                        return default(T);
+                    }
                 }
                 value = dict[caseInsensitiveKey];
             }
@@ -231,19 +258,28 @@ namespace KOTORModSync.Core
                 return t;
             }
 
+            if (value is Dictionary<string, object> nestedDict)
+            {
+                return GetValue<T>(nestedDict, key, required); // Recursively look for the key in the nested dictionary
+            }
+
+            if (value is TomlArray tomlArray && typeof(T) == typeof(List<string>))
+            {
+                return (T)(object)tomlArray.Select(x => x.ToString()).ToList<string>(); // Convert TomlArray to List<string>
+            }
+
             if (value is KeyValuePair<string, object> kvp && kvp.Value is T t2)
             {
                 return t2;
             }
 
-            throw new ArgumentException($"Missing or invalid '{key}' field.");
+            if (required)
+            {
+                throw new ArgumentException($"Missing or invalid '{key}' field.");
+            }
+
+            return default(T);
         }
-
-
-
-
-
-        private static T GetValueOrDefault<T>(Dictionary<string, object> dict, string key) => dict.TryGetValue(key, out object value) && value is T ? (T)value : default;
 
         public static async Task<bool> ExecuteInstructions()
         {

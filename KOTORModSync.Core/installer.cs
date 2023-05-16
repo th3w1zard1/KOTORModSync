@@ -214,9 +214,34 @@ namespace KOTORModSync.Core
             return dict;
         }
 
-        private static T GetRequiredValue<T>(Dictionary<string, object> dict, string key) => !dict.TryGetValue(key, out object value) || !(value is T)
-                ? throw new ArgumentException($"Missing or invalid '{key}' field.")
-                : (T)value;
+        private static T GetRequiredValue<T>(Dictionary<string, object> dict, string key)
+        {
+            if (!dict.TryGetValue(key, out object value))
+            {
+                var caseInsensitiveKey = dict.Keys.FirstOrDefault(k => k.Equals(key, StringComparison.OrdinalIgnoreCase));
+                if (caseInsensitiveKey == null)
+                {
+                    throw new ArgumentException($"Missing or invalid '{key}' field.");
+                }
+                value = dict[caseInsensitiveKey];
+            }
+
+            if (value is T t)
+            {
+                return t;
+            }
+
+            if (value is KeyValuePair<string, object> kvp && kvp.Value is T t2)
+            {
+                return t2;
+            }
+
+            throw new ArgumentException($"Missing or invalid '{key}' field.");
+        }
+
+
+
+
 
         private static T GetValueOrDefault<T>(Dictionary<string, object> dict, string key) => dict.TryGetValue(key, out object value) && value is T ? (T)value : default;
 

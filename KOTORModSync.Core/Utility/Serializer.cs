@@ -144,32 +144,39 @@ namespace KOTORModSync.Core.Utility
 
             public static List<Component> ReadComponentsFromFile(string filePath)
             {
-                // Read the contents of the file into a string
-                string tomlString = File.ReadAllText(filePath);
-
-                // Parse the TOML syntax into a TomlTable
-                DocumentSyntax tomlDocument = Toml.Parse(tomlString);
-                TomlTable tomlTable = tomlDocument.ToModel();
-
-                // Get the array of Component tables
-                TomlTableArray componentTables = tomlTable["Component"] as TomlTableArray;
-
-                List<Component> components = new List<Component>();
-
-                // Deserialize each TomlTable into a Component object
-                foreach (TomlObject tomlComponent in componentTables)
+                try
                 {
-                    Component component = new Component();
-                    _ = Component.DeserializeComponent(tomlComponent);
-                    components.Add(component);
+                    // Read the contents of the file into a string
+                    string tomlString = File.ReadAllText(filePath);
 
-                    foreach (Instruction instruction in component.Instructions)
+                    // Parse the TOML syntax into a TomlTable
+                    DocumentSyntax tomlDocument = Toml.Parse(tomlString);
+                    TomlTable tomlTable = tomlDocument.ToModel();
+
+                    // Get the array of Component tables
+                    TomlTableArray componentTables = tomlTable["thisMod"] as TomlTableArray;
+
+                    List<Component> components = new List<Component>();
+
+                    // Deserialize each TomlTable into a Component object
+                    foreach (TomlObject tomlComponent in componentTables)
                     {
-                        instruction.ParentComponent = component;
-                    }
-                }
+                        Component component = Component.DeserializeComponent(tomlComponent);
+                        components.Add(component);
 
-                return components;
+                        foreach (Instruction instruction in component.Instructions)
+                        {
+                            instruction.ParentComponent = component;
+                        }
+                    }
+
+                    return components;
+                }
+                catch (Exception ex)
+                {
+                    Logger.LogException(ex);
+                }
+                return null;
             }
 
 

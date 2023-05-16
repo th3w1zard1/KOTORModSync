@@ -69,12 +69,6 @@ namespace KOTORModSync.GUI
                 });
             }
         }
-
-
-
-
-
-
         private void logTextBox_TextChanged(object sender, AvaloniaPropertyChangedEventArgs e)
         {
             UpdateLogText();

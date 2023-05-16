@@ -1,4 +1,4 @@
-[ [ "modList" ] ]
+[[thisMod]]
 name = "Ultimate Dantooine"
 guid = "{B3525945-BDBD-45D8-A324-AAF328A5E13E}"
 dependencies = [
@@ -7,13 +7,13 @@ dependencies = [
 ]
 installOrder = 3
 
-[[modList.instructions]]
+[[thisMod.instructions]]
 type = "extract"
 source = "Ultimate Dantooine High Resolution - TPC Version-1103-2-1-1670680013.rar"
 destination = "%temp%\\mod_files\\Dantooine HR"
 overwrite = true
 
-[[modList.instructions]]
+[[thisMod.instructions]]
 type = "delete"
 paths = [
     "%temp%\\mod_files\\Dantooine HR\\DAN_wall03.tpc",
@@ -21,59 +21,59 @@ paths = [
     "%temp%\\mod_files\\Dantooine HR\\DAN_MWFl.tpc"
 ]
 
-[[modList.instructions]]
+[[thisMod.instructions]]
 type = "move"
 source = "%temp%\\mod_files\\Dantooine HR\\"
 destination = "%temp%\\Override"
 
-[[modList]]
+[[thisMod]]
 name = "TSLRCM Tweak Pack"
 guid = "{C5418549-6B7E-4A8C-8B8E-4AA1BC63C732}"
 installOrder = 1
 dependencies = []
 
-[[modList.instructions]]
+[[thisMod.instructions]]
 type = "extract"
 source = "URCMTP 1.3.rar"
 destination = "%temp%\\mod_files\\TSLRCM Tweak Pack"
 overwrite = true
 
-[[modList.instructions]]
+[[thisMod.instructions]]
 type = "run"
 path = "%temp%\\mod_files\\TSLPatcher.exe"
-arguments = "/s /v&quot;/qn&quot;"
+arguments = ""
 
-[[modList.instructions]]
+[[thisMod.instructions]]
 type = "run"
 path = "%temp%\\mod_files\\TSLPatcher.exe"
-arguments = "/s /v&quot;/qn Kaevee Removal Parts 1&quot;"
+arguments = ""
 
-[[modList.instructions]]
+[[thisMod.instructions]]
 type = "run"
 path = "%temp%\\mod_files\\TSLPatcher.exe"
-arguments = "/s /v&quot;/qn Kaevee Removal Parts 2&quot;"
+arguments = ""
 
-[[modList.instructions]]
+[[thisMod.instructions]]
 type = "run"
 path = "%temp%\\mod_files\\TSLPatcher.exe"
-arguments = "/s /v&quot;/qn Saedhe's Head&quot;"
+arguments = ""
 
-[[modList.instructions]]
+[[thisMod.instructions]]
 type = "run"
 path = "%temp%\\mod_files\\TSLPatcher.exe"
-arguments = "/s /v&quot;/qn Atton at the End&quot;"
+arguments = ""
 
-[[modList.instructions]]
+[[thisMod.instructions]]
 type = "run"
 path = "%temp%\\mod_files\\TSLPatcher.exe"
-arguments = "/s /v&quot;/qn Kreia-Atris Dialogue Tweak&quot;"
+arguments = ""
 
-[[modList.instructions]]
+[[thisMod.instructions]]
 type = "run"
 path = "%temp%\\mod_files\\TSLPatcher.exe"
-arguments = "/s /v&quot;/qn Trayus Mandalore Conversation&quot;"
+arguments = ""
 
-[[modList.instructions]]
+[[thisMod.instructions]]
 type = "run"
 path = "%temp%\\mod_files\\TSLPatcher.exe"
-arguments = "/s /v&quot;/qn Trayus Sith Lord Masks&quot;"
+arguments = ""

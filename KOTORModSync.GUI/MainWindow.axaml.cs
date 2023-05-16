@@ -23,6 +23,7 @@ using System.Text;
 using KOTORModSync.Core;
 using KOTORModSync.Core.Utility;
 using Avalonia.Media;
+using static System.Net.WebRequestMethods;
 
 namespace KOTORModSync.GUI
 {
@@ -40,6 +41,8 @@ namespace KOTORModSync.GUI
         private void InitializeComponent()
         {
             AvaloniaXamlLoader.Load(this);
+            // Find the leftTreeView control and assign it to the member variable
+            leftTreeView = this.FindControl<TreeView>("leftTreeView");
         }
 
         public static IControl Build(object data)
@@ -87,64 +90,82 @@ namespace KOTORModSync.GUI
 
         private async Task<string> OpenFile()
         {
-            var openFileDialog = new OpenFileDialog();
-            openFileDialog.AllowMultiple = false;
-            openFileDialog.Filters.Add(new FileDialogFilter { Name = "TOML Files", Extensions = { "toml" } });
+            OpenFileDialog dialog = new OpenFileDialog();
+            dialog.AllowMultiple = false;
+            dialog.Filters.Add(new FileDialogFilter() { Name = "Mod Sync File", Extensions = { "toml" } });
+            dialog.Filters.Add(new FileDialogFilter() { Name = "All Files", Extensions = { "*" } });
 
-            var window = this.FindAncestorOfType<Window>();
-            var result = await openFileDialog.ShowAsync(window);
-
-            if (result != null && result.Length > 0)
+            // Show the dialog and wait for a result.
+            Window parent = this.VisualRoot as Window;
+            if (parent != null)
             {
-                var filePath = result[0];
-                return filePath;
+                string[] files = await dialog.ShowAsync(parent);
+                if (files != null && files.Length > 0)
+                {
+                    string filePath = files[0];
+                    Logger.Log($"Selected file: {filePath}");
+                    return filePath;
+                }
+            }
+            else
+            {
+                Logger.Log("Could not open dialog - parent window not found");
             }
 
             return null;
         }
 
-        private void Button1_Click(object sender, RoutedEventArgs e)
+
+
+        private async void Button1_Click(object sender, RoutedEventArgs e)
         {
-            Task.Run(async () =>
+            // Open the file dialog to select a file
+            var filePath = await OpenFile();
+
+            if (!string.IsNullOrEmpty(filePath))
             {
-
-                // Open the file dialog to select a file
-                var filePath = await OpenFile();
-
-                if (!string.IsNullOrEmpty(filePath))
+                // Verify the file type
+                var fileExtension = Path.GetExtension(filePath);
+                if (string.Equals(fileExtension, ".toml", StringComparison.OrdinalIgnoreCase))
                 {
-                    // Verify the file type
-                    var fileExtension = Path.GetExtension(filePath);
-                    if (string.Equals(fileExtension, ".toml", StringComparison.OrdinalIgnoreCase))
+                    await Dispatcher.UIThread.InvokeAsync(() =>
                     {
-
                         // Clear existing items in the tree view
-                        leftTreeView.Items = new Avalonia.Collections.AvaloniaList<object>();
+                        leftTreeView.Items = new AvaloniaList<object>();
 
                         // Load components dynamically
                         List<Component> components = Serializer.FileHandler.ReadComponentsFromFile(filePath);
-
-                        // Create a dictionary to store components by their GUIDs
-                        Dictionary<Guid, Component> componentDictionary = components.ToDictionary(c => Guid.Parse(c.Guid));
-
-                        // Create the root item for the tree view
-                        var rootItem = new TreeViewItem
+                        if (components != null && components.Count > 0)
                         {
-                            Header = "Components"
-                        };
+                            // Create a dictionary to store components by their GUIDs
+                            Dictionary<Guid, Component> componentDictionary = components.ToDictionary(c => Guid.Parse(c.Guid));
 
-                        // Iterate over the components and create tree view items
-                        foreach (var component in components)
-                        {
-                            CreateTreeViewItem(component, componentDictionary, rootItem);
+                            // Create the root item for the tree view
+                            var rootItem = new TreeViewItem
+                            {
+                                Header = "Components"
+                            };
+
+                            // Iterate over the components and create tree view items
+                            foreach (var component in components)
+                            {
+                                CreateTreeViewItem(component, componentDictionary, rootItem);
+                            }
+
+                            // Create a collection to hold the root item
+                            var rootItemsCollection = new AvaloniaList<TreeViewItem> { rootItem };
+
+                            // Set the root item collection as the items source of the tree view
+                            leftTreeView.Items = rootItemsCollection;
                         }
-
-                        // Set the root item as the items source of the tree view
-                        leftTreeView.Items = (System.Collections.IEnumerable?)rootItem;
-                    }
+                    });
                 }
-            });
+            }
         }
+
+
+
+
 
         private void CreateTreeViewItem(Component component, Dictionary<Guid, Component> componentDictionary, TreeViewItem parentItem)
         {

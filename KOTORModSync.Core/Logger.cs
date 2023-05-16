@@ -42,6 +42,7 @@ namespace KOTORModSync.Core
         {
             var logMessage = $"[{DateTime.Now}] {message}";
             Console.WriteLine(logMessage);
+            Debug.WriteLine(logMessage);
             File.AppendAllText(LogFileName, logMessage + Environment.NewLine);
 
             Logged?.Invoke(logMessage); // Raise the Logged event

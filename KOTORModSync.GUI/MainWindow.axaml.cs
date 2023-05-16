@@ -26,6 +26,7 @@ using Avalonia.Media;
 using static System.Net.WebRequestMethods;
 using System.Collections.ObjectModel;
 using Microsoft.VisualStudio.Services.Common;
+using System.Reflection;
 
 namespace KOTORModSync.GUI
 {
@@ -187,18 +188,32 @@ namespace KOTORModSync.GUI
         {
             if (selectedComponent != null && rightListBox != null)
             {
-                var properties = selectedComponent.GetType().GetProperties();
-                var data = new List<object>();
+                rightListBox.Items = selectedComponent.GetType().GetProperties()
+                    .Select<PropertyInfo, object>(property =>
+                    {
+                        var value = property.GetValue(selectedComponent);
+                        var displayName = property.Name;
 
-                foreach (var property in properties)
-                {
-                    var value = property.GetValue(selectedComponent);
-                    data.Add(value);
-                }
-
-                rightListBox.Items = data;
+                        if (value is List<string> listValue)
+                        {
+                            return new { Name = displayName, Value = listValue, DataType = "List" };
+                        }
+                        else if (value is Dictionary<string, string> dictionaryValue)
+                        {
+                            return new { Name = displayName, Value = dictionaryValue, DataType = "Dictionary" };
+                        }
+                        else
+                        {
+                            return new { Name = displayName, Value = value, DataType = "Default" };
+                        }
+                    })
+                    .ToList();
             }
         }
+
+
+
+
         private void CreateTreeViewItem(Component component, Dictionary<Guid, Component> componentDictionary, TreeViewItem parentItem)
         {
             try

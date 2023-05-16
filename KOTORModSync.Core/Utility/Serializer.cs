@@ -2,9 +2,11 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using SharpCompress.Archives;
@@ -83,64 +85,121 @@ namespace KOTORModSync.Core.Utility
                 return mergedList;
             }
 
-            public static void OutputConfigFile(DirectoryInfo directory, string outputPath)
+            public static void OutputConfigFile(List<Component> components, string filePath)
             {
-                // Create a list to store the mod lists
-                var modListToml = new List<TomlTable>();
-
-                // Iterate over each mod list
-                foreach (Component thisMod in MainConfig.Components)
+                var tomlTableArray = new TomlTableArray();
+                var rootDictionary = new Dictionary<string, TomlTableArray>
                 {
-                    // Create a TOML table to store the mod list
-                    var modListTable = new TomlTable
+                    { "thisMod", tomlTableArray }
+                };
+
+                foreach (Component thisMod in components)
+                {
+                    var modTable = new TomlTable();
+
+                    foreach (var property in typeof(Component).GetProperties())
                     {
-                        // Add the name, guid, dependencies, and installOrder to the mod list table
-                        { "name", thisMod.Name },
-                        { "guid", thisMod.Guid },
-                        { "dependencies", thisMod.Dependencies },
-                        { "installOrder", thisMod.InstallOrder }
-                    };
+                        string propertyName = property.Name;
+                        var propertyValue = property.GetValue(thisMod);
 
-                    // Create a list to store the instructions
-                    var instructionsToml = new List<TomlTable>();
-
-                    // Iterate over each instruction in the mod list
-                    foreach (Instruction instruction in thisMod.Instructions)
-                    {
-                        // Create a TOML table to store the instruction
-                        var instructionTable = new TomlTable
+                        if (propertyValue is IList list)
                         {
-                            // Add the type, source, destination, and overwrite fields to the instruction table
-                            { "Type", instruction.Type },
-                            { "Source", instruction.Source },
-                            { "Destination", instruction.Destination },
-                            { "Overwrite", instruction.Overwrite }
-                        };
+                            var indexedValues = new List<object>();
 
-                        // If the instruction is of type "delete", add the paths field to the instruction table
-                        if (string.Equals(instruction.Type, "delete", StringComparison.InvariantCultureIgnoreCase))
-                        {
-                            instructionTable.Add("Path", instruction.Path);
+                            for (int i = 0; i < list.Count; i++)
+                            {
+                                indexedValues.Add(list[i]);
+                            }
+
+                            modTable.Add(propertyName, indexedValues);
                         }
-
-                        // Add the instruction table to the list of instructions
-                        instructionsToml.Add(instructionTable);
+                        else if (propertyValue != null && !property.PropertyType.IsPrimitive && property.PropertyType != typeof(string))
+                        {
+                            var nestedTable = GenerateNestedTable(propertyValue, new HashSet<object>());
+                            modTable.Add(propertyName, nestedTable);
+                        }
+                        else
+                        {
+                            modTable.Add(propertyName, propertyValue);
+                        }
                     }
 
-                    // Add the list of instructions to the mod list table
-                    modListTable.Add("instructions", instructionsToml);
-
-                    // Add the mod list table to the list of mod lists
-                    modListToml.Add(modListTable);
+                    tomlTableArray.Add(modTable);
                 }
 
-                // Create a TOML table to store the mod list
-                var tomlTable = new TomlTable
-                {
-                    { "modList", modListToml }
-                };
-                File.WriteAllText(MainConfig.DestinationPath.FullName, tomlTable.ToString());
+                var tomlString = Toml.FromModel(rootDictionary);
+
+                // Log the generated TOML content
+                Logger.Log(tomlString);
+
+                File.WriteAllText(filePath, tomlString);
             }
+
+
+            private static object GenerateNestedTable(object obj, HashSet<object> visitedObjects)
+            {
+                if (obj == null)
+                {
+                    return null;
+                }
+
+                // Check if the object has already been visited to avoid infinite recursion
+                if (visitedObjects.Contains(obj))
+                {
+                    return null; // Or throw an exception, depending on your desired behavior
+                }
+                visitedObjects.Add(obj);
+
+                Type objectType = obj.GetType();
+
+                if (objectType.IsPrimitive || objectType == typeof(string) || objectType == typeof(DateTime))
+                {
+                    return obj;
+                }
+
+                if (objectType.IsGenericType && objectType.GetGenericTypeDefinition() == typeof(List<>))
+                {
+                    var indexedValues = new List<object>();
+                    IList list = (IList)obj;
+
+                    for (int i = 0; i < list.Count; i++)
+                    {
+                        indexedValues.Add(GenerateNestedTable(list[i], visitedObjects));
+                    }
+
+                    return indexedValues;
+                }
+
+                if (objectType.IsArray)
+                {
+                    var indexedValues = new List<object>();
+                    Array array = (Array)obj;
+
+                    for (int i = 0; i < array.Length; i++)
+                    {
+                        indexedValues.Add(GenerateNestedTable(array.GetValue(i), visitedObjects));
+                    }
+
+                    return indexedValues;
+                }
+
+                var nestedTable = new TomlTable();
+
+                foreach (var property in objectType.GetProperties())
+                {
+                    string propertyName = property.Name;
+                    var propertyValue = property.GetValue(obj);
+
+                    nestedTable.Add(propertyName, GenerateNestedTable(propertyValue, visitedObjects));
+                }
+
+                return nestedTable;
+            }
+
+
+
+
+
 
             public static List<Component> ReadComponentsFromFile(string filePath)
             {
@@ -151,6 +210,16 @@ namespace KOTORModSync.Core.Utility
 
                     // Parse the TOML syntax into a TomlTable
                     DocumentSyntax tomlDocument = Toml.Parse(tomlString);
+
+                    // Print any errors on the syntax
+                    if (tomlDocument.HasErrors)
+                    {
+                        foreach (var message in tomlDocument.Diagnostics)
+                        {
+                            Logger.LogException(new Exception(message.Message));
+                        }
+                    }
+
                     TomlTable tomlTable = tomlDocument.ToModel();
 
                     // Get the array of Component tables
@@ -179,6 +248,10 @@ namespace KOTORModSync.Core.Utility
                 return null;
             }
 
+            private static bool IsPath(string value)
+            {
+                return Path.IsPathRooted(value) || Regex.IsMatch(value, @"^[a-zA-Z]:\\");
+            }
 
             public static bool IsDirectoryWithName(object directory, string name) => directory is Dictionary<string, object> dict &&
                     dict.ContainsKey("Name") &&

@@ -6,6 +6,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text.RegularExpressions;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
@@ -13,8 +14,9 @@ using SharpCompress.Archives;
 using SharpCompress.Archives.Rar;
 using SharpCompress.Archives.SevenZip;
 using Tomlyn;
-using Tomlyn.Model;
 using Tomlyn.Syntax;
+using Tomlyn.Model;
+using Nett;
 using static KOTORModSync.Core.ModDirectory;
 
 namespace KOTORModSync.Core.Utility
@@ -87,53 +89,77 @@ namespace KOTORModSync.Core.Utility
 
             public static void OutputConfigFile(List<Component> components, string filePath)
             {
-                var tomlTableArray = new TomlTableArray();
-                var rootDictionary = new Dictionary<string, TomlTableArray>
+                var config = TomlSettings.Create();
+                var rootTable = Nett.Toml.Create();
+
+                foreach (var component in components)
                 {
-                    { "thisMod", tomlTableArray }
-                };
-
-                foreach (Component thisMod in components)
-                {
-                    var modTable = new TomlTable();
-
-                    foreach (var property in typeof(Component).GetProperties())
-                    {
-                        string propertyName = property.Name;
-                        var propertyValue = property.GetValue(thisMod);
-
-                        if (propertyValue is IList list)
-                        {
-                            var indexedValues = new List<object>();
-
-                            for (int i = 0; i < list.Count; i++)
-                            {
-                                indexedValues.Add(list[i]);
-                            }
-
-                            modTable.Add(propertyName, indexedValues);
-                        }
-                        else if (propertyValue != null && !property.PropertyType.IsPrimitive && property.PropertyType != typeof(string))
-                        {
-                            var nestedTable = GenerateNestedTable(propertyValue, new HashSet<object>());
-                            modTable.Add(propertyName, nestedTable);
-                        }
-                        else
-                        {
-                            modTable.Add(propertyName, propertyValue);
-                        }
-                    }
-
-                    tomlTableArray.Add(modTable);
+                    var componentTable = SerializeComponent(component, config);
+                    var componentName = component.Name;
+                    rootTable.Add($"[[{componentName}]]", componentTable);
                 }
 
-                var tomlString = Toml.FromModel(rootDictionary);
-
-                // Log the generated TOML content
-                Logger.Log(tomlString);
-
-                File.WriteAllText(filePath, tomlString);
+                Nett.Toml.WriteFile(rootTable, filePath, config);
             }
+
+            private static Nett.TomlTable SerializeComponent(Component component, TomlSettings config)
+            {
+                var componentTable = Nett.Toml.Create();
+                var componentType = component.GetType();
+
+                foreach (var property in componentType.GetProperties())
+                {
+                    if (property.GetIndexParameters().Length > 0)
+                        continue;
+
+                    var propertyValue = property.GetValue(component);
+                    if (propertyValue is null)
+                        continue;
+
+                    if (IsClassType(property.PropertyType) && property.PropertyType != typeof(string))
+                    {
+                        var nestedTable = SerializeNestedComponent(propertyValue, config);
+                        componentTable.Add(property.Name, nestedTable);
+                    }
+                    else
+                    {
+                        var tomlValue = Nett.Toml.Create(propertyValue, config);
+                        componentTable.Add(property.Name, tomlValue);
+                    }
+                }
+
+                return componentTable;
+            }
+
+
+            private static Nett.TomlTable SerializeNestedComponent(object nestedComponent, TomlSettings config)
+            {
+                var nestedComponentTable = Nett.Toml.Create();
+                var nestedComponentType = nestedComponent.GetType();
+
+                foreach (var property in nestedComponentType.GetProperties())
+                {
+                    if (property.GetIndexParameters().Length > 0)
+                        continue;
+
+                    var propertyValue = property.GetValue(nestedComponent);
+                    if (propertyValue is null)
+                        continue;
+
+                    var tomlValue = Nett.Toml.Create(propertyValue, config);
+                    nestedComponentTable.Add(property.Name, tomlValue);
+                }
+
+                return nestedComponentTable;
+            }
+
+            private static bool IsClassType(Type type)
+            {
+                return type.IsClass && type != typeof(string);
+            }
+
+
+
 
 
             private static object GenerateNestedTable(object obj, HashSet<object> visitedObjects)
@@ -152,9 +178,9 @@ namespace KOTORModSync.Core.Utility
 
                 Type objectType = obj.GetType();
 
-                if (objectType.IsPrimitive || objectType == typeof(string) || objectType == typeof(DateTime))
+                if (objectType.IsPrimitive || objectType == typeof(string))
                 {
-                    return obj;
+                    return obj.ToString(); // Convert primitive types and strings to string
                 }
 
                 if (objectType.IsGenericType && objectType.GetGenericTypeDefinition() == typeof(List<>))
@@ -162,9 +188,9 @@ namespace KOTORModSync.Core.Utility
                     var indexedValues = new List<object>();
                     IList list = (IList)obj;
 
-                    for (int i = 0; i < list.Count; i++)
+                    foreach (var item in list)
                     {
-                        indexedValues.Add(GenerateNestedTable(list[i], visitedObjects));
+                        indexedValues.Add(GenerateNestedTable(item, visitedObjects));
                     }
 
                     return indexedValues;
@@ -175,30 +201,31 @@ namespace KOTORModSync.Core.Utility
                     var indexedValues = new List<object>();
                     Array array = (Array)obj;
 
-                    for (int i = 0; i < array.Length; i++)
+                    foreach (var item in array)
                     {
-                        indexedValues.Add(GenerateNestedTable(array.GetValue(i), visitedObjects));
+                        indexedValues.Add(GenerateNestedTable(item, visitedObjects));
                     }
 
                     return indexedValues;
                 }
 
-                var nestedTable = new TomlTable();
+                var nestedTable = new Dictionary<string, object>();
 
                 foreach (var property in objectType.GetProperties())
                 {
-                    string propertyName = property.Name;
-                    var propertyValue = property.GetValue(obj);
+                    if (property.CanRead && property.GetIndexParameters().Length == 0)
+                    {
+                        string propertyName = property.Name;
+                        var propertyValue = property.GetValue(obj);
 
-                    nestedTable.Add(propertyName, GenerateNestedTable(propertyValue, visitedObjects));
+                        // Convert property value to string before adding to nestedTable
+                        string propertyStringValue = propertyValue?.ToString();
+                        nestedTable.Add(propertyName, GenerateNestedTable(propertyStringValue, visitedObjects));
+                    }
                 }
 
                 return nestedTable;
             }
-
-
-
-
 
 
             public static List<Component> ReadComponentsFromFile(string filePath)
@@ -209,7 +236,7 @@ namespace KOTORModSync.Core.Utility
                     string tomlString = File.ReadAllText(filePath);
 
                     // Parse the TOML syntax into a TomlTable
-                    DocumentSyntax tomlDocument = Toml.Parse(tomlString);
+                    DocumentSyntax tomlDocument = Tomlyn.Toml.Parse(tomlString);
 
                     // Print any errors on the syntax
                     if (tomlDocument.HasErrors)
@@ -220,15 +247,15 @@ namespace KOTORModSync.Core.Utility
                         }
                     }
 
-                    TomlTable tomlTable = tomlDocument.ToModel();
+                    Tomlyn.Model.TomlTable tomlTable = tomlDocument.ToModel();
 
                     // Get the array of Component tables
-                    TomlTableArray componentTables = tomlTable["thisMod"] as TomlTableArray;
+                    Tomlyn.Model.TomlTableArray componentTables = tomlTable["thisMod"] as Tomlyn.Model.TomlTableArray;
 
                     List<Component> components = new List<Component>();
 
                     // Deserialize each TomlTable into a Component object
-                    foreach (TomlObject tomlComponent in componentTables)
+                    foreach (Tomlyn.Model.TomlObject tomlComponent in componentTables)
                     {
                         Component component = Component.DeserializeComponent(tomlComponent);
                         components.Add(component);

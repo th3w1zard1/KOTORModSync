@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -17,6 +17,8 @@ using KOTORModSync.Core;
 using KOTORModSync.Core.Utility;
 using System.Collections.ObjectModel;
 using static Nett.TomlObjectFactory;
+using Avalonia.Data.Converters;
+using System.Globalization;
 
 namespace KOTORModSync.GUI
 {
@@ -43,11 +45,11 @@ namespace KOTORModSync.GUI
             leftTreeView = this.FindControl<TreeView>("leftTreeView");
             rightTextBox = this.FindControl<TextBox>("rightTextBox");
             rightTextBox.LostFocus += RightListBox_LostFocus; // Prevents rightListBox from being cleared when clicking elsewhere.
-            selectedComponentProperties = new ObservableCollection<string>();
+            rightTextBox.PropertyChanged += RightTextBox_PropertyChanged;
             rightTextBox.DataContext = selectedComponentProperties;
+            selectedComponentProperties = new ObservableCollection<string>();
             guidTextBox = this.FindControl<TextBox>("guidTextBox");
             guidTextBox.Width = rightTextBox.Bounds.Width;
-            rightTextBox.PropertyChanged += RightTextBox_PropertyChanged;
             mainConfig = new MainConfig();
         }
 
@@ -271,7 +273,7 @@ namespace KOTORModSync.GUI
             {
                 var confirmationDialogCallback = new ConfirmationDialogCallback(this);
                 // Call the ExecuteInstructions method and pass the confirmationDialogCallback
-                await component.ExecuteInstructions(confirmationDialogCallback);
+                await Component.ExecuteInstructions(confirmationDialogCallback);
             }
         }
 
@@ -384,17 +386,34 @@ namespace KOTORModSync.GUI
             return false;
         }
 
-        private void DeleteMenuItem_Click(object sender, RoutedEventArgs e)
+        private void MoveTreeViewItem(ItemsControl parentItemsControl, TreeViewItem selectedTreeViewItem, int newIndex)
         {
-            // Handle the Delete menu item click event
-            // You can access the corresponding TreeViewItem and perform the desired action
-            if (sender is MenuItem menuItem && menuItem.DataContext is Component selectedComponent)
-            {
-                // Remove the component from your data source
-                components.Remove(selectedComponent);
+            var components = parentItemsControl.Items.OfType<TreeViewItem>().ToList();
+            int currentIndex = components.IndexOf(selectedTreeViewItem);
 
-                // Update the leftTreeView to reflect the changes
-                RefreshTreeView();
+            if (currentIndex != -1 && newIndex >= 0 && newIndex < components.Count)
+            {
+                components.RemoveAt(currentIndex);
+                components.Insert(newIndex, selectedTreeViewItem);
+                leftTreeView.SelectedItem = selectedTreeViewItem;
+            }
+        }
+
+        private void MoveUpButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (leftTreeView.SelectedItem is TreeViewItem selectedTreeViewItem && selectedTreeViewItem.Parent is ItemsControl parentItemsControl)
+            {
+                int currentIndex = parentItemsControl.Items.OfType<TreeViewItem>().ToList().IndexOf(selectedTreeViewItem);
+                MoveTreeViewItem(parentItemsControl, selectedTreeViewItem, currentIndex - 1);
+            }
+        }
+
+        private void MoveDownButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (leftTreeView.SelectedItem is TreeViewItem selectedTreeViewItem && selectedTreeViewItem.Parent is ItemsControl parentItemsControl)
+            {
+                int currentIndex = parentItemsControl.Items.OfType<TreeViewItem>().ToList().IndexOf(selectedTreeViewItem);
+                MoveTreeViewItem(parentItemsControl, selectedTreeViewItem, currentIndex + 1);
             }
         }
 
@@ -541,13 +560,29 @@ namespace KOTORModSync.GUI
         public RelayCommand(Action<object> execute, Func<object, bool> canExecute = null)
         {
             this.execute = execute ?? throw new ArgumentNullException(nameof(execute));
-            this.canExecute = canExecute ?? throw new ArgumentNullException(nameof(canExecute));
+            this.canExecute = canExecute;
         }
 
         public bool CanExecute(object parameter) => canExecute == null || canExecute(parameter);
         public void Execute(object parameter) => execute(parameter);
 
         public event EventHandler CanExecuteChanged;
+    }
+    public class BooleanToArrowConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            if (value is bool isExpanded && targetType == typeof(string))
+            {
+                return isExpanded ? "▼" : "▶";
+            }
+            return string.Empty;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            throw new NotSupportedException();
+        }
     }
 
 }

@@ -7,7 +7,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text;
 using System.Text.RegularExpressions;
+using Nett;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using SharpCompress.Archives;
@@ -15,11 +17,7 @@ using SharpCompress.Archives.Rar;
 using SharpCompress.Archives.SevenZip;
 using Tomlyn;
 using Tomlyn.Syntax;
-using Tomlyn.Model;
-using Nett;
 using static KOTORModSync.Core.ModDirectory;
-using System.ComponentModel;
-using System.Text;
 
 namespace KOTORModSync.Core.Utility
 {
@@ -82,7 +80,7 @@ namespace KOTORModSync.Core.Utility
         public static string FixWhitespaceIssues(string tomlContents)
         {
             // Normalize line endings to '\n'
-            tomlContents = tomlContents.Replace("\r\n", "\n").Replace("\r", "\n");
+            tomlContents = tomlContents.Replace("\r\n", "\n").Replace('\r', '\n');
 
             // Remove leading and trailing whitespaces from each line
             string[] lines = tomlContents.Split('\n');
@@ -106,18 +104,17 @@ namespace KOTORModSync.Core.Utility
                         SerializeObject(component)
                     }
             };
-
-            var config = TomlSettings.Create();
-            var tomlString = Nett.Toml.WriteString(rootTable);
+            _ = TomlSettings.Create();
+            string tomlString = Nett.Toml.WriteString(rootTable);
             return FixWhitespaceIssues(tomlString);
         }
 
         public static object SerializeObject(object obj)
         {
-            var type = obj.GetType();
+            Type type = obj.GetType();
             var serializedProperties = new Dictionary<string, object>();
 
-            foreach (var member in type.GetMembers(BindingFlags.Public | BindingFlags.Instance))
+            foreach (MemberInfo member in type.GetMembers(BindingFlags.Public | BindingFlags.Instance))
             {
                 object value = null;
                 string memberName = null;
@@ -139,14 +136,18 @@ namespace KOTORModSync.Core.Utility
                     {
                         var serializedList = new Tomlyn.Model.TomlArray();
 
-                        foreach (var item in (IEnumerable)value)
+                        foreach (object item in (IEnumerable)value)
                         {
-                            if (item != null && item.GetType().IsPrimitive || item is string)
+                            if ((item != null && item.GetType().IsPrimitive) || item is string)
                             {
                                 if (item is IEnumerable && !(item is string))
+                                {
                                     serializedList.Add(SerializeObject(item));
+                                }
                                 else
+                                {
                                     serializedList.Add(item?.ToString());
+                                }
                             }
                             else
                             {
@@ -154,14 +155,13 @@ namespace KOTORModSync.Core.Utility
                             }
                         }
 
-
                         serializedProperties[memberName] = serializedList;
                     }
                     else if (value.GetType().IsNested)
                     {
                         serializedProperties[memberName] = SerializeObject(value);
                     }
-                    else if (value != null && value.GetType().IsPrimitive || value is string)
+                    else if ((value != null && value.GetType().IsPrimitive) || value is string)
                     {
                         serializedProperties[memberName] = value?.ToString();
                     }
@@ -194,13 +194,13 @@ namespace KOTORModSync.Core.Utility
             {
                 var stringBuilder = new StringBuilder(10000);
 
-                foreach (var component in components)
+                foreach (Component component in components)
                 {
-                    var serializedComponent = SerializeComponent(component); // Call SerializeComponent
-                    stringBuilder.AppendLine(serializedComponent);
+                    string serializedComponent = SerializeComponent(component); // Call SerializeComponent
+                    _ = stringBuilder.AppendLine(serializedComponent);
                 }
 
-                var tomlString = stringBuilder.ToString();
+                string tomlString = stringBuilder.ToString();
                 File.WriteAllText(filePath, tomlString);
             }
 
@@ -214,7 +214,7 @@ namespace KOTORModSync.Core.Utility
                 // Print any errors on the syntax
                 if (tomlDocument.HasErrors)
                 {
-                    foreach (var message in tomlDocument.Diagnostics)
+                    foreach (DiagnosticMessage message in tomlDocument.Diagnostics)
                     {
                         Logger.LogException(new Exception(message.Message));
                     }
@@ -260,7 +260,7 @@ namespace KOTORModSync.Core.Utility
                     // Print any errors on the syntax
                     if (tomlDocument.HasErrors)
                     {
-                        foreach (var message in tomlDocument.Diagnostics)
+                        foreach (DiagnosticMessage message in tomlDocument.Diagnostics)
                         {
                             Logger.LogException(new Exception(message.Message));
                         }
@@ -294,10 +294,7 @@ namespace KOTORModSync.Core.Utility
                 return null;
             }
 
-            private static bool IsPath(string value)
-            {
-                return Path.IsPathRooted(value) || Regex.IsMatch(value, @"^[a-zA-Z]:\\");
-            }
+            private static bool IsPath(string value) => Path.IsPathRooted(value) || Regex.IsMatch(value, @"^[a-zA-Z]:\\");
 
             public static bool IsDirectoryWithName(object directory, string name) => directory is Dictionary<string, object> dict &&
                     dict.ContainsKey("Name") &&

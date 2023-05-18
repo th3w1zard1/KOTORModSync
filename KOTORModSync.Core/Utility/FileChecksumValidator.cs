@@ -148,12 +148,37 @@ namespace KOTORModSync.Core.Utility
                         string hash = parts[1];
 
                         FileInfo fileInfo = new FileInfo(file);
-                        SHA1 sha1 = SHA1.Create();
-
-                        byte[] hashBytes;
-                        if (TryConvertHexStringToBytes(hash, out hashBytes) && fileInfo.Exists)
+                        if (fileInfo.Exists)
                         {
-                            checksums[fileInfo] = sha1;
+                            Console.WriteLine($"Reading file: {fileInfo.FullName}");
+                            using (FileStream fileStream = fileInfo.OpenRead())
+                            {
+                                byte[] fileBytes = new byte[fileStream.Length];
+                                await fileStream.ReadAsync(fileBytes, 0, fileBytes.Length);
+
+                                byte[] hashBytes;
+                                if (TryConvertHexStringToBytes(hash, out hashBytes))
+                                {
+                                    Console.WriteLine($"Hash for {fileInfo.FullName}: {BitConverter.ToString(hashBytes)}");
+
+                                    SHA1 sha1 = SHA1.Create();
+                                    byte[] computedHash = sha1.ComputeHash(fileBytes);
+                                    Console.WriteLine($"Computed hash for {fileInfo.FullName}: {BitConverter.ToString(computedHash)}");
+
+                                    if (computedHash.SequenceEqual(hashBytes))
+                                    {
+                                        checksums[fileInfo] = sha1;
+                                    }
+                                }
+                                else
+                                {
+                                    Console.WriteLine($"Failed to convert hash string: {hash}");
+                                }
+                            }
+                        }
+                        else
+                        {
+                            Console.WriteLine($"File does not exist: {fileInfo.FullName}");
                         }
                     }
                 }
@@ -161,6 +186,7 @@ namespace KOTORModSync.Core.Utility
 
             return checksums;
         }
+
 
         private static bool TryConvertHexStringToBytes(string hexString, out byte[] bytes)
         {
@@ -183,7 +209,6 @@ namespace KOTORModSync.Core.Utility
 
             return true;
         }
-
 
     }
 }

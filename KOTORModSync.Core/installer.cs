@@ -11,6 +11,11 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using KOTORModSync.Core.Utility;
+using SharpCompress.Archives;
+using SharpCompress.Archives.Rar;
+using SharpCompress.Archives.SevenZip;
+using SharpCompress.Archives.Zip;
+using SharpCompress.Common;
 using Tomlyn.Model;
 using static KOTORModSync.Core.Utility.Utility;
 
@@ -18,62 +23,97 @@ namespace KOTORModSync.Core
 {
     public class Instruction
     {
-        public string Type { get; set; }
+        public string Action { get; set; }
         public string Source { get; set; }
         public string Destination { get; set; }
+        public List<string> Dependencies { get; set; }
+        public List<string> Restrictions { get; set; }
         public bool Overwrite { get; set; }
-        public string Path { get; set; }
+        public List<string> Paths { get; set; }
         public string Arguments { get; set; }
         public Component ParentComponent { get; set; }
         public Dictionary<FileInfo, System.Security.Cryptography.SHA1> ExpectedChecksums { get; set; }
 
         public static string defaultInstructions = @"
 [[thisMod.instructions]]
-    type = ""extract""
-    source = ""C:\\Users\\****\\path\\to\\mod\\mod.rar""
+    action = ""extract""
+    source = ""<<modDirectory>>\\path\\to\\mod\\mod.rar""
     overwrite = true
 
 [[thisMod.instructions]]
-    type = ""delete""
+    action = ""delete""
     paths = [
-        ""C:\\Users\\****\\path\\to\\mod\\file1.tpc"",
-        ""C:\\Users\\****\\path\\to\\mod\\file2.tpc"",
-        ""C:\\Users\\****\\path\\to\\mod\\file3.tpc""
+        ""<<modDirectory>>\\path\\to\\mod\\file1.tpc"",
+        ""<<modDirectory>>\\path\\to\\mod\\file2.tpc"",
+        ""<<modDirectory>>\\path\\to\\mod\\file3.tpc""
     ]
+    dependencies = ""{C5418549-6B7E-4A8C-8B8E-4AA1BC63C732}""
     overwrite = false
 
 [[thisMod.instructions]]
-    type = ""move""
-    source = ""C:\\Users\\****\\path\\to\\mod\\file\\to\\move""
+    action = ""move""
+    source = ""<<modDirectory>>\\path\\to\\mod\\file\\to\\move""
     destination = ""C:\\Users\\****\\path\\to\\kotor2\\Override""
-
-[[thisMod]]
-    name = ""your custom name of your mod""
-    guid = ""{C5418549-6B7E-4A8C-8B8E-4AA1BC63C732}""
-    installOrder = 1
-    dependencies = [
-        ""Copy and paste any guid of any mod you depend on here, format like below"",
-        ""{C5418549-6B7E-4A8C-8B8E-4AA1BC63C732}"",
-        ""{D0F371DA-5C69-4A26-8A37-76E3A6A2A50D}""
-    ]
+    restrictions = ""{C5418549-6B7E-4A8C-8B8E-4AA1BC63C732}""
 
 [[thisMod.instructions]]
-    type = ""run""
-    path = ""C:\\Users\\****\\path\\to\\mod\\TSLPatcher.exe""
+    action = ""run""
+    paths = [""<<modDirectory>>\\path\\to\\mod\\TSLPatcher.exe""]
     arguments = ""any command line arguments to pass (none available in TSLPatcher)""
 ";
 
         public static async Task<bool> ExecuteInstructionAsync(Func<Task<bool>> instructionMethod) => await instructionMethod().ConfigureAwait(false);
 
-        public async Task<bool> ExtractFile() =>
-            // Implement extraction logic here
-            true;
+        public bool ExtractFile()
+        {
+            try
+            {
+                const string archiveFilePath = "path/to/your/archive/file.rar";
 
-        public async Task<bool> DeleteFile() =>
+                using (Stream stream = File.OpenRead(archiveFilePath))
+                {
+                    IArchive archive = null;
+
+                    if (RarArchive.IsRarFile(stream))
+                    {
+                        archive = RarArchive.Open(stream);
+                    }
+                    else if (ZipArchive.IsZipFile(stream))
+                    {
+                        archive = ZipArchive.Open(stream);
+                    }
+                    else if (SevenZipArchive.IsSevenZipFile(stream))
+                    {
+                        archive = SevenZipArchive.Open(stream);
+                    }
+
+                    if (archive != null)
+                    {
+                        foreach (IArchiveEntry entry in archive.Entries)
+                        {
+                            if (!entry.IsDirectory)
+                            {
+                                entry.WriteToDirectory("path/to/extract/contents", new ExtractionOptions { ExtractFullPath = true, Overwrite = true });
+                            }
+                        }
+                    }
+                }
+
+                return true; // Extraction succeeded
+            }
+            catch (Exception ex)
+            {
+                // Handle any exceptions that occurred during extraction
+                Console.WriteLine($"Error occurred during file extraction: {ex.Message}");
+                return false; // Extraction failed
+            }
+        }
+
+        public bool DeleteFile() =>
             // Implement deletion logic here
             true;
 
-        public async Task<bool> MoveFile() =>
+        public bool MoveFile() =>
             // Implement moving logic here
             true;
 
@@ -86,12 +126,12 @@ namespace KOTORModSync.Core
             }
 
             var cancellationTokenSource = new CancellationTokenSource();
-            cancellationTokenSource.CancelAfter(TimeSpan.FromSeconds(30));
-
+            cancellationTokenSource.CancelAfter(TimeSpan.FromSeconds(3600)); // cancel if running longer than 30 minutes.
+            string path = Paths[0];
             var startInfo = new ProcessStartInfo
             {
-                FileName = this.Path,
-                Arguments = this.Arguments,
+                FileName = path,
+                Arguments = Arguments,
                 RedirectStandardOutput = true,
                 UseShellExecute = false,
                 CreateNoWindow = true
@@ -119,7 +159,7 @@ namespace KOTORModSync.Core
 
             return process.ExitCode != 0
                 ? throw new Exception($"TSLPatcher failed with exit code {process.ExitCode}. Output:\n{output}")
-                : !this.VerifyInstall() ? throw new Exception("TSLPatcher failed to install the mod correctly.") : true;
+                : !VerifyInstall() ? throw new Exception("TSLPatcher failed to install the mod correctly.") : true;
         }
 
         public bool VerifyInstall()
@@ -160,18 +200,6 @@ namespace KOTORModSync.Core
 
     public class Component
     {
-        private bool _isChecked;
-
-        public bool IsChecked
-        {
-            get => _isChecked;
-            set
-            {
-                _isChecked = value;
-                OnPropertyChanged(nameof(IsChecked));
-            }
-        }
-
         public event EventHandler<PropertyChangedEventArgs> PropertyChanged;
 
         protected virtual void OnPropertyChanged(string propertyName) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
@@ -180,6 +208,8 @@ namespace KOTORModSync.Core
         public string Guid { get; set; }
         public int InstallOrder { get; set; }
         public List<string> Dependencies { get; set; }
+        public List<string> Restrictions { get; set; }
+        public List<string> Paths { get; set; }
         public List<Instruction> Instructions { get; set; }
         public DateTime SourceLastModified { get; internal set; }
 
@@ -187,18 +217,22 @@ namespace KOTORModSync.Core
 [[thisMod]]
     name = ""your custom name of your mod""
     guid = ""{B3525945-BDBD-45D8-A324-AAF328A5E13E}""
+    # Copy and paste any guid of any mod you depend on here, format like below
     dependencies = [
-        ""Copy and paste any guid of any mod you depend on here, format like below"",
         ""{C5418549-6B7E-4A8C-8B8E-4AA1BC63C732}"",
         ""{D0F371DA-5C69-4A26-8A37-76E3A6A2A50D}""
     ]
+    # Copy and paste any guid of any incompatible mod here, format like below
     restrictions = [
-        ""Copy and paste any guid of any incompatible mod here, format like below"",
         ""{C5418549-6B7E-4A8C-8B8E-4AA1BC63C732}"",
         ""{D0F371DA-5C69-4A26-8A37-76E3A6A2A50D}""
     ]
-    installOrder = 3";
-
+    installOrder = 3
+    # You can specify multiple paths to the same mod, but it's easier to use just one path and handle everything in instructions.
+    paths = [
+        ""<<modDirectory>>\\path\\to\\mod_location2"",
+        ""<<modDirectory>>\\path\\to\\mod_location1""
+    ]";
 
         public static Component DeserializeComponent(TomlObject tomlObject)
         {
@@ -208,14 +242,20 @@ namespace KOTORModSync.Core
             }
 
             Dictionary<string, object> componentDict = ConvertTomlTableToDictionary(componentTable);
+            List<string> paths = new List<string>();
+            if (componentDict.TryGetValue("path", out object pathValue))
+            {
+                paths.Add((string)pathValue);
+            }
 
             var component = new Component
             {
-                Name = GetRequiredValue<string>(componentDict, "Name"),
-                Guid = GetRequiredValue<string>(componentDict, "Guid"),
-                InstallOrder = GetValueOrDefault<int>(componentDict, "InstallOrder"),
-                Dependencies = GetValueOrDefault<List<string>>(componentDict, "Dependencies"),
-                Instructions = DeserializeInstructions(GetValueOrDefault<TomlTableArray>(componentDict, "Instructions"))
+                Name = GetRequiredValue<string>(componentDict, "name"),
+                Guid = GetRequiredValue<string>(componentDict, "guid"),
+                InstallOrder = GetValueOrDefault<int>(componentDict, "installorder"),
+                Dependencies = GetValueOrDefault<List<string>>(componentDict, "dependencies"),
+                Instructions = DeserializeInstructions(GetValueOrDefault<TomlTableArray>(componentDict, "instructions")),
+                Paths = GetValueOrDefault<List<string>>(componentDict, "Paths")
             };
             component.Instructions?.ForEach(instruction => instruction.ParentComponent = component);
 
@@ -232,18 +272,18 @@ namespace KOTORModSync.Core
 
             var instructions = new List<Instruction>();
 
-            foreach (var item in instructionsArray)
+            foreach (TomlTable item in instructionsArray)
             {
                 if (item is TomlTable instructionTable)
                 {
                     Dictionary<string, object> instructionDict = ConvertTomlTableToDictionary(instructionTable);
                     var instruction = new Instruction
                     {
-                        Type = GetRequiredValue<string>(instructionDict, "Type"),
+                        Action = GetRequiredValue<string>(instructionDict, "action"),
                         Source = GetValueOrDefault<string>(instructionDict, "Source"),
                         Destination = GetValueOrDefault<string>(instructionDict, "Destination"),
                         Overwrite = GetValueOrDefault<bool>(instructionDict, "Overwrite"),
-                        Path = GetValueOrDefault<string>(instructionDict, "Path"),
+                        Paths = GetValueOrDefault<List<string>>(instructionDict, "Paths"),
                         Arguments = GetValueOrDefault<string>(instructionDict, "Arguments"),
                         ParentComponent = null
                     };
@@ -255,14 +295,13 @@ namespace KOTORModSync.Core
             return instructions;
         }
 
-
         private static Dictionary<string, object> ConvertTomlTableToDictionary(TomlTable tomlTable)
         {
             Dictionary<string, object> dict = new Dictionary<string, object>();
 
             foreach (KeyValuePair<string, object> kvp in tomlTable)
             {
-                string key = kvp.Key;
+                string key = kvp.Key.ToLowerInvariant();
                 object value = kvp.Value;
 
                 if (value is TomlTable nestedTable)
@@ -285,17 +324,17 @@ namespace KOTORModSync.Core
         {
             if (!dict.TryGetValue(key, out object value))
             {
-                var caseInsensitiveKey = dict.Keys.FirstOrDefault(k => k.Equals(key, StringComparison.OrdinalIgnoreCase));
+                string caseInsensitiveKey = dict.Keys.FirstOrDefault(k => k.Equals(key, StringComparison.OrdinalIgnoreCase));
                 if (caseInsensitiveKey == null)
                 {
                     if (required)
                     {
                         Logger.LogException(new Exception($"Missing or invalid '{key}' field."));
-                        return default(T);
+                        return default;
                     }
                     else
                     {
-                        return default(T);
+                        return default;
                     }
                 }
                 value = dict[caseInsensitiveKey];
@@ -338,9 +377,8 @@ namespace KOTORModSync.Core
                     throw new ArgumentException($"Invalid format for '{key}' field.");
                 }
             }
-            
 
-            return default(T);
+            return default;
         }
 
         private static bool IsListType<T>()
@@ -349,9 +387,7 @@ namespace KOTORModSync.Core
             return listType.IsGenericType && listType.GetGenericTypeDefinition() == typeof(List<>);
         }
 
-
-
-        public async Task<(bool success, Dictionary<FileInfo, System.Security.Cryptography.SHA1> originalChecksums)> ExecuteInstructions(IConfirmationDialogCallback confirmDialog)
+        public static async Task<(bool success, Dictionary<FileInfo, System.Security.Cryptography.SHA1> originalChecksums)> ExecuteInstructions(IConfirmationDialogCallback confirmDialog)
         {
             // Check if we have permission to write to the Destination directory
             if (!Utility.Utility.CanWriteToDirectory(MainConfig.DestinationPath))
@@ -373,18 +409,18 @@ namespace KOTORModSync.Core
 
                     bool success = false;
 
-                    switch (instruction.Type.ToLower())
+                    switch (instruction.Action.ToLower())
                     {
                         case "extract":
-                            success = await instruction.ExtractFile();
+                            success = instruction.ExtractFile();
                             break;
 
                         case "delete":
-                            success = await instruction.DeleteFile();
+                            success = instruction.DeleteFile();
                             break;
 
                         case "move":
-                            success = await instruction.MoveFile();
+                            success = instruction.MoveFile();
                             break;
 
                         case "tslpatcher":
@@ -398,7 +434,8 @@ namespace KOTORModSync.Core
 
                     if (!success)
                     {
-                        Logger.Log($"Instruction {instruction.Type} failed to install the mod correctly.");
+                        Logger.LogException(new Exception(success.ToString()));
+                        Logger.Log($"Instruction {instruction.Action} failed to install the mod correctly.");
                         return (false, null);
                     }
                     if (instruction.ExpectedChecksums != null)
@@ -414,11 +451,11 @@ namespace KOTORModSync.Core
 
                         if (checksumsMatch)
                         {
-                            Logger.Log($"Component {component.Name}'s instruction '{instruction.Type}' succeeded and modified files have expected checksums.");
+                            Logger.Log($"Component {component.Name}'s instruction '{instruction.Action}' succeeded and modified files have expected checksums.");
                         }
                         else
                         {
-                            Logger.Log($"Component {component.Name}'s instruction '{instruction.Type}' succeeded but modified files have unexpected checksums.");
+                            Logger.Log($"Component {component.Name}'s instruction '{instruction.Action}' succeeded but modified files have unexpected checksums.");
                             bool confirmationResult = await confirmDialog.ShowConfirmationDialog("Warning! Checksums after running install step are not the same as expected. Continue anyway?");
                             if (!confirmationResult)
                             {
@@ -428,7 +465,7 @@ namespace KOTORModSync.Core
                     }
                     else
                     {
-                        Logger.Log($"Component {component.Name}'s instruction '{instruction.Type}' ran, saving the new checksums as expected.");
+                        Logger.Log($"Component {component.Name}'s instruction '{instruction.Action}' ran, saving the new checksums as expected.");
                         var newChecksums = new Dictionary<FileInfo, System.Security.Cryptography.SHA1>();
                         foreach (FileInfo file in MainConfig.DestinationPath.GetFiles("*.*", SearchOption.AllDirectories))
                         {
@@ -445,7 +482,7 @@ namespace KOTORModSync.Core
 
             foreach (Component component in components)
             {
-                var result = ProcessComponentAsync(component);
+                Task<(bool, Dictionary<FileInfo, System.Security.Cryptography.SHA1>)> result = ProcessComponentAsync(component);
                 if (!result.Result.Item1)
                 {
                     Logger.LogException(new Exception($"Component {component.Name} failed to install the mod correctly with {result}"));
@@ -457,7 +494,7 @@ namespace KOTORModSync.Core
                 }
             }
 
-            return(true, null);
+            return (true, null);
         }
     }
 }

@@ -1,9 +1,10 @@
-﻿using System;
+﻿// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+
+using System;
 using System.Diagnostics;
 using System.IO;
-using System.Runtime.ExceptionServices;
 using System.Threading.Tasks;
-using Microsoft.VisualStudio.Services.Client.AccountManagement.Logging;
 
 namespace KOTORModSync.Core
 {
@@ -26,7 +27,7 @@ namespace KOTORModSync.Core
                     {
                         isInitialized = true;
 
-                        var logFilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, LogFileName);
+                        string logFilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, LogFileName);
 
                         Log($"Logging initialized at {DateTime.Now}");
 
@@ -40,7 +41,7 @@ namespace KOTORModSync.Core
 
         public static void Log(string message)
         {
-            var logMessage = $"[{DateTime.Now}] {message}";
+            string logMessage = $"[{DateTime.Now}] {message}";
             Console.WriteLine(logMessage);
             Debug.WriteLine(logMessage);
             File.AppendAllText(LogFileName, logMessage + Environment.NewLine);
@@ -55,7 +56,6 @@ namespace KOTORModSync.Core
 
             ExceptionLogged?.Invoke(ex); // Raise the ExceptionLogged event
         }
-
 
         private static void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
         {

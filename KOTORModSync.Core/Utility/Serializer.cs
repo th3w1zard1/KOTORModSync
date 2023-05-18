@@ -73,7 +73,7 @@ namespace KOTORModSync.Core.Utility
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error generating archive tree for {directory.FullName}: {ex.Message}");
+                Logger.Log($"Error generating archive tree for {directory.FullName}: {ex.Message}");
                 return null;
             }
             return root;
@@ -192,7 +192,7 @@ namespace KOTORModSync.Core.Utility
 
             public static void OutputConfigFile(List<Component> components, string filePath)
             {
-                var stringBuilder = new StringBuilder();
+                var stringBuilder = new StringBuilder(10000);
 
                 foreach (var component in components)
                 {
@@ -328,7 +328,8 @@ namespace KOTORModSync.Core.Utility
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"Error writing output file {outputPath}: {ex.Message}");
+                    Logger.LogException(ex);
+                    Logger.Log($"Error writing output file {outputPath}: {ex.Message}");
                 }
             }
 
@@ -358,7 +359,7 @@ namespace KOTORModSync.Core.Utility
                         }
                         else
                         {
-                            Console.WriteLine($"Unsupported archive format: {Path.GetExtension(archivePath)}");
+                            Logger.Log($"Unsupported archive format: {Path.GetExtension(archivePath)}");
                             return archiveEntries;
                         }
 
@@ -380,7 +381,7 @@ namespace KOTORModSync.Core.Utility
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"Error reading archive {archivePath}: {ex.Message}");
+                    Logger.Log($"Error reading archive {archivePath}: {ex.Message}");
                 }
 
                 return archiveEntries;

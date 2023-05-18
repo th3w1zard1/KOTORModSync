@@ -16,6 +16,7 @@ using System.Text;
 using KOTORModSync.Core;
 using KOTORModSync.Core.Utility;
 using System.Collections.ObjectModel;
+using static Nett.TomlObjectFactory;
 
 namespace KOTORModSync.GUI
 {
@@ -32,10 +33,7 @@ namespace KOTORModSync.GUI
 
 
         private string currentComponent;
-        public MainWindow()
-        {
-            InitializeComponent();
-        }
+        public MainWindow() => InitializeComponent();
 
         private void InitializeComponent()
         {
@@ -108,14 +106,15 @@ namespace KOTORModSync.GUI
         {
             OpenFileDialog dialog = new OpenFileDialog();
             dialog.AllowMultiple = false;
-            dialog.Filters.Add(new FileDialogFilter() { Name = "Mod Sync File", Extensions = { "toml" } });
-            dialog.Filters.Add(new FileDialogFilter() { Name = "All Files", Extensions = { "*" } });
+            dialog?.Filters?.Add(new FileDialogFilter() { Name = "Mod Sync File", Extensions = { "toml", "tml" } });
+            dialog?.Filters?.Add(new FileDialogFilter() { Name = "All Files", Extensions = { "*" } });
 
             // Show the dialog and wait for a result.
             Window? parent = this.VisualRoot as Window;
             if (parent != null)
             {
-                string[] files = await dialog.ShowAsync(parent);
+                string[]? strings = await dialog.ShowAsync(parent);
+                string[] files = strings;
                 if (files != null && files.Length > 0)
                 {
                     string filePath = files[0];
@@ -142,7 +141,7 @@ namespace KOTORModSync.GUI
             {
                 // Verify the file type
                 var fileExtension = System.IO.Path.GetExtension(filePath);
-                if (string.Equals(fileExtension, ".toml", StringComparison.OrdinalIgnoreCase))
+                if (new[] { ".toml", ".tml" }.Any(ext => string.Equals(fileExtension, ext, StringComparison.OrdinalIgnoreCase)))
                 {
                     await Dispatcher.UIThread.InvokeAsync(() =>
                     {
@@ -255,15 +254,22 @@ namespace KOTORModSync.GUI
             }
             catch (ArgumentNullException)
             {
+                Logger.Log("User cancelled selecting folder");
                 return;
             }
         }
 
         private async void StartInstall_Click(object sender, RoutedEventArgs e)
         {
+            if(mainConfig == null)
+            {
+                var informationDialog = new InformationDialog();
+                informationDialog.InfoText = "Please set your directories first";
+                await informationDialog.ShowDialog<bool?>(this);
+            }
             foreach(var component in components)
             {
-                var confirmationDialogCallback = new ConfirmationDialogCallback();
+                var confirmationDialogCallback = new ConfirmationDialogCallback(this);
                 // Call the ExecuteInstructions method and pass the confirmationDialogCallback
                 await component.ExecuteInstructions(confirmationDialogCallback);
             }
@@ -330,7 +336,7 @@ namespace KOTORModSync.GUI
                     var informationDialog = new InformationDialog();
                     if (result)
                     {
-                        informationDialog.InfoText = "Saved successfully";
+                        informationDialog.InfoText = "Saved successfully. Check the output window for more information.";
                     }
                     else
                     {
@@ -405,7 +411,7 @@ namespace KOTORModSync.GUI
                 if (ex is ArgumentException || ex is FormatException)
                     Logger.LogException(ex);
                 else
-                    throw ex;
+                    throw;
                 return;
             }
             // Create the root item for the tree view
@@ -493,7 +499,7 @@ namespace KOTORModSync.GUI
         private void WriteTreeViewItemsToFile(TreeViewItem rootItem)
         {
             string randomFileName = System.IO.Path.GetFileNameWithoutExtension(System.IO.Path.GetRandomFileName());
-            string filePath = $"modconfig_{randomFileName}.txt";
+            string filePath = $"modconfig_{randomFileName}.toml";
 
             using (StreamWriter writer = new StreamWriter(filePath))
             {
@@ -535,18 +541,11 @@ namespace KOTORModSync.GUI
         public RelayCommand(Action<object> execute, Func<object, bool> canExecute = null)
         {
             this.execute = execute ?? throw new ArgumentNullException(nameof(execute));
-            this.canExecute = canExecute;
+            this.canExecute = canExecute ?? throw new ArgumentNullException(nameof(canExecute));
         }
 
-        public bool CanExecute(object parameter)
-        {
-            return canExecute == null || canExecute(parameter);
-        }
-
-        public void Execute(object parameter)
-        {
-            execute(parameter);
-        }
+        public bool CanExecute(object parameter) => canExecute == null || canExecute(parameter);
+        public void Execute(object parameter) => execute(parameter);
 
         public event EventHandler CanExecuteChanged;
     }

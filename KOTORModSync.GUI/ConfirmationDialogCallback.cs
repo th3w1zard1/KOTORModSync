@@ -6,16 +6,26 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Avalonia.Controls;
 using KOTORModSync.Core.Utility;
 
 namespace KOTORModSync.GUI
 {
     internal class ConfirmationDialogCallback : Utility.IConfirmationDialogCallback
     {
-        public async Task<bool> ShowConfirmationDialog(string message)
+        private readonly Window _topLevelWindow;
+
+        public ConfirmationDialogCallback(Window topLevelWindow)
         {
-            return await ConfirmationDialog.ShowConfirmationDialog(null, message);
+            _topLevelWindow = topLevelWindow;
+        }
+
+        public Task<bool> ShowConfirmationDialog(string message)
+        {
+            return ConfirmationDialog.ShowConfirmationDialog(_topLevelWindow, message);
         }
     }
+
+
 
 }

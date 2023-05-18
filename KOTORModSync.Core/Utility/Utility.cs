@@ -26,16 +26,17 @@ namespace KOTORModSync.Core.Utility
             }
             catch (UnauthorizedAccessException ex)
             {
-                Console.WriteLine($"Failed to access files in destination directory: {ex.Message}");
+                Logger.Log($"Failed to access files in destination directory: {ex.Message}");
             }
             catch (PathTooLongException ex)
             {
-                Console.WriteLine($"Your pathname is too long: '{directory.FullName}'");
-                Console.WriteLine("Please utilize the registry patch that increases windows legacy pathlimit of 260, or move your KOTOR2 installation to a shorter directory.");
+                Logger.LogException(ex);
+                Logger.Log($"Your pathname is too long: '{directory.FullName}'");
+                Logger.Log("Please utilize the registry patch that increases windows legacy pathlimit of 260, or move your KOTOR2 installation to a shorter directory.");
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Failed to access files in destination directory: {ex.Message}");
+                Logger.Log($"Failed to access files in destination directory: {ex.Message}");
             }
             return false;
         }
@@ -93,7 +94,7 @@ namespace KOTORModSync.Core.Utility
 
             if (!Directory.Exists(thisPath))
             {
-                Console.WriteLine($"Directory '{thisPath}' does not exist.");
+                Logger.Log($"Directory '{thisPath}' does not exist.");
                 return null;
             }
             return new DirectoryInfo(thisPath);

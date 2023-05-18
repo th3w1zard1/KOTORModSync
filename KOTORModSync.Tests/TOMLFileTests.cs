@@ -170,9 +170,9 @@ namespace KOTORModSync.Tests
                 AssertComponentEquality(originalComponent, loadedComponent);
             }
         }
-        private string ConvertFieldNamesAndValuesToMixedCase(string tomlContents)
+        private static string ConvertFieldNamesAndValuesToMixedCase(string tomlContents)
         {
-            var convertedContents = new StringBuilder();
+            var convertedContents = new StringBuilder(10000);
             var random = new Random();
 
             bool isFieldName = true; // Flag to determine if the current item is a field name or field value

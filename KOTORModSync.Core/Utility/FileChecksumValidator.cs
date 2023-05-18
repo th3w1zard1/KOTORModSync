@@ -53,7 +53,7 @@ namespace KOTORModSync.Core.Utility
 
             if (!allChecksumsMatch)
             {
-                Console.WriteLine("Checksum validation failed for the following files:");
+                Logger.Log("Checksum validation failed for the following files:");
                 foreach (KeyValuePair<FileInfo, SHA1> expectedChecksum in _expectedChecksums)
                 {
                     FileInfo expectedFileInfo = expectedChecksum.Key;
@@ -68,7 +68,7 @@ namespace KOTORModSync.Core.Utility
 
                     if (!actualSha1String.Equals(expectedSha1String, StringComparison.OrdinalIgnoreCase))
                     {
-                        Console.WriteLine($"  {expectedFileInfo.FullName} - expected: {expectedSha1String}, actual: {actualSha1String}");
+                        Logger.Log($"  {expectedFileInfo.FullName} - expected: {expectedSha1String}, actual: {actualSha1String}");
                     }
                 }
             }

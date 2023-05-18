@@ -65,19 +65,19 @@ namespace KOTORModSync.Core
 
         public static async Task<bool> ExecuteInstructionAsync(Func<Task<bool>> instructionMethod) => await instructionMethod().ConfigureAwait(false);
 
-        public bool ExtractFile(Instruction thisStep, Component component) =>
+        public async Task<bool> ExtractFile() =>
             // Implement extraction logic here
             true;
 
-        public bool DeleteFile(Instruction thisStep, Component component) =>
+        public async Task<bool> DeleteFile() =>
             // Implement deletion logic here
             true;
 
-        public bool MoveFile(Instruction thisStep, Component component) =>
+        public async Task<bool> MoveFile() =>
             // Implement moving logic here
             true;
 
-        public async Task<bool> ExecuteTSLPatcherAsync(Instruction thisStep, Component component)
+        public async Task<bool> ExecuteTSLPatcherAsync()
         {
             // Check if we have permission to write to the Destination directory
             if (!Utility.Utility.CanWriteToDirectory(MainConfig.DestinationPath))
@@ -90,8 +90,8 @@ namespace KOTORModSync.Core
 
             var startInfo = new ProcessStartInfo
             {
-                FileName = thisStep.Path,
-                Arguments = thisStep.Arguments,
+                FileName = this.Path,
+                Arguments = this.Arguments,
                 RedirectStandardOutput = true,
                 UseShellExecute = false,
                 CreateNoWindow = true
@@ -119,17 +119,17 @@ namespace KOTORModSync.Core
 
             return process.ExitCode != 0
                 ? throw new Exception($"TSLPatcher failed with exit code {process.ExitCode}. Output:\n{output}")
-                : !VerifyInstall(component) ? throw new Exception("TSLPatcher failed to install the mod correctly.") : true;
+                : !this.VerifyInstall() ? throw new Exception("TSLPatcher failed to install the mod correctly.") : true;
         }
 
-        public static bool VerifyInstall(Component component)
+        public bool VerifyInstall()
         {
             // Verify if the destination directory has been modified
             /*DateTime destinationDirectoryLastModified = Directory.GetLastWriteTime(MainConfig.DestinationPath.FullName);
 
             if (destinationDirectoryLastModified < component.SourceLastModified)
             {
-                Console.WriteLine("Destination directory has not been modified.");
+                Logger.Log("Destination directory has not been modified.");
                 return false;
             }*/
 
@@ -138,7 +138,7 @@ namespace KOTORModSync.Core
 
             if (!File.Exists(installLogFile))
             {
-                Console.WriteLine("Install log file not found.");
+                Logger.Log("Install log file not found.");
                 return false;
             }
 
@@ -149,7 +149,7 @@ namespace KOTORModSync.Core
             {
                 if (bulletPoint.Contains("Warning") || bulletPoint.Contains("Error"))
                 {
-                    Console.WriteLine($"Install log contains warning or error message: {bulletPoint.Trim()}");
+                    Logger.Log($"Install log contains warning or error message: {bulletPoint.Trim()}");
                     return false;
                 }
             }
@@ -376,19 +376,19 @@ namespace KOTORModSync.Core
                     switch (instruction.Type.ToLower())
                     {
                         case "extract":
-                            success = instruction.ExtractFile(instruction, component);
+                            success = await instruction.ExtractFile();
                             break;
 
                         case "delete":
-                            success = instruction.DeleteFile(instruction, component);
+                            success = await instruction.DeleteFile();
                             break;
 
                         case "move":
-                            success = instruction.MoveFile(instruction, component);
+                            success = await instruction.MoveFile();
                             break;
 
                         case "tslpatcher":
-                            success = await instruction.ExecuteTSLPatcherAsync(instruction, component);
+                            success = await instruction.ExecuteTSLPatcherAsync();
                             break;
 
                         default:
@@ -398,7 +398,7 @@ namespace KOTORModSync.Core
 
                     if (!success)
                     {
-                        Console.WriteLine($"Instruction {instruction.Type} failed to install the mod correctly.");
+                        Logger.Log($"Instruction {instruction.Type} failed to install the mod correctly.");
                         return (false, null);
                     }
                     if (instruction.ExpectedChecksums != null)

@@ -96,13 +96,13 @@ namespace KOTORModSync.Core
         public static bool VerifyInstall(Component component)
         {
             // Verify if the destination directory has been modified
-            DateTime destinationDirectoryLastModified = Directory.GetLastWriteTime(MainConfig.DestinationPath.FullName);
+            /*DateTime destinationDirectoryLastModified = Directory.GetLastWriteTime(MainConfig.DestinationPath.FullName);
 
             if (destinationDirectoryLastModified < component.SourceLastModified)
             {
                 Console.WriteLine("Destination directory has not been modified.");
                 return false;
-            }
+            }*/
 
             // Verify if any error or warning message is present in the install.rtf file
             string installLogFile = System.IO.Path.Combine(MainConfig.DestinationPath.FullName, "install.rtf");

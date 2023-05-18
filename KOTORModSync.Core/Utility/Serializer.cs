@@ -89,144 +89,101 @@ namespace KOTORModSync.Core.Utility
 
             public static void OutputConfigFile(List<Component> components, string filePath)
             {
-                var config = TomlSettings.Create();
-                var rootTable = Nett.Toml.Create();
+                var componentList = new List<object>();
 
                 foreach (var component in components)
                 {
-                    var componentTable = SerializeComponent(component, config);
-                    var componentName = component.Name;
-                    rootTable.Add($"[[{componentName}]]", componentTable);
+                    var serializedComponent = SerializeObject(component);
+                    componentList.Add(serializedComponent);
                 }
 
-                Nett.Toml.WriteFile(rootTable, filePath, config);
+                var rootTable = new Dictionary<string, List<object>>()
+                {
+                    ["thisMod"] = componentList
+                };
+
+                var config = TomlSettings.Create();
+                var tomlString = Nett.Toml.WriteString(rootTable);
+                File.WriteAllText(filePath, tomlString);
             }
 
-            private static Nett.TomlTable SerializeComponent(Component component, TomlSettings config)
+            public class SerializedComponent
             {
-                var componentTable = Nett.Toml.Create();
-                var componentType = component.GetType();
-
-                foreach (var property in componentType.GetProperties())
-                {
-                    if (property.GetIndexParameters().Length > 0)
-                        continue;
-
-                    var propertyValue = property.GetValue(component);
-                    if (propertyValue is null)
-                        continue;
-
-                    if (IsClassType(property.PropertyType) && property.PropertyType != typeof(string))
-                    {
-                        var nestedTable = SerializeNestedComponent(propertyValue, config);
-                        componentTable.Add(property.Name, nestedTable);
-                    }
-                    else
-                    {
-                        var tomlValue = Nett.Toml.Create(propertyValue, config);
-                        componentTable.Add(property.Name, tomlValue);
-                    }
-                }
-
-                return componentTable;
+                public Dictionary<string, object> SerializedProperties { get; set; }
             }
 
-
-            private static Nett.TomlTable SerializeNestedComponent(object nestedComponent, TomlSettings config)
+            private static object SerializeObject(object obj)
             {
-                var nestedComponentTable = Nett.Toml.Create();
-                var nestedComponentType = nestedComponent.GetType();
+                var type = obj.GetType();
+                var serializedProperties = new Dictionary<string, object>();
 
-                foreach (var property in nestedComponentType.GetProperties())
+                foreach (var member in type.GetMembers(BindingFlags.Public | BindingFlags.Instance))
                 {
-                    if (property.GetIndexParameters().Length > 0)
-                        continue;
+                    object value = null;
+                    string memberName = null;
 
-                    var propertyValue = property.GetValue(nestedComponent);
-                    if (propertyValue is null)
-                        continue;
+                    if (member is PropertyInfo property && property.CanRead)
+                    {
+                        value = property.GetValue(obj);
+                        memberName = property.Name;
+                    }
+                    else if (member is FieldInfo field)
+                    {
+                        value = field.GetValue(obj);
+                        memberName = field.Name;
+                    }
 
-                    var tomlValue = Nett.Toml.Create(propertyValue, config);
-                    nestedComponentTable.Add(property.Name, tomlValue);
+                    if (value != null)
+                    {
+                        if (value is IEnumerable && !(value is string))
+                        {
+                            var serializedList = new Tomlyn.Model.TomlArray();
+
+                            foreach (var item in (IEnumerable)value)
+                            {
+                                if (item != null && item.GetType().IsPrimitive || item is string)
+                                {
+                                    if (item is IEnumerable && !(item is string))
+                                        serializedList.Add(SerializeObject(item));
+                                    else
+                                        serializedList.Add(item?.ToString());
+                                }
+                                else
+                                {
+                                    serializedList.Add(SerializeObject(item));
+                                }
+                            }
+
+
+                            serializedProperties[memberName] = serializedList;
+                        }
+                        else if (IsNestedType(value))
+                        {
+                            serializedProperties[memberName] = SerializeObject(value);
+                        }
+                        else if (value != null && value.GetType().IsPrimitive || value is string)
+                        {
+                            serializedProperties[memberName] = value?.ToString();
+                        }
+                    }
                 }
 
-                return nestedComponentTable;
+                if (serializedProperties.Count > 0)
+                {
+                    return serializedProperties;
+                }
+                else if (!type.IsNested && serializedProperties.Count == 0)
+                {
+                    return SerializeObject(obj);
+                }
+
+                return null;
             }
 
-            private static bool IsClassType(Type type)
+            private static bool IsNestedType(object obj)
             {
-                return type.IsClass && type != typeof(string);
+                return obj.GetType().IsNested;
             }
-
-
-
-
-
-            private static object GenerateNestedTable(object obj, HashSet<object> visitedObjects)
-            {
-                if (obj == null)
-                {
-                    return null;
-                }
-
-                // Check if the object has already been visited to avoid infinite recursion
-                if (visitedObjects.Contains(obj))
-                {
-                    return null; // Or throw an exception, depending on your desired behavior
-                }
-                visitedObjects.Add(obj);
-
-                Type objectType = obj.GetType();
-
-                if (objectType.IsPrimitive || objectType == typeof(string))
-                {
-                    return obj.ToString(); // Convert primitive types and strings to string
-                }
-
-                if (objectType.IsGenericType && objectType.GetGenericTypeDefinition() == typeof(List<>))
-                {
-                    var indexedValues = new List<object>();
-                    IList list = (IList)obj;
-
-                    foreach (var item in list)
-                    {
-                        indexedValues.Add(GenerateNestedTable(item, visitedObjects));
-                    }
-
-                    return indexedValues;
-                }
-
-                if (objectType.IsArray)
-                {
-                    var indexedValues = new List<object>();
-                    Array array = (Array)obj;
-
-                    foreach (var item in array)
-                    {
-                        indexedValues.Add(GenerateNestedTable(item, visitedObjects));
-                    }
-
-                    return indexedValues;
-                }
-
-                var nestedTable = new Dictionary<string, object>();
-
-                foreach (var property in objectType.GetProperties())
-                {
-                    if (property.CanRead && property.GetIndexParameters().Length == 0)
-                    {
-                        string propertyName = property.Name;
-                        var propertyValue = property.GetValue(obj);
-
-                        // Convert property value to string before adding to nestedTable
-                        string propertyStringValue = propertyValue?.ToString();
-                        nestedTable.Add(propertyName, GenerateNestedTable(propertyStringValue, visitedObjects));
-                    }
-                }
-
-                return nestedTable;
-            }
-
 
             public static List<Component> ReadComponentsFromFile(string filePath)
             {

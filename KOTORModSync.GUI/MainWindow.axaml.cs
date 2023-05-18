@@ -220,17 +220,41 @@ namespace KOTORModSync.GUI
 
             if (hasChanges)
             {
-                bool confirmationResult = await ConfirmationDialog.ShowConfirmationDialog(this, "Are you sure you want to save ?");
+                bool confirmationResult = await ConfirmationDialog.ShowConfirmationDialog(this, "Are you sure you want to save?");
                 if (confirmationResult)
                 {
-                    // SaveChanges();
+                    bool result = SaveChanges();
                     var informationDialog = new InformationDialog();
-                    informationDialog.InfoText = "Saved successfully";
+                    if (result)
+                    {
+                        informationDialog.InfoText = "Saved successfully";
+                    }
+                    else
+                    {
+                        informationDialog.InfoText = "There were some problems with your syntax, please check the output window.";
+                    }
                     await informationDialog.ShowDialog<bool?>(this);
-
                 }
             }
         }
+
+        public bool SaveChanges()
+        {
+            // Get the selected component from the tree view
+            var selectedTreeViewItem = leftTreeView.SelectedItem as TreeViewItem;
+            if (selectedTreeViewItem != null && selectedTreeViewItem.Tag is Component selectedComponent)
+            {
+                Component newComponent = Serializer.FileHandler.DeserializeTomlComponent(rightTextBox.Text);
+                if (newComponent != null)
+                    return true;
+                //SaveComponentsToFile();
+                return false;
+            }
+
+            Logger.LogException(new Exception("Original component is null somehow"));
+            return false;
+        }
+
 
         private void RightListBox_LostFocus(object sender, RoutedEventArgs e)
         {

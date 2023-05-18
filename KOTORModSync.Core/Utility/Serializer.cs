@@ -204,6 +204,44 @@ namespace KOTORModSync.Core.Utility
                 File.WriteAllText(filePath, tomlString);
             }
 
+            public static Component DeserializeTomlComponent(string tomlString)
+            {
+                tomlString = FixWhitespaceIssues(tomlString);
+
+                // Parse the TOML syntax into a TomlTable
+                DocumentSyntax tomlDocument = Tomlyn.Toml.Parse(tomlString);
+
+                // Print any errors on the syntax
+                if (tomlDocument.HasErrors)
+                {
+                    foreach (var message in tomlDocument.Diagnostics)
+                    {
+                        Logger.LogException(new Exception(message.Message));
+                    }
+                    return null;
+                }
+
+                Tomlyn.Model.TomlTable tomlTable = tomlDocument.ToModel();
+
+                // Get the array of Component tables
+                Tomlyn.Model.TomlTableArray componentTables = tomlTable["thisMod"] as Tomlyn.Model.TomlTableArray;
+
+                Component component = null;
+
+                // Deserialize each TomlTable into a Component object
+                foreach (Tomlyn.Model.TomlObject tomlComponent in componentTables)
+                {
+                    component = Component.DeserializeComponent(tomlComponent);
+                    foreach (Instruction instruction in component.Instructions)
+                    {
+                        instruction.ParentComponent = component;
+                    }
+                    break;
+                }
+
+                return component;
+            }
+
             public static List<Component> ReadComponentsFromFile(string filePath)
             {
                 try

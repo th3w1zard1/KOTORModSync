@@ -23,9 +23,9 @@
             <Setter Property="HorizontalAlignment" Value="Center" />
             <Setter Property="VerticalAlignment" Value="Center" />
         </Style>
-        <Style Selector="Button:hover">
+        <Style Selector="Button:pointerover">
             <Setter Property="Foreground" Value="White" />
-            <!-- Bright white color -->
+            <!-- Bright white color, doesn't work for some reason. -->
         </Style>
         <Style Selector="TextBox">
             <Setter Property="Margin" Value="2" />
@@ -104,23 +104,28 @@
                 </Grid>
             </ScrollViewer>
 
-            <ScrollViewer Grid.Column="1" VerticalScrollBarVisibility="Auto">
-                <Grid>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
-                    </Grid.RowDefinitions>
-                    <TextBox x:Name="rightTextBox" Margin="10" AcceptsReturn="True" TextWrapping="Wrap" Height="400" />
+            <Grid Grid.Column="1">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
 
-                    <StackPanel Grid.Row="1" Orientation="Horizontal" VerticalAlignment="Center">
-                        <Button Content="Generate GUID" Click="GenerateGuidButton_Click" MinWidth="100" />
-                        <Rectangle Width="10" />
-                        <TextBox x:Name="guidTextBox" Width="{Binding ElementName=rightTextBox, Path=ActualWidth}" MinWidth="200" />
-                    </StackPanel>
+                <TextBox x:Name="rightTextBox" Margin="10" AcceptsReturn="True" TextWrapping="Wrap" Height="400" />
+
+                <Grid Grid.Row="1" Margin="10">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <Button Content="Generate GUID" Click="GenerateGuidButton_Click" MinWidth="100" VerticalAlignment="Center" />
+                    <Rectangle Width="10" />
+                    <TextBox x:Name="guidTextBox" Grid.Column="2" Width="200" HorizontalAlignment="Left" />
                 </Grid>
-            </ScrollViewer>
+            </Grid>
 
-            <StackPanel Grid.Column="2" Orientation="Vertical" HorizontalAlignment="Center">
+            <StackPanel Grid.Column="2" Orientation="Vertical" HorizontalAlignment="Right">
                 <Button Content="Load Installation File" Margin="0 10" Click="LoadInstallFile_Click" />
                 <Button Content="Set Directories" Margin="0 10" Click="SetDirectories_Click"/>
                 <Button Content="Start Install" Margin="0 10" Click="StartInstall_Click" />

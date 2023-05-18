@@ -124,7 +124,7 @@ namespace KOTORModSync.GUI
             dialog.Filters.Add(new FileDialogFilter() { Name = "All Files", Extensions = { "*" } });
 
             // Show the dialog and wait for a result.
-            Window parent = this.VisualRoot as Window;
+            Window? parent = this.VisualRoot as Window;
             if (parent != null)
             {
                 string[] files = await dialog.ShowAsync(parent);
@@ -227,11 +227,39 @@ namespace KOTORModSync.GUI
             }
         }
 
+        private async Task<string> OpenFolder()
+        {
+            OpenFolderDialog dialog = new OpenFolderDialog();
 
+            // Show the dialog and wait for a result.
+            Window? parent = this.VisualRoot as Window;
+            if (parent != null)
+            {
+                string selectedFolder = await dialog.ShowAsync(parent);
+                if (!string.IsNullOrEmpty(selectedFolder))
+                {
+                    Logger.Log($"Selected folder: {selectedFolder}");
+                    return selectedFolder;
+                }
+            }
+            else
+            {
+                Logger.Log("Could not open folder dialog - parent window not found");
+            }
+
+            return null;
+        }
 
         private async void SetDirectories_Click(object sender, RoutedEventArgs e)
         {
-
+            var informationDialog = new InformationDialog();
+            informationDialog.InfoText = "Please select your mod directory. Ensure the mods are not extracted.";
+            var chosenFolder = await OpenFolder();
+            DirectoryInfo modDirectory = new DirectoryInfo(chosenFolder);
+            informationDialog.InfoText = "Please select your KOTOR(2) directory. (e.g. \"C:\\Program Files (x86)\\Steam\\steamapps\\common\\Knights of the Old Republic II\")";
+            chosenFolder = await OpenFolder();
+            DirectoryInfo kotorInstallDir = new DirectoryInfo(chosenFolder);
+            MainConfig.UpdateConfig(modDirectory, kotorInstallDir);
         }
 
         private async void StartInstall_Click(object sender, RoutedEventArgs e)

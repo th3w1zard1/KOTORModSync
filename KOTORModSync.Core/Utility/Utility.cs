@@ -10,6 +10,10 @@ namespace KOTORModSync.Core.Utility
 {
     public static class Utility
     {
+        public interface IConfirmationDialogCallback
+        {
+            Task<bool> ShowConfirmationDialog(string message);
+        }
         public static bool CanWriteToDirectory(DirectoryInfo directory)
         {
             try

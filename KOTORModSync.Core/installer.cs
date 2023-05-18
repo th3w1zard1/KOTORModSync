@@ -12,6 +12,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using KOTORModSync.Core.Utility;
 using Tomlyn.Model;
+using static KOTORModSync.Core.Utility.Utility;
 
 namespace KOTORModSync.Core
 {
@@ -350,7 +351,7 @@ namespace KOTORModSync.Core
 
 
 
-        public static async Task<bool> ExecuteInstructions()
+        public async Task<(bool success, Dictionary<FileInfo, System.Security.Cryptography.SHA1> originalChecksums)> ExecuteInstructions(IConfirmationDialogCallback confirmDialog)
         {
             // Check if we have permission to write to the Destination directory
             if (!Utility.Utility.CanWriteToDirectory(MainConfig.DestinationPath))
@@ -358,7 +359,7 @@ namespace KOTORModSync.Core
                 throw new Exception("Cannot write to the destination directory.");
             }
 
-            async Task<bool> ProcessComponentAsync(Component component)
+            async Task<(bool, Dictionary<FileInfo, System.Security.Cryptography.SHA1>)> ProcessComponentAsync(Component component)
             {
                 foreach (Instruction instruction in component.Instructions)
                 {
@@ -398,31 +399,45 @@ namespace KOTORModSync.Core
                     if (!success)
                     {
                         Console.WriteLine($"Instruction {instruction.Type} failed to install the mod correctly.");
-                        return false;
+                        return (false, null);
                     }
-
-                    // Get the new checksums after the modifications
-                    var validator = new FileChecksumValidator(
-                        destinationPath: MainConfig.DestinationPath.FullName,
-                        expectedChecksums: instruction.ExpectedChecksums,
-                        originalChecksums: originalPathsToChecksum
-                    );
-
-                    bool checksumsMatch = await validator.ValidateChecksumsAsync();
-
-                    if (checksumsMatch)
+                    if (instruction.ExpectedChecksums != null)
                     {
-                        Console.WriteLine($"Instruction {instruction.Type} succeeded and modified files have expected checksums.");
+                        // Get the new checksums after the modifications
+                        var validator = new FileChecksumValidator(
+                            destinationPath: MainConfig.DestinationPath.FullName,
+                            expectedChecksums: instruction.ExpectedChecksums,
+                            originalChecksums: originalPathsToChecksum
+                        );
+
+                        bool checksumsMatch = await validator.ValidateChecksumsAsync();
+
+                        if (checksumsMatch)
+                        {
+                            Logger.Log($"Component {component.Name}'s instruction '{instruction.Type}' succeeded and modified files have expected checksums.");
+                        }
+                        else
+                        {
+                            Logger.Log($"Component {component.Name}'s instruction '{instruction.Type}' succeeded but modified files have unexpected checksums.");
+                            bool confirmationResult = await confirmDialog.ShowConfirmationDialog("Warning! Checksums after running install step are not the same as expected. Continue anyway?");
+                            if (!confirmationResult)
+                            {
+                                return (false, originalPathsToChecksum);
+                            }
+                        }
                     }
                     else
                     {
-                        Console.WriteLine($"Instruction {instruction.Type} succeeded but modified files have unexpected checksums.");
+                        Logger.Log($"Component {component.Name}'s instruction '{instruction.Type}' ran, saving the new checksums as expected.");
+                        var newChecksums = new Dictionary<FileInfo, System.Security.Cryptography.SHA1>();
+                        foreach (FileInfo file in MainConfig.DestinationPath.GetFiles("*.*", SearchOption.AllDirectories))
+                        {
+                            System.Security.Cryptography.SHA1 sha1 = await FileChecksumValidator.CalculateSHA1Async(file);
+                            newChecksums[file] = sha1;
+                        }
                     }
                 }
-
-                _ = Path.Combine(MainConfig.ModConfigPath.FullName, "modpack_new.toml");
-
-                return true;
+                return (true, new Dictionary<FileInfo, System.Security.Cryptography.SHA1>());
             }
 
             string modConfigFile = Path.Combine(MainConfig.ModConfigPath.FullName, "modpack.toml");
@@ -430,16 +445,19 @@ namespace KOTORModSync.Core
 
             foreach (Component component in components)
             {
-                bool result = await ProcessComponentAsync(component);
-
-                if (!result)
+                var result = ProcessComponentAsync(component);
+                if (!result.Result.Item1)
                 {
-                    Console.WriteLine($"Component {component.Name} failed to install the mod correctly.");
-                    return false;
+                    Logger.LogException(new Exception($"Component {component.Name} failed to install the mod correctly with {result}"));
+                    bool confirmationResult = await confirmDialog.ShowConfirmationDialog($"Error installing mod {component.Name}, continue with install anyway?");
+                    if (!confirmationResult)
+                    {
+                        return (false, null);
+                    }
                 }
             }
 
-            return true;
+            return(true, null);
         }
     }
 }

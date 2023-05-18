@@ -3,7 +3,20 @@
         xmlns:local="clr-namespace:KOTORModSync.GUI"
         x:Class="KOTORModSync.GUI.InformationDialog"
         Width="300" Height="150" Title="Save Confirmation" WindowStartupLocation="CenterScreen">
+    <Window.Styles>
+        <Style Selector="Window">
+            <Setter Property="Background" Value="#000000"/>
+            <Setter Property="Foreground" Value="#FFFFFF"/>
+            <Setter Property="BorderBrush" Value="#FFFFFF"/>
+        </Style>
+    </Window.Styles>
     <Grid>
-        <TextBlock x:Name="InfoTextBlock" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="20"/>
+        <TextBlock x:Name="InfoTextBlock"
+                   HorizontalAlignment="Center"
+                   VerticalAlignment="Center"
+                   FontSize="20"
+                   TextWrapping="Wrap"
+                   Margin="10"
+                   Text="Lorem ipsum dolor sit amet, consectetur adipiscing elit."/>
     </Grid>
 </Window>

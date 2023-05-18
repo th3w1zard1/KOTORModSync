@@ -75,7 +75,7 @@ namespace KOTORModSync.ConsoleApp
                             break;
                         }
                         Console.WriteLine("Set directory paths...");
-                        MainConfig.UpdateConfig(modDownloads, kotorInstallDir);
+                        mainConfig.UpdateConfig(modDownloads, kotorInstallDir);
                         break;
 
                     case "2":

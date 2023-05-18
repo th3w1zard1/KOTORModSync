@@ -3,6 +3,7 @@
 
 using System.Collections.Generic;
 using System.IO;
+using System.Threading.Tasks;
 
 namespace KOTORModSync.Core
 {
@@ -15,11 +16,12 @@ namespace KOTORModSync.Core
         public static DirectoryInfo LastOutputDirectory;
         public static DirectoryInfo ModConfigPath;
 
-        public static void UpdateConfig(DirectoryInfo sourcePath, DirectoryInfo destinationPath)
+        public void UpdateConfig(DirectoryInfo sourcePath, DirectoryInfo destinationPath)
         {
             SourcePath = sourcePath;
             DestinationPath = destinationPath;
         }
+
     }
 
     public static class ModDirectory

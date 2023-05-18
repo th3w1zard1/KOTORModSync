@@ -8,28 +8,14 @@ using System.Windows.Input;
 using Avalonia;
 using Avalonia.Collections;
 using Avalonia.Controls;
-using Avalonia.Controls.Templates;
-using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
 using Avalonia.Threading;
-using Avalonia.Controls.Primitives;
-using Avalonia.Input;
 using Avalonia.Data;
-using Avalonia.VisualTree;
-using Microsoft.VisualStudio.Services.CircuitBreaker;
-using System.Diagnostics;
 using System.Text;
 using KOTORModSync.Core;
 using KOTORModSync.Core.Utility;
-using Avalonia.Media;
-using static System.Net.WebRequestMethods;
 using System.Collections.ObjectModel;
-using Microsoft.VisualStudio.Services.Common;
-using System.Reflection;
-using Avalonia.Controls.Notifications;
-using static Nett.TomlObjectFactory;
-using Avalonia.Controls.Shapes;
 
 namespace KOTORModSync.GUI
 {
@@ -42,6 +28,7 @@ namespace KOTORModSync.GUI
         private ObservableCollection<Component> selectedComponents = new ObservableCollection<Component>();
         private ObservableCollection<string> selectedComponentProperties;
         private string originalContent;
+        private MainConfig mainConfig;
 
 
         private string currentComponent;
@@ -63,6 +50,7 @@ namespace KOTORModSync.GUI
             guidTextBox = this.FindControl<TextBox>("guidTextBox");
             guidTextBox.Width = rightTextBox.Bounds.Width;
             rightTextBox.PropertyChanged += RightTextBox_PropertyChanged;
+            mainConfig = new MainConfig();
         }
 
         private void RightTextBox_PropertyChanged(object sender, AvaloniaPropertyChangedEventArgs e)
@@ -227,7 +215,7 @@ namespace KOTORModSync.GUI
             }
         }
 
-        private async Task<string> OpenFolder()
+        private async Task<string?> OpenFolder()
         {
             OpenFolderDialog dialog = new OpenFolderDialog();
 
@@ -253,18 +241,32 @@ namespace KOTORModSync.GUI
         private async void SetDirectories_Click(object sender, RoutedEventArgs e)
         {
             var informationDialog = new InformationDialog();
-            informationDialog.InfoText = "Please select your mod directory. Ensure the mods are not extracted.";
-            var chosenFolder = await OpenFolder();
-            DirectoryInfo modDirectory = new DirectoryInfo(chosenFolder);
-            informationDialog.InfoText = "Please select your KOTOR(2) directory. (e.g. \"C:\\Program Files (x86)\\Steam\\steamapps\\common\\Knights of the Old Republic II\")";
-            chosenFolder = await OpenFolder();
-            DirectoryInfo kotorInstallDir = new DirectoryInfo(chosenFolder);
-            MainConfig.UpdateConfig(modDirectory, kotorInstallDir);
+            informationDialog.InfoText = "Please select your mod directory (where the archives are).";
+            await informationDialog.ShowDialog<bool?>(this);
+            try
+            {
+                var chosenFolder = await OpenFolder();
+                DirectoryInfo modDirectory = new DirectoryInfo(chosenFolder);
+                informationDialog.InfoText = "Please select your KOTOR(2) directory. (e.g. \"C:\\Program Files (x86)\\Steam\\steamapps\\common\\Knights of the Old Republic II\")";
+                await informationDialog.ShowDialog<bool?>(this);
+                chosenFolder = await OpenFolder();
+                DirectoryInfo kotorInstallDir = new DirectoryInfo(chosenFolder);
+                mainConfig.UpdateConfig(modDirectory, kotorInstallDir);
+            }
+            catch (ArgumentNullException)
+            {
+                return;
+            }
         }
 
         private async void StartInstall_Click(object sender, RoutedEventArgs e)
         {
-
+            foreach(var component in components)
+            {
+                var confirmationDialogCallback = new ConfirmationDialogCallback();
+                // Call the ExecuteInstructions method and pass the confirmationDialogCallback
+                await component.ExecuteInstructions(confirmationDialogCallback);
+            }
         }
 
         private ICommand itemClickCommand;
@@ -276,7 +278,7 @@ namespace KOTORModSync.GUI
 
         private void ItemClick(object parameter)
         {
-            if (parameter is Component component)
+            if (parameter is Core.Component component)
             {
                 // Handle the item click event here
                 if (!selectedComponents.Contains(component))
@@ -287,7 +289,7 @@ namespace KOTORModSync.GUI
             }
         }
 
-        private void PopulateRightTextBox(Component selectedComponent)
+        private void PopulateRightTextBox(Core.Component selectedComponent)
         {
             if (selectedComponent != null && rightTextBox != null)
             {
@@ -296,6 +298,19 @@ namespace KOTORModSync.GUI
             }
         }
 
+        private void GenerateGuidButton_Click(object sender, RoutedEventArgs e)
+        {
+            // Generate a unique GUID
+            Guid uniqueGuid = Guid.NewGuid();
+
+            // Set the generated GUID to the guidTextBox
+            guidTextBox.Text = "{" + uniqueGuid.ToString() + "}";
+        }
+
+        private void RightListBox_LostFocus(object sender, RoutedEventArgs e)
+        {
+            e.Handled = true;
+        }
         private bool CheckForChanges()
         {
             string currentContent = rightTextBox.Text;
@@ -327,6 +342,42 @@ namespace KOTORModSync.GUI
             }
         }
 
+        public bool SaveChanges()
+        {
+            // Get the selected component from the tree view
+            var selectedTreeViewItem = leftTreeView.SelectedItem as TreeViewItem;
+            if (selectedTreeViewItem != null && selectedTreeViewItem.Tag is Component selectedComponent)
+            {
+                try
+                {
+                    Component newComponent = Serializer.FileHandler.DeserializeTomlComponent(rightTextBox.Text);
+                    if (newComponent != null)
+                    {
+                        // Find the corresponding component in the collection
+                        int index = components.IndexOf(selectedComponent);
+                        if (index >= 0)
+                        {
+                            // Update the properties of the component
+                            components[index] = newComponent;
+                            RefreshTreeView(); // Refresh the tree view to reflect the changes
+                            leftTreeView.SelectedItem = newComponent; // Select the updated component in the tree view
+                            return true;
+                        }
+                        Logger.LogException(new Exception("Could not find index of component. Ensure you single clicked on a component on the left before pressing save. Please back up your work and try again."));
+                        return false;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Logger.LogException(ex);
+                }
+                return false;
+            }
+
+            Logger.LogException(new Exception("Original component is null somehow"));
+            return false;
+        }
+
         private void DeleteMenuItem_Click(object sender, RoutedEventArgs e)
         {
             // Handle the Delete menu item click event
@@ -344,7 +395,7 @@ namespace KOTORModSync.GUI
         private void RefreshTreeView()
         {
             // Create a dictionary to store components by their GUIDs
-            Dictionary<Guid, Component> componentDictionary;
+            Dictionary<Guid, Core.Component> componentDictionary;
             try
             {
                 componentDictionary = components.ToDictionary(c => Guid.Parse(c.Guid));
@@ -377,60 +428,8 @@ namespace KOTORModSync.GUI
 
             // Expand the root item to automatically expand the tree view
             rootItem.IsExpanded = true;
-        }
 
-        private void GenerateGuidButton_Click(object sender, RoutedEventArgs e)
-        {
-            // Generate a unique GUID
-            Guid uniqueGuid = Guid.NewGuid();
-
-            // Set the generated GUID to the guidTextBox
-            guidTextBox.Text = uniqueGuid.ToString();
-        }
-
-
-
-        public bool SaveChanges()
-        {
-            // Get the selected component from the tree view
-            var selectedTreeViewItem = leftTreeView.SelectedItem as TreeViewItem;
-            if (selectedTreeViewItem != null && selectedTreeViewItem.Tag is Component selectedComponent)
-            {
-                try
-                {
-                    Component newComponent = Serializer.FileHandler.DeserializeTomlComponent(rightTextBox.Text);
-                    if (newComponent != null)
-                    {
-                        // Find the corresponding component in the collection
-                        int index = components.IndexOf(selectedComponent);
-                        if (index >= 0)
-                        {
-                            // Update the properties of the component
-                            components[index] = newComponent;
-                            RefreshTreeView(); // Refresh the tree view to reflect the changes
-                            leftTreeView.SelectedItem = newComponent; // Select the updated component in the tree view
-                            return true;
-                        }
-                        Logger.LogException(new Exception("Could not find index of component. Please back up your work and try again."));
-                        return false;
-                    }
-                }
-                catch(Exception ex)
-                {
-                    Logger.LogException(ex);
-                }
-                return false;
-            }
-
-            Logger.LogException(new Exception("Original component is null somehow"));
-            return false;
-        }
-
-
-
-        private void RightListBox_LostFocus(object sender, RoutedEventArgs e)
-        {
-            e.Handled = true;
+            WriteTreeViewItemsToFile(rootItem);
         }
 
         private void CreateTreeViewItem(Component component, Dictionary<Guid, Component> componentDictionary, TreeViewItem parentItem)
@@ -458,7 +457,6 @@ namespace KOTORModSync.GUI
                     ItemClickCommand.Execute(component);
                 };
 
-
                 // Add the component item to the parent item
                 ((AvaloniaList<object>)parentItem.Items).Add(componentItem);
 
@@ -477,7 +475,7 @@ namespace KOTORModSync.GUI
                                 CreateTreeViewItem(dependency, componentDictionary, componentItem);
                             }
                         }
-                        catch(FormatException ex)
+                        catch (FormatException ex)
                         {
                             // usually catches invalid guids for the user.
                             Logger.LogException(ex);
@@ -491,6 +489,38 @@ namespace KOTORModSync.GUI
                 Logger.LogException(new Exception("Error creating tree view item: {ex.Message}"));
             }
         }
+
+        private void WriteTreeViewItemsToFile(TreeViewItem rootItem)
+        {
+            string randomFileName = System.IO.Path.GetFileNameWithoutExtension(System.IO.Path.GetRandomFileName());
+            string filePath = $"modconfig_{randomFileName}.txt";
+
+            using (StreamWriter writer = new StreamWriter(filePath))
+            {
+                // Write the tree view items to the file
+                WriteTreeViewItemToFile(rootItem, writer);
+            }
+        }
+
+
+        private void WriteTreeViewItemToFile(TreeViewItem item, StreamWriter writer)
+        {
+            var component = item.Tag as Component;
+            if (component != null)
+            {
+                var tomlContents = Serializer.SerializeComponent(component);
+                writer.WriteLine(tomlContents);
+            }
+
+            // Process child items recursively
+            foreach (var childItem in item.Items.OfType<TreeViewItem>())
+            {
+                WriteTreeViewItemToFile(childItem, writer);
+            }
+        }
+
+
+
 
         private void RightDataGrid_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {

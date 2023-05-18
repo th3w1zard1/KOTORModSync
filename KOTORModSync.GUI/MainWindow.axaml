@@ -36,7 +36,13 @@
                     </TreeView.ItemTemplate>
                 </TreeView>
             </ScrollViewer>
-            <ListBox x:Name="rightListBox" Grid.Column="1" Margin="10" />
+            <ScrollViewer Grid.Column="1" VerticalScrollBarVisibility="Auto">
+                <TextBox x:Name="rightTextBox" Margin="10" AcceptsReturn="True" TextWrapping="Wrap" />
+            </ScrollViewer>
+            <Button Content="Save" Click="SaveButton_Click" />
+
+
+
 
             <StackPanel Grid.Column="2" Orientation="Vertical" HorizontalAlignment="Center">
                 <Button Content="Load Installation File" Margin="0 10" Click="Button1_Click" />

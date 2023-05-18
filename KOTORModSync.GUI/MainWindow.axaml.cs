@@ -36,8 +36,11 @@ namespace KOTORModSync.GUI
         private TextBox _logTextBox;
         private StringBuilder _logBuilder;
         private List<Component> components;
-        private ObservableCollection<Component> selectedComponents;
+        private ObservableCollection<Component> selectedComponents = new ObservableCollection<Component>();
+        private ObservableCollection<string> selectedComponentProperties;
 
+
+        private string currentComponent;
         public MainWindow()
         {
             InitializeComponent();
@@ -48,7 +51,10 @@ namespace KOTORModSync.GUI
             AvaloniaXamlLoader.Load(this);
             // Find the leftTreeView control and assign it to the member variable
             leftTreeView = this.FindControl<TreeView>("leftTreeView");
-            rightListBox = this.FindControl<ListBox>("rightListBox");
+            rightTextBox = this.FindControl<TextBox>("rightTextBox");
+            rightTextBox.LostFocus += RightListBox_LostFocus; // Prevents rightListBox from being cleared when clicking elsewhere.
+            selectedComponentProperties = new ObservableCollection<string>();
+            rightTextBox.DataContext = selectedComponentProperties;
         }
 
         public static IControl Build(object data)
@@ -181,38 +187,27 @@ namespace KOTORModSync.GUI
             if (parameter is Component component)
             {
                 // Handle the item click event here
-                PopulateRightListBox(component);
+                if (!selectedComponents.Contains(component))
+                {
+                    selectedComponents.Add(component);
+                }
+                PopulateRightTextBox(component);
             }
         }
-        private void PopulateRightListBox(Component selectedComponent)
+
+        private void PopulateRightTextBox(Component selectedComponent)
         {
-            if (selectedComponent != null && rightListBox != null)
+            if (selectedComponent != null && rightTextBox != null)
             {
-                rightListBox.Items = selectedComponent.GetType().GetProperties()
-                    .Select<PropertyInfo, object>(property =>
-                    {
-                        var value = property.GetValue(selectedComponent);
-                        var displayName = property.Name;
-
-                        if (value is List<string> listValue)
-                        {
-                            return new { Name = displayName, Value = listValue, DataType = "List" };
-                        }
-                        else if (value is Dictionary<string, string> dictionaryValue)
-                        {
-                            return new { Name = displayName, Value = dictionaryValue, DataType = "Dictionary" };
-                        }
-                        else
-                        {
-                            return new { Name = displayName, Value = value, DataType = "Default" };
-                        }
-                    })
-                    .ToList();
+                rightTextBox.Text = Serializer.SerializeComponent(selectedComponent);
             }
         }
 
 
-
+        private void RightListBox_LostFocus(object sender, RoutedEventArgs e)
+        {
+            e.Handled = true;
+        }
 
         private void CreateTreeViewItem(Component component, Dictionary<Guid, Component> componentDictionary, TreeViewItem parentItem)
         {
@@ -232,8 +227,13 @@ namespace KOTORModSync.GUI
                 // Assign the ItemClickCommand to the componentItem
                 componentItem.DoubleTapped += (sender, e) =>
                 {
+                    if (selectedComponents.Contains(component))
+                    {
+                        selectedComponents.Remove(component);
+                    }
                     ItemClickCommand.Execute(component);
                 };
+
 
                 // Add the component item to the parent item
                 ((AvaloniaList<object>)parentItem.Items).Add(componentItem);

@@ -53,12 +53,24 @@ namespace KOTORModSync.GUI
         private void InitializeComponent()
         {
             AvaloniaXamlLoader.Load(this);
+            components = new List<Component>();
             // Find the leftTreeView control and assign it to the member variable
             leftTreeView = this.FindControl<TreeView>("leftTreeView");
             rightTextBox = this.FindControl<TextBox>("rightTextBox");
             rightTextBox.LostFocus += RightListBox_LostFocus; // Prevents rightListBox from being cleared when clicking elsewhere.
             selectedComponentProperties = new ObservableCollection<string>();
             rightTextBox.DataContext = selectedComponentProperties;
+            guidTextBox = this.FindControl<TextBox>("guidTextBox");
+            guidTextBox.Width = rightTextBox.Bounds.Width;
+            rightTextBox.PropertyChanged += RightTextBox_PropertyChanged;
+        }
+
+        private void RightTextBox_PropertyChanged(object sender, AvaloniaPropertyChangedEventArgs e)
+        {
+            if (e.Property == TextBox.BoundsProperty)
+            {
+                guidTextBox.Width = rightTextBox.Bounds.Width;
+            }
         }
 
         public static IControl Build(object data)
@@ -133,7 +145,7 @@ namespace KOTORModSync.GUI
 
 
 
-        private async void Button1_Click(object sender, RoutedEventArgs e)
+        private async void LoadInstallFile_Click(object sender, RoutedEventArgs e)
         {
             // Open the file dialog to select a file
             var filePath = await OpenFile();
@@ -177,6 +189,54 @@ namespace KOTORModSync.GUI
                     });
                 }
             }
+        }
+
+        private void AddComponentButton_Click(object sender, RoutedEventArgs e)
+        {
+            // Create a new default component with a new GUID
+            var newComponent = new Component
+            {
+                Guid = Guid.NewGuid().ToString(),
+                Name = "new item"
+            };
+
+            // Add the new component to the collection
+            components.Add(newComponent);
+
+            // Refresh the TreeView to reflect the changes
+            RefreshTreeView();
+
+            // Set the example deserialized string for the new component
+            string exampleString = Component.defaultComponent += Instruction.defaultInstructions;
+            rightTextBox.Text = exampleString;
+        }
+
+
+
+
+        private void RemoveComponentButton_Click(object sender, RoutedEventArgs e)
+        {
+            // Get the selected component from the TreeView
+            if (leftTreeView.SelectedItem is TreeViewItem selectedTreeViewItem && selectedTreeViewItem.Tag is Component selectedComponent)
+            {
+                // Remove the selected component from the collection
+                components.Remove(selectedComponent);
+
+                // Refresh the TreeView to reflect the changes
+                RefreshTreeView();
+            }
+        }
+
+
+
+        private async void SetDirectories_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        private async void StartInstall_Click(object sender, RoutedEventArgs e)
+        {
+
         }
 
         private ICommand itemClickCommand;
@@ -234,9 +294,73 @@ namespace KOTORModSync.GUI
                         informationDialog.InfoText = "There were some problems with your syntax, please check the output window.";
                     }
                     await informationDialog.ShowDialog<bool?>(this);
+                    RefreshTreeView();
                 }
             }
         }
+
+        private void DeleteMenuItem_Click(object sender, RoutedEventArgs e)
+        {
+            // Handle the Delete menu item click event
+            // You can access the corresponding TreeViewItem and perform the desired action
+            if (sender is MenuItem menuItem && menuItem.DataContext is Component selectedComponent)
+            {
+                // Remove the component from your data source
+                components.Remove(selectedComponent);
+
+                // Update the leftTreeView to reflect the changes
+                RefreshTreeView();
+            }
+        }
+
+        private void RefreshTreeView()
+        {
+            // Create a dictionary to store components by their GUIDs
+            Dictionary<Guid, Component> componentDictionary;
+            try
+            {
+                componentDictionary = components.ToDictionary(c => Guid.Parse(c.Guid));
+            }
+            catch(Exception ex)
+            {
+                if (ex is ArgumentException || ex is FormatException)
+                    Logger.LogException(ex);
+                else
+                    throw ex;
+                return;
+            }
+            // Create the root item for the tree view
+            var rootItem = new TreeViewItem
+            {
+                Header = "Components"
+            };
+
+            // Iterate over the components and create tree view items
+            foreach (var component in components)
+            {
+                CreateTreeViewItem(component, componentDictionary, rootItem);
+            }
+
+            // Create a collection to hold the root item
+            var rootItemsCollection = new AvaloniaList<TreeViewItem> { rootItem };
+
+            // Set the root item collection as the items source of the tree view
+            leftTreeView.Items = rootItemsCollection;
+
+            // Expand the root item to automatically expand the tree view
+            rootItem.IsExpanded = true;
+        }
+
+        private void GenerateGuidButton_Click(object sender, RoutedEventArgs e)
+        {
+            // Generate a unique GUID
+            Guid uniqueGuid = Guid.NewGuid();
+
+            // Set the generated GUID to the guidTextBox
+            guidTextBox.Text = uniqueGuid.ToString();
+        }
+
+
 
         public bool SaveChanges()
         {
@@ -244,16 +368,36 @@ namespace KOTORModSync.GUI
             var selectedTreeViewItem = leftTreeView.SelectedItem as TreeViewItem;
             if (selectedTreeViewItem != null && selectedTreeViewItem.Tag is Component selectedComponent)
             {
-                Component newComponent = Serializer.FileHandler.DeserializeTomlComponent(rightTextBox.Text);
-                if (newComponent != null)
-                    return true;
-                //SaveComponentsToFile();
+                try
+                {
+                    Component newComponent = Serializer.FileHandler.DeserializeTomlComponent(rightTextBox.Text);
+                    if (newComponent != null)
+                    {
+                        // Find the corresponding component in the collection
+                        int index = components.IndexOf(selectedComponent);
+                        if (index >= 0)
+                        {
+                            // Update the properties of the component
+                            components[index] = newComponent;
+                            RefreshTreeView(); // Refresh the tree view to reflect the changes
+                            leftTreeView.SelectedItem = newComponent; // Select the updated component in the tree view
+                            return true;
+                        }
+                        Logger.LogException(new Exception("Could not find index of component. Please back up your work and try again."));
+                        return false;
+                    }
+                }
+                catch(Exception ex)
+                {
+                    Logger.LogException(ex);
+                }
                 return false;
             }
 
             Logger.LogException(new Exception("Original component is null somehow"));
             return false;
         }
+
 
 
         private void RightListBox_LostFocus(object sender, RoutedEventArgs e)
@@ -296,11 +440,19 @@ namespace KOTORModSync.GUI
                     // Iterate over the dependencies and create tree view items recursively
                     foreach (var dependencyGuid in component.Dependencies)
                     {
-                        // Check if the dependency exists in the component dictionary
-                        if (componentDictionary.TryGetValue(Guid.Parse(dependencyGuid), out Component dependency))
+                        try
                         {
-                            // Create the dependency tree view item recursively
-                            CreateTreeViewItem(dependency, componentDictionary, componentItem);
+                            // Check if the dependency exists in the component dictionary
+                            if (componentDictionary.TryGetValue(Guid.Parse(dependencyGuid), out Component dependency))
+                            {
+                                // Create the dependency tree view item recursively
+                                CreateTreeViewItem(dependency, componentDictionary, componentItem);
+                            }
+                        }
+                        catch(FormatException ex)
+                        {
+                            // usually catches invalid guids for the user.
+                            Logger.LogException(ex);
                         }
                     }
                 }
@@ -308,7 +460,7 @@ namespace KOTORModSync.GUI
             catch (Exception ex)
             {
                 // Handle the exception according to your application's requirements
-                Console.WriteLine($"Error creating tree view item: {ex.Message}");
+                Logger.LogException(new Exception("Error creating tree view item: {ex.Message}"));
             }
         }
 

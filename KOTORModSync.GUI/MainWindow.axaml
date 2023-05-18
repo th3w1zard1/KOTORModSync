@@ -4,7 +4,57 @@
         x:Class="KOTORModSync.GUI.MainWindow"
         Title="KOTORModSync"
         Width="1200"
-        Height="600">
+        Height="600"
+        Background="#1B232F">
+
+    <Window.Styles>
+        <Style Selector="TextBlock">
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="FontWeight" Value="Normal" />
+            <Setter Property="Margin" Value="0,2" />
+            <Setter Property="Foreground" Value="White" />
+        </Style>
+        <Style Selector="Button">
+            <Setter Property="Margin" Value="0,2" />
+            <Setter Property="Padding" Value="10" />
+            <Setter Property="MinWidth" Value="100" />
+            <Setter Property="Background" Value="#4D596D" />
+            <Setter Property="Foreground" Value="White" />
+            <Setter Property="HorizontalAlignment" Value="Center" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+        <Style Selector="Button:hover">
+            <Setter Property="Foreground" Value="White" />
+            <!-- Bright white color -->
+        </Style>
+        <Style Selector="TextBox">
+            <Setter Property="Margin" Value="2" />
+            <Setter Property="Padding" Value="2" />
+            <Setter Property="MinWidth" Value="200" />
+            <Setter Property="MinHeight" Value="30" />
+            <Setter Property="Background" Value="#3E4859" />
+            <Setter Property="Foreground" Value="White" />
+            <Setter Property="BorderBrush" Value="#4D596D" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="FontSize" Value="14" />
+        </Style>
+        <Style Selector="TreeView">
+            <Setter Property="Margin" Value="2" />
+            <Setter Property="MinWidth" Value="150" />
+            <Setter Property="Background" Value="#4D596D" />
+        </Style>
+        <Style Selector="ScrollViewer">
+            <Setter Property="VerticalScrollBarVisibility" Value="Auto" />
+            <Setter Property="HorizontalScrollBarVisibility" Value="Auto" />
+        </Style>
+        <Style Selector="StackPanel">
+            <Setter Property="Margin" Value="2" />
+        </Style>
+        <Style Selector="Rectangle">
+            <Setter Property="Width" Value="5" />
+            <Setter Property="Fill" Value="Transparent" />
+        </Style>
+    </Window.Styles>
 
     <Grid>
         <Grid.RowDefinitions>
@@ -13,7 +63,7 @@
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <TextBlock Text="KOTORModSync" FontSize="18" FontWeight="Bold" HorizontalAlignment="Center" Margin="0,10" />
+        <TextBlock Text="KOTORModSync" FontSize="24" FontWeight="Bold" HorizontalAlignment="Center" Margin="0,10" />
 
         <Grid Grid.Row="1">
             <Grid.ColumnDefinitions>
@@ -23,31 +73,57 @@
             </Grid.ColumnDefinitions>
 
             <ScrollViewer Grid.Column="0" VerticalScrollBarVisibility="Auto">
-                <TreeView Name="leftTreeView" Margin="10">
-                    <TreeView.ItemTemplate>
-                        <DataTemplate>
-                            <StackPanel Orientation="Horizontal">
-                                <CheckBox IsChecked="{Binding IsChecked}" />
-                                <TextBlock Text="{Binding Name}"
-                                           local:AttachedProperties.ItemClickCommand="{Binding DataContext.ItemClickCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Window}}"
-                                           local:AttachedProperties.ItemClickCommandParameter="{Binding}" />
-                            </StackPanel>
-                        </DataTemplate>
-                    </TreeView.ItemTemplate>
-                </TreeView>
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <TreeView Name="leftTreeView" Margin="10" MinHeight="350">
+                        <TreeView.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal">
+                                    <CheckBox IsChecked="{Binding IsChecked}" />
+                                    <TextBlock Text="{Binding Name}"
+                                               local:AttachedProperties.ItemClickCommand="{Binding DataContext.ItemClickCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Window}}"
+                                               local:AttachedProperties.ItemClickCommandParameter="{Binding}">
+                                    </TextBlock>
+                                </StackPanel>
+                            </DataTemplate>
+                        </TreeView.ItemTemplate>
+                    </TreeView>
+
+                    <StackPanel Orientation="Horizontal" Grid.Row="1" HorizontalAlignment="Center" Margin="0,10">
+                        <Button Content=" Add Mod [+] " Margin="5" HorizontalAlignment="Center" Click="AddComponentButton_Click" />
+                        <Button Content=" Del Mod [-] " Margin="5" HorizontalAlignment="Center" Click="RemoveComponentButton_Click" />
+                    </StackPanel>
+
+                    <StackPanel Grid.Row="2" HorizontalAlignment="Center">
+                        <Button Content="Save Individual Mod" Click="SaveButton_Click" />
+                    </StackPanel>
+                </Grid>
             </ScrollViewer>
+
             <ScrollViewer Grid.Column="1" VerticalScrollBarVisibility="Auto">
-                <TextBox x:Name="rightTextBox" Margin="10" AcceptsReturn="True" TextWrapping="Wrap" />
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <TextBox x:Name="rightTextBox" Margin="10" AcceptsReturn="True" TextWrapping="Wrap" Height="400" />
+
+                    <StackPanel Grid.Row="1" Orientation="Horizontal" VerticalAlignment="Center">
+                        <Button Content="Generate GUID" Click="GenerateGuidButton_Click" MinWidth="100" />
+                        <Rectangle Width="10" />
+                        <TextBox x:Name="guidTextBox" Width="{Binding ElementName=rightTextBox, Path=ActualWidth}" MinWidth="200" />
+                    </StackPanel>
+                </Grid>
             </ScrollViewer>
-            <Button Content="Save" Click="SaveButton_Click" />
-
-
-
 
             <StackPanel Grid.Column="2" Orientation="Vertical" HorizontalAlignment="Center">
-                <Button Content="Load Installation File" Margin="0 10" Click="Button1_Click" />
-                <Button Content="Define Custom Steps" Margin="0 10" />
-                <Button Content="Start new install" Margin="0 10" />
+                <Button Content="Load Installation File" Margin="0 10" Click="LoadInstallFile_Click" />
+                <Button Content="Set Directories" Margin="0 10" Click="SetDirectories_Click"/>
+                <Button Content="Start Install" Margin="0 10" Click="StartInstall_Click" />
             </StackPanel>
         </Grid>
     </Grid>

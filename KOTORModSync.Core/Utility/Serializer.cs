@@ -232,9 +232,12 @@ namespace KOTORModSync.Core.Utility
                 foreach (Tomlyn.Model.TomlObject tomlComponent in componentTables)
                 {
                     component = Component.DeserializeComponent(tomlComponent);
-                    foreach (Instruction instruction in component.Instructions)
+                    if (component.Instructions != null)
                     {
-                        instruction.ParentComponent = component;
+                        foreach (Instruction instruction in component.Instructions)
+                        {
+                            instruction.ParentComponent = component;
+                        }
                     }
                     break;
                 }

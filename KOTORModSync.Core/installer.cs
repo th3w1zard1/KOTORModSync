@@ -26,6 +26,42 @@ namespace KOTORModSync.Core
         public Component ParentComponent { get; set; }
         public Dictionary<FileInfo, System.Security.Cryptography.SHA1> ExpectedChecksums { get; set; }
 
+        public static string defaultInstructions = @"
+[[thisMod.instructions]]
+    type = ""extract""
+    source = ""C:\\Users\\****\\path\\to\\mod\\mod.rar""
+    overwrite = true
+
+[[thisMod.instructions]]
+    type = ""delete""
+    paths = [
+        ""C:\\Users\\****\\path\\to\\mod\\file1.tpc"",
+        ""C:\\Users\\****\\path\\to\\mod\\file2.tpc"",
+        ""C:\\Users\\****\\path\\to\\mod\\file3.tpc""
+    ]
+    overwrite = false
+
+[[thisMod.instructions]]
+    type = ""move""
+    source = ""C:\\Users\\****\\path\\to\\mod\\file\\to\\move""
+    destination = ""C:\\Users\\****\\path\\to\\kotor2\\Override""
+
+[[thisMod]]
+    name = ""your custom name of your mod""
+    guid = ""{C5418549-6B7E-4A8C-8B8E-4AA1BC63C732}""
+    installOrder = 1
+    dependencies = [
+        ""Copy and paste any guid of any mod you depend on here, format like below"",
+        ""{C5418549-6B7E-4A8C-8B8E-4AA1BC63C732}"",
+        ""{D0F371DA-5C69-4A26-8A37-76E3A6A2A50D}""
+    ]
+
+[[thisMod.instructions]]
+    type = ""run""
+    path = ""C:\\Users\\****\\path\\to\\mod\\TSLPatcher.exe""
+    arguments = ""any command line arguments to pass (none available in TSLPatcher)""
+";
+
         public static async Task<bool> ExecuteInstructionAsync(Func<Task<bool>> instructionMethod) => await instructionMethod().ConfigureAwait(false);
 
         public bool ExtractFile(Instruction thisStep, Component component) =>
@@ -42,56 +78,47 @@ namespace KOTORModSync.Core
 
         public async Task<bool> ExecuteTSLPatcherAsync(Instruction thisStep, Component component)
         {
-            try
+            // Check if we have permission to write to the Destination directory
+            if (!Utility.Utility.CanWriteToDirectory(MainConfig.DestinationPath))
             {
-                // Check if we have permission to write to the Destination directory
-                if (!Utility.Utility.CanWriteToDirectory(MainConfig.DestinationPath))
-                {
-                    throw new Exception("Cannot write to the destination directory.");
-                }
-
-                var cancellationTokenSource = new CancellationTokenSource();
-                cancellationTokenSource.CancelAfter(TimeSpan.FromSeconds(30));
-
-                var startInfo = new ProcessStartInfo
-                {
-                    FileName = thisStep.Path,
-                    Arguments = thisStep.Arguments,
-                    RedirectStandardOutput = true,
-                    UseShellExecute = false,
-                    CreateNoWindow = true
-                };
-                var process = new Process
-                {
-                    StartInfo = startInfo
-                };
-                _ = process.Start();
-
-                Task<string> outputTask = process.StandardOutput.ReadToEndAsync();
-
-                while (!process.HasExited && !cancellationTokenSource.IsCancellationRequested)
-                {
-                    await Task.Delay(100);
-                }
-
-                if (!process.HasExited)
-                {
-                    process.Kill();
-                    throw new Exception("TSLPatcher timed out after 30 seconds.");
-                }
-
-                string output = await outputTask;
-
-                return process.ExitCode != 0
-                    ? throw new Exception($"TSLPatcher failed with exit code {process.ExitCode}. Output:\n{output}")
-                    : !VerifyInstall(component) ? throw new Exception("TSLPatcher failed to install the mod correctly.") : true;
+                throw new Exception("Cannot write to the destination directory.");
             }
-            catch (Exception)
+
+            var cancellationTokenSource = new CancellationTokenSource();
+            cancellationTokenSource.CancelAfter(TimeSpan.FromSeconds(30));
+
+            var startInfo = new ProcessStartInfo
             {
-                // Handle any exceptions that occurred
-                // Log the exception or display it to the user as appropriate
-                return false;
+                FileName = thisStep.Path,
+                Arguments = thisStep.Arguments,
+                RedirectStandardOutput = true,
+                UseShellExecute = false,
+                CreateNoWindow = true
+            };
+            var process = new Process
+            {
+                StartInfo = startInfo
+            };
+            _ = process.Start();
+
+            Task<string> outputTask = process.StandardOutput.ReadToEndAsync();
+
+            while (!process.HasExited && !cancellationTokenSource.IsCancellationRequested)
+            {
+                await Task.Delay(100);
             }
+
+            if (!process.HasExited)
+            {
+                process.Kill();
+                throw new Exception("TSLPatcher timed out after 30 seconds.");
+            }
+
+            string output = await outputTask;
+
+            return process.ExitCode != 0
+                ? throw new Exception($"TSLPatcher failed with exit code {process.ExitCode}. Output:\n{output}")
+                : !VerifyInstall(component) ? throw new Exception("TSLPatcher failed to install the mod correctly.") : true;
         }
 
         public static bool VerifyInstall(Component component)
@@ -155,6 +182,23 @@ namespace KOTORModSync.Core
         public List<Instruction> Instructions { get; set; }
         public DateTime SourceLastModified { get; internal set; }
 
+        public static string defaultComponent = @"
+[[thisMod]]
+    name = ""your custom name of your mod""
+    guid = ""{B3525945-BDBD-45D8-A324-AAF328A5E13E}""
+    dependencies = [
+        ""Copy and paste any guid of any mod you depend on here, format like below"",
+        ""{C5418549-6B7E-4A8C-8B8E-4AA1BC63C732}"",
+        ""{D0F371DA-5C69-4A26-8A37-76E3A6A2A50D}""
+    ]
+    restrictions = [
+        ""Copy and paste any guid of any incompatible mod here, format like below"",
+        ""{C5418549-6B7E-4A8C-8B8E-4AA1BC63C732}"",
+        ""{D0F371DA-5C69-4A26-8A37-76E3A6A2A50D}""
+    ]
+    installOrder = 3";
+
+
         public static Component DeserializeComponent(TomlObject tomlObject)
         {
             if (!(tomlObject is TomlTable componentTable))
@@ -170,7 +214,7 @@ namespace KOTORModSync.Core
                 Guid = GetRequiredValue<string>(componentDict, "Guid"),
                 InstallOrder = GetValueOrDefault<int>(componentDict, "InstallOrder"),
                 Dependencies = GetValueOrDefault<List<string>>(componentDict, "Dependencies"),
-                Instructions = DeserializeInstructions(GetRequiredValue<TomlTableArray>(componentDict, "Instructions"))
+                Instructions = DeserializeInstructions(GetValueOrDefault<TomlTableArray>(componentDict, "Instructions"))
             };
             component.Instructions?.ForEach(instruction => instruction.ParentComponent = component);
 
@@ -181,7 +225,8 @@ namespace KOTORModSync.Core
         {
             if (!(tomlObject is TomlTableArray instructionsArray))
             {
-                throw new ArgumentException("Expected a TOML table array for instructions data.");
+                Logger.LogException(new Exception("Expected a TOML table array for instructions data."));
+                return null;
             }
 
             var instructions = new List<Instruction>();
@@ -244,7 +289,8 @@ namespace KOTORModSync.Core
                 {
                     if (required)
                     {
-                        throw new ArgumentException($"Missing or invalid '{key}' field.");
+                        Logger.LogException(new Exception($"Missing or invalid '{key}' field."));
+                        return default(T);
                     }
                     else
                     {
@@ -253,7 +299,6 @@ namespace KOTORModSync.Core
                 }
                 value = dict[caseInsensitiveKey];
             }
-
             if (value is T t)
             {
                 return t;
@@ -292,6 +337,7 @@ namespace KOTORModSync.Core
                     throw new ArgumentException($"Invalid format for '{key}' field.");
                 }
             }
+            
 
             return default(T);
         }
@@ -306,102 +352,94 @@ namespace KOTORModSync.Core
 
         public static async Task<bool> ExecuteInstructions()
         {
-            try
+            // Check if we have permission to write to the Destination directory
+            if (!Utility.Utility.CanWriteToDirectory(MainConfig.DestinationPath))
             {
-                // Check if we have permission to write to the Destination directory
-                if (!Utility.Utility.CanWriteToDirectory(MainConfig.DestinationPath))
-                {
-                    throw new Exception("Cannot write to the destination directory.");
-                }
+                throw new Exception("Cannot write to the destination directory.");
+            }
 
-                async Task<bool> ProcessComponentAsync(Component component)
+            async Task<bool> ProcessComponentAsync(Component component)
+            {
+                foreach (Instruction instruction in component.Instructions)
                 {
-                    foreach (Instruction instruction in component.Instructions)
+                    // Get the original checksums before making any modifications
+                    var originalPathsToChecksum = new Dictionary<FileInfo, System.Security.Cryptography.SHA1>();
+                    foreach (FileInfo file in MainConfig.DestinationPath.GetFiles("*.*", SearchOption.AllDirectories))
                     {
-                        // Get the original checksums before making any modifications
-                        var originalPathsToChecksum = new Dictionary<FileInfo, System.Security.Cryptography.SHA1>();
-                        foreach (FileInfo file in MainConfig.DestinationPath.GetFiles("*.*", SearchOption.AllDirectories))
-                        {
-                            System.Security.Cryptography.SHA1 sha1 = await FileChecksumValidator.CalculateSHA1Async(file);
-                            originalPathsToChecksum[file] = sha1;
-                        }
-
-                        bool success = false;
-
-                        switch (instruction.Type.ToLower())
-                        {
-                            case "extract":
-                                success = instruction.ExtractFile(instruction, component);
-                                break;
-
-                            case "delete":
-                                success = instruction.DeleteFile(instruction, component);
-                                break;
-
-                            case "move":
-                                success = instruction.MoveFile(instruction, component);
-                                break;
-
-                            case "tslpatcher":
-                                success = await instruction.ExecuteTSLPatcherAsync(instruction, component);
-                                break;
-
-                            default:
-                                // Handle unknown instruction type here
-                                break;
-                        }
-
-                        if (!success)
-                        {
-                            Console.WriteLine($"Instruction {instruction.Type} failed to install the mod correctly.");
-                            return false;
-                        }
-
-                        // Get the new checksums after the modifications
-                        var validator = new FileChecksumValidator(
-                            destinationPath: MainConfig.DestinationPath.FullName,
-                            expectedChecksums: instruction.ExpectedChecksums,
-                            originalChecksums: originalPathsToChecksum
-                        );
-
-                        bool checksumsMatch = await validator.ValidateChecksumsAsync();
-
-                        if (checksumsMatch)
-                        {
-                            Console.WriteLine($"Instruction {instruction.Type} succeeded and modified files have expected checksums.");
-                        }
-                        else
-                        {
-                            Console.WriteLine($"Instruction {instruction.Type} succeeded but modified files have unexpected checksums.");
-                        }
+                        System.Security.Cryptography.SHA1 sha1 = await FileChecksumValidator.CalculateSHA1Async(file);
+                        originalPathsToChecksum[file] = sha1;
                     }
 
-                    _ = Path.Combine(MainConfig.ModConfigPath.FullName, "modpack_new.toml");
+                    bool success = false;
 
-                    return true;
-                }
-
-                string modConfigFile = Path.Combine(MainConfig.ModConfigPath.FullName, "modpack.toml");
-                List<Component> components = Utility.Serializer.FileHandler.ReadComponentsFromFile(modConfigFile);
-
-                foreach (Component component in components)
-                {
-                    bool result = await ProcessComponentAsync(component);
-
-                    if (!result)
+                    switch (instruction.Type.ToLower())
                     {
-                        Console.WriteLine($"Component {component.Name} failed to install the mod correctly.");
+                        case "extract":
+                            success = instruction.ExtractFile(instruction, component);
+                            break;
+
+                        case "delete":
+                            success = instruction.DeleteFile(instruction, component);
+                            break;
+
+                        case "move":
+                            success = instruction.MoveFile(instruction, component);
+                            break;
+
+                        case "tslpatcher":
+                            success = await instruction.ExecuteTSLPatcherAsync(instruction, component);
+                            break;
+
+                        default:
+                            // Handle unknown instruction type here
+                            break;
+                    }
+
+                    if (!success)
+                    {
+                        Console.WriteLine($"Instruction {instruction.Type} failed to install the mod correctly.");
                         return false;
                     }
+
+                    // Get the new checksums after the modifications
+                    var validator = new FileChecksumValidator(
+                        destinationPath: MainConfig.DestinationPath.FullName,
+                        expectedChecksums: instruction.ExpectedChecksums,
+                        originalChecksums: originalPathsToChecksum
+                    );
+
+                    bool checksumsMatch = await validator.ValidateChecksumsAsync();
+
+                    if (checksumsMatch)
+                    {
+                        Console.WriteLine($"Instruction {instruction.Type} succeeded and modified files have expected checksums.");
+                    }
+                    else
+                    {
+                        Console.WriteLine($"Instruction {instruction.Type} succeeded but modified files have unexpected checksums.");
+                    }
                 }
+
+                _ = Path.Combine(MainConfig.ModConfigPath.FullName, "modpack_new.toml");
 
                 return true;
             }
-            catch (Exception ex)
+
+            string modConfigFile = Path.Combine(MainConfig.ModConfigPath.FullName, "modpack.toml");
+            List<Component> components = Utility.Serializer.FileHandler.ReadComponentsFromFile(modConfigFile);
+
+            foreach (Component component in components)
             {
-                Console.WriteLine($"An exception occurred: {ex.Message}");
-                return false;
+                bool result = await ProcessComponentAsync(component);
+
+                if (!result)
+                {
+                    Console.WriteLine($"Component {component.Name} failed to install the mod correctly.");
+                    return false;
+                }
             }
+
+            return true;
         }
     }
 }

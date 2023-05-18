@@ -4,6 +4,6 @@
         x:Class="KOTORModSync.GUI.InformationDialog"
         Width="300" Height="150" Title="Save Confirmation" WindowStartupLocation="CenterScreen">
     <Grid>
-        <TextBlock Text="Saved successfully" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="20"/>
+        <TextBlock x:Name="InfoTextBlock" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="20"/>
     </Grid>
 </Window>

@@ -29,6 +29,7 @@ using Microsoft.VisualStudio.Services.Common;
 using System.Reflection;
 using Avalonia.Controls.Notifications;
 using static Nett.TomlObjectFactory;
+using Avalonia.Controls.Shapes;
 
 namespace KOTORModSync.GUI
 {
@@ -140,7 +141,7 @@ namespace KOTORModSync.GUI
             if (!string.IsNullOrEmpty(filePath))
             {
                 // Verify the file type
-                var fileExtension = Path.GetExtension(filePath);
+                var fileExtension = System.IO.Path.GetExtension(filePath);
                 if (string.Equals(fileExtension, ".toml", StringComparison.OrdinalIgnoreCase))
                 {
                     await Dispatcher.UIThread.InvokeAsync(() =>
@@ -219,11 +220,14 @@ namespace KOTORModSync.GUI
 
             if (hasChanges)
             {
-                bool confirmationResult = await ConfirmationDialog.ShowConfirmationDialog(this);
+                bool confirmationResult = await ConfirmationDialog.ShowConfirmationDialog(this, "Are you sure you want to save ?");
                 if (confirmationResult)
                 {
                     // SaveChanges();
-                    await new InformationDialog().ShowDialog<bool?>(this);
+                    var informationDialog = new InformationDialog();
+                    informationDialog.InfoText = "Saved successfully";
+                    await informationDialog.ShowDialog<bool?>(this);
+
                 }
             }
         }

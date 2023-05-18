@@ -4,7 +4,7 @@
         Title="Confirmation" Width="300" Height="150"
         x:Class="KOTORModSync.GUI.ConfirmationDialog">
     <Grid>
-        <TextBlock Text="Are you sure you want to save?" HorizontalAlignment="Center" VerticalAlignment="Center" />
+        <TextBlock x:Name="confirmTextBlock" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="20"/>
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="10">
             <Button Content="Yes" Tag="Yes" Click="YesButton_Click" />
             <Button Content="No" Tag="No" Click="NoButton_Click" />

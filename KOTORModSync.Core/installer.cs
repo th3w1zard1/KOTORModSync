@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
@@ -258,28 +259,50 @@ namespace KOTORModSync.Core
                 return t;
             }
 
-            if (value is Dictionary<string, object> nestedDict)
+            if (IsListType<T>() && value is IEnumerable enumerable)
             {
-                return GetValue<T>(nestedDict, key, required); // Recursively look for the key in the nested dictionary
+                Type elementType = typeof(T).GetGenericArguments()[0];
+                dynamic dynamicList = Activator.CreateInstance(typeof(List<>).MakeGenericType(elementType));
+
+                foreach (object item in enumerable)
+                {
+                    dynamic convertedItem = Convert.ChangeType(item, elementType);
+                    dynamicList.Add(convertedItem);
+                }
+
+                return dynamicList;
             }
 
-            if (value is TomlArray tomlArray && typeof(T) == typeof(List<string>))
+            try
             {
-                return (T)(object)tomlArray.Select(x => x.ToString()).ToList<string>(); // Convert TomlArray to List<string>
+                T convertedValue = (T)Convert.ChangeType(value, typeof(T));
+                return convertedValue;
             }
-
-            if (value is KeyValuePair<string, object> kvp && kvp.Value is T t2)
+            catch (InvalidCastException)
             {
-                return t2;
+                if (required)
+                {
+                    throw new ArgumentException($"Invalid '{key}' field type.");
+                }
             }
-
-            if (required)
+            catch (FormatException)
             {
-                throw new ArgumentException($"Missing or invalid '{key}' field.");
+                if (required)
+                {
+                    throw new ArgumentException($"Invalid format for '{key}' field.");
+                }
             }
 
             return default(T);
         }
+
+        private static bool IsListType<T>()
+        {
+            Type listType = typeof(T);
+            return listType.IsGenericType && listType.GetGenericTypeDefinition() == typeof(List<>);
+        }
+
+
 
         public static async Task<bool> ExecuteInstructions()
         {

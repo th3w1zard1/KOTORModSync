@@ -104,6 +104,9 @@ namespace KOTORModSync.Core.Utility
 
                 var config = TomlSettings.Create();
                 var tomlString = Nett.Toml.WriteString(rootTable);
+                string trimmed = tomlString.TrimStart(Environment.NewLine.ToCharArray())
+                      .TrimStart(); // Removes leading whitespace
+
                 File.WriteAllText(filePath, tomlString);
             }
 

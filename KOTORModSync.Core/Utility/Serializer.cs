@@ -18,6 +18,8 @@ using Tomlyn.Syntax;
 using Tomlyn.Model;
 using Nett;
 using static KOTORModSync.Core.ModDirectory;
+using System.ComponentModel;
+using System.Text;
 
 namespace KOTORModSync.Core.Utility
 {
@@ -95,6 +97,89 @@ namespace KOTORModSync.Core.Utility
             return tomlContents;
         }
 
+        public static string SerializeComponent(Component component)
+        {
+            var rootTable = new Dictionary<string, List<object>>()
+            {
+                ["thisMod"] = new List<object>()
+                    {
+                        SerializeObject(component)
+                    }
+            };
+
+            var config = TomlSettings.Create();
+            var tomlString = Nett.Toml.WriteString(rootTable);
+            return FixWhitespaceIssues(tomlString);
+        }
+
+        public static object SerializeObject(object obj)
+        {
+            var type = obj.GetType();
+            var serializedProperties = new Dictionary<string, object>();
+
+            foreach (var member in type.GetMembers(BindingFlags.Public | BindingFlags.Instance))
+            {
+                object value = null;
+                string memberName = null;
+
+                if (member is PropertyInfo property && property.CanRead)
+                {
+                    value = property.GetValue(obj);
+                    memberName = property.Name;
+                }
+                else if (member is FieldInfo field)
+                {
+                    value = field.GetValue(obj);
+                    memberName = field.Name;
+                }
+
+                if (value != null)
+                {
+                    if (value is IEnumerable && !(value is string))
+                    {
+                        var serializedList = new Tomlyn.Model.TomlArray();
+
+                        foreach (var item in (IEnumerable)value)
+                        {
+                            if (item != null && item.GetType().IsPrimitive || item is string)
+                            {
+                                if (item is IEnumerable && !(item is string))
+                                    serializedList.Add(SerializeObject(item));
+                                else
+                                    serializedList.Add(item?.ToString());
+                            }
+                            else
+                            {
+                                serializedList.Add(SerializeObject(item));
+                            }
+                        }
+
+
+                        serializedProperties[memberName] = serializedList;
+                    }
+                    else if (value.GetType().IsNested)
+                    {
+                        serializedProperties[memberName] = SerializeObject(value);
+                    }
+                    else if (value != null && value.GetType().IsPrimitive || value is string)
+                    {
+                        serializedProperties[memberName] = value?.ToString();
+                    }
+                }
+            }
+
+            if (serializedProperties.Count > 0)
+            {
+                return serializedProperties;
+            }
+            else if (!type.IsNested && serializedProperties.Count == 0)
+            {
+                return SerializeObject(obj);
+            }
+
+            return null;
+        }
+
         public static class FileHandler
         {
             private static List<object> MergeLists(List<object> list1, List<object> list2)
@@ -107,96 +192,16 @@ namespace KOTORModSync.Core.Utility
 
             public static void OutputConfigFile(List<Component> components, string filePath)
             {
-                var componentList = new List<object>();
+                var stringBuilder = new StringBuilder();
 
                 foreach (var component in components)
                 {
-                    var serializedComponent = SerializeObject(component);
-                    componentList.Add(serializedComponent);
+                    var serializedComponent = SerializeComponent(component); // Call SerializeComponent
+                    stringBuilder.AppendLine(serializedComponent);
                 }
 
-                var rootTable = new Dictionary<string, List<object>>()
-                {
-                    ["thisMod"] = componentList
-                };
-
-                var config = TomlSettings.Create();
-                var tomlString = Nett.Toml.WriteString(rootTable);
-                tomlString = FixWhitespaceIssues(tomlString);
+                var tomlString = stringBuilder.ToString();
                 File.WriteAllText(filePath, tomlString);
-            }
-
-            public class SerializedComponent
-            {
-                public Dictionary<string, object> SerializedProperties { get; set; }
-            }
-
-            private static object SerializeObject(object obj)
-            {
-                var type = obj.GetType();
-                var serializedProperties = new Dictionary<string, object>();
-
-                foreach (var member in type.GetMembers(BindingFlags.Public | BindingFlags.Instance))
-                {
-                    object value = null;
-                    string memberName = null;
-
-                    if (member is PropertyInfo property && property.CanRead)
-                    {
-                        value = property.GetValue(obj);
-                        memberName = property.Name;
-                    }
-                    else if (member is FieldInfo field)
-                    {
-                        value = field.GetValue(obj);
-                        memberName = field.Name;
-                    }
-
-                    if (value != null)
-                    {
-                        if (value is IEnumerable && !(value is string))
-                        {
-                            var serializedList = new Tomlyn.Model.TomlArray();
-
-                            foreach (var item in (IEnumerable)value)
-                            {
-                                if (item != null && item.GetType().IsPrimitive || item is string)
-                                {
-                                    if (item is IEnumerable && !(item is string))
-                                        serializedList.Add(SerializeObject(item));
-                                    else
-                                        serializedList.Add(item?.ToString());
-                                }
-                                else
-                                {
-                                    serializedList.Add(SerializeObject(item));
-                                }
-                            }
-
-
-                            serializedProperties[memberName] = serializedList;
-                        }
-                        else if (value.GetType().IsNested)
-                        {
-                            serializedProperties[memberName] = SerializeObject(value);
-                        }
-                        else if (value != null && value.GetType().IsPrimitive || value is string)
-                        {
-                            serializedProperties[memberName] = value?.ToString();
-                        }
-                    }
-                }
-
-                if (serializedProperties.Count > 0)
-                {
-                    return serializedProperties;
-                }
-                else if (!type.IsNested && serializedProperties.Count == 0)
-                {
-                    return SerializeObject(obj);
-                }
-
-                return null;
             }
 
             public static List<Component> ReadComponentsFromFile(string filePath)

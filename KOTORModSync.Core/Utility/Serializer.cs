@@ -77,6 +77,24 @@ namespace KOTORModSync.Core.Utility
             return root;
         }
 
+        public static string FixWhitespaceIssues(string tomlContents)
+        {
+            // Normalize line endings to '\n'
+            tomlContents = tomlContents.Replace("\r\n", "\n").Replace("\r", "\n");
+
+            // Remove leading and trailing whitespaces from each line
+            string[] lines = tomlContents.Split('\n');
+            for (int i = 0; i < lines.Length; i++)
+            {
+                lines[i] = lines[i].TrimStart().TrimEnd();
+            }
+
+            // Join the lines with '\n' separator
+            tomlContents = string.Join("\n", lines);
+
+            return tomlContents;
+        }
+
         public static class FileHandler
         {
             private static List<object> MergeLists(List<object> list1, List<object> list2)
@@ -104,9 +122,7 @@ namespace KOTORModSync.Core.Utility
 
                 var config = TomlSettings.Create();
                 var tomlString = Nett.Toml.WriteString(rootTable);
-                string trimmed = tomlString.TrimStart(Environment.NewLine.ToCharArray())
-                      .TrimStart(); // Removes leading whitespace
-
+                tomlString = FixWhitespaceIssues(tomlString);
                 File.WriteAllText(filePath, tomlString);
             }
 
@@ -160,7 +176,7 @@ namespace KOTORModSync.Core.Utility
 
                             serializedProperties[memberName] = serializedList;
                         }
-                        else if (IsNestedType(value))
+                        else if (value.GetType().IsNested)
                         {
                             serializedProperties[memberName] = SerializeObject(value);
                         }
@@ -183,17 +199,14 @@ namespace KOTORModSync.Core.Utility
                 return null;
             }
 
-            private static bool IsNestedType(object obj)
-            {
-                return obj.GetType().IsNested;
-            }
-
             public static List<Component> ReadComponentsFromFile(string filePath)
             {
                 try
                 {
                     // Read the contents of the file into a string
                     string tomlString = File.ReadAllText(filePath);
+
+                    tomlString = FixWhitespaceIssues(tomlString);
 
                     // Parse the TOML syntax into a TomlTable
                     DocumentSyntax tomlDocument = Tomlyn.Toml.Parse(tomlString);

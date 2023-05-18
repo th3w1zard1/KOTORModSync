@@ -81,7 +81,7 @@ namespace KOTORModSync.Tests
             string tomlContents = File.ReadAllText(filePath);
 
             // Fix whitespace issues
-            tomlContents = FixWhitespaceIssues(tomlContents);
+            tomlContents = Serializer.FixWhitespaceIssues(tomlContents);
 
             // Save the modified TOML file
             string modifiedFilePath = Path.GetTempFileName();
@@ -152,9 +152,6 @@ namespace KOTORModSync.Tests
             // Add mixed line endings and extra whitespaces
             tomlContents += "    \r\n\t   \r\n\r\n\r\n";
 
-            // Fix whitespace issues
-            tomlContents = FixWhitespaceIssues(tomlContents);
-
             // Save the modified TOML file
             string modifiedFilePath = Path.GetTempFileName();
             File.WriteAllText(modifiedFilePath, tomlContents);
@@ -173,27 +170,6 @@ namespace KOTORModSync.Tests
                 AssertComponentEquality(originalComponent, loadedComponent);
             }
         }
-
-        public static string FixWhitespaceIssues(string tomlContents)
-        {
-            // Normalize line endings to '\n'
-            tomlContents = tomlContents.Replace("\r\n", "\n").Replace("\r", "\n");
-
-            // Remove leading and trailing whitespaces from each line
-            string[] lines = tomlContents.Split('\n');
-            for (int i = 0; i < lines.Length; i++)
-            {
-                lines[i] = lines[i].TrimStart().TrimEnd();
-            }
-
-            // Join the lines with '\n' separator
-            tomlContents = string.Join("\n", lines);
-
-            return tomlContents;
-        }
-
-
-
         private string ConvertFieldNamesAndValuesToMixedCase(string tomlContents)
         {
             var convertedContents = new StringBuilder();

@@ -27,6 +27,8 @@ using static System.Net.WebRequestMethods;
 using System.Collections.ObjectModel;
 using Microsoft.VisualStudio.Services.Common;
 using System.Reflection;
+using Avalonia.Controls.Notifications;
+using static Nett.TomlObjectFactory;
 
 namespace KOTORModSync.GUI
 {
@@ -38,6 +40,7 @@ namespace KOTORModSync.GUI
         private List<Component> components;
         private ObservableCollection<Component> selectedComponents = new ObservableCollection<Component>();
         private ObservableCollection<string> selectedComponentProperties;
+        private string originalContent;
 
 
         private string currentComponent;
@@ -199,10 +202,31 @@ namespace KOTORModSync.GUI
         {
             if (selectedComponent != null && rightTextBox != null)
             {
-                rightTextBox.Text = Serializer.SerializeComponent(selectedComponent);
+                originalContent = Serializer.SerializeComponent(selectedComponent);
+                rightTextBox.Text = originalContent;
             }
         }
 
+        private bool CheckForChanges()
+        {
+            string currentContent = rightTextBox.Text;
+            return !string.Equals(currentContent, originalContent);
+        }
+
+        private async void SaveButton_Click(object sender, RoutedEventArgs e)
+        {
+            bool hasChanges = CheckForChanges();
+
+            if (hasChanges)
+            {
+                bool confirmationResult = await ConfirmationDialog.ShowConfirmationDialog(this);
+                if (confirmationResult)
+                {
+                    // SaveChanges();
+                    await new InformationDialog().ShowDialog<bool?>(this);
+                }
+            }
+        }
 
         private void RightListBox_LostFocus(object sender, RoutedEventArgs e)
         {
@@ -258,21 +282,6 @@ namespace KOTORModSync.GUI
                 // Handle the exception according to your application's requirements
                 Console.WriteLine($"Error creating tree view item: {ex.Message}");
             }
-        }
-        private void SaveButton_Click(object sender, RoutedEventArgs e)
-        {
-            // Save the new values from the rightDataGrid
-
-            // Access the modified components from the selectedComponents ObservableCollection
-            foreach (Component component in selectedComponents)
-            {
-                // Access the modified fields of the component and save them to the desired location
-                // For example:
-                // component.Name contains the updated name value
-                // component.SomeField contains the updated value of SomeField
-            }
-
-            // Perform any other necessary actions after saving the values
         }
 
         private void RightDataGrid_SelectionChanged(object sender, SelectionChangedEventArgs e)

@@ -27,5 +27,11 @@
     <Compile Update="OutputWindow.axaml.cs">
       <DependentUpon>OutputWindow.axaml</DependentUpon>
     </Compile>
+    <Compile Update="ConfirmationDialog.axaml.cs">
+      <DependentUpon>ConfirmationDialog.axaml</DependentUpon>
+    </Compile>
+    <Compile Update="InformationDialog.axaml.cs">
+      <DependentUpon>InformationDialog.axaml</DependentUpon>
+    </Compile>
   </ItemGroup>
 </Project>

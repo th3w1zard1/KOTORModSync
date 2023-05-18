@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
@@ -126,23 +127,63 @@ namespace KOTORModSync.Core.Utility
             }
         }
 
-        public static Task<Dictionary<FileInfo, SHA1>> LoadChecksumsFromFileAsync(FileInfo filePath)
+        public static async Task<Dictionary<FileInfo, SHA1>> LoadChecksumsFromFileAsync(FileInfo filePath)
         {
             if (!File.Exists(filePath.FullName))
             {
-                return Task.FromResult(new Dictionary<FileInfo, SHA1>());
+                return new Dictionary<FileInfo, SHA1>();
             }
 
-            async Task<Dictionary<FileInfo, SHA1>> LocalFunction()
+            var checksums = new Dictionary<FileInfo, SHA1>();
+
+            using (StreamReader reader = new StreamReader(filePath.FullName))
             {
-                using (StreamReader reader = new StreamReader(filePath.FullName))
+                string line;
+                while ((line = await reader.ReadLineAsync()) != null)
                 {
-                    string json = await reader.ReadToEndAsync();
-                    return JsonConvert.DeserializeObject<Dictionary<FileInfo, SHA1>>(json);
+                    string[] parts = line.Split(',');
+                    if (parts.Length == 2)
+                    {
+                        string file = parts[0];
+                        string hash = parts[1];
+
+                        FileInfo fileInfo = new FileInfo(file);
+                        SHA1 sha1 = SHA1.Create();
+
+                        byte[] hashBytes;
+                        if (TryConvertHexStringToBytes(hash, out hashBytes) && fileInfo.Exists)
+                        {
+                            checksums[fileInfo] = sha1;
+                        }
+                    }
                 }
             }
 
-            return LocalFunction();
+            return checksums;
         }
+
+        private static bool TryConvertHexStringToBytes(string hexString, out byte[] bytes)
+        {
+            int numberChars = hexString.Length;
+            if (numberChars % 2 != 0)
+            {
+                bytes = null;
+                return false;
+            }
+
+            bytes = new byte[numberChars / 2];
+            for (int i = 0; i < numberChars; i += 2)
+            {
+                if (!byte.TryParse(hexString.Substring(i, 2), NumberStyles.HexNumber, null, out bytes[i / 2]))
+                {
+                    bytes = null;
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+
     }
 }

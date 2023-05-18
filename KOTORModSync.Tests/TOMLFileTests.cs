@@ -239,11 +239,11 @@ namespace KOTORModSync.Tests
         {
             // Arrange
             List<Component> originalComponents = new List<Component>
-        {
-            new Component { Name = "Component 1", Guid = "{B3525945-BDBD-45D8-A324-AAF328A5E13E}" },
-            new Component { Name = "Component 2", Guid = "{C5418549-6B7E-4A8C-8B8E-4AA1BC63C732}" },
-            new Component { Name = "Component 3", Guid = "{B3525945-BDBD-45D8-A324-AAF328A5E13E}" },
-        };
+            {
+                new Component { Name = "Component 1", Guid = "{B3525945-BDBD-45D8-A324-AAF328A5E13E}" },
+                new Component { Name = "Component 2", Guid = "{C5418549-6B7E-4A8C-8B8E-4AA1BC63C732}" },
+                new Component { Name = "Component 3", Guid = "{B3525945-BDBD-45D8-A324-AAF328A5E13E}" },
+            };
 
             // Act
             Serializer.FileHandler.OutputConfigFile(originalComponents, filePath);

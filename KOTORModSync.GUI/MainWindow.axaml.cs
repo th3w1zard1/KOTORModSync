@@ -248,6 +248,7 @@ namespace KOTORModSync.GUI
             {
                 var chosenFolder = await OpenFolder();
                 DirectoryInfo modDirectory = new DirectoryInfo(chosenFolder);
+                informationDialog = new InformationDialog();
                 informationDialog.InfoText = "Please select your KOTOR(2) directory. (e.g. \"C:\\Program Files (x86)\\Steam\\steamapps\\common\\Knights of the Old Republic II\")";
                 await informationDialog.ShowDialog<bool?>(this);
                 chosenFolder = await OpenFolder();
@@ -263,7 +264,7 @@ namespace KOTORModSync.GUI
 
         private async void StartInstall_Click(object sender, RoutedEventArgs e)
         {
-            if(mainConfig == null)
+            if(mainConfig == null || MainConfig.DestinationPath == null)
             {
                 var informationDialog = new InformationDialog();
                 informationDialog.InfoText = "Please set your directories first";

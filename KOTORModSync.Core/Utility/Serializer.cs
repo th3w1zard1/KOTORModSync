@@ -9,6 +9,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using Nett;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
@@ -204,6 +205,15 @@ namespace KOTORModSync.Core.Utility
                 File.WriteAllText(filePath, tomlString);
             }
 
+            public static async Task MoveFileAsync(string sourcePath, string destinationPath) {
+                using (var sourceStream = new FileStream(sourcePath, FileMode.Open, FileAccess.Read, FileShare.Read, bufferSize: 4096, useAsync: true))
+                using (var destinationStream = new FileStream(destinationPath, FileMode.CreateNew, FileAccess.Write, FileShare.None, bufferSize: 4096, useAsync: true)) {
+                    await sourceStream.CopyToAsync(destinationStream);
+                }
+
+                File.Delete(sourcePath);
+            }
+
             public static Component DeserializeTomlComponent(string tomlString)
             {
                 tomlString = FixWhitespaceIssues(tomlString);
@@ -226,12 +236,12 @@ namespace KOTORModSync.Core.Utility
                 // Get the array of Component tables
                 Tomlyn.Model.TomlTableArray componentTables = tomlTable["thisMod"] as Tomlyn.Model.TomlTableArray;
 
-                Component component = null;
+                Component component = new Component();
 
                 // Deserialize each TomlTable into a Component object
                 foreach (Tomlyn.Model.TomlObject tomlComponent in componentTables)
                 {
-                    component = Component.DeserializeComponent(tomlComponent);
+                    component.DeserializeComponent(tomlComponent);
                     if (component.Instructions != null)
                     {
                         foreach (Instruction instruction in component.Instructions)
@@ -243,6 +253,38 @@ namespace KOTORModSync.Core.Utility
                 }
 
                 return component;
+            }
+            public static async Task<List<string>> EnumerateFilesWithWildcards(IEnumerable<string> filesAndFolders) {
+                var filesToDelete = new List<string>();
+
+                foreach (string fileStrPath in filesAndFolders) {
+                    if (Path.GetInvalidPathChars().Any(fileStrPath.Contains)) {
+                        string directory = Path.GetDirectoryName(fileStrPath);
+                        string pattern = Path.GetFileName(fileStrPath);
+
+                        if (!string.IsNullOrEmpty(directory)) {
+                            List<string> matchingFiles = await EnumerateFilesWithWildcards(directory, pattern);
+                            filesToDelete.AddRange(matchingFiles);
+                        }
+                    } else {
+                        filesToDelete.Add(fileStrPath);
+                    }
+                }
+
+                return filesToDelete;
+            }
+
+            public static Task<List<string>> EnumerateFilesWithWildcards(string directory, string pattern) {
+                var matchingFiles = new List<string>();
+
+                DirectoryInfo dirInfo = new DirectoryInfo(directory);
+                IEnumerable<string> filesAndFolders = Directory.EnumerateFileSystemEntries(directory, pattern, SearchOption.TopDirectoryOnly);
+
+                foreach (string file in filesAndFolders) {
+                    matchingFiles.Add(file);
+                }
+
+                return Task.FromResult(matchingFiles);
             }
 
             public static List<Component> ReadComponentsFromFile(string filePath)
@@ -276,7 +318,8 @@ namespace KOTORModSync.Core.Utility
                     // Deserialize each TomlTable into a Component object
                     foreach (Tomlyn.Model.TomlObject tomlComponent in componentTables)
                     {
-                        Component component = Component.DeserializeComponent(tomlComponent);
+                        Component component = new Component();
+                        component.DeserializeComponent(tomlComponent);
                         components.Add(component);
 
                         foreach (Instruction instruction in component.Instructions)

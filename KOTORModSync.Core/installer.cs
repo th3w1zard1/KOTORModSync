@@ -24,7 +24,7 @@ namespace KOTORModSync.Core
     public class Instruction
     {
         public string Action { get; set; }
-        public string Source { get; set; }
+        public List<string> Source { get; set; }
         public string Destination { get; set; }
         public List<string> Dependencies { get; set; }
         public List<string> Restrictions { get; set; }
@@ -64,37 +64,51 @@ namespace KOTORModSync.Core
 
         public static async Task<bool> ExecuteInstructionAsync(Func<Task<bool>> instructionMethod) => await instructionMethod().ConfigureAwait(false);
 
-        public bool ExtractFile()
+        public async Task<bool> ExtractFile()
         {
             try
             {
-                const string archiveFilePath = "path/to/your/archive/file.rar";
-
-                using (Stream stream = File.OpenRead(archiveFilePath))
+                foreach (string fileStrPath in this.Source)
                 {
-                    IArchive archive = null;
+                    var thisFile = new FileInfo(fileStrPath);
+                    if (!thisFile.Exists)
+                    {
+                        Exception ex = new FileNotFoundException($"The file {fileStrPath} could not be located on the disk");
+                        Logger.LogException(ex);
+                        throw ex;
+                    }
+                    using (Stream stream = File.OpenRead(thisFile.FullName))
+                    {
+                        IArchive archive = null;
 
-                    if (RarArchive.IsRarFile(stream))
-                    {
-                        archive = RarArchive.Open(stream);
-                    }
-                    else if (ZipArchive.IsZipFile(stream))
-                    {
-                        archive = ZipArchive.Open(stream);
-                    }
-                    else if (SevenZipArchive.IsSevenZipFile(stream))
-                    {
-                        archive = SevenZipArchive.Open(stream);
-                    }
-
-                    if (archive != null)
-                    {
-                        foreach (IArchiveEntry entry in archive.Entries)
+                        if (RarArchive.IsRarFile(stream))
                         {
-                            if (!entry.IsDirectory)
+                            archive = RarArchive.Open(stream);
+                        }
+                        else if (ZipArchive.IsZipFile(stream))
+                        {
+                            archive = ZipArchive.Open(stream);
+                        }
+                        else if (SevenZipArchive.IsSevenZipFile(stream))
+                        {
+                            archive = SevenZipArchive.Open(stream);
+                        }
+
+                        if (archive != null)
+                        {
+                            foreach (IArchiveEntry entry in archive.Entries)
                             {
-                                entry.WriteToDirectory("path/to/extract/contents", new ExtractionOptions { ExtractFullPath = true, Overwrite = true });
+                                if (!entry.IsDirectory)
+                                {
+                                    entry.WriteToDirectory(this.ParentComponent.tempPath.FullName, new ExtractionOptions { ExtractFullPath = true, Overwrite = true });
+                                }
                             }
+                        }
+                        else
+                        {
+                            var ex = new ArgumentNullException($"{this.ParentComponent.Name} failed to extract file {thisFile}");
+                            Logger.LogException(ex);
+                            throw ex;
                         }
                     }
                 }
@@ -104,62 +118,164 @@ namespace KOTORModSync.Core
             catch (Exception ex)
             {
                 // Handle any exceptions that occurred during extraction
-                Console.WriteLine($"Error occurred during file extraction: {ex.Message}");
+                Logger.Log($"Error occurred during file extraction: {ex.Message}");
                 return false; // Extraction failed
             }
         }
 
-        public bool DeleteFile() =>
-            // Implement deletion logic here
-            true;
+        public async Task<bool> DeleteFile()
+        {
+            try
+            {
+                var deleteTasks = new List<Task>();
 
-        public bool MoveFile() =>
-            // Implement moving logic here
-            true;
+                // Enumerate the files/folders with wildcards and add them to the list
+                var filesToDelete = await Serializer.FileHandler.EnumerateFilesWithWildcards(this.Source);
+
+                SemaphoreSlim semaphore = new SemaphoreSlim(Utility.PlatformAgnosticMethods.CalculateMaxDegreeOfParallelism()); // Set the maximum degree of parallelism
+
+                foreach (string fileToDelete in filesToDelete)
+                {
+                    if (Path.IsPathRooted(fileToDelete))
+                    {
+                        var thisFile = new FileInfo(fileToDelete);
+                        if (!thisFile.Exists)
+                        {
+                            Exception ex = new FileNotFoundException($"The file {fileToDelete} could not be located on the disk");
+                            Logger.LogException(ex);
+                            return false;
+                        }
+
+                        // Delete the file asynchronously
+                        Task deleteTask = Task.Run(async () =>
+                        {
+                            await semaphore.WaitAsync(); // Acquire a semaphore slot
+
+                            try
+                            {
+                                File.Delete(thisFile.FullName);
+                                Logger.Log($"Deleting {thisFile.FullName}...");
+                            }
+                            finally
+                            {
+                                semaphore.Release(); // Release the semaphore slot
+                            }
+                        });
+
+                        deleteTasks.Add(deleteTask);
+                    }
+                    else
+                    {
+                        var ex = new ArgumentException($"Invalid wildcards/not a valid path: {fileToDelete}");
+                        Logger.LogException(ex);
+                        return false;
+                    }
+                }
+
+                // Wait for all delete tasks to complete
+                await Task.WhenAll(deleteTasks);
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Logger.LogException(ex);
+                return false;
+            }
+        }
+
+
+        public async Task<bool> MoveFile() {
+            try {
+                var moveTasks = new List<Task>();
+
+                SemaphoreSlim semaphore = new SemaphoreSlim(Utility.PlatformAgnosticMethods.CalculateMaxDegreeOfParallelism()); // Set the maximum degree of parallelism
+
+                foreach (string fileStrPath in this.Source) {
+                    var thisFile = new FileInfo(fileStrPath);
+                    if (!thisFile.Exists) {
+                        Exception ex = new FileNotFoundException($"The file {fileStrPath} could not be located on the disk");
+                        Logger.LogException(ex);
+                        return false;
+                    }
+
+                    string destinationPath = Path.Combine(this.Destination, thisFile.Name);
+
+                    // Check if the destination file already exists
+                    if (this.Overwrite || !File.Exists(destinationPath)) {
+                        // Move the file asynchronously
+                        Task moveTask = Task.Run(async () =>
+                        {
+                            await semaphore.WaitAsync(); // Acquire a semaphore slot
+
+                            try {
+                                await Serializer.FileHandler.MoveFileAsync(thisFile.FullName, destinationPath);
+                                Logger.Log($"Moving {thisFile.FullName} to {destinationPath}... Overwriting? {this.Overwrite}");
+                            } finally {
+                                semaphore.Release(); // Release the semaphore slot
+                            }
+                        });
+
+                        moveTasks.Add(moveTask);
+                    }
+                }
+
+                // Wait for all move tasks to complete
+                await Task.WhenAll(moveTasks);
+
+                return true;
+            } catch (Exception ex) {
+                Logger.LogException(ex);
+                return false;
+            }
+        }
+
 
         public async Task<bool> ExecuteTSLPatcherAsync()
         {
-            // Check if we have permission to write to the Destination directory
-            if (!Utility.Utility.CanWriteToDirectory(MainConfig.DestinationPath))
+            try
             {
-                throw new Exception("Cannot write to the destination directory.");
+                var cancellationTokenSource = new CancellationTokenSource();
+                cancellationTokenSource.CancelAfter(TimeSpan.FromSeconds(3600)); // cancel if running longer than 30 minutes.
+                string path = Paths[0];
+                var startInfo = new ProcessStartInfo
+                {
+                    FileName = path,
+                    Arguments = Arguments,
+                    RedirectStandardOutput = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true
+                };
+                var process = new Process
+                {
+                    StartInfo = startInfo
+                };
+                _ = process.Start();
+
+                Task<string> outputTask = process.StandardOutput.ReadToEndAsync();
+
+                while (!process.HasExited && !cancellationTokenSource.IsCancellationRequested)
+                {
+                    await Task.Delay(100);
+                }
+
+                if (!process.HasExited)
+                {
+                    process.Kill();
+                    throw new Exception("TSLPatcher timed out after 30 minutes.");
+                }
+
+                string output = await outputTask;
+
+                return process.ExitCode != 0
+                    ? throw new Exception($"TSLPatcher failed with exit code {process.ExitCode}. Output:\n{output}")
+                    : !VerifyInstall() ? throw new Exception("TSLPatcher failed to install the mod correctly.") : true;
+            } catch (Exception ex) {
+                Logger.LogException(ex);
+                return false;
             }
 
-            var cancellationTokenSource = new CancellationTokenSource();
-            cancellationTokenSource.CancelAfter(TimeSpan.FromSeconds(3600)); // cancel if running longer than 30 minutes.
-            string path = Paths[0];
-            var startInfo = new ProcessStartInfo
-            {
-                FileName = path,
-                Arguments = Arguments,
-                RedirectStandardOutput = true,
-                UseShellExecute = false,
-                CreateNoWindow = true
-            };
-            var process = new Process
-            {
-                StartInfo = startInfo
-            };
-            _ = process.Start();
 
-            Task<string> outputTask = process.StandardOutput.ReadToEndAsync();
-
-            while (!process.HasExited && !cancellationTokenSource.IsCancellationRequested)
-            {
-                await Task.Delay(100);
-            }
-
-            if (!process.HasExited)
-            {
-                process.Kill();
-                throw new Exception("TSLPatcher timed out after 30 seconds.");
-            }
-
-            string output = await outputTask;
-
-            return process.ExitCode != 0
-                ? throw new Exception($"TSLPatcher failed with exit code {process.ExitCode}. Output:\n{output}")
-                : !VerifyInstall() ? throw new Exception("TSLPatcher failed to install the mod correctly.") : true;
         }
 
         public bool VerifyInstall()
@@ -234,12 +350,16 @@ namespace KOTORModSync.Core
         ""<<modDirectory>>\\path\\to\\mod_location1""
     ]";
 
-        public static Component DeserializeComponent(TomlObject tomlObject)
+        public DirectoryInfo tempPath;
+
+        public Component DeserializeComponent(TomlObject tomlObject)
         {
             if (!(tomlObject is TomlTable componentTable))
             {
                 throw new ArgumentException("Expected a TOML table for component data.");
             }
+
+            tempPath = new DirectoryInfo(Path.GetTempPath());
 
             Dictionary<string, object> componentDict = ConvertTomlTableToDictionary(componentTable);
             List<string> paths = new List<string>();
@@ -289,7 +409,7 @@ namespace KOTORModSync.Core
                     var instruction = new Instruction
                     {
                         Action = GetRequiredValue<string>(instructionDict, "action"),
-                        Source = GetValueOrDefault<string>(instructionDict, "source"),
+                        Source = GetValueOrDefault<List<string>>(instructionDict, "source"),
                         Destination = GetValueOrDefault<string>(instructionDict, "destination"),
                         Dependencies = GetValueOrDefault<List<string>>(instructionDict, "dependencies"),
                         Restrictions = GetValueOrDefault<List<string>>(instructionDict, "restrictions"),
@@ -424,9 +544,9 @@ namespace KOTORModSync.Core
 
         public static async Task<(bool success, Dictionary<FileInfo, System.Security.Cryptography.SHA1> originalChecksums)> ExecuteInstructions(IConfirmationDialogCallback confirmDialog)
         {
+
             // Check if we have permission to write to the Destination directory
-            if (!Utility.Utility.CanWriteToDirectory(MainConfig.DestinationPath))
-            {
+            if (!Utility.Utility.CanWriteToDirectory(MainConfig.DestinationPath)) {
                 throw new Exception("Cannot write to the destination directory.");
             }
 
@@ -444,24 +564,26 @@ namespace KOTORModSync.Core
 
                     bool success = false;
 
+                    // there's no real reason to run these async except to keep the UI from freezing up during a task.
                     switch (instruction.Action.ToLower())
                     {
                         case "extract":
-                            success = instruction.ExtractFile();
+                            success = await instruction.ExtractFile();
                             break;
 
                         case "delete":
-                            success = instruction.DeleteFile();
+                            success = await instruction.DeleteFile();
                             break;
 
                         case "move":
-                            success = instruction.MoveFile();
+                            success = await instruction.MoveFile();
                             break;
 
                         case "tslpatcher":
                             success = await instruction.ExecuteTSLPatcherAsync();
                             break;
-
+                        case "backup": //todo
+                        case "rename": //todo
                         default:
                             // Handle unknown instruction type here
                             break;

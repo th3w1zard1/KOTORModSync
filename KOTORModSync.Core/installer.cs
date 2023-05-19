@@ -243,9 +243,15 @@ namespace KOTORModSync.Core
 
             Dictionary<string, object> componentDict = ConvertTomlTableToDictionary(componentTable);
             List<string> paths = new List<string>();
-            if (componentDict.TryGetValue("path", out object pathValue))
+            if (componentDict.TryGetValue("path", out object pathValue) && pathValue is string path)
             {
-                paths.Add((string)pathValue);
+                path = NormalizeAndReplacePath(path);
+                paths.Add(path);
+            }
+            NormalizeAndReplacePath(componentDict, "paths");
+            if (componentDict.TryGetValue("paths", out object pathsValue) && pathsValue is IList<string> pathsList)
+            {
+                paths.AddRange(pathsList);
             }
 
             var component = new Component
@@ -277,14 +283,18 @@ namespace KOTORModSync.Core
                 if (item is TomlTable instructionTable)
                 {
                     Dictionary<string, object> instructionDict = ConvertTomlTableToDictionary(instructionTable);
+
+                    NormalizeAndReplacePath(instructionDict, "source");
+                    NormalizeAndReplacePath(instructionDict, "destination");
                     var instruction = new Instruction
                     {
                         Action = GetRequiredValue<string>(instructionDict, "action"),
-                        Source = GetValueOrDefault<string>(instructionDict, "Source"),
-                        Destination = GetValueOrDefault<string>(instructionDict, "Destination"),
-                        Overwrite = GetValueOrDefault<bool>(instructionDict, "Overwrite"),
-                        Paths = GetValueOrDefault<List<string>>(instructionDict, "Paths"),
-                        Arguments = GetValueOrDefault<string>(instructionDict, "Arguments"),
+                        Source = GetValueOrDefault<string>(instructionDict, "source"),
+                        Destination = GetValueOrDefault<string>(instructionDict, "destination"),
+                        Dependencies = GetValueOrDefault<List<string>>(instructionDict, "dependencies"),
+                        Restrictions = GetValueOrDefault<List<string>>(instructionDict, "restrictions"),
+                        Overwrite = GetValueOrDefault<bool>(instructionDict, "overwrite"),
+                        Arguments = GetValueOrDefault<string>(instructionDict, "arguments"),
                         ParentComponent = null
                     };
 
@@ -293,6 +303,31 @@ namespace KOTORModSync.Core
             }
 
             return instructions;
+        }
+
+        // Function to normalize and replace paths
+        public static void NormalizeAndReplacePath(Dictionary<string, object> dict, string key)
+        {
+            if (dict.TryGetValue(key, out object pathValue) && pathValue is IList<string> paths)
+            {
+                for (int index = 0; index < paths.Count; index++)
+                {
+                    string thisPath = paths[index];
+                    thisPath = thisPath.Replace("<<modDirectory>>", MainConfig.ModConfigPath.FullName);
+                    thisPath = thisPath.Replace("<<kotorDirectory>>", MainConfig.DestinationPath.FullName);
+                    if (thisPath != paths[index])
+                        thisPath = Path.Combine(MainConfig.ModConfigPath.FullName, thisPath);
+                    paths[index] = Path.GetFullPath(thisPath);
+                }
+            }
+        }
+
+        // Function to normalize and replace paths
+        public static string NormalizeAndReplacePath(string path)
+        {
+            string normalizedPath = path.Replace("<<modDirectory>>", MainConfig.ModConfigPath.FullName);
+            normalizedPath = normalizedPath.Replace("<<kotorDirectory>>", MainConfig.DestinationPath.FullName);
+            return Path.GetFullPath(normalizedPath);
         }
 
         private static Dictionary<string, object> ConvertTomlTableToDictionary(TomlTable tomlTable)

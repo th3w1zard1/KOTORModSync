@@ -396,6 +396,7 @@ namespace KOTORModSync.GUI
                 components.RemoveAt(currentIndex);
                 components.Insert(newIndex, selectedTreeViewItem);
                 leftTreeView.SelectedItem = selectedTreeViewItem;
+                RefreshTreeView();
             }
         }
 

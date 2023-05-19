@@ -68,6 +68,9 @@ namespace KOTORModSync.Core
         {
             try
             {
+                var extractTasks = new List<Task>();
+                SemaphoreSlim semaphore = new SemaphoreSlim(Utility.PlatformAgnosticMethods.CalculateMaxDegreeOfParallelism()); // Set the maximum degree of parallelism
+
                 foreach (string fileStrPath in this.Source)
                 {
                     var thisFile = new FileInfo(fileStrPath);
@@ -77,6 +80,7 @@ namespace KOTORModSync.Core
                         Logger.LogException(ex);
                         throw ex;
                     }
+
                     using (Stream stream = File.OpenRead(thisFile.FullName))
                     {
                         IArchive archive = null;
@@ -100,7 +104,21 @@ namespace KOTORModSync.Core
                             {
                                 if (!entry.IsDirectory)
                                 {
-                                    entry.WriteToDirectory(this.ParentComponent.tempPath.FullName, new ExtractionOptions { ExtractFullPath = true, Overwrite = true });
+                                    Task extractTask = Task.Run(async () =>
+                                    {
+                                        await semaphore.WaitAsync(); // Acquire a semaphore slot
+
+                                        try
+                                        {
+                                            entry.WriteToDirectory(this.ParentComponent.tempPath.FullName, new ExtractionOptions { ExtractFullPath = true, Overwrite = true });
+                                        }
+                                        finally
+                                        {
+                                            semaphore.Release(); // Release the semaphore slot
+                                        }
+                                    });
+
+                                    extractTasks.Add(extractTask);
                                 }
                             }
                         }
@@ -113,6 +131,9 @@ namespace KOTORModSync.Core
                     }
                 }
 
+                // Wait for all extract tasks to complete
+                await Task.WhenAll(extractTasks);
+
                 return true; // Extraction succeeded
             }
             catch (Exception ex)
@@ -122,6 +143,7 @@ namespace KOTORModSync.Core
                 return false; // Extraction failed
             }
         }
+
 
         public async Task<bool> DeleteFile()
         {
@@ -352,7 +374,7 @@ namespace KOTORModSync.Core
 
         public DirectoryInfo tempPath;
 
-        public Component DeserializeComponent(TomlObject tomlObject)
+        public void DeserializeComponent(TomlObject tomlObject)
         {
             if (!(tomlObject is TomlTable componentTable))
             {
@@ -374,18 +396,13 @@ namespace KOTORModSync.Core
                 paths.AddRange(pathsList);
             }
 
-            var component = new Component
-            {
-                Name = GetRequiredValue<string>(componentDict, "name"),
-                Guid = GetRequiredValue<string>(componentDict, "guid"),
-                InstallOrder = GetValueOrDefault<int>(componentDict, "installorder"),
-                Dependencies = GetValueOrDefault<List<string>>(componentDict, "dependencies"),
-                Instructions = DeserializeInstructions(GetValueOrDefault<TomlTableArray>(componentDict, "instructions")),
-                Paths = GetValueOrDefault<List<string>>(componentDict, "Paths")
-            };
-            component.Instructions?.ForEach(instruction => instruction.ParentComponent = component);
-
-            return component;
+            this.Name = GetRequiredValue<string>(componentDict, "name");
+            this.Guid = GetRequiredValue<string>(componentDict, "guid");
+            this.InstallOrder = GetValueOrDefault<int>(componentDict, "installorder");
+            this.Dependencies = GetValueOrDefault<List<string>>(componentDict, "dependencies");
+            this.Instructions = DeserializeInstructions(GetValueOrDefault<TomlTableArray>(componentDict, "instructions"));
+            this.Paths = GetValueOrDefault<List<string>>(componentDict, "Paths");
+            this.Instructions?.ForEach(instruction => instruction.ParentComponent = this);
         }
 
         private static List<Instruction> DeserializeInstructions(TomlObject tomlObject)
@@ -542,7 +559,7 @@ namespace KOTORModSync.Core
             return listType.IsGenericType && listType.GetGenericTypeDefinition() == typeof(List<>);
         }
 
-        public static async Task<(bool success, Dictionary<FileInfo, System.Security.Cryptography.SHA1> originalChecksums)> ExecuteInstructions(IConfirmationDialogCallback confirmDialog)
+        public static async Task<(bool success, Dictionary<FileInfo, System.Security.Cryptography.SHA1> originalChecksums)> ExecuteInstructions(IConfirmationDialogCallback confirmDialog, List<Component> componentsList)
         {
 
             // Check if we have permission to write to the Destination directory
@@ -578,7 +595,8 @@ namespace KOTORModSync.Core
                         case "move":
                             success = await instruction.MoveFile();
                             break;
-
+                        case "patch":
+                        case "execute":
                         case "tslpatcher":
                             success = await instruction.ExecuteTSLPatcherAsync();
                             break;

@@ -8,13 +8,13 @@ dependencies = [
 installOrder = 3
 
 [[thisMod.instructions]]
-type = "extract"
+action = "extract"
 source = "Ultimate Dantooine High Resolution - TPC Version-1103-2-1-1670680013.rar"
 destination = "%temp%\\mod_files\\Dantooine HR"
 overwrite = true
 
 [[thisMod.instructions]]
-type = "delete"
+action = "delete"
 paths = [
     "%temp%\\mod_files\\Dantooine HR\\DAN_wall03.tpc",
     "%temp%\\mod_files\\Dantooine HR\\DAN_NEW1.tpc",
@@ -22,7 +22,7 @@ paths = [
 ]
 
 [[thisMod.instructions]]
-type = "move"
+action = "move"
 source = "%temp%\\mod_files\\Dantooine HR\\"
 destination = "%temp%\\Override"
 
@@ -33,47 +33,47 @@ installOrder = 1
 dependencies = []
 
 [[thisMod.instructions]]
-type = "extract"
+action = "extract"
 source = "URCMTP 1.3.rar"
 destination = "%temp%\\mod_files\\TSLRCM Tweak Pack"
 overwrite = true
 
 [[thisMod.instructions]]
-type = "run"
+action = "run"
 path = "%temp%\\mod_files\\TSLPatcher.exe"
 arguments = ""
 
 [[thisMod.instructions]]
-type = "run"
+action = "run"
 path = "%temp%\\mod_files\\TSLPatcher.exe"
 arguments = ""
 
 [[thisMod.instructions]]
-type = "run"
+action = "run"
 path = "%temp%\\mod_files\\TSLPatcher.exe"
 arguments = ""
 
 [[thisMod.instructions]]
-type = "run"
+action = "run"
 path = "%temp%\\mod_files\\TSLPatcher.exe"
 arguments = ""
 
 [[thisMod.instructions]]
-type = "run"
+action = "run"
 path = "%temp%\\mod_files\\TSLPatcher.exe"
 arguments = ""
 
 [[thisMod.instructions]]
-type = "run"
+action = "run"
 path = "%temp%\\mod_files\\TSLPatcher.exe"
 arguments = ""
 
 [[thisMod.instructions]]
-type = "run"
+action = "run"
 path = "%temp%\\mod_files\\TSLPatcher.exe"
 arguments = ""
 
 [[thisMod.instructions]]
-type = "run"
+action = "run"
 path = "%temp%\\mod_files\\TSLPatcher.exe"
 arguments = ""

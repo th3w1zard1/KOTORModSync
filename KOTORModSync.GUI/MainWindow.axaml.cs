@@ -180,6 +180,11 @@ namespace KOTORModSync.GUI
             }
         }
 
+        private void ValidateButton_Click(object sender, RoutedEventArgs e)
+        {
+            return;
+        }
+
         private void AddComponentButton_Click(object sender, RoutedEventArgs e)
         {
             // Create a new default component with a new GUID
@@ -274,7 +279,7 @@ namespace KOTORModSync.GUI
             {
                 var confirmationDialogCallback = new ConfirmationDialogCallback(this);
                 // Call the ExecuteInstructions method and pass the confirmationDialogCallback
-                await Component.ExecuteInstructions(confirmationDialogCallback);
+                await Component.ExecuteInstructions(confirmationDialogCallback, components);
             }
         }
 
@@ -438,7 +443,7 @@ namespace KOTORModSync.GUI
             // Create the root item for the tree view
             var rootItem = new TreeViewItem
             {
-                Header = "Components"
+                Header = "Components",
             };
 
             // Iterate over the components and create tree view items

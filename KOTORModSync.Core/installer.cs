@@ -8,6 +8,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using KOTORModSync.Core.Utility;
@@ -387,14 +388,9 @@ namespace KOTORModSync.Core
             List<string> paths = new List<string>();
             if (componentDict.TryGetValue("path", out object pathValue) && pathValue is string path)
             {
-                path = NormalizeAndReplacePath(path);
                 paths.Add(path);
             }
-            NormalizeAndReplacePath(componentDict, "paths");
-            if (componentDict.TryGetValue("paths", out object pathsValue) && pathsValue is IList<string> pathsList)
-            {
-                paths.AddRange(pathsList);
-            }
+            DeserializePath(componentDict, "paths");
 
             this.Name = GetRequiredValue<string>(componentDict, "name");
             this.Guid = GetRequiredValue<string>(componentDict, "guid");
@@ -421,8 +417,11 @@ namespace KOTORModSync.Core
                 {
                     Dictionary<string, object> instructionDict = ConvertTomlTableToDictionary(instructionTable);
 
-                    NormalizeAndReplacePath(instructionDict, "source");
-                    NormalizeAndReplacePath(instructionDict, "destination");
+                    // ConvertTomlTableToDictionary lowercases all string keys.
+                    DeserializePath(instructionDict, "source");
+                    DeserializePath(instructionDict, "destination");
+                    DeserializeGuids(instructionDict, "restrictions");
+                    DeserializeGuids(instructionDict, "dependencies");
                     var instruction = new Instruction
                     {
                         Action = GetRequiredValue<string>(instructionDict, "action"),
@@ -442,29 +441,98 @@ namespace KOTORModSync.Core
             return instructions;
         }
 
-        // Function to normalize and replace paths
-        public static void NormalizeAndReplacePath(Dictionary<string, object> dict, string key)
+        public static void DeserializeGuids(Dictionary<string, object> dict, string key)
         {
-            if (dict.TryGetValue(key, out object pathValue) && pathValue is IList<string> paths)
+            if (dict.TryGetValue(key, out object value))
             {
-                for (int index = 0; index < paths.Count; index++)
+                if (value is string stringValue)
                 {
-                    string thisPath = paths[index];
-                    thisPath = thisPath.Replace("<<modDirectory>>", MainConfig.ModConfigPath.FullName);
-                    thisPath = thisPath.Replace("<<kotorDirectory>>", MainConfig.DestinationPath.FullName);
-                    if (thisPath != paths[index])
-                        thisPath = Path.Combine(MainConfig.ModConfigPath.FullName, thisPath);
-                    paths[index] = Path.GetFullPath(thisPath);
+                    // Convert the string to a list of strings
+                    List<string> stringList = new List<string> { stringValue };
+
+                    // Replace the string value with the list
+                    dict[key] = stringList;
+
+                    // Fix GUID strings in each list item
+                    for (int i = 0; i < stringList.Count; i++)
+                    {
+                        if (!System.Guid.TryParse(stringList[i], out Guid guidValue))
+                        {
+                            // Attempt to fix common issues with GUID strings
+                            string fixedGuid = FixGuidString(stringList[i]);
+
+                            // Update the list item with the fixed GUID string
+                            stringList[i] = fixedGuid;
+                        }
+                    }
+                }
+                else if (value is List<string> stringList)
+                {
+                    // Fix GUID strings in each list item
+                    for (int i = 0; i < stringList.Count; i++)
+                    {
+                        if (!System.Guid.TryParse(stringList[i], out Guid guidValue))
+                        {
+                            // Attempt to fix common issues with GUID strings
+                            string fixedGuid = FixGuidString(stringList[i]);
+
+                            // Update the list item with the fixed GUID string
+                            stringList[i] = fixedGuid;
+                        }
+                    }
                 }
             }
         }
 
-        // Function to normalize and replace paths
-        public static string NormalizeAndReplacePath(string path)
+        private static string FixGuidString(string guidString)
         {
-            string normalizedPath = path.Replace("<<modDirectory>>", MainConfig.ModConfigPath.FullName);
-            normalizedPath = normalizedPath.Replace("<<kotorDirectory>>", MainConfig.DestinationPath.FullName);
-            return Path.GetFullPath(normalizedPath);
+            // Remove any whitespace characters
+            guidString = Regex.Replace(guidString, @"\s", "");
+
+            // Attempt to fix common issues with GUID strings
+            if (!guidString.StartsWith("{"))
+                guidString = "{" + guidString;
+            if (!guidString.EndsWith("}"))
+                guidString += "}";
+            if (!guidString.Contains("-"))
+                guidString = Regex.Replace(guidString, @"(\w{8})(\w{4})(\w{4})(\w{4})(\w{12})", "$1-$2-$3-$4-$5");
+
+            return guidString;
+        }
+
+        public static void DeserializePath(Dictionary<string, object> dict, string key)
+        {
+            if (dict.TryGetValue(key, out object pathValue))
+            {
+                if (pathValue is string path)
+                {
+                    string formattedPath = FixPathFormatting(path);
+                    dict[key] = new List<string> { formattedPath };
+                }
+                else if (pathValue is IList<string> paths)
+                {
+                    for (int index = 0; index < paths.Count; index++)
+                    {
+                        string currentPath = paths[index];
+                        string formattedPath = FixPathFormatting(currentPath);
+                        paths[index] = formattedPath;
+                    }
+                }
+            }
+        }
+
+        public static string FixPathFormatting(string path)
+        {
+            // Replace backslashes with forward slashes
+            string formattedPath = path.Replace('\\', '/');
+
+            // Fix repeated slashes
+            formattedPath = Regex.Replace(formattedPath, @"(?<!:)//+", "/");
+
+            // Fix trailing slashes
+            formattedPath = formattedPath.TrimEnd('/');
+
+            return formattedPath;
         }
 
         private static Dictionary<string, object> ConvertTomlTableToDictionary(TomlTable tomlTable)
@@ -557,6 +625,13 @@ namespace KOTORModSync.Core
         {
             Type listType = typeof(T);
             return listType.IsGenericType && listType.GetGenericTypeDefinition() == typeof(List<>);
+        }
+
+        public static string ReplaceCustomVariables(string path)
+        {
+            string normalizedPath = path.Replace("<<modDirectory>>", MainConfig.ModConfigPath.FullName)
+                                       .Replace("<<kotorDirectory>>", MainConfig.DestinationPath.FullName);
+            return Path.GetFullPath(normalizedPath);
         }
 
         public static async Task<(bool success, Dictionary<FileInfo, System.Security.Cryptography.SHA1> originalChecksums)> ExecuteInstructions(IConfirmationDialogCallback confirmDialog, List<Component> componentsList)

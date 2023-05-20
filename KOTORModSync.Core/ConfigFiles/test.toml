@@ -1,14 +1,20 @@
 
 [[thisMod]]
-Name = "TSLRCM 2022 Main"
-Guid = "{d2bf7bbb-4757-4418-96bf-a9772a36a262}"
-InstallOrder = "1"
-Dependencies = []
-Paths = ["<<modDirectory>>"]
+Name = "Ultimate Dantooine"
+Guid = "{B3525945-BDBD-45D8-A324-AAF328A5E13E}"
+InstallOrder = "3"
+Dependencies = ["{C5418549-6B7E-4A8C-8B8E-4AA1BC63C732}", "{D0F371DA-5C69-4A26-8A37-76E3A6A2A50D}"]
 
 [[thisMod.Instructions]]
-Action = "execute"
-Source = ["<<modDirectory>>/tslrcm2022.exe"]
+Action = "extract"
+Source = ["Ultimate Dantooine High Resolution - TPC Version-1103-2-1-1670680013.rar"]
+Overwrite = "True"
+[[thisMod.Instructions]]
+Action = "delete"
+Overwrite = "False"
+[[thisMod.Instructions]]
+Action = "move"
+Source = ["%temp%/mod_files/Dantooine HR"]
 Overwrite = "False"
 
 
@@ -54,25 +60,6 @@ Arguments = ""
 Action = "run"
 Overwrite = "False"
 Arguments = ""
-
-
-[[thisMod]]
-Name = "Ultimate Dantooine"
-Guid = "{B3525945-BDBD-45D8-A324-AAF328A5E13E}"
-InstallOrder = "3"
-Dependencies = ["{C5418549-6B7E-4A8C-8B8E-4AA1BC63C732}", "{D0F371DA-5C69-4A26-8A37-76E3A6A2A50D}"]
-
-[[thisMod.Instructions]]
-Action = "extract"
-Source = ["Ultimate Dantooine High Resolution - TPC Version-1103-2-1-1670680013.rar"]
-Overwrite = "True"
-[[thisMod.Instructions]]
-Action = "delete"
-Overwrite = "False"
-[[thisMod.Instructions]]
-Action = "move"
-Source = ["%temp%/mod_files/Dantooine HR"]
-Overwrite = "False"
 
 
 [[thisMod]]

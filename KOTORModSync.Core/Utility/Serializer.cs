@@ -226,7 +226,7 @@ namespace KOTORModSync.Core.Utility
                 {
                     foreach (DiagnosticMessage message in tomlDocument.Diagnostics)
                     {
-                        Logger.LogException(new Exception(message.Message));
+                        Logger.Log(message.Message);
                     }
                     return null;
                 }

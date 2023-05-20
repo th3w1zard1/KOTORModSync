@@ -132,6 +132,32 @@ namespace KOTORModSync.GUI
             return null;
         }
 
+        private async Task<string> SaveFile()
+        {
+            SaveFileDialog dialog = new SaveFileDialog();
+            dialog.DefaultExtension = "toml";
+            dialog?.Filters?.Add(new FileDialogFilter() { Name = "Mod Sync File", Extensions = { "toml", "tml" } });
+
+            // Show the dialog and wait for a result.
+            Window? parent = this.VisualRoot as Window;
+            if (parent != null)
+            {
+                string filePath = await dialog.ShowAsync(parent);
+                if (!string.IsNullOrEmpty(filePath))
+                {
+                    Logger.Log($"Selected file: {filePath}");
+                    return filePath;
+                }
+            }
+            else
+            {
+                Logger.Log("Could not open dialog - parent window not found");
+            }
+
+            return null;
+        }
+
+
 
 
         private async void LoadInstallFile_Click(object sender, RoutedEventArgs e)
@@ -180,8 +206,14 @@ namespace KOTORModSync.GUI
             }
         }
 
-        private void ValidateButton_Click(object sender, RoutedEventArgs e)
+        private async void ValidateButton_Click(object sender, RoutedEventArgs e)
         {
+            if (mainConfig == null || MainConfig.DestinationPath == null)
+            {
+                var informationDialog = new InformationDialog();
+                informationDialog.InfoText = "Please set your directories first";
+                await informationDialog.ShowDialog<bool?>(this);
+            }
             return;
         }
 
@@ -191,7 +223,7 @@ namespace KOTORModSync.GUI
             var newComponent = new Component
             {
                 Guid = Guid.NewGuid().ToString(),
-                Name = "new item"
+                Name = ("new mod_" + Path.GetRandomFileName())
             };
 
             // Add the new component to the collection
@@ -340,8 +372,8 @@ namespace KOTORModSync.GUI
                 bool confirmationResult = await ConfirmationDialog.ShowConfirmationDialog(this, "Are you sure you want to save?");
                 if (confirmationResult)
                 {
-                    bool result = SaveChanges();
                     var informationDialog = new InformationDialog();
+                    bool result = SaveChanges();
                     if (result)
                     {
                         informationDialog.InfoText = "Saved successfully. Check the output window for more information.";
@@ -402,7 +434,10 @@ namespace KOTORModSync.GUI
                 components.RemoveAt(currentIndex);
                 components.Insert(newIndex, selectedTreeViewItem);
                 leftTreeView.SelectedItem = selectedTreeViewItem;
-                RefreshTreeView();
+
+                // Update the visual tree directly to reflect the changes
+                var parentItemsCollection = (AvaloniaList<object>)parentItemsControl.Items;
+                parentItemsCollection.Move(currentIndex, newIndex);
             }
         }
 
@@ -424,6 +459,7 @@ namespace KOTORModSync.GUI
             }
         }
 
+
         private void RefreshTreeView()
         {
             // Create a dictionary to store components by their GUIDs
@@ -432,7 +468,7 @@ namespace KOTORModSync.GUI
             {
                 componentDictionary = components.ToDictionary(c => Guid.Parse(c.Guid));
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 if (ex is ArgumentException || ex is FormatException)
                     Logger.LogException(ex);
@@ -452,17 +488,35 @@ namespace KOTORModSync.GUI
                 CreateTreeViewItem(component, componentDictionary, rootItem);
             }
 
-            // Create a collection to hold the root item
-            var rootItemsCollection = new AvaloniaList<TreeViewItem> { rootItem };
-
-            // Set the root item collection as the items source of the tree view
-            leftTreeView.Items = rootItemsCollection;
+            // Set the root item as the single item of the tree view
+            leftTreeView.Items = new AvaloniaList<object> { rootItem };
 
             // Expand the root item to automatically expand the tree view
             rootItem.IsExpanded = true;
 
-            WriteTreeViewItemsToFile(rootItem);
+            WriteTreeViewItemsToFile(new List<TreeViewItem> { rootItem }, null);
         }
+
+        private async void SaveModFile_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                var filePath = await SaveFile();
+                if (filePath != null)
+                {
+                    var rootItem = leftTreeView.Items.OfType<TreeViewItem>().FirstOrDefault();
+                    if (rootItem != null)
+                    {
+                        WriteTreeViewItemsToFile(new List<TreeViewItem> { rootItem }, filePath);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.LogException(ex);
+            }
+        }
+
 
         private void CreateTreeViewItem(Component component, Dictionary<Guid, Component> componentDictionary, TreeViewItem parentItem)
         {
@@ -522,18 +576,20 @@ namespace KOTORModSync.GUI
             }
         }
 
-        private void WriteTreeViewItemsToFile(TreeViewItem rootItem)
+
+        private void WriteTreeViewItemsToFile(IEnumerable<TreeViewItem> items, string? filePath)
         {
             string randomFileName = System.IO.Path.GetFileNameWithoutExtension(System.IO.Path.GetRandomFileName());
-            string filePath = $"modconfig_{randomFileName}.toml";
+            filePath ??= $"modconfig_{randomFileName}.toml";
 
             using (StreamWriter writer = new StreamWriter(filePath))
             {
-                // Write the tree view items to the file
-                WriteTreeViewItemToFile(rootItem, writer);
+                foreach (var item in items)
+                {
+                    WriteTreeViewItemToFile(item, writer);
+                }
             }
         }
-
 
         private void WriteTreeViewItemToFile(TreeViewItem item, StreamWriter writer)
         {
@@ -544,12 +600,17 @@ namespace KOTORModSync.GUI
                 writer.WriteLine(tomlContents);
             }
 
-            // Process child items recursively
-            foreach (var childItem in item.Items.OfType<TreeViewItem>())
+            if (item.Items != null)
             {
-                WriteTreeViewItemToFile(childItem, writer);
+                foreach (var childItem in item.Items.OfType<TreeViewItem>())
+                {
+                    WriteTreeViewItemToFile(childItem, writer);
+                }
             }
         }
+
+
+
 
 
 

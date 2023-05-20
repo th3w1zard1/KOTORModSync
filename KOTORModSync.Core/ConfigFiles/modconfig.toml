@@ -16,7 +16,7 @@ Overwrite = "False"
 Name = "TSLRCM Tweak Pack"
 Guid = "{C5418549-6B7E-4A8C-8B8E-4AA1BC63C732}"
 InstallOrder = "1"
-Dependencies = []
+Dependencies = ["{d2bf7bbb-4757-4418-96bf-a9772a36a262}"]
 
 [[thisMod.Instructions]]
 Action = "extract"
@@ -73,48 +73,4 @@ Overwrite = "False"
 Action = "move"
 Source = ["%temp%/mod_files/Dantooine HR"]
 Overwrite = "False"
-
-
-[[thisMod]]
-Name = "TSLRCM Tweak Pack"
-Guid = "{C5418549-6B7E-4A8C-8B8E-4AA1BC63C732}"
-InstallOrder = "1"
-Dependencies = []
-
-[[thisMod.Instructions]]
-Action = "extract"
-Source = ["URCMTP 1.3.rar"]
-Overwrite = "True"
-[[thisMod.Instructions]]
-Action = "run"
-Overwrite = "False"
-Arguments = ""
-[[thisMod.Instructions]]
-Action = "run"
-Overwrite = "False"
-Arguments = ""
-[[thisMod.Instructions]]
-Action = "run"
-Overwrite = "False"
-Arguments = ""
-[[thisMod.Instructions]]
-Action = "run"
-Overwrite = "False"
-Arguments = ""
-[[thisMod.Instructions]]
-Action = "run"
-Overwrite = "False"
-Arguments = ""
-[[thisMod.Instructions]]
-Action = "run"
-Overwrite = "False"
-Arguments = ""
-[[thisMod.Instructions]]
-Action = "run"
-Overwrite = "False"
-Arguments = ""
-[[thisMod.Instructions]]
-Action = "run"
-Overwrite = "False"
-Arguments = ""
 

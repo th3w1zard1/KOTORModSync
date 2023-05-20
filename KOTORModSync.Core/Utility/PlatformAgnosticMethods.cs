@@ -46,8 +46,7 @@ namespace KOTORModSync.Core.Utility
 
         public static long GetAvailableMemory()
         {
-            long availableMemory = 0;
-
+            // Check if the required command/method exists on the current platform
             // Check if the required command/method exists on the current platform
             var result = TryExecuteCommand("sysctl -n hw.memsize");
             if (!result.Success)
@@ -56,25 +55,39 @@ namespace KOTORModSync.Core.Utility
                 if (!result.Success)
                 {
                     result = TryExecuteCommand("wmic OS get FreePhysicalMemory");
-                    if (!result.Success)
+                }
+            }
+
+
+            if (result.Success)
+            {
+                string output = result.Output;
+
+                // Update the regular expressions for matching memory values
+                string[] patterns = {
+                    @"\d{1,3}(,\d{3})*",                   // wmic command
+                    @"\d+\s+\d+\s+\d+\s+(\d+)",             // free command
+                    @"\d+(\.\d+)?",                         // sysctl command
+                };
+
+                foreach (string pattern in patterns)
+                {
+                    Match match = Regex.Match(output, pattern);
+                    if (match.Success)
                     {
-                        // Platform-agnostic fallback logic for getting available memory
-                        // Example: Set a default available memory value
-                        availableMemory = 4L * 1024 * 1024 * 1024; // 4GB
-                        return availableMemory;
+                        string matchedValue = match.Groups[1].Value.Replace(",", "");
+                        if (long.TryParse(matchedValue, out long availableMemory))
+                        {
+                            return availableMemory;
+                        }
                     }
                 }
             }
 
-            var regex = new Regex(@"\d+");
-            var match = regex.Match(result.Output);
-            if (match.Success && match.Groups.Count > 0)
-            {
-                long.TryParse(match.Groups[0].Value, out availableMemory);
-            }
-
-            return availableMemory;
+            // Platform-agnostic fallback logic for getting available memory
+            return 4L * 1024 * 1024 * 1024; // 4GB
         }
+
 
         public static (bool Success, string Output, string Error) TryExecuteCommand(string command, int timeoutSeconds = 10)
         {

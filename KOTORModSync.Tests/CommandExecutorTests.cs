@@ -12,6 +12,8 @@ using KOTORModSync.Core;
 using KOTORModSync.Core.Utility;
 using Microsoft.VisualStudio.Services.CircuitBreaker;
 using Microsoft.VisualStudio.TestPlatform.Utilities;
+using NUnit.Framework;
+using SharpCompress.Readers;
 
 namespace KOTORModSync.Tests
 {
@@ -222,6 +224,28 @@ namespace KOTORModSync.Tests
             Assert.That(output, Is.EqualTo(string.Empty));
         }
 
+        [Test]
+        public void GetAvailableMemory_ShouldReturnNonZero_OnSupportedPlatform()
+        {
+            // Act
+            long availableMemory = PlatformAgnosticMethods.GetAvailableMemory();
+
+            // Assert
+            Assert.That(availableMemory, Is.GreaterThan(0));
+        }
+
+        [Test]
+        public void GetAvailableMemory_ShouldReturnDefaultValue_OnUnsupportedPlatform()
+        {
+            // Arrange
+            ConfigureEnvironmentForUnsupportedPlatform();
+
+            // Act
+            long availableMemory = PlatformAgnosticMethods.GetAvailableMemory();
+
+            // Assert
+            Assert.That(availableMemory, Is.EqualTo(4L * 1024 * 1024 * 1024)); // 4GB
+        }
 
         private static void ConfigureEnvironmentForWindows()
         {

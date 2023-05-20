@@ -77,19 +77,12 @@ namespace KOTORModSync.Core
             try
             {
                 var extractTasks = new List<Task>();
-                int maxDegreeOfParallelism = await Utility.PlatformAgnosticMethods.CalculateMaxDegreeOfParallelismAsync();
+                int maxDegreeOfParallelism = await Utility.PlatformAgnosticMethods.CalculateMaxDegreeOfParallelismAsync(new DirectoryInfo(this.Source[0]));
                 SemaphoreSlim semaphore = new SemaphoreSlim(maxDegreeOfParallelism); // Set the maximum degree of parallelism
 
                 for (int i = 0; i < Source.Count; i++)
                 {
-                    string fileStrPath = this.Source[i];
-                    var thisFile = new FileInfo(Utility.Utility.ReplaceCustomVariables(fileStrPath));
-                    if (!thisFile.Exists)
-                    {
-                        Exception ex = new FileNotFoundException($"The file {fileStrPath} could not be located on the disk");
-                        Logger.LogException(ex);
-                        throw ex;
-                    }
+                    var thisFile = new FileInfo(this.Source[i]);
                     Logger.Log($"File path: {thisFile.FullName}");
 
                     using (Stream stream = File.OpenRead(thisFile.FullName))
@@ -162,27 +155,14 @@ namespace KOTORModSync.Core
             try
             {
                 var deleteTasks = new List<Task>();
-
-                // Enumerate the files/folders with wildcards and add them to the list
-                var filesToDelete = await Serializer.FileHandler.EnumerateFilesWithWildcards(this.Source);
-
-                int maxDegreeOfParallelism = await Utility.PlatformAgnosticMethods.CalculateMaxDegreeOfParallelismAsync();
+                int maxDegreeOfParallelism = await Utility.PlatformAgnosticMethods.CalculateMaxDegreeOfParallelismAsync(new DirectoryInfo(this.Source[0]));
                 SemaphoreSlim semaphore = new SemaphoreSlim(maxDegreeOfParallelism); // Set the maximum degree of parallelism
 
-                for (int i = 0; i < filesToDelete.Count; i++)
+                for (int i = 0; i < this.Source.Count; i++)
                 {
-                    string fileToDelete = filesToDelete[i];
-                    string thisFileStr = Utility.Utility.ReplaceCustomVariables(fileToDelete);
-                    if (Path.IsPathRooted(thisFileStr))
+                    var thisFile = new FileInfo(this.Source[i]);
+                    if (Path.IsPathRooted(thisFile.FullName))
                     {
-                        var thisFile = new FileInfo(thisFileStr);
-                        if (!thisFile.Exists)
-                        {
-                            Exception ex = new FileNotFoundException($"The file {fileToDelete} could not be located on the disk");
-                            Logger.LogException(ex);
-                            return false;
-                        }
-
                         // Delete the file asynchronously
                         Task deleteTask = Task.Run(async () =>
                         {
@@ -203,7 +183,7 @@ namespace KOTORModSync.Core
                     }
                     else
                     {
-                        var ex = new ArgumentException($"Invalid wildcards/not a valid path: {fileToDelete}");
+                        var ex = new ArgumentException($"Invalid wildcards/not a valid path: {thisFile.FullName}");
                         Logger.LogException(ex);
                         return false;
                     }
@@ -225,30 +205,22 @@ namespace KOTORModSync.Core
         public async Task<bool> MoveFile() {
             try {
                 var moveTasks = new List<Task>();
-
-                int maxDegreeOfParallelism = await Utility.PlatformAgnosticMethods.CalculateMaxDegreeOfParallelismAsync();
+                int maxDegreeOfParallelism = await Utility.PlatformAgnosticMethods.CalculateMaxDegreeOfParallelismAsync(new DirectoryInfo(this.Source[0]));
                 SemaphoreSlim semaphore = new SemaphoreSlim(maxDegreeOfParallelism); // Set the maximum degree of parallelism
 
                 for (int i = 0; i < Source.Count; i++) {
-                    string fileStrPath = this.Source[i];
-                    var thisFile = new FileInfo(Utility.Utility.ReplaceCustomVariables(fileStrPath));
-                    if (!thisFile.Exists) {
-                        Exception ex = new FileNotFoundException($"The file {fileStrPath} could not be located on the disk");
-                        Logger.LogException(ex);
-                        return false;
-                    }
-
-                    string destinationPath = Path.Combine(Utility.Utility.ReplaceCustomVariables(this.Destination), thisFile.Name);
-
+                    var thisFile = new FileInfo(this.Source[i]);
+                    var destinationPath = new DirectoryInfo(this.Destination);
                     // Check if the destination file already exists
-                    if (this.Overwrite || !File.Exists(destinationPath)) {
+                    if (this.Overwrite || !File.Exists(Path.Combine(destinationPath.FullName, thisFile.Name)))
+                    {
                         // Move the file asynchronously
                         Task moveTask = Task.Run(async () =>
                         {
                             await semaphore.WaitAsync(); // Acquire a semaphore slot
 
                             try {
-                                await Serializer.FileHandler.MoveFileAsync(thisFile.FullName, destinationPath);
+                                await Serializer.FileHandler.MoveFileAsync(thisFile.FullName, destinationPath.FullName);
                                 Logger.Log($"Moving {thisFile.FullName} to {destinationPath}... Overwriting? {this.Overwrite}");
                             } finally {
                                 semaphore.Release(); // Release the semaphore slot
@@ -275,7 +247,7 @@ namespace KOTORModSync.Core
             {
                 for (int i = 0; i < this.Source.Count; i++)
                 {
-                    var thisProgram = new FileInfo(Utility.Utility.ReplaceCustomVariables(this.Source[i]));
+                    var thisProgram = new FileInfo(this.Source[i]);
                     if (!thisProgram.Exists)
                     {
                         throw new FileNotFoundException($"The file {this.Source[i]} could not be located on the disk");
@@ -695,6 +667,20 @@ namespace KOTORModSync.Core
                     {
                         Logger.Log("Warning! Original checksums of your KOTOR directory do not match the instructions file.");
                     }*/
+
+                    //parse the source/destinations
+
+                    // Enumerate the files/folders with wildcards and add them to the list
+                    for (int i = 0; i < instruction.Source.Count; i++)
+                    {
+                        instruction.Source[i] = Utility.Utility.ReplaceCustomVariables(instruction.Source[i]);
+                    }
+                    instruction.Source = await Serializer.FileHandler.EnumerateFilesWithWildcards(instruction.Source);
+
+                    var destinationList = new List<string> { Utility.Utility.ReplaceCustomVariables(instruction.Destination) };
+                    destinationList = await Serializer.FileHandler.EnumerateFilesWithWildcards(destinationList);
+                    instruction.Destination = destinationList.FirstOrDefault();
+
 
                     bool success = false;
                     switch (instruction.Action.ToLower())

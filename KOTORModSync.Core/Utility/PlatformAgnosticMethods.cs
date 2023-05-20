@@ -4,8 +4,10 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -15,27 +17,33 @@ namespace KOTORModSync.Core.Utility
 {
     public static class PlatformAgnosticMethods
     {
-        public static async Task<int> CalculateMaxDegreeOfParallelismAsync() {
+        public static async Task<int> CalculateMaxDegreeOfParallelismAsync(DirectoryInfo thisDir)
+        {
             int maxParallelism = Environment.ProcessorCount; // Start with the number of available processors
 
-            // Adjust the maximum parallelism based on other factors such as file sizes, memory usage, available memory, and disk speed
-            // Add your custom logic here to fine-tune the parallelism
-
-            // Example: Limit parallelism based on available memory
             long availableMemory = GetAvailableMemory();
             const long memoryThreshold = 2L * 1024 * 1024 * 1024; // 2GB threshold
-            if (availableMemory < memoryThreshold) {
-                maxParallelism = Math.Max(1, maxParallelism / 2); // Reduce parallelism by half if available memory is below the threshold
+            if (availableMemory < memoryThreshold)
+            {
+                // Utilize Parallel to distribute the memory check workload across multiple threads
+                Parallel.Invoke(() =>
+                {
+                    maxParallelism = Math.Max(1, maxParallelism / 2); // Reduce parallelism by half if available memory is below the threshold
+                });
             }
 
-            // Example: Limit parallelism based on disk speed
-            bool isSSD = IsSSDDrive();
-            if (isSSD) {
-                maxParallelism = Math.Max(1, maxParallelism * 2); // Double parallelism if the disk is an SSD
+            Task<double> maxDiskSpeedTask = Task.Run(() => GetMaxDiskSpeed(Path.GetPathRoot(thisDir.FullName)));
+            double maxDiskSpeed = await maxDiskSpeedTask;
+
+            const double diskSpeedThreshold = 100.0; // MB/sec threshold
+            if (maxDiskSpeed < diskSpeedThreshold)
+            {
+                maxParallelism = Math.Max(1, maxParallelism / 2); // Reduce parallelism by half if disk speed is below the threshold
             }
 
             // Platform-agnostic fallback logic
-            if (maxParallelism <= 1) {
+            if (maxParallelism <= 1)
+            {
                 // Fallback logic when unable to determine or adjust parallelism
                 maxParallelism = Environment.ProcessorCount; // Reset to the default number of available processors
             }
@@ -44,9 +52,10 @@ namespace KOTORModSync.Core.Utility
         }
 
 
+
+
         public static long GetAvailableMemory()
         {
-            // Check if the required command/method exists on the current platform
             // Check if the required command/method exists on the current platform
             var result = TryExecuteCommand("sysctl -n hw.memsize");
             if (!result.Success)
@@ -66,8 +75,8 @@ namespace KOTORModSync.Core.Utility
                 // Update the regular expressions for matching memory values
                 string[] patterns = {
                     @"\d{1,3}(,\d{3})*",                   // wmic command
-                    @"\d+\s+\d+\s+\d+\s+(\d+)",             // free command
-                    @"\d+(\.\d+)?",                         // sysctl command
+                    @"\d+\s+\d+\s+\d+\s+(\d+)",            // free command
+                    @"\d+(\.\d+)?",                        // sysctl command
                 };
 
                 foreach (string pattern in patterns)
@@ -151,38 +160,77 @@ namespace KOTORModSync.Core.Utility
         }
 
 
-        public static bool IsSSDDrive() {
-            bool isSSD = false;
+        public static double GetMaxDiskSpeed(string drivePath)
+        {
+            string command;
+            string arguments;
 
-            // Check if the required method exists on the current platform
-            if (!TryInvokeMethod(typeof(DriveInfo), "IsSSD", out object result) &&
-                !TryInvokeMethod(typeof(DriveInfo), "GetDriveType", out result)) {
-                // Platform-agnostic fallback logic for determining if the disk is an SSD
-                // Example: Assume it's not an SSD
-                isSSD = false;
-
-                return isSSD;
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                command = "cmd.exe";
+                arguments = $"/C winsat disk -drive \"{drivePath}\" -seq -read -ransize 4096";
+            }
+            else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux) || RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+            {
+                command = "dd";
+                arguments = $"if={drivePath} bs=1M count=256 iflag=direct";
+            }
+            else
+            {
+                throw new PlatformNotSupportedException("Disk performance checking is not supported on this platform.");
             }
 
-            if (result is bool boolResult) {
-                isSSD = boolResult;
-            } else if (result is int driveType) {
-                // Example: Assume SSD for drive types indicating flash storage
-                isSSD = driveType == 2 || driveType == 3;
-            }
+            ProcessStartInfo startInfo = new ProcessStartInfo
+            {
+                FileName = command,
+                Arguments = arguments,
+                RedirectStandardOutput = true,
+                UseShellExecute = false
+            };
 
-            return isSSD;
+            using (Process process = new Process())
+            {
+                process.StartInfo = startInfo;
+                process.Start();
+
+                string output = process.StandardOutput.ReadToEnd();
+                process.WaitForExit();
+
+                // Extract the relevant information from the output and calculate the max disk speed
+                double maxSpeed = ExtractMaxDiskSpeed(output);
+                return maxSpeed;
+            }
         }
 
-        public static bool TryInvokeMethod(Type type, string methodName, out object result) {
-            try {
-                var method = type.GetMethod(methodName, BindingFlags.Public | BindingFlags.Static);
-                result = method?.Invoke(null, null);
-                return true;
-            } catch {
-                result = null;
-                return false;
+        private static double ExtractMaxDiskSpeed(string output)
+        {
+            double maxSpeed = 0.0;
+
+            Regex regex = new Regex(@"([0-9,.]+)\s*(bytes/sec|MB/sec)");
+            Match match = regex.Match(output);
+            if (match.Success && match.Groups.Count >= 3)
+            {
+                string speedString = match.Groups[1].Value;
+                string unit = match.Groups[2].Value.ToLower();
+
+                if (double.TryParse(speedString.Replace(",", ""), out double speed))
+                {
+                    if (unit == "bytes/sec")
+                    {
+                        maxSpeed = speed / 1048576; // Convert bytes/sec to MB/sec
+                    }
+                    else if (unit == "mb/sec")
+                    {
+                        maxSpeed = speed;
+                    }
+                }
             }
+
+            return maxSpeed;
         }
+
+
+
+
     }
 }

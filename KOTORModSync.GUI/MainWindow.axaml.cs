@@ -300,19 +300,33 @@ namespace KOTORModSync.GUI
 
         private async void StartInstall_Click(object sender, RoutedEventArgs e)
         {
-            if(mainConfig == null || MainConfig.DestinationPath == null)
+            if (mainConfig == null || MainConfig.DestinationPath == null)
             {
                 var informationDialog = new InformationDialog();
                 informationDialog.InfoText = "Please set your directories first";
                 await informationDialog.ShowDialog<bool?>(this);
+                return;
             }
-            foreach(var component in components)
+
+            foreach (var component in components)
             {
                 var confirmationDialogCallback = new ConfirmationDialogCallback(this);
-                // Call the ExecuteInstructions method and pass the confirmationDialogCallback
-                await Component.ExecuteInstructions(confirmationDialogCallback, components);
+
+                // Call the ExecuteInstructions method asynchronously using Task.Run
+                var result = await Task.Run(() => component.ExecuteInstructions(confirmationDialogCallback, components));
+
+                if (!result.success)
+                {
+                    var informationDialog = new InformationDialog();
+                    informationDialog.InfoText = $"There was a problem installing {component.Name}, please check the output window.";
+                }
+                else
+                {
+                    Logger.Log("Successfully installed {component.Name}");
+                }
             }
         }
+
 
         private ICommand itemClickCommand;
 
@@ -596,12 +610,12 @@ namespace KOTORModSync.GUI
             {
                 foreach (var item in items)
                 {
-                    WriteTreeViewItemToFile(item, writer);
+                    WriteTreeViewItemToFile(item, writer, maxDepth: 1);
                 }
             }
         }
 
-        private void WriteTreeViewItemToFile(TreeViewItem item, StreamWriter writer)
+        private void WriteTreeViewItemToFile(TreeViewItem item, StreamWriter writer, int depth = 0, int maxDepth = int.MaxValue)
         {
             var component = item.Tag as Component;
             if (component != null)
@@ -610,14 +624,15 @@ namespace KOTORModSync.GUI
                 writer.WriteLine(tomlContents);
             }
 
-            if (item.Items != null)
+            if (depth < maxDepth && item.Items != null)
             {
                 foreach (var childItem in item.Items.OfType<TreeViewItem>())
                 {
-                    WriteTreeViewItemToFile(childItem, writer);
+                    WriteTreeViewItemToFile(childItem, writer, depth + 1, maxDepth);
                 }
             }
         }
+
 
         private void RightDataGrid_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {

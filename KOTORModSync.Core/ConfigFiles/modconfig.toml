@@ -5,18 +5,20 @@ Guid = "{d2bf7bbb-4757-4418-96bf-a9772a36a262}"
 InstallOrder = "1"
 Dependencies = []
 Paths = ["<<modDirectory>>"]
-
+Description = "The whole reason why you would mod KOTOR 2, the legendary mod that includes bugfixes, restored content, and altered scenes to return the game to what it was meant to be. This mod isn't just essential--it's mandatory."
+Directions = "Executable. Recall that M4-78 is incompatible with this build; do not use it alongside TSLRCM! Remember also that the Workshop version of this or any other mod is NOT to be used!"
 [[thisMod.Instructions]]
 Action = "execute"
 Source = ["<<modDirectory>>/tslrcm2022.exe"]
 Overwrite = "False"
-
 
 [[thisMod]]
 Name = "TSLRCM Tweak Pack"
 Guid = "{C5418549-6B7E-4A8C-8B8E-4AA1BC63C732}"
 InstallOrder = "1"
 Dependencies = ["{d2bf7bbb-4757-4418-96bf-a9772a36a262}"]
+Directions = "Don't use the complete installer, instead selecting the individual component installer--this is critical for compatibility, not just to choose specific options. The installer for this mod will need to be run 7 times, once to install each of the options we'll be using: Kaevee Removal Parts 1 & 2, Saedhe's Head, Atton at the End, Kreia-Atris Dialogue Tweak, Trayus Mandalore Conversation, and Trayus Sith Lord Masks."
+Description = "Reverts and otherwise modifies certain TSLRCM settings to make the game more sensible and internally consistent (mostly unrestoring content which was likely intentionally cut by Obsidian). This includes removing Jedi Padawan Kaevee."
 
 [[thisMod.Instructions]]
 Action = "extract"
@@ -54,6 +56,23 @@ Arguments = ""
 Action = "run"
 Overwrite = "False"
 Arguments = ""
+
+
+[[thisMod]]
+Name = "Prestige Class Saving Throw Fixes"
+Guid = "{0db2c43f-5298-4345-9e17-22852e64d3b7}"
+InstallOrder = "0"
+Dependencies = ["{d2bf7bbb-4757-4418-96bf-a9772a36a262}"]
+
+[[thisMod.Instructions]]
+Action = "extract"
+Source = ["<<modDirectory>>/TSL_prestige_save_fixes.zip"]
+Overwrite = "True"
+[[thisMod.Instructions]]
+Action = "move"
+Source = ["<<modDirectory>>/TSL_prestige_save_fixes/TSL_prestige_save_fixes/jedimaster_sithlord fixes/*"]
+Dependencies = ["{C5418549-6B7E-4A8C-8B8E-4AA1BC63C732}"]
+Overwrite = "True"
 
 
 [[thisMod]]

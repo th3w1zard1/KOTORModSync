@@ -81,7 +81,7 @@ namespace KOTORModSync.Core.Utility
         {
             using (SHA1 sha1 = SHA1.Create())
             {
-                using (BufferedStream stream = new BufferedStream(File.OpenRead(filePath.FullName), 1200000))
+                using (FileStream stream = File.OpenRead(filePath.FullName))
                 {
                     byte[] buffer = new byte[81920];
                     List<Task> tasks = new List<Task>();
@@ -93,16 +93,17 @@ namespace KOTORModSync.Core.Utility
                     {
                         totalBytesRead += bytesRead;
 
+                        byte[] data = new byte[bytesRead];
+                        Buffer.BlockCopy(buffer, 0, data, 0, bytesRead);
+
                         tasks.Add(
-                            Task.Run(
-                                () =>
-                                {
-                                    _ = sha1.TransformBlock(buffer, 0, bytesRead, null, 0);
-                                }
-                            )
+                            Task.Run(() =>
+                            {
+                                sha1.TransformBlock(data, 0, bytesRead, null, 0);
+                            })
                         );
 
-                        if (tasks.Count >= 8)
+                        if (tasks.Count >= Environment.ProcessorCount * 2)
                         {
                             await Task.WhenAll(tasks);
                             tasks.Clear();
@@ -117,6 +118,7 @@ namespace KOTORModSync.Core.Utility
                 }
             }
         }
+
 
         public static async Task SaveChecksumsToFileAsync(string filePath, Dictionary<DirectoryInfo, SHA1> checksums)
         {

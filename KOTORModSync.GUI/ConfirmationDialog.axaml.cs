@@ -4,6 +4,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
+using Avalonia.Threading;
 
 namespace KOTORModSync.GUI
 {
@@ -36,53 +37,57 @@ namespace KOTORModSync.GUI
 
         public static Task<bool> ShowConfirmationDialog(Window parentWindow, string confirmText)
         {
-            var confirmationDialog = new ConfirmationDialog();
-            confirmationDialog.ConfirmText = confirmText;
+            var tcs = new TaskCompletionSource<bool>();
 
-            TaskCompletionSource<bool> tcs = new TaskCompletionSource<bool>();
-
-            EventHandler<RoutedEventArgs> yesClickedHandler = null;
-            EventHandler<RoutedEventArgs> noClickedHandler = null;
-            EventHandler closedHandler = null;
-
-            yesClickedHandler = (sender, e) =>
+            Dispatcher.UIThread.InvokeAsync(() =>
             {
-                confirmationDialog.YesButtonClicked -= yesClickedHandler;
-                confirmationDialog.NoButtonClicked -= noClickedHandler;
-                confirmationDialog.Closed -= closedHandler;
+                var confirmationDialog = new ConfirmationDialog();
+                confirmationDialog.ConfirmText = confirmText;
 
-                confirmationDialog.Close();
-                tcs.SetResult(true);
-            };
+                EventHandler<RoutedEventArgs> yesClickedHandler = null;
+                EventHandler<RoutedEventArgs> noClickedHandler = null;
+                EventHandler closedHandler = null;
 
-            noClickedHandler = (sender, e) =>
-            {
-                confirmationDialog.YesButtonClicked -= yesClickedHandler;
-                confirmationDialog.NoButtonClicked -= noClickedHandler;
-                confirmationDialog.Closed -= closedHandler;
+                yesClickedHandler = (sender, e) =>
+                {
+                    confirmationDialog.YesButtonClicked -= yesClickedHandler;
+                    confirmationDialog.NoButtonClicked -= noClickedHandler;
+                    confirmationDialog.Closed -= closedHandler;
 
-                confirmationDialog.Close();
-                tcs.SetResult(false);
-            };
+                    confirmationDialog.Close();
+                    tcs.SetResult(true);
+                };
 
-            closedHandler = (sender, e) =>
-            {
-                confirmationDialog.YesButtonClicked -= yesClickedHandler;
-                confirmationDialog.NoButtonClicked -= noClickedHandler;
-                confirmationDialog.Closed -= closedHandler;
+                noClickedHandler = (sender, e) =>
+                {
+                    confirmationDialog.YesButtonClicked -= yesClickedHandler;
+                    confirmationDialog.NoButtonClicked -= noClickedHandler;
+                    confirmationDialog.Closed -= closedHandler;
 
-                tcs.SetResult(false);
-            };
+                    confirmationDialog.Close();
+                    tcs.SetResult(false);
+                };
 
-            confirmationDialog.YesButtonClicked += yesClickedHandler;
-            confirmationDialog.NoButtonClicked += noClickedHandler;
-            confirmationDialog.Closed += closedHandler;
-            confirmationDialog.Opened += confirmationDialog.OnOpened;
+                closedHandler = (sender, e) =>
+                {
+                    confirmationDialog.YesButtonClicked -= yesClickedHandler;
+                    confirmationDialog.NoButtonClicked -= noClickedHandler;
+                    confirmationDialog.Closed -= closedHandler;
 
-            confirmationDialog.ShowDialog(parentWindow);
+                    tcs.SetResult(false);
+                };
+
+                confirmationDialog.YesButtonClicked += yesClickedHandler;
+                confirmationDialog.NoButtonClicked += noClickedHandler;
+                confirmationDialog.Closed += closedHandler;
+                confirmationDialog.Opened += confirmationDialog.OnOpened;
+
+                confirmationDialog.ShowDialog(parentWindow);
+            });
 
             return tcs.Task;
         }
+
 
 
         public static readonly RoutedEvent<RoutedEventArgs> YesButtonClickedEvent =

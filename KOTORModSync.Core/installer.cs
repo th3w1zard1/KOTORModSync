@@ -11,6 +11,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Security.Cryptography;
 using KOTORModSync.Core.Utility;
 using SharpCompress.Archives;
 using SharpCompress.Archives.Rar;
@@ -19,6 +20,7 @@ using SharpCompress.Archives.Zip;
 using SharpCompress.Common;
 using Tomlyn.Model;
 using static KOTORModSync.Core.Utility.Utility;
+using Microsoft.TeamFoundation.WorkItemTracking.WebApi.Models;
 
 namespace KOTORModSync.Core
 {
@@ -33,7 +35,8 @@ namespace KOTORModSync.Core
         public List<string> Paths { get; set; }
         public string Arguments { get; set; }
         public Component ParentComponent { get; set; }
-        public Dictionary<FileInfo, System.Security.Cryptography.SHA1> ExpectedChecksums { get; set; }
+        public Dictionary<FileInfo, SHA1> ExpectedChecksums { get; set; }
+        public Dictionary<FileInfo, SHA1> OriginalChecksums { get; internal set; }
 
         public static string defaultInstructions = @"
 [[thisMod.instructions]]
@@ -72,15 +75,17 @@ namespace KOTORModSync.Core
                 var extractTasks = new List<Task>();
                 SemaphoreSlim semaphore = new SemaphoreSlim(Utility.PlatformAgnosticMethods.CalculateMaxDegreeOfParallelism()); // Set the maximum degree of parallelism
 
-                foreach (string fileStrPath in this.Source)
+                for (int i = 0; i < Source.Count; i++)
                 {
-                    var thisFile = new FileInfo(fileStrPath);
+                    string fileStrPath = this.Source[i];
+                    var thisFile = new FileInfo(Utility.Utility.ReplaceCustomVariables(fileStrPath));
                     if (!thisFile.Exists)
                     {
                         Exception ex = new FileNotFoundException($"The file {fileStrPath} could not be located on the disk");
                         Logger.LogException(ex);
                         throw ex;
                     }
+                    Logger.Log($"File path: {thisFile.FullName}");
 
                     using (Stream stream = File.OpenRead(thisFile.FullName))
                     {
@@ -101,6 +106,7 @@ namespace KOTORModSync.Core
 
                         if (archive != null)
                         {
+                            Logger.Log($"Archive type: {archive.GetType().Name}");
                             foreach (IArchiveEntry entry in archive.Entries)
                             {
                                 if (!entry.IsDirectory)
@@ -157,11 +163,13 @@ namespace KOTORModSync.Core
 
                 SemaphoreSlim semaphore = new SemaphoreSlim(Utility.PlatformAgnosticMethods.CalculateMaxDegreeOfParallelism()); // Set the maximum degree of parallelism
 
-                foreach (string fileToDelete in filesToDelete)
+                for (int i = 0; i < filesToDelete.Count; i++)
                 {
-                    if (Path.IsPathRooted(fileToDelete))
+                    string fileToDelete = filesToDelete[i];
+                    string thisFileStr = Utility.Utility.ReplaceCustomVariables(fileToDelete);
+                    if (Path.IsPathRooted(thisFileStr))
                     {
-                        var thisFile = new FileInfo(fileToDelete);
+                        var thisFile = new FileInfo(thisFileStr);
                         if (!thisFile.Exists)
                         {
                             Exception ex = new FileNotFoundException($"The file {fileToDelete} could not be located on the disk");
@@ -214,15 +222,16 @@ namespace KOTORModSync.Core
 
                 SemaphoreSlim semaphore = new SemaphoreSlim(Utility.PlatformAgnosticMethods.CalculateMaxDegreeOfParallelism()); // Set the maximum degree of parallelism
 
-                foreach (string fileStrPath in this.Source) {
-                    var thisFile = new FileInfo(fileStrPath);
+                for (int i = 0; i < Source.Count; i++) {
+                    string fileStrPath = this.Source[i];
+                    var thisFile = new FileInfo(Utility.Utility.ReplaceCustomVariables(fileStrPath));
                     if (!thisFile.Exists) {
                         Exception ex = new FileNotFoundException($"The file {fileStrPath} could not be located on the disk");
                         Logger.LogException(ex);
                         return false;
                     }
 
-                    string destinationPath = Path.Combine(this.Destination, thisFile.Name);
+                    string destinationPath = Path.Combine(Utility.Utility.ReplaceCustomVariables(this.Destination), thisFile.Name);
 
                     // Check if the destination file already exists
                     if (this.Overwrite || !File.Exists(destinationPath)) {
@@ -258,60 +267,119 @@ namespace KOTORModSync.Core
         {
             try
             {
-                var cancellationTokenSource = new CancellationTokenSource();
-                cancellationTokenSource.CancelAfter(TimeSpan.FromSeconds(3600)); // cancel if running longer than 30 minutes.
-                string path = Paths[0];
-                var startInfo = new ProcessStartInfo
+                for (int i = 0; i < Source.Count; i++)
                 {
-                    FileName = path,
-                    Arguments = Arguments,
-                    RedirectStandardOutput = true,
-                    UseShellExecute = false,
-                    CreateNoWindow = true
-                };
-                var process = new Process
-                {
-                    StartInfo = startInfo
-                };
-                _ = process.Start();
+                    string thisProgramStr = this.Source[i];
+                    var thisProgram = new FileInfo(Utility.Utility.ReplaceCustomVariables(thisProgramStr));
+                    if (!thisProgram.Exists)
+                    {
+                        throw new FileNotFoundException($"The file {thisProgramStr} could not be located on the disk");
+                    }
+                    var cancellationTokenSource = new CancellationTokenSource();
+                    cancellationTokenSource.CancelAfter(TimeSpan.FromSeconds(3600)); // cancel if running longer than 30 minutes.
+                    var startInfo = new ProcessStartInfo
+                    {
+                        FileName = thisProgram.FullName,
+                        Arguments = Arguments,
+                        RedirectStandardOutput = true,
+                        UseShellExecute = false,
+                        CreateNoWindow = true
+                    };
+                    var process = new Process
+                    {
+                        StartInfo = startInfo
+                    };
+                    _ = process.Start();
 
-                Task<string> outputTask = process.StandardOutput.ReadToEndAsync();
+                    Task<string> outputTask = process.StandardOutput.ReadToEndAsync();
 
-                while (!process.HasExited && !cancellationTokenSource.IsCancellationRequested)
-                {
-                    await Task.Delay(100);
+                    while (!process.HasExited && !cancellationTokenSource.IsCancellationRequested)
+                    {
+                        await Task.Delay(100);
+                    }
+
+                    if (!process.HasExited)
+                    {
+                        process.Kill();
+                        throw new Exception("TSLPatcher timed out after 30 minutes.");
+                    }
+
+                    string output = await outputTask;
+
+                    return process.ExitCode != 0
+                        ? throw new Exception($"TSLPatcher failed with exit code {process.ExitCode}. Output:\n{output}")
+                        : !VerifyInstall() ? throw new Exception("TSLPatcher failed to install the mod correctly.") : true;
                 }
-
-                if (!process.HasExited)
-                {
-                    process.Kill();
-                    throw new Exception("TSLPatcher timed out after 30 minutes.");
-                }
-
-                string output = await outputTask;
-
-                return process.ExitCode != 0
-                    ? throw new Exception($"TSLPatcher failed with exit code {process.ExitCode}. Output:\n{output}")
-                    : !VerifyInstall() ? throw new Exception("TSLPatcher failed to install the mod correctly.") : true;
             } catch (Exception ex) {
                 Logger.LogException(ex);
                 return false;
             }
 
+            return false;
+        }
 
+        public async Task<bool> ExecuteProgramAsync()
+        {
+            try
+            {
+                for (int i = 0; i < this.Source.Count; i++)
+                {
+                    var thisProgram = new FileInfo(Utility.Utility.ReplaceCustomVariables(this.Source[i]));
+                    if (!thisProgram.Exists)
+                    {
+                        throw new FileNotFoundException($"The file {this.Source[i]} could not be located on the disk");
+                    }
+                    var cancellationTokenSource = new CancellationTokenSource();
+                    cancellationTokenSource.CancelAfter(TimeSpan.FromSeconds(3600)); // cancel if running longer than 30 minutes.
+                    var startInfo = new ProcessStartInfo
+                    {
+                        FileName = thisProgram.FullName,
+                        Arguments = Arguments,
+                        RedirectStandardOutput = true,
+                        UseShellExecute = false,
+                        CreateNoWindow = true
+                    };
+                    var process = new Process
+                    {
+                        StartInfo = startInfo
+                    };
+                    _ = process.Start();
+
+                    Task<string> outputTask = process.StandardOutput.ReadToEndAsync();
+
+                    while (!process.HasExited && !cancellationTokenSource.IsCancellationRequested)
+                    {
+                        await Task.Delay(100);
+                    }
+
+                    if (!process.HasExited)
+                    {
+                        process.Kill();
+                        throw new Exception("Process timed out after 30 minutes.");
+                    }
+
+                    string output = await outputTask;
+
+                    if (process.ExitCode != 0)
+                    {
+                        Logger.Log($"Process failed with exit code {process.ExitCode}. Output:\n{output}");
+                        return false;
+                    }
+                    else
+                        return true;
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.LogException(ex);
+                return false;
+            }
+
+            return false;
         }
 
         public bool VerifyInstall()
         {
-            // Verify if the destination directory has been modified
-            /*DateTime destinationDirectoryLastModified = Directory.GetLastWriteTime(MainConfig.DestinationPath.FullName);
-
-            if (destinationDirectoryLastModified < component.SourceLastModified)
-            {
-                Logger.Log("Destination directory has not been modified.");
-                return false;
-            }*/
-
             // Verify if any error or warning message is present in the install.rtf file
             string installLogFile = System.IO.Path.Combine(MainConfig.DestinationPath.FullName, "install.rtf");
 
@@ -348,8 +416,9 @@ namespace KOTORModSync.Core
         public int InstallOrder { get; set; }
         public List<string> Dependencies { get; set; }
         public List<string> Restrictions { get; set; }
-        public List<string> Paths { get; set; }
         public List<Instruction> Instructions { get; set; }
+        public string Directions { get; set; }
+        public string Description { get; set; }
         public DateTime SourceLastModified { get; internal set; }
 
         public static string defaultComponent = @"
@@ -358,20 +427,15 @@ namespace KOTORModSync.Core
     guid = ""{B3525945-BDBD-45D8-A324-AAF328A5E13E}""
     # Copy and paste any guid of any mod you depend on here, format like below
     dependencies = [
-        ""{C5418549-6B7E-4A8C-8B8E-4AA1BC63C732}"",
-        ""{D0F371DA-5C69-4A26-8A37-76E3A6A2A50D}""
+        ""{d2bf7bbb-4757-4418-96bf-a9772a36a262}"",
+        ""{C5418549-6B7E-4A8C-8B8E-4AA1BC63C732}""
     ]
     # Copy and paste any guid of any incompatible mod here, format like below
     restrictions = [
         ""{C5418549-6B7E-4A8C-8B8E-4AA1BC63C732}"",
         ""{D0F371DA-5C69-4A26-8A37-76E3A6A2A50D}""
     ]
-    installOrder = 3
-    # You can specify multiple paths to the same mod, but it's easier to use just one path and handle everything in instructions.
-    paths = [
-        ""<<modDirectory>>\\path\\to\\mod_location2"",
-        ""<<modDirectory>>\\path\\to\\mod_location1""
-    ]";
+    installOrder = 3";
 
         public DirectoryInfo tempPath;
 
@@ -395,9 +459,11 @@ namespace KOTORModSync.Core
             this.Name = GetRequiredValue<string>(componentDict, "name");
             this.Guid = GetRequiredValue<string>(componentDict, "guid");
             this.InstallOrder = GetValueOrDefault<int>(componentDict, "installorder");
+            this.Description = GetValueOrDefault<string>(componentDict,"description");
+            this.Directions = GetValueOrDefault<string>(componentDict, "directions");
             this.Dependencies = GetValueOrDefault<List<string>>(componentDict, "dependencies");
             this.Instructions = DeserializeInstructions(GetValueOrDefault<TomlTableArray>(componentDict, "instructions"));
-            this.Paths = GetValueOrDefault<List<string>>(componentDict, "Paths");
+
             this.Instructions?.ForEach(instruction => instruction.ParentComponent = this);
         }
 
@@ -627,58 +693,85 @@ namespace KOTORModSync.Core
             return listType.IsGenericType && listType.GetGenericTypeDefinition() == typeof(List<>);
         }
 
-        public static string ReplaceCustomVariables(string path)
+        public async Task<(
+            bool success,
+            Dictionary<FileInfo, SHA1> originalChecksums
+        )> ExecuteInstructions(
+            IConfirmationDialogCallback confirmDialog,
+            List<Component> componentsList
+        )
         {
-            string normalizedPath = path.Replace("<<modDirectory>>", MainConfig.ModConfigPath.FullName)
-                                       .Replace("<<kotorDirectory>>", MainConfig.DestinationPath.FullName);
-            return Path.GetFullPath(normalizedPath);
-        }
-
-        public static async Task<(bool success, Dictionary<FileInfo, System.Security.Cryptography.SHA1> originalChecksums)> ExecuteInstructions(IConfirmationDialogCallback confirmDialog, List<Component> componentsList)
-        {
-
             // Check if we have permission to write to the Destination directory
             if (!Utility.Utility.CanWriteToDirectory(MainConfig.DestinationPath)) {
                 throw new Exception("Cannot write to the destination directory.");
             }
 
-            async Task<(bool, Dictionary<FileInfo, System.Security.Cryptography.SHA1>)> ProcessComponentAsync(Component component)
+            async Task<(bool, Dictionary<FileInfo, SHA1>)> ProcessComponentAsync(Component component)
             {
                 foreach (Instruction instruction in component.Instructions)
                 {
-                    // Get the original checksums before making any modifications
-                    var originalPathsToChecksum = new Dictionary<FileInfo, System.Security.Cryptography.SHA1>();
-                    foreach (FileInfo file in MainConfig.DestinationPath.GetFiles("*.*", SearchOption.AllDirectories))
+                    //The instruction will run if any of the following conditions are met:
+                    //The instruction has no dependencies or restrictions.
+                    //The instruction has dependencies, and all of the required components are installed.
+                    //The instruction has restrictions, but none of the restricted components are installed.
+                    bool shouldRunInstruction = true;
+                    if (instruction.Dependencies != null && instruction.Dependencies.Count > 0)
                     {
-                        System.Security.Cryptography.SHA1 sha1 = await FileChecksumValidator.CalculateSHA1Async(file);
-                        originalPathsToChecksum[file] = sha1;
+                        shouldRunInstruction &= instruction.Dependencies.All(requiredGuid =>
+                            componentsList.Any(checkComponent => checkComponent.Guid == requiredGuid));
+                    }
+                    if (instruction.Restrictions != null && instruction.Restrictions.Count > 0)
+                    {
+                        shouldRunInstruction &= !instruction.Restrictions.Any(restrictedGuid =>
+                            componentsList.Any(checkComponent => checkComponent.Guid == restrictedGuid));
+                    }
+
+                    if (!shouldRunInstruction)
+                    {
+                        continue;
+                    }
+
+                    // Get the original checksums before making any modifications
+                    Logger.Log("Calculating game install file hashes");
+                    var originalPathsToChecksum = MainConfig.DestinationPath.GetFiles("*.*", SearchOption.AllDirectories)
+                        .ToDictionary(file => file, file => FileChecksumValidator.CalculateSHA1Async(file).Result);
+
+                    if (instruction.OriginalChecksums == null)
+                    {
+                        instruction.OriginalChecksums = originalPathsToChecksum;
+                    }
+                    else if (!instruction.OriginalChecksums.SequenceEqual(originalPathsToChecksum))
+                    {
+                        Logger.Log("Warning! Original checksums of your KOTOR directory do not match the instructions file.");
                     }
 
                     bool success = false;
-
-                    // there's no real reason to run these async except to keep the UI from freezing up during a task.
                     switch (instruction.Action.ToLower())
                     {
                         case "extract":
                             success = await instruction.ExtractFile();
                             break;
-
                         case "delete":
                             success = await instruction.DeleteFile();
                             break;
-
                         case "move":
                             success = await instruction.MoveFile();
                             break;
                         case "patch":
-                        case "execute":
                         case "tslpatcher":
                             success = await instruction.ExecuteTSLPatcherAsync();
                             break;
+                        case "execute":
+                        case "run":
+                            success = await instruction.ExecuteProgramAsync();
+                            break;
                         case "backup": //todo
                         case "rename": //todo
+                        case "dialog": //todo
                         default:
                             // Handle unknown instruction type here
+                            Logger.Log("Unknown instruction {instruction.Action}");
+                            success = false;
                             break;
                     }
 
@@ -696,9 +789,7 @@ namespace KOTORModSync.Core
                             expectedChecksums: instruction.ExpectedChecksums,
                             originalChecksums: originalPathsToChecksum
                         );
-
                         bool checksumsMatch = await validator.ValidateChecksumsAsync();
-
                         if (checksumsMatch)
                         {
                             Logger.Log($"Component {component.Name}'s instruction '{instruction.Action}' succeeded and modified files have expected checksums.");
@@ -727,20 +818,14 @@ namespace KOTORModSync.Core
                 return (true, new Dictionary<FileInfo, System.Security.Cryptography.SHA1>());
             }
 
-            string modConfigFile = Path.Combine(MainConfig.ModConfigPath.FullName, "modpack.toml");
-            List<Component> components = Utility.Serializer.FileHandler.ReadComponentsFromFile(modConfigFile);
-
-            foreach (Component component in components)
+            Task<(bool, Dictionary<FileInfo, System.Security.Cryptography.SHA1>)> result = ProcessComponentAsync(this);
+            if (!result.Result.Item1)
             {
-                Task<(bool, Dictionary<FileInfo, System.Security.Cryptography.SHA1>)> result = ProcessComponentAsync(component);
-                if (!result.Result.Item1)
+                Logger.LogException(new Exception($"Component {this.Name} failed to install the mod correctly with {result}"));
+                bool confirmationResult = await confirmDialog.ShowConfirmationDialog($"Error installing mod {this.Name}, continue installing next mod anyway?");
+                if (!confirmationResult)
                 {
-                    Logger.LogException(new Exception($"Component {component.Name} failed to install the mod correctly with {result}"));
-                    bool confirmationResult = await confirmDialog.ShowConfirmationDialog($"Error installing mod {component.Name}, continue with install anyway?");
-                    if (!confirmationResult)
-                    {
-                        return (false, null);
-                    }
+                    return (false, null);
                 }
             }
 

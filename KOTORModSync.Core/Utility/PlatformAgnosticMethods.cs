@@ -8,12 +8,14 @@ using System.IO;
 using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace KOTORModSync.Core.Utility
 {
-    internal static class PlatformAgnosticMethods
+    public static class PlatformAgnosticMethods
     {
-        public static int CalculateMaxDegreeOfParallelism() {
+        public static async Task<int> CalculateMaxDegreeOfParallelismAsync() {
             int maxParallelism = Environment.ProcessorCount; // Start with the number of available processors
 
             // Adjust the maximum parallelism based on other factors such as file sizes, memory usage, available memory, and disk speed
@@ -42,28 +44,99 @@ namespace KOTORModSync.Core.Utility
         }
 
 
-        public static long GetAvailableMemory() {
+        public static long GetAvailableMemory()
+        {
             long availableMemory = 0;
 
             // Check if the required command/method exists on the current platform
-            if (!TryExecuteCommand("sysctl -n hw.memsize", out string output) &&
-                !TryExecuteCommand("free -b", out output) &&
-                !TryExecuteCommand("wmic OS get FreePhysicalMemory", out output)) {
-                // Platform-agnostic fallback logic for getting available memory
-                // Example: Set a default available memory value
-                availableMemory = 4L * 1024 * 1024 * 1024; // 4GB
-
-                return availableMemory;
+            var result = TryExecuteCommand("sysctl -n hw.memsize");
+            if (!result.Success)
+            {
+                result = TryExecuteCommand("free -b");
+                if (!result.Success)
+                {
+                    result = TryExecuteCommand("wmic OS get FreePhysicalMemory");
+                    if (!result.Success)
+                    {
+                        // Platform-agnostic fallback logic for getting available memory
+                        // Example: Set a default available memory value
+                        availableMemory = 4L * 1024 * 1024 * 1024; // 4GB
+                        return availableMemory;
+                    }
+                }
             }
 
             var regex = new Regex(@"\d+");
-            var match = regex.Match(output);
-            if (match.Success && match.Groups.Count > 0) {
+            var match = regex.Match(result.Output);
+            if (match.Success && match.Groups.Count > 0)
+            {
                 long.TryParse(match.Groups[0].Value, out availableMemory);
             }
 
             return availableMemory;
         }
+
+        public static (bool Success, string Output, string Error) TryExecuteCommand(string command, int timeoutSeconds = 10)
+        {
+            string shellPath = GetShellExecutable();
+            if (string.IsNullOrEmpty(shellPath))
+            {
+                return (false, string.Empty, "Unable to retrieve shell executable path.");
+            }
+
+            try
+            {
+                using (var process = new Process())
+                {
+                    process.StartInfo.FileName = shellPath;
+                    process.StartInfo.Arguments = $"/c \"{command}\"";  // Use "/c" for Windows command prompt and "-c" for Unix-like shells
+                    process.StartInfo.RedirectStandardOutput = true;
+                    process.StartInfo.RedirectStandardError = true;
+                    process.StartInfo.UseShellExecute = false;
+                    process.StartInfo.CreateNoWindow = true;
+
+                    process.Start();
+
+                    // Wait for the process to exit or timeout
+                    if (!process.WaitForExit(timeoutSeconds * 1000))
+                    {
+                        process.Kill(); // Terminate the process if it exceeds the timeout
+                        return (false, string.Empty, "Command execution timed out.");
+                    }
+
+                    string output = process.StandardOutput.ReadToEnd().TrimEnd('\r', '\n');
+                    string error = process.StandardError.ReadToEnd();
+
+                    process.WaitForExit();
+
+                    return (true, output, error);
+                }
+            }
+            catch (Exception ex)
+            {
+                return (false, string.Empty, $"Command execution failed: {ex.Message}");
+            }
+        }
+
+        public static string GetShellExecutable()
+        {
+            string[] shellExecutables =
+            {
+                "cmd.exe", "powershell.exe", "sh", "/bin/sh", "/usr/bin/sh", "/usr/local/bin/sh",
+                "bash", "/bin/bash", "/usr/bin/bash", "/usr/local/bin/bash"
+            };
+
+            foreach (string executable in shellExecutables)
+            {
+                if (File.Exists(executable) || File.Exists(Path.Combine(Environment.SystemDirectory, executable)))
+                {
+                    return executable;
+                }
+            }
+
+            return string.Empty;
+        }
+
 
         public static bool IsSSDDrive() {
             bool isSSD = false;
@@ -88,32 +161,6 @@ namespace KOTORModSync.Core.Utility
             return isSSD;
         }
 
-        public static bool TryExecuteCommand(string command, out string output) {
-            try {
-                var process = new Process {
-                    StartInfo = new ProcessStartInfo {
-                        FileName = GetShellExecutable(),
-                        Arguments = $"-c \"{command}\"",
-                        RedirectStandardOutput = true,
-                        UseShellExecute = false,
-                        CreateNoWindow = true
-                    }
-                };
-
-                process.Start();
-                using (var reader = process.StandardOutput) {
-                    output = reader.ReadToEnd();
-                }
-
-                process.WaitForExit();
-
-                return true;
-            } catch {
-                output = string.Empty;
-                return false;
-            }
-        }
-
         public static bool TryInvokeMethod(Type type, string methodName, out object result) {
             try {
                 var method = type.GetMethod(methodName, BindingFlags.Public | BindingFlags.Static);
@@ -124,22 +171,5 @@ namespace KOTORModSync.Core.Utility
                 return false;
             }
         }
-
-        public static string GetShellExecutable() {
-            string[] shellExecutables =
-            {
-                "sh", "/bin/sh", "/usr/bin/sh", "/usr/local/bin/sh",
-                "bash", "/bin/bash", "/usr/bin/bash", "/usr/local/bin/bash"
-            };
-
-            foreach (string executable in shellExecutables) {
-                if (TryExecuteCommand($"command -v {executable}", out _)) {
-                    return executable;
-                }
-            }
-
-            return string.Empty;
-        }
-
     }
 }

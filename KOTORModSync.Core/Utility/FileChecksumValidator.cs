@@ -110,7 +110,7 @@ namespace KOTORModSync.Core.Utility
                         }
                     }
 
-                    _ = sha1.TransformFinalBlock(buffer, 0, 0);
+                    sha1.TransformFinalBlock(buffer, 0, bytesRead); // Use 'bytesRead' instead of 0
 
                     await Task.WhenAll(tasks);
 
@@ -118,6 +118,7 @@ namespace KOTORModSync.Core.Utility
                 }
             }
         }
+
 
 
         public static async Task SaveChecksumsToFileAsync(string filePath, Dictionary<DirectoryInfo, SHA1> checksums)

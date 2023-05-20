@@ -59,9 +59,13 @@ namespace KOTORModSync.Core
     source = ""<<modDirectory>>\\path\\to\\mod\\file\\to\\move""
     destination = ""C:\\Users\\****\\path\\to\\kotor2\\Override""
     restrictions = ""{C5418549-6B7E-4A8C-8B8E-4AA1BC63C732}""
-
 [[thisMod.instructions]]
     action = ""run""
+    paths = [""<<modDirectory>>\\path\\to\\mod\\program.exe""]
+    arguments = ""any command line arguments to pass""
+# same as 'run' except it'll try to verify the installation from the tslpatcher log.
+[[thisMod.instructions]]
+    action = ""tslpatcher""
     paths = [""<<modDirectory>>\\path\\to\\mod\\TSLPatcher.exe""]
     arguments = ""any command line arguments to pass (none available in TSLPatcher)""
 ";
@@ -73,7 +77,8 @@ namespace KOTORModSync.Core
             try
             {
                 var extractTasks = new List<Task>();
-                SemaphoreSlim semaphore = new SemaphoreSlim(Utility.PlatformAgnosticMethods.CalculateMaxDegreeOfParallelism()); // Set the maximum degree of parallelism
+                int maxDegreeOfParallelism = await Utility.PlatformAgnosticMethods.CalculateMaxDegreeOfParallelismAsync();
+                SemaphoreSlim semaphore = new SemaphoreSlim(maxDegreeOfParallelism); // Set the maximum degree of parallelism
 
                 for (int i = 0; i < Source.Count; i++)
                 {
@@ -161,7 +166,8 @@ namespace KOTORModSync.Core
                 // Enumerate the files/folders with wildcards and add them to the list
                 var filesToDelete = await Serializer.FileHandler.EnumerateFilesWithWildcards(this.Source);
 
-                SemaphoreSlim semaphore = new SemaphoreSlim(Utility.PlatformAgnosticMethods.CalculateMaxDegreeOfParallelism()); // Set the maximum degree of parallelism
+                int maxDegreeOfParallelism = await Utility.PlatformAgnosticMethods.CalculateMaxDegreeOfParallelismAsync();
+                SemaphoreSlim semaphore = new SemaphoreSlim(maxDegreeOfParallelism); // Set the maximum degree of parallelism
 
                 for (int i = 0; i < filesToDelete.Count; i++)
                 {
@@ -220,7 +226,8 @@ namespace KOTORModSync.Core
             try {
                 var moveTasks = new List<Task>();
 
-                SemaphoreSlim semaphore = new SemaphoreSlim(Utility.PlatformAgnosticMethods.CalculateMaxDegreeOfParallelism()); // Set the maximum degree of parallelism
+                int maxDegreeOfParallelism = await Utility.PlatformAgnosticMethods.CalculateMaxDegreeOfParallelismAsync();
+                SemaphoreSlim semaphore = new SemaphoreSlim(maxDegreeOfParallelism); // Set the maximum degree of parallelism
 
                 for (int i = 0; i < Source.Count; i++) {
                     string fileStrPath = this.Source[i];
@@ -260,62 +267,6 @@ namespace KOTORModSync.Core
                 Logger.LogException(ex);
                 return false;
             }
-        }
-
-
-        public async Task<bool> ExecuteTSLPatcherAsync()
-        {
-            try
-            {
-                for (int i = 0; i < Source.Count; i++)
-                {
-                    string thisProgramStr = this.Source[i];
-                    var thisProgram = new FileInfo(Utility.Utility.ReplaceCustomVariables(thisProgramStr));
-                    if (!thisProgram.Exists)
-                    {
-                        throw new FileNotFoundException($"The file {thisProgramStr} could not be located on the disk");
-                    }
-                    var cancellationTokenSource = new CancellationTokenSource();
-                    cancellationTokenSource.CancelAfter(TimeSpan.FromSeconds(3600)); // cancel if running longer than 30 minutes.
-                    var startInfo = new ProcessStartInfo
-                    {
-                        FileName = thisProgram.FullName,
-                        Arguments = Arguments,
-                        RedirectStandardOutput = true,
-                        UseShellExecute = false,
-                        CreateNoWindow = true
-                    };
-                    var process = new Process
-                    {
-                        StartInfo = startInfo
-                    };
-                    _ = process.Start();
-
-                    Task<string> outputTask = process.StandardOutput.ReadToEndAsync();
-
-                    while (!process.HasExited && !cancellationTokenSource.IsCancellationRequested)
-                    {
-                        await Task.Delay(100);
-                    }
-
-                    if (!process.HasExited)
-                    {
-                        process.Kill();
-                        throw new Exception("TSLPatcher timed out after 30 minutes.");
-                    }
-
-                    string output = await outputTask;
-
-                    return process.ExitCode != 0
-                        ? throw new Exception($"TSLPatcher failed with exit code {process.ExitCode}. Output:\n{output}")
-                        : !VerifyInstall() ? throw new Exception("TSLPatcher failed to install the mod correctly.") : true;
-                }
-            } catch (Exception ex) {
-                Logger.LogException(ex);
-                return false;
-            }
-
-            return false;
         }
 
         public async Task<bool> ExecuteProgramAsync()
@@ -732,7 +683,7 @@ namespace KOTORModSync.Core
                     }
 
                     // Get the original checksums before making any modifications
-                    Logger.Log("Calculating game install file hashes");
+                    /*Logger.Log("Calculating game install file hashes");
                     var originalPathsToChecksum = MainConfig.DestinationPath.GetFiles("*.*", SearchOption.AllDirectories)
                         .ToDictionary(file => file, file => FileChecksumValidator.CalculateSHA1Async(file).Result);
 
@@ -743,7 +694,7 @@ namespace KOTORModSync.Core
                     else if (!instruction.OriginalChecksums.SequenceEqual(originalPathsToChecksum))
                     {
                         Logger.Log("Warning! Original checksums of your KOTOR directory do not match the instructions file.");
-                    }
+                    }*/
 
                     bool success = false;
                     switch (instruction.Action.ToLower())
@@ -759,7 +710,8 @@ namespace KOTORModSync.Core
                             break;
                         case "patch":
                         case "tslpatcher":
-                            success = await instruction.ExecuteTSLPatcherAsync();
+                            success = await instruction.ExecuteProgramAsync();
+                            success = success && instruction.VerifyInstall();
                             break;
                         case "execute":
                         case "run":
@@ -770,7 +722,7 @@ namespace KOTORModSync.Core
                         case "dialog": //todo
                         default:
                             // Handle unknown instruction type here
-                            Logger.Log("Unknown instruction {instruction.Action}");
+                            Logger.Log($"Unknown instruction {instruction.Action}");
                             success = false;
                             break;
                     }
@@ -781,7 +733,7 @@ namespace KOTORModSync.Core
                         Logger.Log($"Instruction {instruction.Action} failed to install the mod correctly.");
                         return (false, null);
                     }
-                    if (instruction.ExpectedChecksums != null)
+                    /*if (instruction.ExpectedChecksums != null)
                     {
                         // Get the new checksums after the modifications
                         var validator = new FileChecksumValidator(
@@ -813,7 +765,7 @@ namespace KOTORModSync.Core
                             System.Security.Cryptography.SHA1 sha1 = await FileChecksumValidator.CalculateSHA1Async(file);
                             newChecksums[file] = sha1;
                         }
-                    }
+                    }*/
                 }
                 return (true, new Dictionary<FileInfo, System.Security.Cryptography.SHA1>());
             }

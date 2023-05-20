@@ -322,7 +322,7 @@ namespace KOTORModSync.GUI
                 }
                 else
                 {
-                    Logger.Log("Successfully installed {component.Name}");
+                    Logger.Log($"Successfully installed {component.Name}");
                 }
             }
         }

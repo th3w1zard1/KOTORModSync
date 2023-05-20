@@ -4,13 +4,14 @@ Name = "TSLRCM 2022 Main"
 Guid = "{d2bf7bbb-4757-4418-96bf-a9772a36a262}"
 InstallOrder = "1"
 Dependencies = []
-Paths = ["<<modDirectory>>"]
-Description = "The whole reason why you would mod KOTOR 2, the legendary mod that includes bugfixes, restored content, and altered scenes to return the game to what it was meant to be. This mod isn't just essential--it's mandatory."
 Directions = "Executable. Recall that M4-78 is incompatible with this build; do not use it alongside TSLRCM! Remember also that the Workshop version of this or any other mod is NOT to be used!"
+Description = "The whole reason why you would mod KOTOR 2, the legendary mod that includes bugfixes, restored content, and altered scenes to return the game to what it was meant to be. This mod isn't just essential--it's mandatory."
+
 [[thisMod.Instructions]]
 Action = "execute"
 Source = ["<<modDirectory>>/tslrcm2022.exe"]
 Overwrite = "False"
+
 
 [[thisMod]]
 Name = "TSLRCM Tweak Pack"
@@ -26,34 +27,7 @@ Source = ["URCMTP 1.3.rar"]
 Overwrite = "True"
 [[thisMod.Instructions]]
 Action = "run"
-Overwrite = "False"
-Arguments = ""
-[[thisMod.Instructions]]
-Action = "run"
-Overwrite = "False"
-Arguments = ""
-[[thisMod.Instructions]]
-Action = "run"
-Overwrite = "False"
-Arguments = ""
-[[thisMod.Instructions]]
-Action = "run"
-Overwrite = "False"
-Arguments = ""
-[[thisMod.Instructions]]
-Action = "run"
-Overwrite = "False"
-Arguments = ""
-[[thisMod.Instructions]]
-Action = "run"
-Overwrite = "False"
-Arguments = ""
-[[thisMod.Instructions]]
-Action = "run"
-Overwrite = "False"
-Arguments = ""
-[[thisMod.Instructions]]
-Action = "run"
+Source = ["<<modDirectory>>\\URCMTP 1.3\\Individual component installer", "<<modDirectory>>\\URCMTP 1.3\\Individual component installer", "<<modDirectory>>\\URCMTP 1.3\\Individual component installer", "<<modDirectory>>\\URCMTP 1.3\\Individual component installer", "<<modDirectory>>\\URCMTP 1.3\\Individual component installer", "<<modDirectory>>\\URCMTP 1.3\\Individual component installer", "<<modDirectory>>\\URCMTP 1.3\\Individual component installer"]
 Overwrite = "False"
 Arguments = ""
 

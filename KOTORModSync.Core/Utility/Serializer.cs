@@ -18,7 +18,9 @@ using SharpCompress.Archives.Rar;
 using SharpCompress.Archives.SevenZip;
 using Tomlyn;
 using Tomlyn.Syntax;
+using MarkdownSharp;
 using static KOTORModSync.Core.ModDirectory;
+using Tomlyn.Model;
 
 namespace KOTORModSync.Core.Utility
 {
@@ -84,17 +86,88 @@ namespace KOTORModSync.Core.Utility
             tomlContents = tomlContents.Replace("\r\n", "\n").Replace('\r', '\n');
 
             // Remove leading and trailing whitespaces from each line
-            string[] lines = tomlContents.Split('\n');
-            for (int i = 0; i < lines.Length; i++)
-            {
-                lines[i] = lines[i].TrimStart().TrimEnd();
-            }
+            string[] lines = tomlContents.Split('\n')
+                                        .Select(line => line.Trim())
+                                        .ToArray();
+
 
             // Join the lines with '\n' separator
             tomlContents = string.Join("\n", lines);
 
             return tomlContents;
         }
+
+        /*static string GenerateModDocumentation(Nett.TomlTableArray modArray)
+        {
+            StringBuilder sb = new StringBuilder();
+            var markdown = new Markdown();
+
+            // Loop through each 'thisMod' entry
+            foreach (Nett.TomlTable modTable in modArray)
+            {
+                sb.AppendLine();
+
+                // Name
+                string name = modTable.Get<string>("Name");
+                sb.AppendLine($"# {name}");
+
+                // Author
+                string author = modTable.Get<string>("Author");
+                sb.AppendLine($"**Author**: {author}");
+
+                // Description
+                string description = modTable.Get<string>("Description");
+                sb.AppendLine();
+                sb.AppendLine(description);
+
+                // Category & Tier
+                string categoryAndTier = modTable.Get<string>("Category");
+                sb.AppendLine();
+                sb.AppendLine($"**Category & Tier**: {categoryAndTier}");
+
+                // Language
+                List<string> languages = modTable.Get<List<string>>("Language");
+                bool hasEnglishLanguage = languages.Contains("English");
+                sb.AppendLine($"**Non-English Functionality**: {(hasEnglishLanguage ? "NO" : "YES")}");
+
+                // Directions
+                string directions = modTable.Get<string>("Directions");
+                sb.AppendLine();
+                sb.AppendLine("**Instructions**: ");
+                sb.AppendLine(directions);
+
+                // Instructions
+                Tomlyn.Model.TomlTableArray instructionsArray = modTable.Get<Tomlyn.Model.TomlTableArray>("Instructions");
+                sb.AppendLine();
+                sb.AppendLine("## **Instructions**");
+
+                List<Tomlyn.Model.TomlTable> instructionsList = instructionsArray.ToList();
+
+                // Get the array of Component tables
+                Tomlyn.Model.TomlTableArray componentTables = modTable.Get<Tomlyn.Model.TomlTableArray>("thisMod");
+
+                // Deserialize each TomlTable into a Component object
+                foreach (Nett.TomlTable tomlComponent in componentTables)
+                {
+                    // Action
+                    string action = tomlComponent.Get<string>("Action");
+                    sb.AppendLine($"### **Action**: {action}");
+
+                    // Source
+                    List<string> source = tomlComponent.Get<List<string>>("Source");
+                    string sourceFormatted = FormatSourcePaths(source); // Make sure FormatSourcePaths is defined and accessible
+                    sb.AppendLine($"**To run this mod, execute**: {sourceFormatted}");
+
+                    // Overwrite
+                    string overwrite = tomlComponent.Get<string>("Overwrite");
+                    sb.AppendLine($"**Overwrite**: {overwrite}");
+
+                    sb.AppendLine();
+                }
+            }
+            return sb.ToString();
+        }*/
+
 
         public static string SerializeComponent(Component component)
         {

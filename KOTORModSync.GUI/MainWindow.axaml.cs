@@ -24,14 +24,11 @@ namespace KOTORModSync.GUI
 {
     public partial class MainWindow : Window
     {
-        private Window _outputWindow;
-        private TextBox _logTextBox;
-        private StringBuilder _logBuilder;
-        private List<Component> components;
-        private ObservableCollection<Component> selectedComponents = new ObservableCollection<Component>();
-        private ObservableCollection<string> selectedComponentProperties;
-        private string originalContent;
-        private MainConfig mainConfig;
+        private List<Component> _components;
+        private ObservableCollection<Component> _selectedComponents = new ObservableCollection<Component>();
+        private ObservableCollection<string> _selectedComponentProperties;
+        private string _originalContent;
+        private MainConfig _mainConfig;
 
 
         private string currentComponent;
@@ -40,17 +37,17 @@ namespace KOTORModSync.GUI
         private void InitializeComponent()
         {
             AvaloniaXamlLoader.Load(this);
-            components = new List<Component>();
+            _components = new List<Component>();
             // Find the leftTreeView control and assign it to the member variable
             leftTreeView = this.FindControl<TreeView>("leftTreeView");
             rightTextBox = this.FindControl<TextBox>("rightTextBox");
             rightTextBox.LostFocus += RightListBox_LostFocus; // Prevents rightListBox from being cleared when clicking elsewhere.
-            rightTextBox.PropertyChanged += RightTextBox_PropertyChanged;
-            rightTextBox.DataContext = selectedComponentProperties;
-            selectedComponentProperties = new ObservableCollection<string>();
+            rightTextBox.PropertyChanged += (f, f2) => RightTextBox_PropertyChanged(f, f2);
+            rightTextBox.DataContext = _selectedComponentProperties;
+            _selectedComponentProperties = new ObservableCollection<string>();
             guidTextBox = this.FindControl<TextBox>("guidTextBox");
             guidTextBox.Width = rightTextBox.Bounds.Width;
-            mainConfig = new MainConfig();
+            _mainConfig = new MainConfig();
         }
 
         private void RightTextBox_PropertyChanged(object sender, AvaloniaPropertyChangedEventArgs e)
@@ -61,7 +58,7 @@ namespace KOTORModSync.GUI
             }
         }
 
-        public static IControl Build(object data)
+        public static IControl? Build(object data)
         {
             if (data is Component component)
             {
@@ -104,7 +101,7 @@ namespace KOTORModSync.GUI
             return null;
         }
 
-        private async Task<string> OpenFile()
+        private async Task<string?> OpenFile()
         {
             OpenFileDialog dialog = new OpenFileDialog();
             dialog.AllowMultiple = false;
@@ -132,7 +129,7 @@ namespace KOTORModSync.GUI
             return null;
         }
 
-        private async Task<string> SaveFile()
+        private async Task<string?> SaveFile()
         {
             SaveFileDialog dialog = new SaveFileDialog();
             dialog.DefaultExtension = "toml";
@@ -177,8 +174,8 @@ namespace KOTORModSync.GUI
                         leftTreeView.Items = new AvaloniaList<object>();
 
                         // Load components dynamically
-                        components = Serializer.FileHandler.ReadComponentsFromFile(filePath);
-                        if (components != null && components.Count > 0)
+                        _components = Serializer.FileHandler.ReadComponentsFromFile(filePath);
+                        if (_components != null && _components.Count > 0)
                         {
                             // Create the root item for the tree view
                             var rootItem = new TreeViewItem
@@ -187,7 +184,7 @@ namespace KOTORModSync.GUI
                             };
 
                             // Iterate over the components and create tree view items
-                            foreach (var component in components)
+                            foreach (var component in _components)
                             {
                                 CreateTreeViewItem(component, rootItem);
                             }
@@ -205,7 +202,7 @@ namespace KOTORModSync.GUI
 
         private async void ValidateButton_Click(object sender, RoutedEventArgs e)
         {
-            if (mainConfig == null || MainConfig.DestinationPath == null)
+            if (_mainConfig == null || MainConfig.DestinationPath == null)
             {
                 var informationDialog = new InformationDialog();
                 informationDialog.InfoText = "Please set your directories first";
@@ -224,7 +221,7 @@ namespace KOTORModSync.GUI
             };
 
             // Add the new component to the collection
-            components.Add(newComponent);
+            _components.Add(newComponent);
 
             // Refresh the TreeView to reflect the changes
             RefreshTreeView();
@@ -240,7 +237,7 @@ namespace KOTORModSync.GUI
             if (leftTreeView.SelectedItem is TreeViewItem selectedTreeViewItem && selectedTreeViewItem.Tag is Component selectedComponent)
             {
                 // Remove the selected component from the collection
-                components.Remove(selectedComponent);
+                _components.Remove(selectedComponent);
 
                 // Refresh the TreeView to reflect the changes
                 RefreshTreeView();
@@ -289,7 +286,7 @@ namespace KOTORModSync.GUI
                 await informationDialog.ShowDialog<bool?>(this);
                 chosenFolder = await OpenFolder();
                 DirectoryInfo kotorInstallDir = new DirectoryInfo(chosenFolder);
-                mainConfig.UpdateConfig(modDirectory, kotorInstallDir);
+                _mainConfig.UpdateConfig(modDirectory, kotorInstallDir);
             }
             catch (ArgumentNullException)
             {
@@ -300,7 +297,7 @@ namespace KOTORModSync.GUI
 
         private async void StartInstall_Click(object sender, RoutedEventArgs e)
         {
-            if (mainConfig == null || MainConfig.DestinationPath == null)
+            if (_mainConfig == null || MainConfig.DestinationPath == null)
             {
                 var informationDialog = new InformationDialog();
                 informationDialog.InfoText = "Please set your directories first";
@@ -308,12 +305,12 @@ namespace KOTORModSync.GUI
                 return;
             }
 
-            foreach (var component in components)
+            foreach (var component in _components)
             {
                 var confirmationDialogCallback = new ConfirmationDialogCallback(this);
 
                 // Call the ExecuteInstructions method asynchronously using Task.Run
-                var result = await Task.Run(() => component.ExecuteInstructions(confirmationDialogCallback, components));
+                var result = await Task.Run(() => component.ExecuteInstructions(confirmationDialogCallback, _components));
 
                 if (!result.success)
                 {
@@ -340,9 +337,9 @@ namespace KOTORModSync.GUI
             if (parameter is Core.Component component)
             {
                 // Handle the item click event here
-                if (!selectedComponents.Contains(component))
+                if (!_selectedComponents.Contains(component))
                 {
-                    selectedComponents.Add(component);
+                    _selectedComponents.Add(component);
                 }
                 PopulateRightTextBox(component);
             }
@@ -352,8 +349,8 @@ namespace KOTORModSync.GUI
         {
             if (selectedComponent != null && rightTextBox != null)
             {
-                originalContent = Serializer.SerializeComponent(selectedComponent);
-                rightTextBox.Text = originalContent;
+                _originalContent = Serializer.SerializeComponent(selectedComponent);
+                rightTextBox.Text = _originalContent;
             }
         }
 
@@ -373,7 +370,7 @@ namespace KOTORModSync.GUI
         private bool CheckForChanges()
         {
             string currentContent = rightTextBox.Text;
-            return !string.Equals(currentContent, originalContent);
+            return !string.Equals(currentContent, _originalContent);
         }
 
         private async void SaveButton_Click(object sender, RoutedEventArgs e)
@@ -413,11 +410,11 @@ namespace KOTORModSync.GUI
                     if (newComponent != null)
                     {
                         // Find the corresponding component in the collection
-                        int index = components.IndexOf(selectedComponent);
+                        int index = _components.IndexOf(selectedComponent);
                         if (index >= 0)
                         {
                             // Update the properties of the component
-                            components[index] = newComponent;
+                            _components[index] = newComponent;
                             RefreshTreeView(); // Refresh the tree view to reflect the changes
                             leftTreeView.SelectedItem = newComponent; // Select the updated component in the tree view
                             return true;
@@ -439,7 +436,7 @@ namespace KOTORModSync.GUI
 
         private void MoveTreeViewItem(ItemsControl parentItemsControl, TreeViewItem selectedTreeViewItem, int newIndex)
         {
-            var componentsList = components; // Use the original components list
+            var componentsList = _components; // Use the original components list
             int currentIndex = componentsList.IndexOf((Component)selectedTreeViewItem.Tag);
 
             if (currentIndex != -1 && newIndex >= 0 && newIndex < componentsList.Count)
@@ -505,7 +502,7 @@ namespace KOTORModSync.GUI
                 };
 
                 // Iterate over the components and create tree view items
-                foreach (var component in components)
+                foreach (var component in _components)
                 {
                     CreateTreeViewItem(component, rootItem);
                 }
@@ -540,7 +537,7 @@ namespace KOTORModSync.GUI
                 }
 
                 // Check for duplicate GUID
-                var duplicateComponent = components.FirstOrDefault(c => c.Guid == component.Guid && c != component);
+                var duplicateComponent = _components.FirstOrDefault(c => c.Guid == component.Guid && c != component);
                 if (duplicateComponent != null)
                 {
                     Logger.Log($"Mod {component.Name} has duplicate GUID with mod {duplicateComponent.Name}");
@@ -556,9 +553,9 @@ namespace KOTORModSync.GUI
                 // Assign the ItemClickCommand to the componentItem
                 componentItem.DoubleTapped += (sender, e) =>
                 {
-                    if (selectedComponents.Contains(component))
+                    if (_selectedComponents.Contains(component))
                     {
-                        selectedComponents.Remove(component);
+                        _selectedComponents.Remove(component);
                     }
                     ItemClickCommand.Execute(component);
                 };
@@ -575,7 +572,7 @@ namespace KOTORModSync.GUI
                         try
                         {
                             // Find the dependency in the components list
-                            var dependency = components.FirstOrDefault(c => c.Guid == dependencyGuid);
+                            var dependency = _components.FirstOrDefault(c => c.Guid == dependencyGuid);
 
                             if (dependency != null)
                             {

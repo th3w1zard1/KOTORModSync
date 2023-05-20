@@ -22,13 +22,13 @@ namespace KOTORModSync.Tests
             installOrder = 3
 
             [[thisMod.instructions]]
-            type = ""extract""
+            action = ""extract""
             source = ""Ultimate Dantooine High Resolution - TPC Version-1103-2-1-1670680013.rar""
             destination = ""%temp%\\mod_files\\Dantooine HR""
             overwrite = true
 
             [[thisMod.instructions]]
-            type = ""delete""
+            action = ""delete""
             paths = [
                 ""%temp%\\mod_files\\Dantooine HR\\DAN_wall03.tpc"",
                 ""%temp%\\mod_files\\Dantooine HR\\DAN_NEW1.tpc"",
@@ -36,7 +36,7 @@ namespace KOTORModSync.Tests
             ]
 
             [[thisMod.instructions]]
-            type = ""move""
+            action = ""move""
             source = ""%temp%\\mod_files\\Dantooine HR\\""
             destination = ""%temp%\\Override""
 
@@ -47,13 +47,13 @@ namespace KOTORModSync.Tests
             dependencies = []
 
             [[thisMod.instructions]]
-            type = ""extract""
+            action = ""extract""
             source = ""URCMTP 1.3.rar""
             destination = ""%temp%\\mod_files\\TSLRCM Tweak Pack""
             overwrite = true
 
             [[thisMod.instructions]]
-            type = ""run""
+            action = ""run""
             path = ""%temp%\\mod_files\\TSLPatcher.exe""
             arguments = """"";
 
@@ -108,7 +108,7 @@ namespace KOTORModSync.Tests
             }
         }
 
-
+        // not sure if I want to support this.
         [Test]
         public void SaveAndLoadTOMLFile_CaseInsensitive()
         {
@@ -121,11 +121,10 @@ namespace KOTORModSync.Tests
             // Convert field names and values to mixed case
             tomlContents = ConvertFieldNamesAndValuesToMixedCase(tomlContents);
 
-            // Save the modified TOML file
+            // Act
             string modifiedFilePath = Path.GetTempFileName();
             File.WriteAllText(modifiedFilePath, tomlContents);
 
-            // Act
             List<Component> loadedComponents = Serializer.FileHandler.ReadComponentsFromFile(modifiedFilePath);
 
             // Assert
@@ -139,6 +138,7 @@ namespace KOTORModSync.Tests
                 AssertComponentEquality(originalComponent, loadedComponent);
             }
         }
+
 
         [Test]
         public void SaveAndLoadTOMLFile_WhitespaceTests()

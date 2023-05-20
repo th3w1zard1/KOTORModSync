@@ -103,15 +103,14 @@ namespace KOTORModSync.Tests
         {
             // Arrange
             string filePath = Path.Combine(TestFolderPath, "TestFile.txt");
-            string fileContent = "test content";
-            File.WriteAllText(filePath, fileContent);
+            File.WriteAllText(filePath, "test content");
 
             // Act
             SHA1 sha1 = await FileChecksumValidator.CalculateSHA1Async(new FileInfo(filePath));
             string actualChecksum = FileChecksumValidator.SHA1ToString(sha1);
 
             // Assert
-            string expectedChecksum = FileChecksumValidator.StringToSHA1(fileContent);
+            string expectedChecksum = FileChecksumValidator.StringToSHA1("test content");
             Assert.AreEqual(expectedChecksum, actualChecksum);
         }
 

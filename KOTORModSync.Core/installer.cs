@@ -245,6 +245,7 @@ namespace KOTORModSync.Core
         {
             try
             {
+                bool isSuccess = false; // Track the success status
                 for (int i = 0; i < this.Source.Count; i++)
                 {
                     var thisProgram = new FileInfo(this.Source[i]);
@@ -286,19 +287,20 @@ namespace KOTORModSync.Core
                     if (process.ExitCode != 0)
                     {
                         Logger.Log($"Process failed with exit code {process.ExitCode}. Output:\n{output}");
-                        return false;
+                        isSuccess = false;
                     }
                     else
-                        return true;
+                    {
+                        isSuccess = true;
+                    }
                 }
+                return isSuccess;
             }
             catch (Exception ex)
             {
                 Logger.LogException(ex);
                 return false;
             }
-
-            return false;
         }
 
         public bool VerifyInstall()
@@ -340,8 +342,11 @@ namespace KOTORModSync.Core
         public List<string> Dependencies { get; set; }
         public List<string> Restrictions { get; set; }
         public List<Instruction> Instructions { get; set; }
+        public string Author { get; set; }
         public string Directions { get; set; }
         public string Description { get; set; }
+        public List<string> Language { get; set; }
+        public string Category { get; set; }
         public DateTime SourceLastModified { get; internal set; }
 
         public static string defaultComponent = @"
@@ -384,6 +389,9 @@ namespace KOTORModSync.Core
             this.InstallOrder = GetValueOrDefault<int>(componentDict, "installorder");
             this.Description = GetValueOrDefault<string>(componentDict,"description");
             this.Directions = GetValueOrDefault<string>(componentDict, "directions");
+            this.Category = GetValueOrDefault<string>(componentDict, "category");
+            this.Language = GetValueOrDefault<List<string>>(componentDict, "language");
+            this.Author = GetValueOrDefault<string>(componentDict, "author");
             this.Dependencies = GetValueOrDefault<List<string>>(componentDict, "dependencies");
             this.Instructions = DeserializeInstructions(GetValueOrDefault<TomlTableArray>(componentDict, "instructions"));
 
@@ -479,12 +487,13 @@ namespace KOTORModSync.Core
             guidString = Regex.Replace(guidString, @"\s", "");
 
             // Attempt to fix common issues with GUID strings
-            if (!guidString.StartsWith("{"))
+            if (!guidString.StartsWith("{", StringComparison.Ordinal))
                 guidString = "{" + guidString;
-            if (!guidString.EndsWith("}"))
+            if (!guidString.EndsWith("}", StringComparison.Ordinal))
                 guidString += "}";
-            if (!guidString.Contains("-"))
+            if (guidString.IndexOf('-') < 0)
                 guidString = Regex.Replace(guidString, @"(\w{8})(\w{4})(\w{4})(\w{4})(\w{12})", "$1-$2-$3-$4-$5");
+
 
             return guidString;
         }

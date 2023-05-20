@@ -1,8 +1,10 @@
 
 [[thisMod]]
-Name = "TSLRCM 2022 Main"
+Name = "The Sith Lords Restored Content Mod 2022"
+Author = "zbyl2, DarthStoney, Hassat Hunter & VarsityPuppet"
+Category = "Essential"
+Language = ["All"]
 Guid = "{d2bf7bbb-4757-4418-96bf-a9772a36a262}"
-InstallOrder = "1"
 Dependencies = []
 Directions = "Executable. Recall that M4-78 is incompatible with this build; do not use it alongside TSLRCM! Remember also that the Workshop version of this or any other mod is NOT to be used!"
 Description = "The whole reason why you would mod KOTOR 2, the legendary mod that includes bugfixes, restored content, and altered scenes to return the game to what it was meant to be. This mod isn't just essential--it's mandatory."

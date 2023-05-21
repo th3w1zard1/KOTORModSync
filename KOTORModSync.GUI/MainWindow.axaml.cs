@@ -400,7 +400,7 @@ namespace KOTORModSync.GUI
             Guid uniqueGuid = Guid.NewGuid();
 
             // Set the generated GUID to the guidTextBox
-            guidTextBox.Text = "{" + uniqueGuid.ToString() + "}";
+            guidTextBox.Text = "{" + uniqueGuid.ToString().ToUpper() + "}";
         }
 
         private void RightListBox_LostFocus(object sender, RoutedEventArgs e)
@@ -481,18 +481,26 @@ namespace KOTORModSync.GUI
 
         private void MoveTreeViewItem(ItemsControl parentItemsControl, TreeViewItem selectedTreeViewItem, int newIndex)
         {
-            var componentsList = _components; // Use the original components list
-            int currentIndex = componentsList.IndexOf((Component)selectedTreeViewItem.Tag);
-
-            if (currentIndex != -1 && newIndex >= 0 && newIndex < componentsList.Count)
+            try
             {
-                componentsList.RemoveAt(currentIndex);
-                componentsList.Insert(newIndex, (Component)selectedTreeViewItem.Tag);
-                leftTreeView.SelectedItem = selectedTreeViewItem;
+                var componentsList = _components; // Use the original components list
+                int currentIndex = componentsList.IndexOf((Component)selectedTreeViewItem.Tag);
 
-                // Update the visual tree directly to reflect the changes
-                var parentItemsCollection = (AvaloniaList<object>)parentItemsControl.Items;
-                parentItemsCollection.Move(currentIndex, newIndex);
+                if (currentIndex != -1 && newIndex >= 0 && newIndex < componentsList.Count)
+                {
+                    componentsList.RemoveAt(currentIndex);
+                    componentsList.Insert(newIndex, (Component)selectedTreeViewItem.Tag);
+                    leftTreeView.SelectedItem = selectedTreeViewItem;
+
+                    // Update the visual tree directly to reflect the changes
+                    var parentItemsCollection = (AvaloniaList<object>)parentItemsControl.Items;
+                    parentItemsCollection.Move(currentIndex, newIndex);
+                }
+            }
+            catch(ArgumentOutOfRangeException ex)
+            {
+                Logger.LogException(ex);
+                Logger.Log("Will fix this in the next version - sorry.");
             }
         }
 

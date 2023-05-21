@@ -48,39 +48,41 @@ Overwrite = "True"
 [[thisMod.Instructions]]
 Action = "move"
 Source = ["<<modDirectory>>/TSL_prestige_save_fixes/TSL_prestige_save_fixes/jedimaster_sithlord fixes/*"]
-Destination = "<<kotorDirectory>>/Override"
 Dependencies = ["{C5418549-6B7E-4A8C-8B8E-4AA1BC63C732}"]
 Overwrite = "True"
 
+
 [[thisMod]]
 Name = "Robes with Shadows for TSL"
+Guid = "{F2C74B45-7D85-4F56-96E9-61288CE4B78F}"
+InstallOrder = "0"
 Author = "PapaZinos"
-Description = "What use, I ask you, is the Soft Shadows setting ingame if your shadows are still 10 polygons? This mod gives all robes proper shadows that match their models more directly, for that extra touch of realism."
-Category = "Graphics Improvement"
-Language = ["All"]
 Directions = "Extract the mod. Ignore the included subfolders, and move just the files in the base folder to your override. Overwrite when prompted."
+Description = "What use, I ask you, is the Soft Shadows setting ingame if your shadows are still 10 polygons? This mod gives all robes proper shadows that match their models more directly, for that extra touch of realism."
+Language = ["All"]
+Category = "Graphics Improvement"
 
 [[thisMod.Instructions]]
 Action = "move"
 Source = ["<<modDirectory>>/Ultimate_Robes_Repair_For_TSL*/*.*"]
-Destination = "<<kotorDirectory/Override"
 Overwrite = "True"
 
 
 [[thisMod]]
-name = "K2 Community Patch"
-Author = "Multiple; A Future Pilot, DarthParametric and JCarter426 Curate"
-Description = "A community bugfix and general improvement patch for KOTOR 2 meant to be a supplement to TSLRCM, fixing bugs that TSLRCM didn't catch or viewed too minor to address; highly recommended."
+Name = "K2 Community Patch"
+Guid = "{6777F8ED-8978-49A0-ACE2-3005EFCF1DCF}"
+InstallOrder = "0"
 Dependencies = ["{d2bf7bbb-4757-4418-96bf-a9772a36a262}"]
-Category = "Graphics Improvement & Bugfix"
+Author = "Multiple; A Future Pilot, DarthParametric and JCarter426 Curate"
 Tier = "Essential"
-Language = ["All"]
 Directions = "Run the TSLPatcher exe included. Remember, warnings during an installation are normal--errors are not."
+Description = "A community bugfix and general improvement patch for KOTOR 2 meant to be a supplement to TSLRCM, fixing bugs that TSLRCM didn't catch or viewed too minor to address; highly recommended."
+Language = ["All"]
+Category = "Graphics Improvement & Bugfix"
 
-[[thisMod.instructions]]
+[[thisMod.Instructions]]
 Action = "extract"
-Source = "<<modDirectory>>/KOTOR 2 Community Patch*.7z"
-Destination = "<<kotorDirectory/Override"
+Source = ["<<modDirectory>>/KOTOR 2 Community Patch*.7z"]
 Overwrite = "True"
 
 

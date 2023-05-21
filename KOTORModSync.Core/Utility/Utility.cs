@@ -16,8 +16,8 @@ namespace KOTORModSync.Core.Utility
         }
         public static string ReplaceCustomVariables(string path)
         {
-            string normalizedPath = path.Replace("<<modDirectory>>", MainConfig.SourcePath.FullName)
-                                       .Replace("<<kotorDirectory>>", MainConfig.DestinationPath.FullName);
+            string normalizedPath = path.Replace("<<modDirectory>>", MainConfig.SourcePath.FullName);
+            normalizedPath = normalizedPath.Replace("<<kotorDirectory>>", MainConfig.DestinationPath.FullName);
             return Path.GetFullPath(normalizedPath);
         }
         public static bool CanWriteToDirectory(DirectoryInfo directory)

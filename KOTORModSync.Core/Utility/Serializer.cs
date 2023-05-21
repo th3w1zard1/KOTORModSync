@@ -327,19 +327,22 @@ namespace KOTORModSync.Core.Utility
 
                 return component;
             }
-            public static async Task<List<string>> EnumerateFilesWithWildcards(IEnumerable<string> filesAndFolders) {
+            public static async Task<List<string>> EnumerateFilesWithWildcards(IEnumerable<string> filesAndFolders)
+            {
                 var filesToDelete = new List<string>();
 
-                foreach (string fileStrPath in filesAndFolders) {
-                    if (Path.GetInvalidPathChars().Any(fileStrPath.Contains)) {
-                        string directory = Path.GetDirectoryName(fileStrPath);
-                        string pattern = Path.GetFileName(fileStrPath);
+                foreach (string fileStrPath in filesAndFolders)
+                {
+                    string directory = Path.GetDirectoryName(fileStrPath);
+                    string pattern = Path.GetFileName(fileStrPath);
 
-                        if (!string.IsNullOrEmpty(directory)) {
-                            List<string> matchingFiles = await EnumerateFilesWithWildcards(directory, pattern);
-                            filesToDelete.AddRange(matchingFiles);
-                        }
-                    } else {
+                    if (!string.IsNullOrEmpty(directory))
+                    {
+                        List<string> matchingFiles = await EnumerateFilesWithWildcards(directory, pattern);
+                        filesToDelete.AddRange(matchingFiles);
+                    }
+                    else
+                    {
                         filesToDelete.Add(fileStrPath);
                     }
                 }
@@ -347,18 +350,40 @@ namespace KOTORModSync.Core.Utility
                 return filesToDelete;
             }
 
-            public static Task<List<string>> EnumerateFilesWithWildcards(string directory, string pattern) {
+            public static async Task<List<string>> EnumerateFilesWithWildcards(string directory, string pattern, bool excludeDirectories = true)
+            {
                 var matchingFiles = new List<string>();
 
-                DirectoryInfo dirInfo = new DirectoryInfo(directory);
-                IEnumerable<string> filesAndFolders = Directory.EnumerateFileSystemEntries(directory, pattern, SearchOption.TopDirectoryOnly);
+                string regexPattern = "^" + Regex.Escape(pattern)
+                                           .Replace("\\*", ".*")
+                                           .Replace("\\?", ".")
+                                           + "$";
 
-                foreach (string file in filesAndFolders) {
-                    matchingFiles.Add(file);
+                IEnumerable<string> files = Directory.EnumerateFiles(directory, "*", SearchOption.AllDirectories);
+                foreach (string file in files)
+                {
+                    if (Regex.IsMatch(Path.GetFileName(file), regexPattern))
+                    {
+                        matchingFiles.Add(file);
+                    }
                 }
 
-                return Task.FromResult(matchingFiles);
+                if (!excludeDirectories)
+                {
+                    IEnumerable<string> directories = Directory.EnumerateDirectories(directory, "*", SearchOption.AllDirectories);
+                    foreach (string subdirectory in directories)
+                    {
+                        if (Regex.IsMatch(Path.GetFileName(subdirectory), regexPattern))
+                        {
+                            matchingFiles.Add(subdirectory);
+                        }
+                    }
+                }
+
+                return matchingFiles;
             }
+
+
 
             public static List<Component> ReadComponentsFromFile(string filePath)
             {

@@ -419,7 +419,10 @@ namespace KOTORModSync.Core
 
                     // ConvertTomlTableToDictionary lowercases all string keys.
                     DeserializePath(instructionDict, "source");
-                    DeserializePath(instructionDict, "destination");
+                    if (!instructionDict.ContainsKey("destination"))
+                    {
+                        instructionDict["destination"] = "<<kotorDirectory>>/Override";
+                    }
                     DeserializeGuids(instructionDict, "restrictions");
                     DeserializeGuids(instructionDict, "dependencies");
                     var instruction = new Instruction
@@ -692,7 +695,6 @@ namespace KOTORModSync.Core
                     if (instruction.Destination != null)
                     {
                         var destinationList = new List<string> { Utility.Utility.ReplaceCustomVariables(instruction.Destination) };
-                        destinationList = await Serializer.FileHandler.EnumerateFilesWithWildcards(destinationList);
                         instruction.Destination = destinationList.FirstOrDefault();
                     }
 

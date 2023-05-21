@@ -21,6 +21,8 @@ using SharpCompress.Common;
 using Tomlyn.Model;
 using static KOTORModSync.Core.Utility.Utility;
 using Microsoft.TeamFoundation.WorkItemTracking.WebApi.Models;
+using static KOTORModSync.Core.ModDirectory;
+using static KOTORModSync.Core.Utility.Serializer;
 
 namespace KOTORModSync.Core
 {
@@ -72,83 +74,76 @@ namespace KOTORModSync.Core
 
         public static async Task<bool> ExecuteInstructionAsync(Func<Task<bool>> instructionMethod) => await instructionMethod().ConfigureAwait(false);
 
-        public async Task<bool> ExtractFile()
+        public bool ExtractFile()
         {
             try
             {
-                var extractTasks = new List<Task>();
-                int maxDegreeOfParallelism = await Utility.PlatformAgnosticMethods.CalculateMaxDegreeOfParallelismAsync(new DirectoryInfo(this.Source[0]));
-                SemaphoreSlim semaphore = new SemaphoreSlim(maxDegreeOfParallelism); // Set the maximum degree of parallelism
-
-                for (int i = 0; i < Source.Count; i++)
+                foreach (string sourcePath in Source)
                 {
-                    var thisFile = new FileInfo(this.Source[i]);
+                    var thisFile = new FileInfo(sourcePath);
                     Logger.Log($"File path: {thisFile.FullName}");
 
-                    using (Stream stream = File.OpenRead(thisFile.FullName))
+                    if (ArchiveHelper.IsArchive(thisFile.Extension))
                     {
-                        IArchive archive = null;
+                        List<ArchiveEntry> archiveEntries = ArchiveHelper.TraverseArchiveEntries(thisFile.FullName);
 
-                        if (RarArchive.IsRarFile(stream))
+                        foreach (ArchiveEntry entry in archiveEntries)
                         {
-                            archive = RarArchive.Open(stream);
-                        }
-                        else if (ZipArchive.IsZipFile(stream))
-                        {
-                            archive = ZipArchive.Open(stream);
-                        }
-                        else if (SevenZipArchive.IsSevenZipFile(stream))
-                        {
-                            archive = SevenZipArchive.Open(stream);
-                        }
-
-                        if (archive != null)
-                        {
-                            Logger.Log($"Archive type: {archive.GetType().Name}");
-                            foreach (IArchiveEntry entry in archive.Entries)
+                            string destinationFolder = Path.GetFileNameWithoutExtension(thisFile.Name);
+                            string destinationPath = Path.Combine(thisFile.Directory.FullName, destinationFolder, entry.Path);
+                            Directory.CreateDirectory(Path.GetDirectoryName(destinationPath));
+                            using (Stream outputStream = File.Create(destinationPath))
                             {
-                                if (!entry.IsDirectory)
+                                using (FileStream stream = File.OpenRead(thisFile.FullName))
                                 {
-                                    Task extractTask = Task.Run(async () =>
+                                    IArchive archive = null;
+
+                                    if (thisFile.Extension.Equals(".zip", StringComparison.OrdinalIgnoreCase))
                                     {
-                                        await semaphore.WaitAsync(); // Acquire a semaphore slot
-
-                                        try
+                                        archive = SharpCompress.Archives.Zip.ZipArchive.Open(stream);
+                                    }
+                                    else if (thisFile.Extension.Equals(".rar", StringComparison.OrdinalIgnoreCase))
+                                    {
+                                        archive = RarArchive.Open(stream);
+                                    }
+                                    else if (thisFile.Extension.Equals(".7z", StringComparison.OrdinalIgnoreCase))
+                                    {
+                                        archive = SevenZipArchive.Open(stream);
+                                    }
+                                    Logger.Log($"Attempting to extract {thisFile.Name}");
+                                    if (archive != null)
+                                    {
+                                        IArchiveEntry archiveEntry = archive.Entries.FirstOrDefault(e => e.Key == entry.Path);
+                                        if (archiveEntry != null && !archiveEntry.IsDirectory)
                                         {
-                                            entry.WriteToDirectory(this.ParentComponent.tempPath.FullName, new ExtractionOptions { ExtractFullPath = true, Overwrite = true });
+                                            Logger.Log($"Extracting {archiveEntry.Key}");
+                                            using (Stream entryStream = archiveEntry.OpenEntryStream())
+                                            {
+                                                entryStream.CopyTo(outputStream);
+                                            }
                                         }
-                                        finally
-                                        {
-                                            semaphore.Release(); // Release the semaphore slot
-                                        }
-                                    });
-
-                                    extractTasks.Add(extractTask);
+                                    }
                                 }
                             }
                         }
-                        else
-                        {
-                            var ex = new ArgumentNullException($"{this.ParentComponent.Name} failed to extract file {thisFile}");
-                            Logger.LogException(ex);
-                            throw ex;
-                        }
+                    }
+                    else
+                    {
+                        var ex = new ArgumentNullException($"{this.ParentComponent.Name} failed to extract file {thisFile}");
+                        Logger.LogException(ex);
+                        throw ex;
                     }
                 }
-
-                // Wait for all extract tasks to complete
-                await Task.WhenAll(extractTasks);
 
                 return true; // Extraction succeeded
             }
             catch (Exception ex)
             {
                 // Handle any exceptions that occurred during extraction
-                Logger.Log($"Error occurred during file extraction: {ex.Message}");
+                Logger.LogException(ex);
                 return false; // Extraction failed
             }
         }
-
 
         public async Task<bool> DeleteFile()
         {
@@ -305,28 +300,33 @@ namespace KOTORModSync.Core
 
         public bool VerifyInstall()
         {
-            // Verify if any error or warning message is present in the install.rtf file
-            string installLogFile = System.IO.Path.Combine(MainConfig.DestinationPath.FullName, "install.rtf");
-
-            if (!File.Exists(installLogFile))
+            bool errors = false;
+            bool found = false;
+            foreach(string sourcePath in this.Source)
             {
-                Logger.Log("Install log file not found.");
-                return false;
-            }
+                // Verify if any error or warning message is present in the install.rtf file
+                string installLogFile = System.IO.Path.Combine(Path.GetDirectoryName(sourcePath), "install.rtf");
 
-            string installLogContent = File.ReadAllText(installLogFile);
-            string[] bulletPoints = installLogContent.Split('\u2022');
-
-            foreach (string bulletPoint in bulletPoints)
-            {
-                if (bulletPoint.Contains("Warning") || bulletPoint.Contains("Error"))
+                if (!File.Exists(installLogFile))
                 {
-                    Logger.Log($"Install log contains warning or error message: {bulletPoint.Trim()}");
-                    return false;
+                    Logger.Log("Install log file not found.");
+                    continue;
+                }
+
+                found = false;
+                string installLogContent = File.ReadAllText(installLogFile);
+                string[] bulletPoints = installLogContent.Split('\u2022');
+
+                foreach (string bulletPoint in bulletPoints)
+                {
+                    if (bulletPoint.Contains("Error"))
+                    {
+                        Logger.Log($"Install log contains warning or error message: {bulletPoint.Trim()}");
+                        errors = true;
+                    }
                 }
             }
-
-            return true;
+            return found && !errors;
         }
     }
 
@@ -343,6 +343,7 @@ namespace KOTORModSync.Core
         public List<string> Restrictions { get; set; }
         public List<Instruction> Instructions { get; set; }
         public string Author { get; set; }
+        public string Tier { get; set; }
         public string Directions { get; set; }
         public string Description { get; set; }
         public List<string> Language { get; set; }
@@ -351,8 +352,9 @@ namespace KOTORModSync.Core
 
         public static string defaultComponent = @"
 [[thisMod]]
-    name = ""your custom name of your mod""
-    guid = ""{B3525945-BDBD-45D8-A324-AAF328A5E13E}""
+    name = ""the name of your mod""
+    # Use the button below to generate a Global Unique Identifier (guid) for this mod
+    guid = ""{01234567-ABCD-EF01-2345-6789ABCDEF01}""
     # Copy and paste any guid of any mod you depend on here, format like below
     dependencies = [
         ""{d2bf7bbb-4757-4418-96bf-a9772a36a262}"",
@@ -390,6 +392,7 @@ namespace KOTORModSync.Core
             this.Description = GetValueOrDefault<string>(componentDict,"description");
             this.Directions = GetValueOrDefault<string>(componentDict, "directions");
             this.Category = GetValueOrDefault<string>(componentDict, "category");
+            this.Tier = GetValueOrDefault<string>(componentDict, "tier");
             this.Language = GetValueOrDefault<List<string>>(componentDict, "language");
             this.Author = GetValueOrDefault<string>(componentDict, "author");
             this.Dependencies = GetValueOrDefault<List<string>>(componentDict, "dependencies");
@@ -640,8 +643,9 @@ namespace KOTORModSync.Core
 
             async Task<(bool, Dictionary<FileInfo, SHA1>)> ProcessComponentAsync(Component component)
             {
-                foreach (Instruction instruction in component.Instructions)
+                for (int i1 = 0; i1 < component.Instructions.Count; i1++)
                 {
+                    Instruction instruction = component.Instructions[i1];
                     //The instruction will run if any of the following conditions are met:
                     //The instruction has no dependencies or restrictions.
                     //The instruction has dependencies, and all of the required components are installed.
@@ -685,17 +689,19 @@ namespace KOTORModSync.Core
                         instruction.Source[i] = Utility.Utility.ReplaceCustomVariables(instruction.Source[i]);
                     }
                     instruction.Source = await Serializer.FileHandler.EnumerateFilesWithWildcards(instruction.Source);
-
-                    var destinationList = new List<string> { Utility.Utility.ReplaceCustomVariables(instruction.Destination) };
-                    destinationList = await Serializer.FileHandler.EnumerateFilesWithWildcards(destinationList);
-                    instruction.Destination = destinationList.FirstOrDefault();
+                    if (instruction.Destination != null)
+                    {
+                        var destinationList = new List<string> { Utility.Utility.ReplaceCustomVariables(instruction.Destination) };
+                        destinationList = await Serializer.FileHandler.EnumerateFilesWithWildcards(destinationList);
+                        instruction.Destination = destinationList.FirstOrDefault();
+                    }
 
 
                     bool success = false;
                     switch (instruction.Action.ToLower())
                     {
                         case "extract":
-                            success = await instruction.ExtractFile();
+                            success = instruction.ExtractFile();
                             break;
                         case "delete":
                             success = await instruction.DeleteFile();
@@ -725,8 +731,12 @@ namespace KOTORModSync.Core
                     if (!success)
                     {
                         Logger.LogException(new Exception(success.ToString()));
-                        Logger.Log($"Instruction {instruction.Action} failed to install the mod correctly.");
-                        return (false, null);
+                        Logger.Log($"Instruction {instruction.Action} failed at index {i1}.");
+                        bool confirmationResult = await confirmDialog.ShowConfirmationDialog($"Error installing mod {this.Name}, would you like to execute the next instruction anyway?");
+                        if (!confirmationResult)
+                            return (false, null);
+                        else
+                            continue;
                     }
                     /*if (instruction.ExpectedChecksums != null)
                     {
@@ -769,11 +779,7 @@ namespace KOTORModSync.Core
             if (!result.Result.Item1)
             {
                 Logger.LogException(new Exception($"Component {this.Name} failed to install the mod correctly with {result}"));
-                bool confirmationResult = await confirmDialog.ShowConfirmationDialog($"Error installing mod {this.Name}, continue installing next mod anyway?");
-                if (!confirmationResult)
-                {
-                    return (false, null);
-                }
+                return (false, null);
             }
 
             return (true, null);

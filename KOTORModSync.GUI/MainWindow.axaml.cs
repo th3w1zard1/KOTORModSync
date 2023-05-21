@@ -295,6 +295,43 @@ namespace KOTORModSync.GUI
             }
         }
 
+        private async void InstallModSingle_Click(object sender, RoutedEventArgs e)
+        {
+            if (_mainConfig == null || MainConfig.DestinationPath == null)
+            {
+                var informationDialog = new InformationDialog();
+                informationDialog.InfoText = "Please set your directories first";
+                await informationDialog.ShowDialog<bool?>(this);
+                return;
+            }
+            var selectedTreeViewItem = leftTreeView.SelectedItem as TreeViewItem;
+            Component thisComponent;
+            if (selectedTreeViewItem != null && selectedTreeViewItem.Tag is Component selectedComponent)
+                thisComponent = (Component)selectedTreeViewItem.Tag;
+            else
+            {
+                var informationDialog = new InformationDialog();
+                informationDialog.InfoText = "Please choose a mod to install from the left list first";
+                await informationDialog.ShowDialog<bool?>(this);
+                return;
+            }
+            var confirmationDialogCallback = new ConfirmationDialogCallback(this);
+
+            // Call the ExecuteInstructions method asynchronously using Task.Run
+            var result = await Task.Run(() => thisComponent.ExecuteInstructions(confirmationDialogCallback, _components));
+            if (!result.success)
+            {
+                var informationDialog = new InformationDialog();
+                informationDialog.InfoText = $"There was a problem installing {thisComponent.Name}, please check the output window";
+                await informationDialog.ShowDialog<bool?>(this);
+                return;
+            }
+            else
+            {
+                Logger.Log($"Successfully installed {thisComponent.Name}");
+            }
+        }
+
         private async void StartInstall_Click(object sender, RoutedEventArgs e)
         {
             if (_mainConfig == null || MainConfig.DestinationPath == null)
@@ -314,8 +351,11 @@ namespace KOTORModSync.GUI
 
                 if (!result.success)
                 {
-                    var informationDialog = new InformationDialog();
-                    informationDialog.InfoText = $"There was a problem installing {component.Name}, please check the output window.";
+                    bool confirmationResult = await ConfirmationDialog.ShowConfirmationDialog(this, $"There was a problem installing {component.Name}, please check the output window. Continue with next mod anyway?");
+                    if (!confirmationResult)
+                    {
+                        break;
+                    }
                 }
                 else
                 {
@@ -375,9 +415,14 @@ namespace KOTORModSync.GUI
 
         private async void SaveButton_Click(object sender, RoutedEventArgs e)
         {
-            bool hasChanges = CheckForChanges();
-
-            if (hasChanges)
+            var selectedTreeViewItem = leftTreeView.SelectedItem as TreeViewItem;
+            if (selectedTreeViewItem == null || selectedTreeViewItem.Tag is not Component selectedComponent)
+            {
+                var informationDialog = new InformationDialog();
+                informationDialog.InfoText = "You must select a component from the list, or create one, before saving.";
+                await informationDialog.ShowDialog<bool?>(this);
+            }
+            else if (CheckForChanges())
             {
                 bool confirmationResult = await ConfirmationDialog.ShowConfirmationDialog(this, "Are you sure you want to save?");
                 if (confirmationResult)

@@ -1,13 +1,14 @@
 
 [[thisMod]]
 Name = "The Sith Lords Restored Content Mod 2022"
-Author = "zbyl2, DarthStoney, Hassat Hunter & VarsityPuppet"
-Category = "Essential"
-Language = ["All"]
 Guid = "{d2bf7bbb-4757-4418-96bf-a9772a36a262}"
+InstallOrder = "0"
 Dependencies = []
+Author = "zbyl2, DarthStoney, Hassat Hunter & VarsityPuppet"
 Directions = "Executable. Recall that M4-78 is incompatible with this build; do not use it alongside TSLRCM! Remember also that the Workshop version of this or any other mod is NOT to be used!"
 Description = "The whole reason why you would mod KOTOR 2, the legendary mod that includes bugfixes, restored content, and altered scenes to return the game to what it was meant to be. This mod isn't just essential--it's mandatory."
+Language = ["All"]
+Category = "Essential"
 
 [[thisMod.Instructions]]
 Action = "execute"
@@ -20,16 +21,16 @@ Name = "TSLRCM Tweak Pack"
 Guid = "{C5418549-6B7E-4A8C-8B8E-4AA1BC63C732}"
 InstallOrder = "1"
 Dependencies = ["{d2bf7bbb-4757-4418-96bf-a9772a36a262}"]
-Directions = "Don't use the complete installer, instead selecting the individual component installer--this is critical for compatibility, not just to choose specific options. The installer for this mod will need to be run 7 times, once to install each of the options we'll be using: Kaevee Removal Parts 1 & 2, Saedhe's Head, Atton at the End, Kreia-Atris Dialogue Tweak, Trayus Mandalore Conversation, and Trayus Sith Lord Masks."
+Directions = "Don't use the complete installer, instead select the individual component installer--this is critical for compatibility, not just to choose specific options. The installer for this mod will need to be run 7 times, once to install each of the options we'll be using: Kaevee Removal Parts 1 & 2, Saedhe's Head, Atton at the End, Kreia-Atris Dialogue Tweak, Trayus Mandalore Conversation, and Trayus Sith Lord Masks."
 Description = "Reverts and otherwise modifies certain TSLRCM settings to make the game more sensible and internally consistent (mostly unrestoring content which was likely intentionally cut by Obsidian). This includes removing Jedi Padawan Kaevee."
 
 [[thisMod.Instructions]]
 Action = "extract"
-Source = ["URCMTP 1.3.rar"]
+Source = ["<<modDirectory>>\\URCMTP 1.3.rar"]
 Overwrite = "True"
 [[thisMod.Instructions]]
-Action = "run"
-Source = ["<<modDirectory>>\\URCMTP 1.3\\Individual component installer", "<<modDirectory>>\\URCMTP 1.3\\Individual component installer", "<<modDirectory>>\\URCMTP 1.3\\Individual component installer", "<<modDirectory>>\\URCMTP 1.3\\Individual component installer", "<<modDirectory>>\\URCMTP 1.3\\Individual component installer", "<<modDirectory>>\\URCMTP 1.3\\Individual component installer", "<<modDirectory>>\\URCMTP 1.3\\Individual component installer"]
+Action = "tslpatcher"
+Source = ["<<modDirectory>>\\URCMTP 1.3\\Individual component installer\\U_TSLRCM_TP_IND.exe", "<<modDirectory>>\\URCMTP 1.3\\Individual component installer\\U_TSLRCM_TP_IND.exe", "<<modDirectory>>\\URCMTP 1.3\\Individual component installer\\U_TSLRCM_TP_IND.exe", "<<modDirectory>>\\URCMTP 1.3\\Individual component installer\\U_TSLRCM_TP_IND.exe", "<<modDirectory>>\\URCMTP 1.3\\Individual component installer\\U_TSLRCM_TP_IND.exe", "<<modDirectory>>\\URCMTP 1.3\\Individual component installer\\U_TSLRCM_TP_IND.exe", "<<modDirectory>>\\URCMTP 1.3\\Individual component installer\\U_TSLRCM_TP_IND.exe"]
 Overwrite = "False"
 Arguments = ""
 
@@ -38,7 +39,7 @@ Arguments = ""
 Name = "Prestige Class Saving Throw Fixes"
 Guid = "{0db2c43f-5298-4345-9e17-22852e64d3b7}"
 InstallOrder = "0"
-Dependencies = ["{d2bf7bbb-4757-4418-96bf-a9772a36a262}"]
+Dependencies = []
 
 [[thisMod.Instructions]]
 Action = "extract"
@@ -47,7 +48,39 @@ Overwrite = "True"
 [[thisMod.Instructions]]
 Action = "move"
 Source = ["<<modDirectory>>/TSL_prestige_save_fixes/TSL_prestige_save_fixes/jedimaster_sithlord fixes/*"]
+Destination = "<<kotorDirectory>>/Override"
 Dependencies = ["{C5418549-6B7E-4A8C-8B8E-4AA1BC63C732}"]
+Overwrite = "True"
+
+[[thisMod]]
+Name = "Robes with Shadows for TSL"
+Author = "PapaZinos"
+Description = "What use, I ask you, is the Soft Shadows setting ingame if your shadows are still 10 polygons? This mod gives all robes proper shadows that match their models more directly, for that extra touch of realism."
+Category = "Graphics Improvement"
+Language = ["All"]
+Directions = "Extract the mod. Ignore the included subfolders, and move just the files in the base folder to your override. Overwrite when prompted."
+
+[[thisMod.Instructions]]
+Action = "move"
+Source = ["<<modDirectory>>/Ultimate_Robes_Repair_For_TSL*/*.*"]
+Destination = "<<kotorDirectory/Override"
+Overwrite = "True"
+
+
+[[thisMod]]
+name = "K2 Community Patch"
+Author = "Multiple; A Future Pilot, DarthParametric and JCarter426 Curate"
+Description = "A community bugfix and general improvement patch for KOTOR 2 meant to be a supplement to TSLRCM, fixing bugs that TSLRCM didn't catch or viewed too minor to address; highly recommended."
+Dependencies = ["{d2bf7bbb-4757-4418-96bf-a9772a36a262}"]
+Category = "Graphics Improvement & Bugfix"
+Tier = "Essential"
+Language = ["All"]
+Directions = "Run the TSLPatcher exe included. Remember, warnings during an installation are normal--errors are not."
+
+[[thisMod.instructions]]
+Action = "extract"
+Source = "<<modDirectory>>/KOTOR 2 Community Patch*.7z"
+Destination = "<<kotorDirectory/Override"
 Overwrite = "True"
 
 
@@ -55,7 +88,7 @@ Overwrite = "True"
 Name = "Ultimate Dantooine"
 Guid = "{B3525945-BDBD-45D8-A324-AAF328A5E13E}"
 InstallOrder = "3"
-Dependencies = ["{C5418549-6B7E-4A8C-8B8E-4AA1BC63C732}", "{D0F371DA-5C69-4A26-8A37-76E3A6A2A50D}"]
+Dependencies = []
 
 [[thisMod.Instructions]]
 Action = "extract"

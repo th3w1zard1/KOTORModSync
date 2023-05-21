@@ -526,11 +526,11 @@ namespace KOTORModSync.Core.Utility
                     else
                     {
                         var child = new Dictionary<string, object>
-                {
-                    { "Name", name },
-                    { "Type", isFile ? "file" : "directory" },
-                    { "Contents", new List<object>() }
-                };
+                        {
+                            { "Name", name },
+                            { "Type", isFile ? "file" : "directory" },
+                            { "Contents", new List<object>() }
+                        };
                         existingDirectory.Add(child);
                         currentDirectory = child;
                     }

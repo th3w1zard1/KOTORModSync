@@ -125,9 +125,10 @@
                     </Grid>
 
                     <StackPanel Grid.Row="3" HorizontalAlignment="Center" Margin="0,2">
-                        <Button Content="Save Individual Mod" Click="SaveButton_Click" />
-                        <Button Content="Save All Mods to New File" Click="SaveModFile_Click" />
+                        <Button Content="Save Editor Changes" Click="SaveButton_Click" />
+                        <Button Content="Save Config to File" Click="SaveModFile_Click" />
                         <Button Content="Refresh Components" Click="RefreshComponents_Click" />
+                        <Button Content="Install Single Mod" Click="InstallModSingle_Click" />
                     </StackPanel>
                 </Grid>
             </ScrollViewer>

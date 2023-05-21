@@ -29,9 +29,7 @@ namespace KOTORModSync.GUI
         private ObservableCollection<string> _selectedComponentProperties;
         private string _originalContent;
         private MainConfig _mainConfig;
-
-
-        private string currentComponent;
+        private Component currentComponent;
         public MainWindow() => InitializeComponent();
 
         private void InitializeComponent()
@@ -334,6 +332,9 @@ namespace KOTORModSync.GUI
 
         private async void StartInstall_Click(object sender, RoutedEventArgs e)
         {
+            bool confirmationResult = await ConfirmationDialog.ShowConfirmationDialog(this, "yo man it's not a bait. This button will install all mods sequentially without stopping until the end is reached. If you don't want this, press no");
+            if (!confirmationResult)
+                return;
             if (_mainConfig == null || MainConfig.DestinationPath == null)
             {
                 var informationDialog = new InformationDialog();
@@ -351,7 +352,7 @@ namespace KOTORModSync.GUI
 
                 if (!result.success)
                 {
-                    bool confirmationResult = await ConfirmationDialog.ShowConfirmationDialog(this, $"There was a problem installing {component.Name}, please check the output window. Continue with next mod anyway?");
+                    confirmationResult = await ConfirmationDialog.ShowConfirmationDialog(this, $"There was a problem installing {component.Name}, please check the output window. Continue with next mod anyway?");
                     if (!confirmationResult)
                     {
                         break;
@@ -391,6 +392,7 @@ namespace KOTORModSync.GUI
             {
                 _originalContent = Serializer.SerializeComponent(selectedComponent);
                 rightTextBox.Text = _originalContent;
+                this.currentComponent = selectedComponent;
             }
         }
 
@@ -415,8 +417,7 @@ namespace KOTORModSync.GUI
 
         private async void SaveButton_Click(object sender, RoutedEventArgs e)
         {
-            var selectedTreeViewItem = leftTreeView.SelectedItem as TreeViewItem;
-            if (selectedTreeViewItem == null || selectedTreeViewItem.Tag is not Component selectedComponent)
+            if (currentComponent is null)
             {
                 var informationDialog = new InformationDialog();
                 informationDialog.InfoText = "You must select a component from the list, or create one, before saving.";
@@ -567,6 +568,7 @@ namespace KOTORModSync.GUI
                 rootItem.IsExpanded = true;
 
                 WriteTreeViewItemsToFile(new List<TreeViewItem> { rootItem }, null);
+                currentComponent = null;
             }
             catch (ArgumentException ex)
             {
@@ -700,10 +702,10 @@ namespace KOTORModSync.GUI
             this.canExecute = canExecute;
         }
 
+        public event EventHandler? CanExecuteChanged;
+
         public bool CanExecute(object parameter) => canExecute == null || canExecute(parameter);
         public void Execute(object parameter) => execute(parameter);
-
-        public event EventHandler CanExecuteChanged;
     }
     public class BooleanToArrowConverter : IValueConverter
     {

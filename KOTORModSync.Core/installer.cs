@@ -76,11 +76,30 @@ arguments = ""any command line arguments to pass (none available in TSLPatcher)"
 
         public static async Task<bool> ExecuteInstructionAsync(Func<Task<bool>> instructionMethod) => await instructionMethod().ConfigureAwait(false);
 
-        public bool ExtractFile()
+
+        private async Task<(List<string>, DirectoryInfo)> ParsePathsAsync()
+        {
+            var sourcePaths = new List<string>();
+            // Enumerate the files/folders with wildcards and add them to the list
+            for (int i = 0; i < this.Source.Count; i++)
+            {
+                sourcePaths.Add(Utility.Utility.ReplaceCustomVariables(this.Source[i]));
+            }
+            sourcePaths = await FileHandler.EnumerateFilesWithWildcards(sourcePaths);
+            DirectoryInfo destinationPath = null;
+            if (this.Destination != null)
+            {
+                destinationPath = new DirectoryInfo(Utility.Utility.ReplaceCustomVariables(this.Destination));
+            }
+            return (sourcePaths, destinationPath);
+        }
+
+        public async Task<bool> ExtractFileAsync()
         {
             try
             {
-                foreach (string sourcePath in Source)
+                (List<string> sourcePaths, DirectoryInfo _) = await ParsePathsAsync();
+                foreach (string sourcePath in sourcePaths)
                 {
                     var thisFile = new FileInfo(sourcePath);
                     Logger.Log($"File path: {thisFile.FullName}");
@@ -151,13 +170,14 @@ arguments = ""any command line arguments to pass (none available in TSLPatcher)"
         {
             try
             {
+                (List<string> sourcePaths, DirectoryInfo destinationPath) = await ParsePathsAsync();
                 var deleteTasks = new List<Task>();
                 int maxDegreeOfParallelism = await Utility.PlatformAgnosticMethods.CalculateMaxDegreeOfParallelismAsync(new DirectoryInfo(this.Source[0]));
                 SemaphoreSlim semaphore = new SemaphoreSlim(maxDegreeOfParallelism); // Set the maximum degree of parallelism
 
-                for (int i = 0; i < this.Source.Count; i++)
+                for (int i = 0; i < sourcePaths.Count; i++)
                 {
-                    var thisFile = new FileInfo(this.Source[i]);
+                    var thisFile = new FileInfo(sourcePaths[i]);
                     if (Path.IsPathRooted(thisFile.FullName))
                     {
                         // Delete the file asynchronously
@@ -169,6 +189,8 @@ arguments = ""any command line arguments to pass (none available in TSLPatcher)"
                             {
                                 File.Delete(thisFile.FullName);
                                 Logger.Log($"Deleting {thisFile.FullName}...");
+                            } catch {
+                                throw;
                             }
                             finally
                             {
@@ -201,13 +223,14 @@ arguments = ""any command line arguments to pass (none available in TSLPatcher)"
 
         public async Task<bool> MoveFile() {
             try {
+
+                (List<string> sourcePaths, DirectoryInfo destinationPath) = await ParsePathsAsync();
                 var moveTasks = new List<Task>();
                 int maxDegreeOfParallelism = await Utility.PlatformAgnosticMethods.CalculateMaxDegreeOfParallelismAsync(new DirectoryInfo(this.Source[0]));
                 SemaphoreSlim semaphore = new SemaphoreSlim(maxDegreeOfParallelism); // Set the maximum degree of parallelism
 
-                for (int i = 0; i < Source.Count; i++) {
-                    var thisFile = new FileInfo(this.Source[i]);
-                    var destinationPath = new DirectoryInfo(this.Destination);
+                for (int i = 0; i < sourcePaths.Count; i++) {
+                    var thisFile = new FileInfo(sourcePaths[i]);
                     // Check if the destination file already exists
                     if (this.Overwrite || !File.Exists(Path.Combine(destinationPath.FullName, thisFile.Name)))
                     {
@@ -219,6 +242,8 @@ arguments = ""any command line arguments to pass (none available in TSLPatcher)"
                             try {
                                 await Serializer.FileHandler.MoveFileAsync(thisFile.FullName, destinationPath.FullName);
                                 Logger.Log($"Moving {thisFile.FullName} to {destinationPath}... Overwriting? {this.Overwrite}");
+                            } catch {
+                                throw;
                             } finally {
                                 semaphore.Release(); // Release the semaphore slot
                             }
@@ -242,13 +267,14 @@ arguments = ""any command line arguments to pass (none available in TSLPatcher)"
         {
             try
             {
+                (List<string> sourcePaths, DirectoryInfo _) = await ParsePathsAsync();
                 bool isSuccess = false; // Track the success status
-                for (int i = 0; i < this.Source.Count; i++)
+                for (int i = 0; i < sourcePaths.Count; i++)
                 {
-                    var thisProgram = new FileInfo(this.Source[i]);
+                    var thisProgram = new FileInfo(sourcePaths[i]);
                     if (!thisProgram.Exists)
                     {
-                        throw new FileNotFoundException($"The file {this.Source[i]} could not be located on the disk");
+                        throw new FileNotFoundException($"The file {sourcePaths[i]} could not be located on the disk");
                     }
                     var cancellationTokenSource = new CancellationTokenSource();
                     cancellationTokenSource.CancelAfter(TimeSpan.FromSeconds(3600)); // cancel if running longer than 30 minutes.
@@ -276,7 +302,7 @@ arguments = ""any command line arguments to pass (none available in TSLPatcher)"
                     if (!process.HasExited)
                     {
                         process.Kill();
-                        throw new Exception("Process timed out after 30 minutes.");
+                        throw new TimeoutException("Process timed out after 30 minutes.");
                     }
 
                     string output = await outputTask;
@@ -300,11 +326,12 @@ arguments = ""any command line arguments to pass (none available in TSLPatcher)"
             }
         }
 
-        public bool VerifyInstall()
+        public async Task<bool> VerifyInstallAsync()
         {
             bool errors = false;
             bool found = false;
-            foreach(string sourcePath in this.Source)
+            (List<string> sourcePaths, DirectoryInfo _) = await ParsePathsAsync();
+            foreach (string sourcePath in sourcePaths)
             {
                 // Verify if any error or warning message is present in the install.rtf file
                 string installLogFile = System.IO.Path.Combine(Path.GetDirectoryName(sourcePath), "install.rtf");
@@ -688,24 +715,11 @@ arguments = ""any command line arguments to pass (none available in TSLPatcher)"
 
                     //parse the source/destinations
 
-                    // Enumerate the files/folders with wildcards and add them to the list
-                    for (int i = 0; i < instruction.Source.Count; i++)
-                    {
-                        instruction.Source[i] = Utility.Utility.ReplaceCustomVariables(instruction.Source[i]);
-                    }
-                    instruction.Source = await Serializer.FileHandler.EnumerateFilesWithWildcards(instruction.Source);
-                    if (instruction.Destination != null)
-                    {
-                        var destinationList = new List<string> { Utility.Utility.ReplaceCustomVariables(instruction.Destination) };
-                        instruction.Destination = destinationList.FirstOrDefault();
-                    }
-
-
                     bool success = false;
                     switch (instruction.Action.ToLower())
                     {
                         case "extract":
-                            success = instruction.ExtractFile();
+                            success = await instruction.ExtractFileAsync();
                             break;
                         case "delete":
                             success = await instruction.DeleteFile();
@@ -715,8 +729,12 @@ arguments = ""any command line arguments to pass (none available in TSLPatcher)"
                             break;
                         case "patch":
                         case "tslpatcher":
+                            for (int i = 0; i < instruction.Source.Count; i++)
+                            {
+                                FileHandler.ReplaceLookupGameFolder(new DirectoryInfo(Path.GetDirectoryName(instruction.Source[i])));
+                            }
                             success = await instruction.ExecuteProgramAsync();
-                            success = success && instruction.VerifyInstall();
+                            success = success && await instruction.VerifyInstallAsync();
                             break;
                         case "execute":
                         case "run":

@@ -264,6 +264,22 @@ namespace KOTORModSync.Core.Utility
                 return mergedList;
             }
 
+            public static void ReplaceLookupGameFolder(DirectoryInfo directory)
+            {
+                FileInfo[] iniFiles = directory.GetFiles("*.ini", SearchOption.AllDirectories);
+
+                foreach (FileInfo file in iniFiles)
+                {
+                    string filePath = file.FullName;
+                    string fileContents = File.ReadAllText(filePath);
+
+                    // Replace the string 'LookupGameFolder=1' with 'LookupGameFolder=0'
+                    fileContents = fileContents.Replace("LookupGameFolder=1", "LookupGameFolder=0");
+
+                    File.WriteAllText(filePath, fileContents);
+                }
+            }
+
             public static void OutputConfigFile(List<Component> components, string filePath)
             {
                 var stringBuilder = new StringBuilder(10000);

@@ -42,34 +42,36 @@ namespace KOTORModSync.Core
 
         public static string defaultInstructions = @"
 [[thisMod.instructions]]
-    action = ""extract""
-    source = ""<<modDirectory>>\\path\\to\\mod\\mod.rar""
-    overwrite = true
+action = ""extract""
+source = ""<<modDirectory>>\\path\\to\\mod\\mod.rar""
+overwrite = true
 
 [[thisMod.instructions]]
-    action = ""delete""
-    paths = [
-        ""<<modDirectory>>\\path\\to\\mod\\file1.tpc"",
-        ""<<modDirectory>>\\path\\to\\mod\\file2.tpc"",
-        ""<<modDirectory>>\\path\\to\\mod\\file3.tpc""
-    ]
-    dependencies = ""{C5418549-6B7E-4A8C-8B8E-4AA1BC63C732}""
-    overwrite = false
+action = ""delete""
+paths = [
+    ""<<modDirectory>>\\path\\to\\mod\\file1.tpc"",
+    ""<<modDirectory>>\\path\\to\\mod\\file2.tpc"",
+    ""<<modDirectory>>\\path\\to\\mod\\file3.tpc""
+]
+dependencies = ""{C5418549-6B7E-4A8C-8B8E-4AA1BC63C732}""
+overwrite = false
 
 [[thisMod.instructions]]
-    action = ""move""
-    source = ""<<modDirectory>>\\path\\to\\mod\\file\\to\\move""
-    destination = ""C:\\Users\\****\\path\\to\\kotor2\\Override""
-    restrictions = ""{C5418549-6B7E-4A8C-8B8E-4AA1BC63C732}""
+action = ""move""
+source = ""<<modDirectory>>\\path\\to\\mod\\file\\to\\move""
+destination = ""C:\\Users\\****\\path\\to\\kotor2\\Override""
+restrictions = ""{C5418549-6B7E-4A8C-8B8E-4AA1BC63C732}""
+
 [[thisMod.instructions]]
-    action = ""run""
-    paths = [""<<modDirectory>>\\path\\to\\mod\\program.exe""]
-    arguments = ""any command line arguments to pass""
+action = ""run""
+Source = [""<<modDirectory>>\\path\\to\\mod\\program.exe""]
+arguments = ""any command line arguments to pass""
 # same as 'run' except it'll try to verify the installation from the tslpatcher log.
+
 [[thisMod.instructions]]
-    action = ""tslpatcher""
-    paths = [""<<modDirectory>>\\path\\to\\mod\\TSLPatcher.exe""]
-    arguments = ""any command line arguments to pass (none available in TSLPatcher)""
+action = ""tslpatcher""
+source = [""<<modDirectory>>\\path\\to\\mod\\TSLPatcher.exe""]
+arguments = ""any command line arguments to pass (none available in TSLPatcher)""
 ";
 
         public static async Task<bool> ExecuteInstructionAsync(Func<Task<bool>> instructionMethod) => await instructionMethod().ConfigureAwait(false);

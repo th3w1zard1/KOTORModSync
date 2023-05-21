@@ -160,7 +160,7 @@
                 <Button Content="Load Installation File" Margin="0 10" Click="LoadInstallFile_Click" />
                 <Button Content="Set Directories" Margin="0 10" Click="SetDirectories_Click"/>
                 <Button Content="Validate Config" Margin="0 10" Click="ValidateButton_Click"/>
-                <Button Content="Start Install" Margin="0 10" Click="StartInstall_Click" />
+                <Button Content="(do not push)" Margin="0 10" Click="StartInstall_Click" />
             </StackPanel>
         </Grid>
     </Grid>

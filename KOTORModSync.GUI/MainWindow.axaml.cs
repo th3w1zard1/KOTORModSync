@@ -417,7 +417,7 @@ namespace KOTORModSync.GUI
 
         private async void SaveButton_Click(object sender, RoutedEventArgs e)
         {   if (currentComponent is null)
-                currentComponent = leftTreeView.SelectedItem as Core.Component;
+                currentComponent = leftTreeView.SelectedItem as Component;
             if (currentComponent is null)
             {
                 var informationDialog = new InformationDialog();

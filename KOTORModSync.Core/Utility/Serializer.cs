@@ -373,34 +373,46 @@ namespace KOTORModSync.Core.Utility
             {
                 var matchingFiles = new List<string>();
 
-                string regexPattern = "^" + Regex.Escape(pattern)
-                                           .Replace("\\*", ".*")
-                                           .Replace("\\?", ".")
-                                           + "$";
+                string directoryPath = Path.GetDirectoryName(directory);
+                string directoryNamePattern = Path.GetFileName(directory);
 
-                IEnumerable<string> files = Directory.EnumerateFiles(directory, "*", SearchOption.AllDirectories);
-                foreach (string file in files)
-                {
-                    if (Regex.IsMatch(Path.GetFileName(file), regexPattern))
-                    {
-                        matchingFiles.Add(file);
-                    }
-                }
+                IEnumerable<string> matchingDirectories = Directory.GetDirectories(directoryPath, directoryNamePattern, SearchOption.TopDirectoryOnly);
 
-                if (!excludeDirectories)
+                foreach (string matchingDirectory in matchingDirectories)
                 {
-                    IEnumerable<string> directories = Directory.EnumerateDirectories(directory, "*", SearchOption.AllDirectories);
-                    foreach (string subdirectory in directories)
+                    string filePattern = Path.GetFileName(pattern);
+                    string regexPattern = "^" + Regex.Escape(filePattern)
+                                               .Replace("\\*", ".*")
+                                               .Replace("\\?", ".")
+                                               + "$";
+
+                    IEnumerable<string> files = Directory.EnumerateFiles(matchingDirectory, "*", SearchOption.AllDirectories);
+                    foreach (string file in files)
                     {
-                        if (Regex.IsMatch(Path.GetFileName(subdirectory), regexPattern))
+                        if (Regex.IsMatch(Path.GetFileName(file), regexPattern))
                         {
-                            matchingFiles.Add(subdirectory);
+                            matchingFiles.Add(file);
+                        }
+                    }
+
+                    if (!excludeDirectories)
+                    {
+                        IEnumerable<string> directories = Directory.EnumerateDirectories(matchingDirectory, "*", SearchOption.AllDirectories);
+                        foreach (string subdirectory in directories)
+                        {
+                            if (Regex.IsMatch(Path.GetFileName(subdirectory), regexPattern))
+                            {
+                                matchingFiles.Add(subdirectory);
+                            }
                         }
                     }
                 }
 
                 return matchingFiles;
             }
+
+
+
 
 
 

@@ -99,21 +99,23 @@ arguments = ""any command line arguments to pass (none available in TSLPatcher)"
             try
             {
                 (List<string> sourcePaths, DirectoryInfo _) = await ParsePathsAsync();
+                List<Task> extractionTasks = new List<Task>();
+
+                // Use SemaphoreSlim to limit concurrent extractions
+                SemaphoreSlim semaphore = new SemaphoreSlim(5); // Limiting to 5 concurrent extractions
+
                 foreach (string sourcePath in sourcePaths)
                 {
-                    var thisFile = new FileInfo(sourcePath);
-                    Logger.Log($"File path: {thisFile.FullName}");
+                    await semaphore.WaitAsync(); // Acquire a semaphore slot
 
-                    if (ArchiveHelper.IsArchive(thisFile.Extension))
+                    extractionTasks.Add(Task.Run(async () =>
                     {
-                        List<ArchiveEntry> archiveEntries = ArchiveHelper.TraverseArchiveEntries(thisFile.FullName);
-
-                        foreach (ArchiveEntry entry in archiveEntries)
+                        try
                         {
-                            string destinationFolder = Path.GetFileNameWithoutExtension(thisFile.Name);
-                            string destinationPath = Path.Combine(thisFile.Directory.FullName, destinationFolder, entry.Path);
-                            Directory.CreateDirectory(Path.GetDirectoryName(destinationPath));
-                            using (Stream outputStream = File.Create(destinationPath))
+                            var thisFile = new FileInfo(sourcePath);
+                            Logger.Log($"File path: {thisFile.FullName}");
+
+                            if (ArchiveHelper.IsArchive(thisFile.Extension))
                             {
                                 using (FileStream stream = File.OpenRead(thisFile.FullName))
                                 {
@@ -131,30 +133,49 @@ arguments = ""any command line arguments to pass (none available in TSLPatcher)"
                                     {
                                         archive = SevenZipArchive.Open(stream);
                                     }
-                                    Logger.Log($"Attempting to extract {thisFile.Name}");
+
                                     if (archive != null)
                                     {
-                                        IArchiveEntry archiveEntry = archive.Entries.FirstOrDefault(e => e.Key == entry.Path);
-                                        if (archiveEntry != null && !archiveEntry.IsDirectory)
+                                        List<ArchiveEntry> archiveEntries = ArchiveHelper.TraverseArchiveEntries(thisFile.FullName);
+
+                                        // Extract entries in parallel
+                                        await Task.WhenAll(archiveEntries.Select(async entry =>
                                         {
-                                            Logger.Log($"Extracting {archiveEntry.Key}");
-                                            using (Stream entryStream = archiveEntry.OpenEntryStream())
+                                            string destinationFolder = Path.GetFileNameWithoutExtension(thisFile.Name);
+                                            string destinationPath = Path.Combine(thisFile.Directory.FullName, destinationFolder, entry.Path);
+                                            Directory.CreateDirectory(Path.GetDirectoryName(destinationPath));
+
+                                            using (Stream outputStream = File.Create(destinationPath))
                                             {
-                                                entryStream.CopyTo(outputStream);
+                                                IArchiveEntry archiveEntry = archive.Entries.FirstOrDefault(e => e.Key == entry.Path);
+                                                if (archiveEntry != null && !archiveEntry.IsDirectory)
+                                                {
+                                                    Logger.Log($"Extracting {archiveEntry.Key}");
+                                                    using (Stream entryStream = archiveEntry.OpenEntryStream())
+                                                    {
+                                                        await entryStream.CopyToAsync(outputStream);
+                                                    }
+                                                }
                                             }
-                                        }
+                                        }));
                                     }
                                 }
                             }
+                            else
+                            {
+                                var ex = new ArgumentNullException($"{this.ParentComponent.Name} failed to extract file {thisFile}");
+                                Logger.LogException(ex);
+                                throw ex;
+                            }
                         }
-                    }
-                    else
-                    {
-                        var ex = new ArgumentNullException($"{this.ParentComponent.Name} failed to extract file {thisFile}");
-                        Logger.LogException(ex);
-                        throw ex;
-                    }
+                        finally
+                        {
+                            semaphore.Release(); // Release the semaphore slot
+                        }
+                    }));
                 }
+
+                await Task.WhenAll(extractionTasks); // Wait for all extraction tasks to complete
 
                 return true; // Extraction succeeded
             }
@@ -165,6 +186,8 @@ arguments = ""any command line arguments to pass (none available in TSLPatcher)"
                 return false; // Extraction failed
             }
         }
+
+
 
         public async Task<bool> DeleteFileAsync()
         {

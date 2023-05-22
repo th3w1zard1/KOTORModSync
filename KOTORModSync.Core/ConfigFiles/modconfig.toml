@@ -224,3 +224,22 @@ Source = ["<<kotorDirectory>>/Ultimate Dantooine High Resolution*TPC Version*/Da
 Destination = "<<kotorDirectory>>/Override"
 Overwrite = "False"
 
+
+[[thisMod]]
+Name = "Ultimate Dxun"
+Guid = "{9E749DD5-BE68-4E63-B79F-4E95BB7674CA}"
+InstallOrder = "0"
+Dependencies = []
+
+[[thisMod.Instructions]]
+Action = "extract"
+Source = ["<<modDirectory>>/path/to/mod/mod.rar"]
+Destination = "<<kotorDirectory>>/Override"
+Overwrite = "True"
+[[thisMod.Instructions]]
+Action = "delete"
+Source = ["<<modDirectory>>\\Ultimate Dxun High Resolution*TPC Version*\\Dxun HR\\Override\\DXN_BWa1.tpc", "<<modDirectory>>\\Ultimate Dxun High Resolution*TPC Version*\\Dxun HR\\Override\\DXN_BWa2.tpc", "<<modDirectory>>\\Ultimate Dxun High Resolution*TPC Version*\\Dxun HR\\Override\\DXN_BWa3.tpc", "<<modDirectory>>\\Ultimate Dxun High Resolution*TPC Version*\\Dxun HR\\Override\\DXN_BWa4.tpc", "<<modDirectory>>\\Ultimate Dxun High Resolution*TPC Version*\\Dxun HR\\Override\\DXN_BWa5.tpc", "<<modDirectory>>\\Ultimate Dxun High Resolution*TPC Version*\\Dxun HR\\Override\\DXN_BWa6.tpc", "<<modDirectory>>\\Ultimate Dxun High Resolution*TPC Version*\\Dxun HR\\Override\\DXN_BWa7.tpc", "<<modDirectory>>\\Ultimate Dxun High Resolution*TPC Version*\\Dxun HR\\Override\\DXN_BWa8.tpc"]
+Destination = "<<kotorDirectory>>/Override"
+Dependencies = ["{C5418549-6B7E-4A8C-8B8E-4AA1BC63C732}"]
+Overwrite = "False"
+

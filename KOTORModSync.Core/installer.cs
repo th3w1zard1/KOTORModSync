@@ -24,6 +24,7 @@ using Microsoft.TeamFoundation.WorkItemTracking.WebApi.Models;
 using static KOTORModSync.Core.ModDirectory;
 using static KOTORModSync.Core.Utility.Serializer;
 using SharpCompress.Readers;
+using System.Reflection;
 
 namespace KOTORModSync.Core
 {
@@ -277,7 +278,71 @@ arguments = ""any command line arguments to pass (none available in TSLPatcher)"
             }
         }
 
+        public static string getResourcesDirectory()
+        {
+            string outputDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+            return Path.Combine(outputDirectory, "Resources");
+        }
 
+        public async Task<bool> ExecuteTSLPatcherAsync()
+        {
+            try
+            {
+                (List<string> sourcePaths, DirectoryInfo _) = await ParsePathsAsync();
+                bool isSuccess = false; // Track the success status
+                for (int i = 0; i < sourcePaths.Count; i++)
+                {
+                    var thisProgram = new FileInfo(sourcePaths[i]);
+                    if (!thisProgram.Exists)
+                    {
+                        throw new FileNotFoundException($"The file {sourcePaths[i]} could not be located on the disk");
+                    }
+                    var cancellationTokenSource = new CancellationTokenSource();
+                    cancellationTokenSource.CancelAfter(TimeSpan.FromSeconds(3600)); // cancel if running longer than 30 minutes.
+                                                                                     // arg1 = swkotor directory
+                                                                                     // arg2 = mod directory (where TSLPatcher lives)
+                                                                                     // arg3 = (optional) install option index
+                    string args = $"\"{MainConfig.DestinationPath}\" \"{Directory.GetParent(thisProgram.FullName)}\" \"\"";
+
+                    ProcessStartInfo startInfo = new ProcessStartInfo();
+                    startInfo.CreateNoWindow = false;
+                    startInfo.FileName = Path.Combine(getResourcesDirectory(), "TSLPatcherCLI.exe");
+                    startInfo.WindowStyle = ProcessWindowStyle.Normal;
+                    startInfo.Arguments = args;
+
+                    var exeProcess = Process.Start(startInfo);
+                    Task<string> outputTask = exeProcess.StandardOutput.ReadToEndAsync();
+
+                    while (!exeProcess.HasExited && !cancellationTokenSource.IsCancellationRequested)
+                    {
+                        await Task.Delay(100);
+                    }
+                    if (!exeProcess.HasExited)
+                    {
+                        exeProcess.Kill();
+                        throw new TimeoutException("Process timed out after 30 minutes.");
+                    }
+
+                    string output = await outputTask;
+
+                    if (exeProcess.ExitCode != 0)
+                    {
+                        Logger.Log($"Process failed with exit code {exeProcess.ExitCode}. Output:\n{output}");
+                        isSuccess = false;
+                    }
+                    else
+                    {
+                        isSuccess = true;
+                    }
+                }
+                return isSuccess;
+            }
+            catch (Exception ex)
+            {
+                Logger.LogException(ex);
+                return false;
+            }
+        }
 
         public async Task<bool> ExecuteProgramAsync()
         {
@@ -749,7 +814,7 @@ arguments = ""any command line arguments to pass (none available in TSLPatcher)"
                             {
                                 FileHandler.ReplaceLookupGameFolder(new DirectoryInfo(Path.GetDirectoryName(instruction.Source[i])));
                             }
-                            success = await instruction.ExecuteProgramAsync();
+                            success = await instruction.ExecuteTSLPatcherAsync();
                             success = success && await instruction.VerifyInstallAsync();
                             break;
                         case "execute":

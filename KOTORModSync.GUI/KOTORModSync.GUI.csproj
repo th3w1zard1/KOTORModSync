@@ -1,30 +1,42 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFrameworks>net6.0;net472</TargetFrameworks>
-    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <TargetFrameworks>net6.0;net462</TargetFrameworks>
     <Platforms>AnyCPU</Platforms>
+    <Nullable>disable</Nullable>
+    <LangVersion>7.3</LangVersion>
+    <EnforceCodeStyleInBuild>True</EnforceCodeStyleInBuild>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)' == 'Release'">
-    <IncludeAllContentForSelfExtract>true</IncludeAllContentForSelfExtract>
-    <IncludeDebugSymbolsInSingleFile>false</IncludeDebugSymbolsInSingleFile>
-    <!-- Trim unused dependencies -->
+    <IncludeAllContentForSelfExtract>false</IncludeAllContentForSelfExtract>
+    <SelfContained>false</SelfContained>
+    <DebugType>none</DebugType>
     <PublishTrimmed>true</PublishTrimmed>
-    <!-- Bundle all DLLs into the executable -->
+    <PublishReadyToRun>false</PublishReadyToRun>
     <PublishSingleFile>true</PublishSingleFile>
+    <IncludeNativeLibrariesForSelfExtract>false</IncludeNativeLibrariesForSelfExtract>
+    <PublishTrimmed>true</PublishTrimmed>
+    <PublishReadyToRun>true</PublishReadyToRun>
+    <TrimMode>CopyUsed</TrimMode>
   </PropertyGroup>
 
-  <ItemGroup>
-    <ProjectCapability Include="Avalonia" />
-    <TrimmerRootAssembly Include="Avalonia.Themes.Fluent" />
-  </ItemGroup>
+
+  <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
+    <DebugType>portable</DebugType>
+  </PropertyGroup>
 
   <ItemGroup Condition="'$(Configuration)' == 'Release'">
     <PackageReference Include="Costura.Fody" Version="5.7.0">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+  </ItemGroup>
+
+
+  <ItemGroup>
+    <ProjectCapability Include="Avalonia" />
+    <TrimmerRootAssembly Include="Avalonia.Themes.Fluent" />
   </ItemGroup>
   
   <ItemGroup>
@@ -33,12 +45,16 @@
     <PackageReference Include="Avalonia.LinuxFramebuffer" Version="0.10.21" />
     <!--Condition below is needed to remove Avalonia.Diagnostics package from build output in Release configuration.-->
     <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="0.10.21" />
+    <PackageReference Include="System.Text.Encoding.CodePages" Version="7.0.0" />
     <PackageReference Include="XamlNameReferenceGenerator" Version="1.6.1" />
   </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\KOTORModSync.Core\KOTORModSync.Core.csproj" />
-  </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\KOTORModSync.Core\KOTORModSync.Core.csproj">
+      <PrivateAssets>all</PrivateAssets>
+    </ProjectReference>
+  </ItemGroup>
+  
   <ItemGroup>
     <Compile Update="OutputWindow.axaml.cs">
       <DependentUpon>OutputWindow.axaml</DependentUpon>

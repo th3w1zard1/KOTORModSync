@@ -1,6 +1,7 @@
 using System;
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
 using Avalonia.Threading;
 
@@ -31,6 +32,11 @@ namespace KOTORModSync.GUI
         {
             base.OnOpened(e);
             UpdateInfoText();
+        }
+
+        private void OKButton_Click(object sender, RoutedEventArgs e)
+        {
+            Close();
         }
 
         private void UpdateInfoText()

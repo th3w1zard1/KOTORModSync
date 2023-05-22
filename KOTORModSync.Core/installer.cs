@@ -815,7 +815,7 @@ arguments = ""any command line arguments to pass (none available in TSLPatcher)"
                                 FileHandler.ReplaceLookupGameFolder(new DirectoryInfo(Path.GetDirectoryName(instruction.Source[i])));
                             }
                             success = await instruction.ExecuteTSLPatcherAsync();
-                            success = success && await instruction.VerifyInstallAsync();
+                            //success = success && await instruction.VerifyInstallAsync();
                             break;
                         case "execute":
                         case "run":

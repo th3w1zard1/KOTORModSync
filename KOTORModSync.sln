@@ -13,7 +13,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		kotor2 specific dev notes.txt = kotor2 specific dev notes.txt
 	EndProjectSection
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "KOTORModSync.GUI", "KOTORModSync.GUI\KOTORModSync.GUI.csproj", "{E3B5CB94-DA74-4F77-B769-B9D872495916}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "KOTORModSync", "KOTORModSync.GUI\KOTORModSync.csproj", "{E3B5CB94-DA74-4F77-B769-B9D872495916}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "KOTORModSync.Tests", "KOTORModSync.Tests\KOTORModSync.Tests.csproj", "{52B21526-2B8D-43BE-90DD-2A54FF631825}"
 EndProject

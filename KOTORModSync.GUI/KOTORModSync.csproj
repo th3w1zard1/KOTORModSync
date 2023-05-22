@@ -11,7 +11,7 @@
   <PropertyGroup Condition="'$(Configuration)' == 'Release'">
     <IncludeAllContentForSelfExtract>false</IncludeAllContentForSelfExtract>
     <SelfContained>false</SelfContained>
-    <DebugType>none</DebugType>
+    <DebugType>embedded</DebugType>
     <PublishTrimmed>true</PublishTrimmed>
     <PublishReadyToRun>false</PublishReadyToRun>
     <PublishSingleFile>true</PublishSingleFile>
@@ -23,7 +23,16 @@
 
 
   <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
+    <IncludeAllContentForSelfExtract>true</IncludeAllContentForSelfExtract>
+    <SelfContained>true</SelfContained>
     <DebugType>portable</DebugType>
+    <PublishTrimmed>true</PublishTrimmed>
+    <PublishReadyToRun>false</PublishReadyToRun>
+    <PublishSingleFile>true</PublishSingleFile>
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+    <PublishTrimmed>true</PublishTrimmed>
+    <PublishReadyToRun>true</PublishReadyToRun>
+    <TrimMode>CopyUsed</TrimMode>
   </PropertyGroup>
 
   <ItemGroup Condition="'$(Configuration)' == 'Release'">
@@ -45,7 +54,6 @@
     <PackageReference Include="Avalonia.LinuxFramebuffer" Version="0.10.21" />
     <!--Condition below is needed to remove Avalonia.Diagnostics package from build output in Release configuration.-->
     <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="0.10.21" />
-    <PackageReference Include="System.Text.Encoding.CodePages" Version="7.0.0" />
     <PackageReference Include="XamlNameReferenceGenerator" Version="1.6.1" />
   </ItemGroup>
 

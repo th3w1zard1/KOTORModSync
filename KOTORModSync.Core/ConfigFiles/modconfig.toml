@@ -96,6 +96,11 @@ Action = "extract"
 Source = ["<<modDirectory>>/KOTOR 2 Community Patch*.7z"]
 Destination = "<<kotorDirectory>>/Override"
 Overwrite = "True"
+[[thisMod.Instructions]]
+Action = "tslpatcher"
+Source = ["<<modDirectory>>/KOTOR 2 Community Patch*/INSTALL.exe"]
+Destination = "<<kotorDirectory>>/Override"
+Overwrite = "True"
 
 
 [[thisMod]]
@@ -117,7 +122,7 @@ Overwrite = "True"
 Action = "move"
 Source = ["<<modDirectory>>\\remote_influence\remote.dlg", "<<modDirectory>>\\remote_influence\tk_remote_getinf.ncs"]
 Destination = "<<kotorDirectory>>\\Override"
-Overwrite = "False"
+Overwrite = "True"
 [[thisMod.Instructions]]
 Action = "extract"
 Source = ["<<modDirectory>>/Remote Tells Influence Patch for TSLRCM.zip"]
@@ -127,7 +132,7 @@ Overwrite = "True"
 Action = "move"
 Source = ["<<modDirectory>>/Remote Tells Influence Patch for TSLRCM/remote.dlg"]
 Destination = "<<kotorDirectory>>\\Override"
-Overwrite = "False"
+Overwrite = "True"
 
 
 [[thisMod]]
@@ -146,12 +151,12 @@ Action = "delete"
 Source = ["<<modDirectory>>\\High Resolution Texture Pack\\Override\\TEL_rock.tpc", "<<modDirectory>>\\High Resolution Texture Pack\\Override\\TEL_rock02.tpc", "<<modDirectory>>\\High Resolution Texture Pack\\Override\\TEL_rock03.tpc", "<<modDirectory>>\\High Resolution Texture Pack\\Override\\TEL_rock04.tpc", "<<modDirectory>>\\High Resolution Texture Pack\\Override\\TEL_rock05.tpc", "<<modDirectory>>\\High Resolution Texture Pack\\Override\\TEL_rock06.tpc", "<<modDirectory>>\\High Resolution Texture Pack\\Override\\TEL_rock07.tpc", "<<modDirectory>>\\High Resolution Texture Pack\\Override\\TEL_wl05.tpc"]
 Destination = "<<kotorDirectory>>/Override"
 Dependencies = []
-Overwrite = "False"
+Overwrite = "True"
 [[thisMod.Instructions]]
 Action = "move"
 Source = ["<<modDirectory>>/High Resolution Texture Pack/Override/*"]
 Destination = "<<kotorDirectory>>\\Override"
-Overwrite = "False"
+Overwrite = "True"
 
 
 [[thisMod]]
@@ -190,16 +195,16 @@ Destination = "<<kotorDirectory>>/Override"
 Overwrite = "True"
 [[thisMod.Instructions]]
 Action = "delete"
-Source = ["<<modDirectory>>\\Nar Shaddaa HR\\Override\\NAR_wl07.tpc", "<<modDirectory>>\\Nar Shaddaa HR\\Override\\NAR_fl01.tpc", "<<modDirectory>>\\Nar Shaddaa HR\\Override\\NAR_Met4.tpc"]
+Source = ["<<modDirectory>>/Ultimate Nar Shaddaa High Resolution*TPC Version*\\Nar Shaddaa HR\\Override\\NAR_wl07.tpc", "<<modDirectory>>/Ultimate Nar Shaddaa High Resolution*TPC Version*\\Nar Shaddaa HR\\Override\\NAR_fl01.tpc", "<<modDirectory>>/Ultimate Nar Shaddaa High Resolution*TPC Version*\\Nar Shaddaa HR\\Override\\NAR_Met4.tpc"]
 Destination = "<<kotorDirectory>>/Override"
 Dependencies = ["{}"]
-Overwrite = "False"
+Overwrite = "True"
 [[thisMod.Instructions]]
 Action = "move"
-Source = ["<<modDirectory>>/Nar Shaddaa HR/Override/*"]
+Source = ["<<modDirectory>>/Ultimate Nar Shaddaa High Resolution*TPC Version*/Nar Shaddaa HR/Override/*"]
 Destination = "<<kotorDirectory\\Override"
 Restrictions = ["{C5418549-6B7E-4A8C-8B8E-4AA1BC63C732}"]
-Overwrite = "False"
+Overwrite = "True"
 
 
 [[thisMod]]
@@ -215,14 +220,14 @@ Destination = "<<kotorDirectory>>/Override"
 Overwrite = "True"
 [[thisMod.Instructions]]
 Action = "delete"
-Source = ["<<kotorDirectory>>/Ultimate Dantooine High Resolution*TPC Version*/DAN_wall03.tpc", "<<kotorDirectory>>/Ultimate Dantooine High Resolution*TPC Version*/DAN_NEW1.tpc", "<<kotorDirectory>>/Ultimate Dantooine High Resolution*TPC Version*/DAN_MWFl.tpc"]
+Source = ["<<kotorDirectory>>/Ultimate Dantooine High Resolution*TPC Version*/Dantooine HR/DAN_wall03.tpc", "<<kotorDirectory>>/Ultimate Dantooine High Resolution*TPC Version*/Dantooine HR/DAN_NEW1.tpc", "<<kotorDirectory>>/Ultimate Dantooine High Resolution*TPC Version*/Dantooine HR/DAN_MWFl.tpc"]
 Destination = "<<kotorDirectory>>/Override"
 Overwrite = "False"
 [[thisMod.Instructions]]
 Action = "move"
 Source = ["<<kotorDirectory>>/Ultimate Dantooine High Resolution*TPC Version*/Dantooine HR/Override/*"]
 Destination = "<<kotorDirectory>>/Override"
-Overwrite = "False"
+Overwrite = "True"
 
 
 [[thisMod]]
@@ -233,7 +238,7 @@ Dependencies = []
 
 [[thisMod.Instructions]]
 Action = "extract"
-Source = ["<<modDirectory>>/path/to/mod/mod.rar"]
+Source = ["<<modDirectory>>\\Ultimate Dxun High Resolution*TPC Version*.rar"]
 Destination = "<<kotorDirectory>>/Override"
 Overwrite = "True"
 [[thisMod.Instructions]]
@@ -241,5 +246,153 @@ Action = "delete"
 Source = ["<<modDirectory>>\\Ultimate Dxun High Resolution*TPC Version*\\Dxun HR\\Override\\DXN_BWa1.tpc", "<<modDirectory>>\\Ultimate Dxun High Resolution*TPC Version*\\Dxun HR\\Override\\DXN_BWa2.tpc", "<<modDirectory>>\\Ultimate Dxun High Resolution*TPC Version*\\Dxun HR\\Override\\DXN_BWa3.tpc", "<<modDirectory>>\\Ultimate Dxun High Resolution*TPC Version*\\Dxun HR\\Override\\DXN_BWa4.tpc", "<<modDirectory>>\\Ultimate Dxun High Resolution*TPC Version*\\Dxun HR\\Override\\DXN_BWa5.tpc", "<<modDirectory>>\\Ultimate Dxun High Resolution*TPC Version*\\Dxun HR\\Override\\DXN_BWa6.tpc", "<<modDirectory>>\\Ultimate Dxun High Resolution*TPC Version*\\Dxun HR\\Override\\DXN_BWa7.tpc", "<<modDirectory>>\\Ultimate Dxun High Resolution*TPC Version*\\Dxun HR\\Override\\DXN_BWa8.tpc"]
 Destination = "<<kotorDirectory>>/Override"
 Dependencies = ["{C5418549-6B7E-4A8C-8B8E-4AA1BC63C732}"]
+Overwrite = "True"
+[[thisMod.Instructions]]
+Action = "move"
+Source = ["<<modDirectory>>\\Ultimate Dxun High Resolution*TPC Version*\\Dxun HR\\Override\\*"]
+Destination = "<<kotorDirectory>>/Override"
+Overwrite = "True"
+
+
+[[thisMod]]
+Name = "Ultimate Onderon"
+Guid = "{BD52AC23-90B4-4504-A13C-E667736C1EE4}"
+InstallOrder = "0"
+Dependencies = []
+
+[[thisMod.Instructions]]
+Action = "extract"
+Source = ["<<modDirectory>>\\Ultimate Onderon High Resolution*TPC Version*.rar"]
+Destination = "<<kotorDirectory>>/Override"
+Overwrite = "True"
+[[thisMod.Instructions]]
+Action = "delete"
+Source = ["<<modDirectory>>\\Ultimate Onderon High Resolution*TPC Version*\\Onderon HR\\Override\\OND_dor1.tpc", "<<modDirectory>>\\Ultimate Onderon High Resolution*TPC Version*\\Onderon HR\\Override\\OND_dor3.tpc"]
+Destination = "<<kotorDirectory>>/Override"
+Overwrite = "True"
+[[thisMod.Instructions]]
+Action = "move"
+Source = ["<<modDirectory>>\\Ultimate Onderon High Resolution*TPC Version*\\Onderon HR\\Override\\*"]
+Destination = "<<kotorDirectory>>/Override"
+Overwrite = "True"
+
+
+[[thisMod]]
+Name = "Ultimate Korriban"
+Guid = "{6D4E9159-C3FC-4FE4-8FFF-F38FAE447FEE}"
+InstallOrder = "0"
+Dependencies = []
+
+[[thisMod.Instructions]]
+Action = "extract"
+Source = ["<<modDirectory>>\\Ultimate Korriban High Resolution*TPC Version*.rar"]
+Destination = "<<kotorDirectory>>/Override"
+Overwrite = "True"
+[[thisMod.Instructions]]
+Action = "delete"
+Source = ["<<modDirectory>>\\Ultimate Korriban High Resolution*TPC Version*\\Korriban HR\\Override\\KOR_water01.tpc"]
+Destination = "<<kotorDirectory>>/Override"
+Overwrite = "True"
+[[thisMod.Instructions]]
+Action = "move"
+Source = ["<<modDirectory>>\\Ultimate Korriban High Resolution*TPC Version*\\Korriban HR\\Override\\*"]
+Destination = "<<kotorDirectory>>/Override"
+Overwrite = "True"
+
+
+[[thisMod]]
+Name = "Ultimate Malachor"
+Guid = "{5F5F47D6-2982-4AC1-B934-48CCAE2E5C0A}"
+InstallOrder = "0"
+Dependencies = []
+
+[[thisMod.Instructions]]
+Action = "extract"
+Source = ["<<modDirectory>>\\Ultimate Malachor High Resolution*TPC Version*.rar"]
+Destination = "<<kotorDirectory>>/Override"
+Overwrite = "True"
+[[thisMod.Instructions]]
+Action = "move"
+Source = ["<<modDirectory>>\\Ultimate Malachor High Resolution*TPC Version*\\Malachor HR\\Override\\*"]
+Destination = "<<kotorDirectory>>/Override"
 Overwrite = "False"
+
+
+[[thisMod]]
+Name = "PFHC06 Fix"
+Guid = "{9E4DF110-FE56-4A21-A58C-FB521D38B287}"
+InstallOrder = "3"
+Dependencies = []
+
+[[thisMod.Instructions]]
+Action = "extract"
+Source = ["<<modDirectory>>/k2-pfhc06-fix.zip"]
+Destination = "<<kotorDirectory>>/Override"
+Overwrite = "True"
+[[thisMod.Instructions]]
+Action = "move"
+Source = ["<<modDirectory>>\\k2-pfhc06-fix\\*"]
+Destination = "<<modDirectory>>/Override"
+Restrictions = ["{C5418549-6B7E-4A8C-8B8E-4AA1BC63C732}"]
+Overwrite = "True"
+
+
+[[thisMod]]
+Name = "Droid Special Weapons Fix"
+Guid = "{28CE9F69-5C78-4D91-8AF7-3670A3A96226}"
+InstallOrder = "0"
+Dependencies = []
+
+[[thisMod.Instructions]]
+Action = "extract"
+Source = ["<<modDirectory>>/Droid special weapons fix for TSL*.7z"]
+Destination = "<<kotorDirectory>>/Override"
+Overwrite = "True"
+[[thisMod.Instructions]]
+Action = "tslpatcher"
+Source = ["<<modDirectory>>\\Droid special weapons fix for TSL*\\TSLPatcher.exe"]
+Destination = "<<kotorDirectory>>/Override"
+Overwrite = "False"
+Arguments = ""
+
+
+[[thisMod]]
+Name = "Honest Merchant"
+Guid = "{01234567-ABCD-EF01-2345-6789ABCDEF01}"
+InstallOrder = "0"
+Dependencies = []
+
+[[thisMod.Instructions]]
+Action = "extract"
+Source = ["<<modDirectory>>/dendis_merchant_mod.rar"]
+Destination = "<<kotorDirectory>>/Override"
+Overwrite = "True"
+[[thisMod.Instructions]]
+Action = "tslpatcher"
+Source = ["<<modDirectory>>\\dendis_merchant_mod\\TSLPatcher.exe"]
+Destination = "<<kotorDirectory>>/Override"
+Overwrite = "False"
+Arguments = "any command line arguments to pass (none available in TSLPatcher)"
+
+
+[[thisMod]]
+Name = "JC's Minor Fixes"
+Guid = "{0C292CC4-D393-4C91-A59F-7A007ADBEE2A}"
+InstallOrder = "0"
+
+[[thisMod.Instructions]]
+Action = "extract"
+Source = ["<<modDirectory>>/JC's Minor Fixes for K2*.zip"]
+Destination = "<<kotorDirectory>>/Override"
+Overwrite = "True"
+[[thisMod.Instructions]]
+Action = "delete"
+Destination = "<<modDirectory>>/JC's Minor Fixes for K2*/Straight Fixes"
+Dependencies = ["{6777F8ED-8978-49A0-ACE2-3005EFCF1DCF}"]
+Overwrite = "True"
+[[thisMod.Instructions]]
+Action = "move"
+Source = ["<<modDirectory>>/JC's Minor Fixes for K2*/*/*.*"]
+Destination = "<<kotorDirectory>>/Override"
+Overwrite = "True"
 

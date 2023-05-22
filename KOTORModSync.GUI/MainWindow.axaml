@@ -81,6 +81,7 @@
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
 
                     <TreeView x:Name="leftTreeView" MinHeight="350">
@@ -123,12 +124,17 @@
                         <Button Grid.Column="1" Content="▼ Down ▼" Margin="1" Click="MoveDownButton_Click"
                                 HorizontalContentAlignment="Center" VerticalContentAlignment="Center" />
                     </Grid>
-
-                    <StackPanel Grid.Row="3" HorizontalAlignment="Center" Margin="0,2">
-                        <Button Content="Save Editor Changes" Click="SaveButton_Click" />
-                        <Button Content="Save Config to File" Click="SaveModFile_Click" />
-                        <Button Content="Refresh Components" Click="RefreshComponents_Click" />
-                        <Button Content="Install Single Mod" Click="InstallModSingle_Click" />
+                    <Grid Grid.Row="3" HorizontalAlignment="Center" Margin="5,1">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <Button Grid.Column="0" Content="Save Config" Margin="2,0" Click="SaveModFile_Click" />
+                        <Button Grid.Column="1" Content=" Refresh List" Click="RefreshComponents_Click" />
+                    </Grid>
+                    <StackPanel Grid.Row="4" HorizontalAlignment="Center" Margin="0,0">
+                        <Button Content="Apply Editor Changes" Click="SaveButton_Click" />
+                        <Button Content="Install Selected Mod" Margin="0,35" Click="InstallModSingle_Click" />
                     </StackPanel>
                 </Grid>
             </ScrollViewer>

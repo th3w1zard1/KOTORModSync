@@ -220,13 +220,13 @@ namespace KOTORModSync.GUI
 
             // Add the new component to the collection
             _components.Add(newComponent);
+            currentComponent = newComponent;
 
             // Refresh the TreeView to reflect the changes
             RefreshTreeView();
 
             // Set the example deserialized string for the new component
-            string exampleString = Component.defaultComponent += Instruction.defaultInstructions;
-            rightTextBox.Text = exampleString;
+            rightTextBox.Text = Component.defaultComponent + Instruction.defaultInstructions;
         }
 
         private void RemoveComponentButton_Click(object sender, RoutedEventArgs e)
@@ -236,6 +236,7 @@ namespace KOTORModSync.GUI
             {
                 // Remove the selected component from the collection
                 _components.Remove(selectedComponent);
+                currentComponent = null;
 
                 // Refresh the TreeView to reflect the changes
                 RefreshTreeView();
@@ -416,8 +417,11 @@ namespace KOTORModSync.GUI
         }
 
         private async void SaveButton_Click(object sender, RoutedEventArgs e)
-        {   if (currentComponent is null)
-                currentComponent = leftTreeView.SelectedItem as Component;
+        {   if (currentComponent is null && leftTreeView.SelectedItem != null)
+            {
+                var selectedItem = leftTreeView.SelectedItem as TreeViewItem;
+                currentComponent = selectedItem.Tag as Component;
+            }
             if (currentComponent is null)
             {
                 var informationDialog = new InformationDialog();

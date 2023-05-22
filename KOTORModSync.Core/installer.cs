@@ -23,6 +23,7 @@ using static KOTORModSync.Core.Utility.Utility;
 using Microsoft.TeamFoundation.WorkItemTracking.WebApi.Models;
 using static KOTORModSync.Core.ModDirectory;
 using static KOTORModSync.Core.Utility.Serializer;
+using SharpCompress.Readers;
 
 namespace KOTORModSync.Core
 {
@@ -136,28 +137,29 @@ arguments = ""any command line arguments to pass (none available in TSLPatcher)"
 
                                     if (archive != null)
                                     {
-                                        List<ArchiveEntry> archiveEntries = ArchiveHelper.TraverseArchiveEntries(thisFile.FullName);
-
-                                        // Extract entries in parallel
-                                        await Task.WhenAll(archiveEntries.Select(async entry =>
+                                        var reader = archive.ExtractAllEntries();
+                                        while (reader.MoveToNextEntry())
                                         {
-                                            string destinationFolder = Path.GetFileNameWithoutExtension(thisFile.Name);
-                                            string destinationPath = Path.Combine(thisFile.Directory.FullName, destinationFolder, entry.Path);
-                                            Directory.CreateDirectory(Path.GetDirectoryName(destinationPath));
-
-                                            using (Stream outputStream = File.Create(destinationPath))
+                                            if (!reader.Entry.IsDirectory)
                                             {
-                                                IArchiveEntry archiveEntry = archive.Entries.FirstOrDefault(e => e.Key == entry.Path);
-                                                if (archiveEntry != null && !archiveEntry.IsDirectory)
+                                                string destinationFolder = Path.GetFileNameWithoutExtension(thisFile.Name);
+                                                string destinationPath = Path.Combine(thisFile.Directory.FullName, destinationFolder, reader.Entry.Key);
+                                                string destinationDirectory = Path.GetDirectoryName(destinationPath);
+
+                                                Logger.Log($"Extract {reader.Entry.Key} to {thisFile.Directory.FullName}");
+
+                                                if (!Directory.Exists(destinationDirectory))
                                                 {
-                                                    Logger.Log($"Extracting {archiveEntry.Key}");
-                                                    using (Stream entryStream = archiveEntry.OpenEntryStream())
-                                                    {
-                                                        await entryStream.CopyToAsync(outputStream);
-                                                    }
+                                                    Logger.Log($"Create directory {destinationDirectory}");
+                                                    Directory.CreateDirectory(destinationDirectory);
                                                 }
+
+                                                await Task.Run(() =>
+                                                {
+                                                    reader.WriteEntryToDirectory(destinationDirectory, new ExtractionOptions { ExtractFullPath = false, Overwrite = true });
+                                                });
                                             }
-                                        }));
+                                        }
                                     }
                                 }
                             }
@@ -186,6 +188,7 @@ arguments = ""any command line arguments to pass (none available in TSLPatcher)"
                 return false; // Extraction failed
             }
         }
+
 
 
 

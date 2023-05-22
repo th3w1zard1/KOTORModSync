@@ -59,7 +59,9 @@ namespace KOTORModSync.GUI
             {
                 Dispatcher.UIThread.InvokeAsync(() =>
                 {
-                    _logTextBox.Text = _logBuilder.ToString();
+                    var logText = _logBuilder.ToString(); // Get the log text before modifying the UI
+
+                    _logTextBox.Text = logText;
 
                     if (_logScrollViewer != null)
                     {
@@ -69,6 +71,7 @@ namespace KOTORModSync.GUI
                 });
             }
         }
+
         private void logTextBox_TextChanged(object sender, AvaloniaPropertyChangedEventArgs e)
         {
             UpdateLogText();

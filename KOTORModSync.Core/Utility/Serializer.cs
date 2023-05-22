@@ -294,12 +294,15 @@ namespace KOTORModSync.Core.Utility
                 File.WriteAllText(filePath, tomlString);
             }
 
-            public static async Task MoveFileAsync(string sourcePath, string destinationPath) {
+            public static async Task MoveFileAsync(string sourcePath, string destinationPath)
+            {
                 using (var sourceStream = new FileStream(sourcePath, FileMode.Open, FileAccess.Read, FileShare.Read, bufferSize: 4096, useAsync: true))
-                using (var destinationStream = new FileStream(destinationPath, FileMode.CreateNew, FileAccess.Write, FileShare.None, bufferSize: 4096, useAsync: true)) {
+                using (var destinationStream = new FileStream(destinationPath, FileMode.CreateNew, FileAccess.Write, FileShare.None, bufferSize: 4096, useAsync: true))
+                {
                     await sourceStream.CopyToAsync(destinationStream);
                 }
 
+                // The file is closed at this point, so it can be safely deleted
                 File.Delete(sourcePath);
             }
 

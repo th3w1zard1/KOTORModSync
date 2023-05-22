@@ -166,39 +166,31 @@ arguments = ""any command line arguments to pass (none available in TSLPatcher)"
             }
         }
 
-        public async Task<bool> DeleteFile()
+        public async Task<bool> DeleteFileAsync()
         {
             try
             {
                 (List<string> sourcePaths, DirectoryInfo destinationPath) = await ParsePathsAsync();
+
                 var deleteTasks = new List<Task>();
-                int maxDegreeOfParallelism = await Utility.PlatformAgnosticMethods.CalculateMaxDegreeOfParallelismAsync(new DirectoryInfo(this.Source[0]));
-                SemaphoreSlim semaphore = new SemaphoreSlim(maxDegreeOfParallelism); // Set the maximum degree of parallelism
 
                 for (int i = 0; i < sourcePaths.Count; i++)
                 {
                     var thisFile = new FileInfo(sourcePaths[i]);
+
                     if (Path.IsPathRooted(thisFile.FullName))
                     {
-                        // Delete the file asynchronously
-                        Task deleteTask = Task.Run(async () =>
+                        // Delete the file synchronously
+                        try
                         {
-                            await semaphore.WaitAsync(); // Acquire a semaphore slot
-
-                            try
-                            {
-                                File.Delete(thisFile.FullName);
-                                Logger.Log($"Deleting {thisFile.FullName}...");
-                            } catch {
-                                throw;
-                            }
-                            finally
-                            {
-                                semaphore.Release(); // Release the semaphore slot
-                            }
-                        });
-
-                        deleteTasks.Add(deleteTask);
+                            File.Delete(thisFile.FullName);
+                            Logger.Log($"Deleting {thisFile.FullName}...");
+                        }
+                        catch (Exception ex)
+                        {
+                            Logger.LogException(ex);
+                            return false;
+                        }
                     }
                     else
                     {
@@ -207,9 +199,6 @@ arguments = ""any command line arguments to pass (none available in TSLPatcher)"
                         return false;
                     }
                 }
-
-                // Wait for all delete tasks to complete
-                await Task.WhenAll(deleteTasks);
 
                 return true;
             }
@@ -221,47 +210,48 @@ arguments = ""any command line arguments to pass (none available in TSLPatcher)"
         }
 
 
-        public async Task<bool> MoveFile() {
-            try {
 
+        public async Task<bool> MoveFileAsync()
+        {
+            try
+            {
                 (List<string> sourcePaths, DirectoryInfo destinationPath) = await ParsePathsAsync();
-                var moveTasks = new List<Task>();
-                int maxDegreeOfParallelism = await Utility.PlatformAgnosticMethods.CalculateMaxDegreeOfParallelismAsync(new DirectoryInfo(this.Source[0]));
-                SemaphoreSlim semaphore = new SemaphoreSlim(maxDegreeOfParallelism); // Set the maximum degree of parallelism
 
-                for (int i = 0; i < sourcePaths.Count; i++) {
-                    var thisFile = new FileInfo(sourcePaths[i]);
+                foreach (string sourcePath in sourcePaths)
+                {
+                    string fileName = Path.GetFileName(sourcePath);
+                    string destinationFilePath = Path.Combine(destinationPath.FullName, fileName);
+
                     // Check if the destination file already exists
-                    if (this.Overwrite || !File.Exists(Path.Combine(destinationPath.FullName, thisFile.Name)))
+                    if (Overwrite || !File.Exists(destinationFilePath))
                     {
-                        // Move the file asynchronously
-                        Task moveTask = Task.Run(async () =>
+                        // Check if the destination file already exists
+                        if (File.Exists(destinationFilePath))
                         {
-                            await semaphore.WaitAsync(); // Acquire a semaphore slot
+                            Logger.Log($"File already exists, deleting existing file {destinationFilePath}");
+                            // Delete the existing file
+                            File.Delete(destinationFilePath);
+                        } else {
+                            Logger.Log($"File already exists, but overwrite is false. Skipping file {destinationFilePath}");
+                            continue;
+                        }
 
-                            try {
-                                await Serializer.FileHandler.MoveFileAsync(thisFile.FullName, destinationPath.FullName);
-                                Logger.Log($"Moving {thisFile.FullName} to {destinationPath}... Overwriting? {this.Overwrite}");
-                            } catch {
-                                throw;
-                            } finally {
-                                semaphore.Release(); // Release the semaphore slot
-                            }
-                        });
-
-                        moveTasks.Add(moveTask);
+                        // Move the file
+                        Logger.Log($"Moving {sourcePath} to {destinationFilePath}... Overwriting? {Overwrite}");
+                        File.Move(sourcePath, destinationFilePath);
                     }
                 }
 
-                // Wait for all move tasks to complete
-                await Task.WhenAll(moveTasks);
-
                 return true;
-            } catch (Exception ex) {
+            }
+            catch (Exception ex)
+            {
                 Logger.LogException(ex);
                 return false;
             }
         }
+
+
 
         public async Task<bool> ExecuteProgramAsync()
         {
@@ -722,10 +712,10 @@ arguments = ""any command line arguments to pass (none available in TSLPatcher)"
                             success = await instruction.ExtractFileAsync();
                             break;
                         case "delete":
-                            success = await instruction.DeleteFile();
+                            success = await instruction.DeleteFileAsync();
                             break;
                         case "move":
-                            success = await instruction.MoveFile();
+                            success = await instruction.MoveFileAsync();
                             break;
                         case "patch":
                         case "tslpatcher":

@@ -56,7 +56,7 @@ namespace KOTORModSync.GUI
             }
         }
 
-        public static IControl? Build(object data)
+        public static IControl Build(object data)
         {
             if (data is Component component)
             {
@@ -99,7 +99,7 @@ namespace KOTORModSync.GUI
             return null;
         }
 
-        private async Task<string?> OpenFile()
+        private async Task<string> OpenFile()
         {
             OpenFileDialog dialog = new OpenFileDialog();
             dialog.AllowMultiple = false;
@@ -107,10 +107,10 @@ namespace KOTORModSync.GUI
             dialog?.Filters?.Add(new FileDialogFilter() { Name = "All Files", Extensions = { "*" } });
 
             // Show the dialog and wait for a result.
-            Window? parent = this.VisualRoot as Window;
+            Window parent = this.VisualRoot as Window;
             if (parent != null)
             {
-                string[]? strings = await dialog.ShowAsync(parent);
+                string[] strings = await dialog.ShowAsync(parent);
                 string[] files = strings;
                 if (files != null && files.Length > 0)
                 {
@@ -127,14 +127,14 @@ namespace KOTORModSync.GUI
             return null;
         }
 
-        private async Task<string?> SaveFile()
+        private async Task<string> SaveFile()
         {
             SaveFileDialog dialog = new SaveFileDialog();
             dialog.DefaultExtension = "toml";
             dialog?.Filters?.Add(new FileDialogFilter() { Name = "Mod Sync File", Extensions = { "toml", "tml" } });
 
             // Show the dialog and wait for a result.
-            Window? parent = this.VisualRoot as Window;
+            Window parent = this.VisualRoot as Window;
             if (parent != null)
             {
                 string filePath = await dialog.ShowAsync(parent);
@@ -247,12 +247,12 @@ namespace KOTORModSync.GUI
             RefreshTreeView();
         }
 
-        private async Task<string?> OpenFolder()
+        private async Task<string> OpenFolder()
         {
             OpenFolderDialog dialog = new OpenFolderDialog();
 
             // Show the dialog and wait for a result.
-            Window? parent = this.VisualRoot as Window;
+            Window parent = this.VisualRoot as Window;
             if (parent != null)
             {
                 string selectedFolder = await dialog.ShowAsync(parent);
@@ -416,7 +416,8 @@ namespace KOTORModSync.GUI
         }
 
         private async void SaveButton_Click(object sender, RoutedEventArgs e)
-        {
+        {   if (currentComponent is null)
+                currentComponent = leftTreeView.SelectedItem as Core.Component;
             if (currentComponent is null)
             {
                 var informationDialog = new InformationDialog();
@@ -653,10 +654,10 @@ namespace KOTORModSync.GUI
 
 
 
-        private void WriteTreeViewItemsToFile(IEnumerable<TreeViewItem> items, string? filePath)
+        private void WriteTreeViewItemsToFile(IEnumerable<TreeViewItem> items, string filePath)
         {
             string randomFileName = System.IO.Path.GetFileNameWithoutExtension(System.IO.Path.GetRandomFileName());
-            filePath ??= $"modconfig_{randomFileName}.toml";
+            filePath = filePath ?? $"modconfig_{randomFileName}.toml";
 
             using (StreamWriter writer = new StreamWriter(filePath))
             {
@@ -702,7 +703,7 @@ namespace KOTORModSync.GUI
             this.canExecute = canExecute;
         }
 
-        public event EventHandler? CanExecuteChanged;
+        public event EventHandler CanExecuteChanged;
 
         public bool CanExecute(object parameter) => canExecute == null || canExecute(parameter);
         public void Execute(object parameter) => execute(parameter);

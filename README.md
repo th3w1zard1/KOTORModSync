@@ -1,5 +1,5 @@
 # KOTORModSync
-KOTORModSync is a multi-mod installer for KOTOR games that makes it easier to install and manage mods. I created this the day that in 3 separate attempts I failed a different step in a modbuild install. Going through the manual install and getting anxious when an instruction could be ambiguous or have multiple meanings. I usually install the modbuild every year or so. the last time I did so I made a mistake on a single different step 3 times in a row and had to start over for each. So I decided to build a tool to simplify the process.
+KOTORModSync is a multi-mod installer for KOTOR games that makes it easier to install and manage mods. I usually install the Snigaroo modbuild every year or so. The last time I did so I made a mistake on a single different step 3 times in a row and had to start over each time. So I decided to build a tool to simplify the process.
 
 ## Features
 A flexible configuration editor and parser utilizing TOML syntax, which is very similar to INI.

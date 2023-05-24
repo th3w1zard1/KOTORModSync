@@ -413,13 +413,41 @@ namespace KOTORModSync.Core.Utility
 
             public static bool WildcardMatch(string input, string patternInput)
             {
-                string pattern = "^" + patternInput
-                    .Replace("*", @"[^\\/]+")
-                    .Replace("?", @"[^\\/]")
-                    .Replace("\\", "\\\\") + "$";
+                // Split the input and pattern into directory levels
+                string[] inputLevels = input.Split(Path.DirectorySeparatorChar);
+                string[] patternLevels = patternInput.Split(Path.DirectorySeparatorChar);
 
-                return Regex.IsMatch(input, pattern);
+                // Ensure the number of levels match
+                if (inputLevels.Length != patternLevels.Length)
+                    return false;
+
+                // Iterate over each level and perform wildcard matching
+                for (int i = 0; i < inputLevels.Length; i++)
+                {
+                    string inputLevel = inputLevels[i];
+                    string patternLevel = patternLevels[i];
+
+                    // Check if the current level is a wildcard
+                    if (patternLevel == "*" || patternLevel == "?")
+                        continue;
+
+                    // Check if the current level matches the pattern
+                    if (!WildcardMatchLevel(inputLevel, patternLevel))
+                        return false;
+                }
+
+                return true;
             }
+
+            private static bool WildcardMatchLevel(string input, string pattern)
+            {
+                // Replace * with .* and ? with . in the pattern
+                pattern = pattern.Replace("*", ".*").Replace("?", ".");
+
+                // Use regex to perform the wildcard matching
+                return Regex.IsMatch(input, $"^{pattern}$");
+            }
+
 
 
             public static List<Component> ReadComponentsFromFile(string filePath)

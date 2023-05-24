@@ -413,9 +413,10 @@ namespace KOTORModSync.Core.Utility
 
             public static bool WildcardMatch(string input, string patternInput)
             {
-                string pattern = "^" + Regex.Escape(patternInput)
-                    .Replace("\\*", ".*")
-                    .Replace("\\?", ".") + "$";
+                string pattern = "^" + patternInput
+                    .Replace("*", @"[^\\/]+")
+                    .Replace("?", @"[^\\/]")
+                    .Replace("\\", "\\\\") + "$";
 
                 return Regex.IsMatch(input, pattern);
             }

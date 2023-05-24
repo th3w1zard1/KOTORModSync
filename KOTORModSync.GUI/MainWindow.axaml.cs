@@ -318,12 +318,14 @@ namespace KOTORModSync.GUI
             // Call the ExecuteInstructions method asynchronously using Task.Run
             try
             {
+                if (thisComponent.Directions != null)
+                {
+                    _ = InformationDialog.ShowInformationDialog(this, thisComponent.Directions);
+                }
                 var result = await Task.Run(() => thisComponent.ExecuteInstructions(confirmationDialogCallback, _components));
                 if (!result.success)
                 {
-                    var informationDialog = new InformationDialog();
-                    informationDialog.InfoText = $"There was a problem installing {thisComponent.Name}, please check the output window";
-                    await informationDialog.ShowDialog<bool?>(this);
+                    await InformationDialog.ShowInformationDialog(this, $"There was a problem installing {thisComponent.Name}, please check the output window");
                     return;
                 }
                 else
@@ -362,22 +364,31 @@ namespace KOTORModSync.GUI
             for (int i = 0; i < _components.Count; i++)
             {
                 Component component = _components[i];
-                Dispatcher.UIThread.Post(() =>
+                await Dispatcher.UIThread.InvokeAsync(async () =>
                 {
-                    progressWindow.progressTextBlock.Text = $"Installing {component.Name}...";
+                    progressWindow.progressTextBlock.Text = $"Installing {component.Name}...\nDirections: {component.Directions}";
                     progressWindow.progressBar.Value = 0;
+
+                    // Additional fallback options
+                    await Task.Delay(100); // Introduce a small delay
+                    await Dispatcher.UIThread.InvokeAsync(() => { }); // Invoke an empty action to ensure UI updates are processed
+                    await Task.Delay(50); // Introduce another small delay
                 });
 
-                // Allow the UI thread to process pending updates
+                // Ensure the UI updates are processed
                 await Task.Yield();
+                await Task.Delay(200);
+
+                // Further code execution
+
 
                 // Call the ExecuteInstructions method asynchronously using Task.Run
-                Logger.Log($"Installing {component.Name}");
+                Logger.Log($"Call ExecuteInstructions for {component.Name}...");
                 (bool success, Dictionary<FileInfo, SHA1> originalChecksums) = await component.ExecuteInstructions(new ConfirmationDialogCallback(this), _components);
 
                 if (!success)
                 {
-                    if (!await ConfirmationDialog.ShowConfirmationDialog(this, $"There was a problem installing {component.Name}, please check the output window. Continue with the next mod anyway?"))
+                    if (!await ConfirmationDialog.ShowConfirmationDialog(this, $"There was a problem installing {component.Name}, please check the output window.\n\nContinue with the next mod anyway?"))
                     {
                         break;
                     }
@@ -397,11 +408,6 @@ namespace KOTORModSync.GUI
                 progressWindow.Dispose();
             }
         }
-
-
-
-
-
 
         private async void DocsButton_Click(object sender, RoutedEventArgs e)
         {

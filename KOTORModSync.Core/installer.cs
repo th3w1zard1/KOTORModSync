@@ -257,7 +257,7 @@ arguments = ""any command line arguments to pass (none available in TSLPatcher)"
                     string destinationFilePath = Path.Combine(destinationPath.FullName, fileName);
 
                     // Check if the destination file already exists
-                    if (Overwrite || !File.Exists(destinationFilePath))
+                    if (this.Overwrite || !File.Exists(destinationFilePath))
                     {
                         // Check if the destination file already exists
                         if (File.Exists(destinationFilePath))
@@ -268,18 +268,18 @@ arguments = ""any command line arguments to pass (none available in TSLPatcher)"
                         }
                         else
                         {
-                            Logger.Log($"File already exists, but overwrite is false. Skipping file {destinationFilePath}");
-                            continue;
+                            Logger.Log($"File doesn't exist at the destination {destinationFilePath}");
                         }
 
                         // Move the file
                         Logger.Log($"Moving {sourcePath} to {destinationFilePath}... Overwriting? {Overwrite}");
                         File.Move(sourcePath, destinationFilePath);
                     }
-                    else if (!Overwrite)
+                    else if (!this.Overwrite)
                     {
                         Logger.Log($"File already exists, but overwrite is false. Skipping file {destinationFilePath}");
                     }
+
                 }
 
                 return true;

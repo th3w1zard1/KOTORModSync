@@ -10,6 +10,10 @@ namespace KOTORModSync.GUI
 {
     public partial class InformationDialog : Window
     {
+        public static readonly StyledProperty<string> TitleProperty =
+            AvaloniaProperty.Register<InformationDialog, string>(nameof(Title), "Information");
+        public static readonly AvaloniaProperty InfoTextProperty =
+            AvaloniaProperty.Register<InformationDialog, string>("InfoText");
         public InformationDialog()
         {
             InitializeComponent();
@@ -20,10 +24,12 @@ namespace KOTORModSync.GUI
             AvaloniaXamlLoader.Load(this);
         }
 
-        public static async Task ShowInformationDialog(Window parentWindow, string message) => await new InformationDialog(){ InfoText = message }.ShowDialog<bool?>(parentWindow);
+        public static async Task ShowInformationDialog(Window parentWindow, string message, string title = "Information")
+        {
+            var dialog = new InformationDialog { Title = title, InfoText = message };
+            _ = await dialog.ShowDialog<bool?>(parentWindow);
+        }
 
-        public static readonly AvaloniaProperty InfoTextProperty =
-            AvaloniaProperty.Register<InformationDialog, string>("InfoText");
 
         public string InfoText
         {

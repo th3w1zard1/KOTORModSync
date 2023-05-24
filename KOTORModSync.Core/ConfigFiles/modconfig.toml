@@ -45,6 +45,7 @@ InstallOrder = "0"
 Dependencies = []
 Author = "Rovan"
 Tier = "Recommended"
+Directions = "I advise users to only install the Jedi Master/Sith Lord fixes."
 Description = "For some reason, some prestige classes in KOTOR 2 have worse saving throws than their predecessor class. This mod fixes this, ensuring that the more advanced classes always have slightly better throws."
 Category = "Mechanics Change"
 

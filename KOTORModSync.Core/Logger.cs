@@ -10,8 +10,8 @@ namespace KOTORModSync.Core
 {
     public static class Logger
     {
-        public static event Action<string> Logged;
-        public static event Action<Exception> ExceptionLogged;
+        public static event Action<string> Logged = delegate { };
+        public static event Action<Exception> ExceptionLogged = delegate { };
 
         private static readonly string LogFileName = "log.txt";
         private static bool isInitialized = false;

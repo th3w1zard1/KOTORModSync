@@ -83,7 +83,7 @@ arguments = ""any command line arguments to pass (none available in TSLPatcher)"
         public static async Task<bool> ExecuteInstructionAsync(Func<Task<bool>> instructionMethod) => await instructionMethod().ConfigureAwait(false);
 
 
-        private async Task<(List<string>, DirectoryInfo)> ParsePathsAsync()
+        private (List<string>, DirectoryInfo) ParsePaths()
         {
             var sourcePaths = new List<string>();
             // Enumerate the files/folders with wildcards and add them to the list
@@ -91,11 +91,15 @@ arguments = ""any command line arguments to pass (none available in TSLPatcher)"
             {
                 sourcePaths.Add(Utility.Utility.ReplaceCustomVariables(this.Source[i]));
             }
-            sourcePaths = await FileHandler.EnumerateFilesWithWildcards(sourcePaths);
+            sourcePaths = FileHandler.EnumerateFilesWithWildcards(sourcePaths);
             DirectoryInfo destinationPath = null;
             if (this.Destination != null)
             {
                 destinationPath = new DirectoryInfo(Utility.Utility.ReplaceCustomVariables(this.Destination));
+            }
+            if (sourcePaths.Count == 0)
+            {
+                throw new Exception($"Could not find any files! Source: {string.Join(", ", this.Source)}");
             }
             return (sourcePaths, destinationPath);
         }
@@ -104,7 +108,7 @@ arguments = ""any command line arguments to pass (none available in TSLPatcher)"
         {
             try
             {
-                (List<string> sourcePaths, DirectoryInfo _) = await ParsePathsAsync();
+                (List<string> sourcePaths, DirectoryInfo _) = ParsePaths();
                 List<Task> extractionTasks = new List<Task>();
 
                 // Use SemaphoreSlim to limit concurrent extractions
@@ -201,7 +205,7 @@ arguments = ""any command line arguments to pass (none available in TSLPatcher)"
         {
             try
             {
-                (List<string> sourcePaths, DirectoryInfo destinationPath) = await ParsePathsAsync();
+                (List<string> sourcePaths, DirectoryInfo destinationPath) = ParsePaths();
 
                 var deleteTasks = new List<Task>();
 
@@ -246,8 +250,7 @@ arguments = ""any command line arguments to pass (none available in TSLPatcher)"
         {
             try
             {
-                (List<string> sourcePaths, DirectoryInfo destinationPath) = await ParsePathsAsync();
-
+                (List<string> sourcePaths, DirectoryInfo destinationPath) = ParsePaths();
                 foreach (string sourcePath in sourcePaths)
                 {
                     string fileName = Path.GetFileName(sourcePath);
@@ -262,7 +265,9 @@ arguments = ""any command line arguments to pass (none available in TSLPatcher)"
                             Logger.Log($"File already exists, deleting existing file {destinationFilePath}");
                             // Delete the existing file
                             File.Delete(destinationFilePath);
-                        } else {
+                        }
+                        else
+                        {
                             Logger.Log($"File already exists, but overwrite is false. Skipping file {destinationFilePath}");
                             continue;
                         }
@@ -270,6 +275,10 @@ arguments = ""any command line arguments to pass (none available in TSLPatcher)"
                         // Move the file
                         Logger.Log($"Moving {sourcePath} to {destinationFilePath}... Overwriting? {Overwrite}");
                         File.Move(sourcePath, destinationFilePath);
+                    }
+                    else if (!Overwrite)
+                    {
+                        Logger.Log($"File already exists, but overwrite is false. Skipping file {destinationFilePath}");
                     }
                 }
 
@@ -292,7 +301,7 @@ arguments = ""any command line arguments to pass (none available in TSLPatcher)"
         {
             try
             {
-                (List<string> sourcePaths, DirectoryInfo _) = await ParsePathsAsync();
+                (List<string> sourcePaths, DirectoryInfo _) = ParsePaths();
                 bool isSuccess = false; // Track the success status
                 for (int i = 0; i < sourcePaths.Count; i++)
                 {
@@ -352,7 +361,7 @@ arguments = ""any command line arguments to pass (none available in TSLPatcher)"
         {
             try
             {
-                (List<string> sourcePaths, _) = await ParsePathsAsync();
+                (List<string> sourcePaths, _) = ParsePaths();
                 bool isSuccess = true; // Track the success status
 
                 foreach (string sourcePath in sourcePaths)
@@ -459,7 +468,7 @@ arguments = ""any command line arguments to pass (none available in TSLPatcher)"
         {
             bool errors = false;
             bool found = false;
-            (List<string> sourcePaths, DirectoryInfo _) = await ParsePathsAsync();
+            (List<string> sourcePaths, DirectoryInfo _) = ParsePaths();
             foreach (string sourcePath in sourcePaths)
             {
                 // Verify if any error or warning message is present in the install.rtf file
@@ -669,7 +678,7 @@ arguments = ""any command line arguments to pass (none available in TSLPatcher)"
                 if (pathValue is string path)
                 {
                     string formattedPath = FixPathFormatting(path);
-                    dict[key] = new List<string> { formattedPath };
+                    dict[key] = new List<string> { PrefixPath(formattedPath) };
                 }
                 else if (pathValue is IList<string> paths)
                 {
@@ -677,11 +686,21 @@ arguments = ""any command line arguments to pass (none available in TSLPatcher)"
                     {
                         string currentPath = paths[index];
                         string formattedPath = FixPathFormatting(currentPath);
-                        paths[index] = formattedPath;
+                        paths[index] = PrefixPath(formattedPath);
                     }
                 }
             }
         }
+
+        private static string PrefixPath(string path)
+        {
+            if (!path.StartsWith("<<modDirectory>>") && !path.StartsWith("<<kotorDirectory>>"))
+            {
+                return "<<modDirectory>>" + path;
+            }
+            return path;
+        }
+
 
         public static string FixPathFormatting(string path)
         {
@@ -868,7 +887,15 @@ arguments = ""any command line arguments to pass (none available in TSLPatcher)"
                             break;
                         case "backup": //todo
                         case "rename": //todo
-                        case "dialog": //todo
+                        case "confirm":
+                            /*(var sourcePaths, var something) = instruction.ParsePaths();
+                            bool confirmationResult = await confirmDialog.ShowConfirmationDialog(sourcePaths.FirstOrDefault());
+                            if (!confirmationResult)
+                            {
+                                this.Confirmations.Add(true);
+                            }
+                            break;*/
+                        case "inform":
                         default:
                             // Handle unknown instruction type here
                             Logger.Log($"Unknown instruction {instruction.Action}");

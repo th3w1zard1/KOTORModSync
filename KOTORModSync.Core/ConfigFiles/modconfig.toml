@@ -308,12 +308,12 @@ Dependencies = []
 
 [[thisMod.Instructions]]
 Action = "extract"
-Source = ["<<modDirectory>>\\Ultimate Malachor High Resolution*TPC Version*.rar"]
+Source = ["<<modDirectory>>\\Ultimate Malachor V High Resolution*TPC Version*.rar"]
 Destination = "<<kotorDirectory>>/Override"
 Overwrite = "True"
 [[thisMod.Instructions]]
 Action = "move"
-Source = ["<<modDirectory>>\\Ultimate Malachor High Resolution*TPC Version*\\Malachor HR\\Override\\*"]
+Source = ["<<modDirectory>>\\Ultimate Malachor V High Resolution*TPC Version*\\Malachor V HR\\Override\\*"]
 Destination = "<<kotorDirectory>>/Override"
 Overwrite = "False"
 

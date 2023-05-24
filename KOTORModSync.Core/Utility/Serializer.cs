@@ -332,74 +332,93 @@ namespace KOTORModSync.Core.Utility
 
                 return component;
             }
-            public static async Task<List<string>> EnumerateFilesWithWildcards(IEnumerable<string> filesAndFolders)
+            public static List<string> EnumerateFilesWithWildcards(IEnumerable<string> filesAndFolders)
             {
-                var filesToDelete = new List<string>();
+                List<string> result = new List<string>();
 
-                foreach (string fileStrPath in filesAndFolders)
+                HashSet<string> uniquePaths = new HashSet<string>(filesAndFolders);
+
+                foreach (string path in uniquePaths)
                 {
-                    string directory = Path.GetDirectoryName(fileStrPath);
-                    string pattern = Path.GetFileName(fileStrPath);
+                    if (string.IsNullOrEmpty(path))
+                        continue;
 
-                    if (!string.IsNullOrEmpty(directory))
+                    try
                     {
-                        List<string> matchingFiles = await EnumerateFilesWithWildcards(directory, pattern);
-                        filesToDelete.AddRange(matchingFiles);
-                    }
-                    else
-                    {
-                        filesToDelete.Add(fileStrPath);
-                    }
-                }
-
-                return filesToDelete;
-            }
-
-            public static async Task<List<string>> EnumerateFilesWithWildcards(string directory, string pattern, bool excludeDirectories = true)
-            {
-                var matchingFiles = new List<string>();
-
-                string directoryPath = Path.GetDirectoryName(directory);
-                string directoryNamePattern = Path.GetFileName(directory);
-
-                IEnumerable<string> matchingDirectories = Directory.GetDirectories(directoryPath, directoryNamePattern, SearchOption.TopDirectoryOnly);
-
-                foreach (string matchingDirectory in matchingDirectories)
-                {
-                    string filePattern = Path.GetFileName(pattern);
-                    string regexPattern = "^" + Regex.Escape(filePattern)
-                                               .Replace("\\*", ".*")
-                                               .Replace("\\?", ".")
-                                               + "$";
-
-                    IEnumerable<string> files = Directory.EnumerateFiles(matchingDirectory, "*", SearchOption.AllDirectories);
-                    foreach (string file in files)
-                    {
-                        if (Regex.IsMatch(Path.GetFileName(file), regexPattern))
+                        if (!ContainsWildcards(path))
                         {
-                            matchingFiles.Add(file);
-                        }
-                    }
-
-                    if (!excludeDirectories)
-                    {
-                        IEnumerable<string> directories = Directory.EnumerateDirectories(matchingDirectory, "*", SearchOption.AllDirectories);
-                        foreach (string subdirectory in directories)
-                        {
-                            if (Regex.IsMatch(Path.GetFileName(subdirectory), regexPattern))
+                            // Handle non-wildcard paths
+                            if (File.Exists(path))
                             {
-                                matchingFiles.Add(subdirectory);
+                                result.Add(path);
+                            }
+                            else if (Directory.Exists(path))
+                            {
+                                IEnumerable<string> matchingFiles = Directory.EnumerateFiles(path, "*", SearchOption.AllDirectories);
+                                result.AddRange(matchingFiles);
+                            }
+                        }
+                        else
+                        {
+                            // Handle wildcard paths
+                            string directory = Path.GetDirectoryName(path);
+
+                            if (!string.IsNullOrEmpty(directory) && Directory.Exists(directory))
+                            {
+                                IEnumerable<string> matchingFiles = Directory.EnumerateFiles(directory, Path.GetFileName(path), SearchOption.AllDirectories);
+                                result.AddRange(matchingFiles);
+                            }
+                            else
+                            {
+                                // Handle wildcard paths
+                                string currentDirectory = path;
+
+                                while (ContainsWildcards(currentDirectory))
+                                {
+                                    string parentDirectory = Path.GetDirectoryName(currentDirectory);
+                                    if (string.IsNullOrEmpty(parentDirectory) || parentDirectory == currentDirectory)
+                                        break; // Exit the loop if no parent directory is found or if the parent directory is the same as the current directory
+                                    currentDirectory = parentDirectory;
+                                }
+
+                                if (!string.IsNullOrEmpty(currentDirectory) && Directory.Exists(currentDirectory))
+                                {
+                                    IEnumerable<string> checkFiles = Directory.EnumerateFiles(currentDirectory, "*", SearchOption.AllDirectories);
+                                    foreach (string thisFile in checkFiles)
+                                    {
+                                        if (WildcardMatch(thisFile, path))
+                                        {
+                                            result.Add(thisFile);
+                                        }
+                                    }
+
+                                }
                             }
                         }
                     }
+                    catch (Exception ex)
+                    {
+                        // Handle or log the exception as required
+                        Console.WriteLine($"An error occurred while processing path '{path}': {ex.Message}");
+                    }
                 }
 
-                return matchingFiles;
+                return result;
             }
 
+            private static bool ContainsWildcards(string path)
+            {
+                return path.Contains("*") || path.Contains("?");
+            }
 
+            public static bool WildcardMatch(string input, string patternInput)
+            {
+                string pattern = "^" + Regex.Escape(patternInput)
+                    .Replace("\\*", ".*")
+                    .Replace("\\?", ".") + "$";
 
-
+                return Regex.IsMatch(input, pattern);
+            }
 
 
             public static List<Component> ReadComponentsFromFile(string filePath)

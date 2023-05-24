@@ -46,7 +46,7 @@ namespace KOTORModSync.Core
             Debug.WriteLine(logMessage);
             File.AppendAllText(LogFileName, logMessage + Environment.NewLine);
 
-            Logged?.Invoke(logMessage); // Raise the Logged event
+            Logged.Invoke(logMessage); // Raise the Logged event
         }
 
         public static void LogException(Exception ex)
@@ -54,7 +54,7 @@ namespace KOTORModSync.Core
             Log($"Exception: {ex.GetType().Name} - {ex.Message}");
             Log($"Stack trace: {ex.StackTrace}");
 
-            ExceptionLogged?.Invoke(ex); // Raise the ExceptionLogged event
+            ExceptionLogged.Invoke(ex); // Raise the ExceptionLogged event
         }
 
         private static void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)

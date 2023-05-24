@@ -57,10 +57,11 @@ namespace KOTORModSync.GUI
         {
             lock (_logBuilder)
             {
+                // Create a local copy of _logBuilder to avoid accessing it from multiple threads
+                var logText = _logBuilder.ToString();
+
                 Dispatcher.UIThread.InvokeAsync(() =>
                 {
-                    var logText = _logBuilder.ToString(); // Get the log text before modifying the UI
-
                     _logTextBox.Text = logText;
 
                     if (_logScrollViewer != null)
@@ -71,6 +72,7 @@ namespace KOTORModSync.GUI
                 });
             }
         }
+
 
         private void logTextBox_TextChanged(object sender, AvaloniaPropertyChangedEventArgs e)
         {

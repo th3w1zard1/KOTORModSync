@@ -179,7 +179,7 @@ Action = "move"
 Source = ["<<modDirectory>>\\Ultimate Character Overhaul*TPC Version*\\KOTORII - Ultimate Character Overhaul\\*"]
 Destination = "<<kotorDirectory>>/Override"
 Dependencies = []
-Overwrite = "False"
+Overwrite = "True"
 
 
 [[thisMod]]
@@ -358,7 +358,7 @@ Arguments = ""
 
 [[thisMod]]
 Name = "Honest Merchant"
-Guid = "{01234567-ABCD-EF01-2345-6789ABCDEF01}"
+Guid = "{9309C26D-83EA-4188-BFE7-55719EE7BCB7}"
 InstallOrder = "0"
 Dependencies = []
 
@@ -372,7 +372,7 @@ Action = "tslpatcher"
 Source = ["<<modDirectory>>\\dendis_merchant_mod\\TSLPatcher.exe"]
 Destination = "<<kotorDirectory>>/Override"
 Overwrite = "False"
-Arguments = "any command line arguments to pass (none available in TSLPatcher)"
+Arguments = ""
 
 
 [[thisMod]]
@@ -387,12 +387,745 @@ Destination = "<<kotorDirectory>>/Override"
 Overwrite = "True"
 [[thisMod.Instructions]]
 Action = "delete"
-Destination = "<<modDirectory>>/JC's Minor Fixes for K2*/Straight Fixes"
+Source = ["<<modDirectory>>/JC's Minor Fixes for K2*/Straight Fixes"]
+Destination = "<<kotorDirectory>>/Override"
 Dependencies = ["{6777F8ED-8978-49A0-ACE2-3005EFCF1DCF}"]
 Overwrite = "True"
 [[thisMod.Instructions]]
 Action = "move"
 Source = ["<<modDirectory>>/JC's Minor Fixes for K2*/*/*.*"]
+Destination = "<<kotorDirectory>>/Override"
+Overwrite = "True"
+
+
+[[thisMod]]
+Name = "Maintenance Reskin"
+Guid = "{DE4C49E4-D478-426B-960D-05E0ED02FCAD}"
+InstallOrder = "0"
+
+[[thisMod.Instructions]]
+Action = "extract"
+Source = ["<<modDirectory>>/Maintenance_Officer_New_Dead_*.zip"]
+Destination = "<<kotorDirectory>>/Override"
+Overwrite = "True"
+[[thisMod.Instructions]]
+Action = "move"
+Source = ["<<modDirectory>>\\Maintenance_Officer_New_Dead_*\\*.*"]
+Destination = "<<kotorDirectory>>/Override"
+Overwrite = "True"
+
+
+[[thisMod]]
+Name = "HI-Res Beam Effects"
+Guid = "{6FDA5D59-1DAF-4668-902C-1218849B43C9}"
+InstallOrder = "0"
+Dependencies = []
+
+[[thisMod.Instructions]]
+Action = "extract"
+Source = ["<<modDirectory>>/DI_HRBM_2.7z"]
+Destination = "<<kotorDirectory>>/Override"
+Overwrite = "True"
+[[thisMod.Instructions]]
+Action = "move"
+Source = ["<<modDirectory>>\\DI_HRBM_2\\*"]
+Destination = "<<kotorDirectory>>/Override"
+Overwrite = "True"
+
+
+[[thisMod]]
+Name = "Fire and Ice HD"
+Guid = "{0A2AEC18-0DCC-4A03-87B4-6F95658B2D57}"
+InstallOrder = "0"
+Author = "InSidious"
+
+[[thisMod.Instructions]]
+Action = "extract"
+Source = ["<<modDirectory>>/FireandIceHDWhee.zip"]
+Destination = "<<kotorDirectory>>\\Override\\"
+Overwrite = "True"
+[[thisMod.Instructions]]
+Action = "move"
+Source = ["<<modDirectory>>/FireandIceHDWhee/*.*"]
+Destination = "<<kotorDirectory>>\\Override\\"
+Overwrite = "True"
+
+
+[[thisMod]]
+Name = "Animated Energy Shields"
+Guid = "{2D527031-E9F7-4650-8121-C416ED51DBD1}"
+InstallOrder = "0"
+
+[[thisMod.Instructions]]
+Action = "extract"
+Source = ["<<modDirectory>>/Animated energy shields.rar"]
+Destination = "<<kotorDirectory>>/Override"
+Overwrite = "True"
+[[thisMod.Instructions]]
+Action = "move"
+Source = ["<<modDirectory>>\\Animated energy shields\\*.*"]
+Destination = "<<kotorDirectory>>/Override"
+Overwrite = "True"
+
+
+[[thisMod]]
+Name = "Blaster Visual Effects"
+Guid = "{48506FB8-87D9-4B39-BC1A-AD467D0961FE}"
+InstallOrder = "3"
+Language = ["All"]
+
+[[thisMod.Instructions]]
+Action = "extract"
+Source = ["<<modDirectory>>/JC's Blaster Visual Effects for K2.zip"]
+Destination = "<<kotorDirectory>>/Override"
+Overwrite = "True"
+[[thisMod.Instructions]]
+Action = "move"
+Source = ["<<modDirectory>>\\JC's Blaster Visual Effects for K2\\Override\\*.*"]
+Destination = "<<kotorDirectory>>\\Override"
+Overwrite = "True"
+
+
+[[thisMod]]
+Name = "Head Model Fixes"
+Guid = "{F1D95386-A33D-4B8A-A3A6-F63C6EABC426}"
+InstallOrder = "3"
+Language = ["All"]
+
+[[thisMod.Instructions]]
+Action = "extract"
+Source = ["<<modDirectory>>/TSL_Head_Model_Fixes_by_RedRob41.zip"]
+Destination = "<<kotorDirectory>>/Override"
+Overwrite = "True"
+[[thisMod.Instructions]]
+Action = "move"
+Source = ["<<modDirectory>>\\TSL_Head_Model_Fixes_by_RedRob41\\*.*"]
+Destination = "<<kotorDirectory>>/Override"
+Overwrite = "True"
+
+
+[[thisMod]]
+Name = "New Holocron Textures"
+Guid = "{A9677043-1ED4-4C32-B11C-D92423FC2955}"
+InstallOrder = "3"
+Author = "Sith Holocron"
+Description = "Retextures the Sith Holocrons present in Atris's meditation chamber on Telos and gives them a pulsing animation."
+
+[[thisMod.Instructions]]
+Action = "extract"
+Source = ["<<modDirectory>>/AtrisHolocron.7z"]
+Destination = "<<kotorDirectory>>/Override"
+Overwrite = "True"
+[[thisMod.Instructions]]
+Action = "move"
+Source = ["<<modDirectory>>\\AtrisHolocron\\Animated Version\\*.*"]
+Destination = "<<kotorDirectory>>/Override"
+Overwrite = "True"
+
+
+[[thisMod]]
+Name = "Thigh-High Boots for Twi'lek"
+Guid = "{B9F551FC-9782-4362-9A83-3421C7F386F6}"
+InstallOrder = "3"
+
+[[thisMod.Instructions]]
+Action = "extract"
+Source = ["<<modDirectory>>/[TSL]_Thigh-High_Boots_For_Twilek_Body_MODDERS_RESOURCE.7z"]
+Destination = "<<kotorDirectory>>/Override"
+Overwrite = "True"
+[[thisMod.Instructions]]
+Action = "move"
+Source = ["<<modDirectory>>\\[TSL]_Thigh-High_Boots_For_Twilek_Body_MODDERS_RESOURCE\\[TSL]_Thigh-High_Boots_For_Twilek_Body_MODDERS_RESOURCE\\NPC Replacement\\*.*"]
+Destination = "<<kotorDirectory>>/Override"
+Overwrite = "True"
+
+
+[[thisMod]]
+Name = "Better Twi'lek Heads - Slim Necks"
+Guid = "{15B0DC84-50DE-4901-97D8-78AF917C0D49}"
+InstallOrder = "0"
+
+[[thisMod.Instructions]]
+Action = "extract"
+Source = ["<<modDirectory>>/TSL Twilek Heads*.7z"]
+Destination = "<<kotorDirectory>>/Override"
+Overwrite = "True"
+[[thisMod.Instructions]]
+Action = "move"
+Source = ["<<modDirectory>>\\TSL Twilek Heads*\\Option A - Slim Necks\\*.*", "<<modDirectory>>\\TSL Twilek Heads*\\Textures\\*.*"]
+Destination = "<<kotorDirectory>>/Override"
+Overwrite = "True"
+
+
+[[thisMod]]
+Name = "Darth Malak's Armor"
+Guid = "{AC563422-7F4E-498B-833D-3A043A84E150}"
+InstallOrder = "0"
+
+[[thisMod.Instructions]]
+Action = "extract"
+Source = ["<<modDirectory>>/TSL_Darth_Malaks_Armour_PMBM05_Reskin*.7z"]
+Destination = "<<kotorDirectory>>/Override"
+Overwrite = "True"
+[[thisMod.Instructions]]
+Action = "move"
+Source = ["<<modDirectory>>\\TSL_Darth_Malaks_Armour_PMBM05_Reskin*\\[TSL]_Darth_Malak's_Armour_PMBM05_Reskin\\Override\\*.*"]
+Destination = "<<kotorDirectory>>/Override"
+Overwrite = "True"
+
+
+[[thisMod]]
+Name = "JC's Supermodel Fix for K2"
+Guid = "{AE44F62F-4589-4464-B799-24DA342C9EF2}"
+InstallOrder = "3"
+Author = "JCarter426"
+Directions = "Move the files from the override folder to your override directory. Optionally, if you prefer the aesthetic of the K1 running animation, you can also move the files from the 'K1 Style Running' folder to your override and overwrite."
+Description = "Fixes several model errors present due to misnamed animations and misplaced weapon positions."
+Language = ["All"]
+
+[[thisMod.Instructions]]
+Action = "extract"
+Source = ["<<modDirectory>>/JC's Supermodel Fix for K2*.zip"]
+Destination = "<<kotorDirectory>>/Override"
+Overwrite = "True"
+[[thisMod.Instructions]]
+Action = "move"
+Source = ["<<modDirectory>>/JC's Supermodel Fix for K2*/Override/*.*"]
+Destination = "<<kotorDirectory>>/Override"
+Overwrite = "True"
+
+
+[[thisMod]]
+Name = "Worn-Out Mando Armor"
+Guid = "{DA4B2637-AE81-4D42-BCA2-19CBD40E7126}"
+InstallOrder = "0"
+
+[[thisMod.Instructions]]
+Action = "extract"
+Source = ["<<modDirectory>>/Mandalorian Worn-Out Armour Reskin.rar"]
+Destination = "<<kotorDirectory>>/Override"
+Overwrite = "True"
+[[thisMod.Instructions]]
+Action = "move"
+Source = ["<<modDirectory>>\\Mandalorian Worn-Out Armour Reskin\\Mandalorian Worn-Out Armour Reskin\\*.*"]
+Destination = "<<kotorDirectory>>/Override"
+Overwrite = "True"
+
+
+[[thisMod]]
+Name = "HD NPC Portraits"
+Guid = "{AAFFFDF4-9B4D-40FB-A55B-64360BBB4D53}"
+InstallOrder = "0"
+Author = "ndix UR"
+
+[[thisMod.Instructions]]
+Action = "extract"
+Source = ["<<modDirectory>>/hd_npc_portraits_tsl*.7z"]
+Destination = "<<kotorDirectory>>/Override"
+Overwrite = "True"
+[[thisMod.Instructions]]
+Action = "move"
+Source = ["<<modDirectory>>\\hd_npc_portraits_tsl*\\hd_npc_portraits_tsl\\Override\\*.*"]
+Destination = "<<kotorDirectory>>/Override"
+Overwrite = "True"
+
+
+[[thisMod]]
+Name = "HD PC Portraits"
+Guid = "{4B2AD3BC-099C-4F1D-AB29-71AE9FEA0B54}"
+InstallOrder = "0"
+Author = "ndix UR"
+
+[[thisMod.Instructions]]
+Action = "extract"
+Source = ["<<modDirectory>>/hd_pc_portraits_tsl*.7z"]
+Destination = "<<kotorDirectory>>/Override"
+Overwrite = "True"
+[[thisMod.Instructions]]
+Action = "move"
+Source = ["<<modDirectory>>\\hd_pc_portraits_tsl*\\hd_pc_portraits_tsl\\Override\\*.*"]
+Destination = "<<kotorDirectory>>/Override"
+Overwrite = "True"
+
+
+[[thisMod]]
+Name = "PFHC03 Restoration Zombie-Like"
+Guid = "{C02AFF2F-5D10-4186-97EB-F1A2A7678DA6}"
+InstallOrder = "0"
+Author = "Effix"
+
+[[thisMod.Instructions]]
+Action = "extract"
+Source = ["<<modDirectory>>/Effixians_PFHC03_Restoration.zip"]
+Destination = "<<kotorDirectory>>/Override"
+Overwrite = "True"
+[[thisMod.Instructions]]
+Action = "move"
+Source = ["<<modDirectory>>\\Effixians_PFHC03_Restoration\\Effixians_PFHC03_Restoration\\Vanilla Zombie\\*.*"]
+Destination = "<<kotorDirectory>>/Override"
+Overwrite = "True"
+
+
+[[thisMod]]
+Name = "4K Atton"
+Guid = "{0F5DAF5C-EBFB-4CBC-BE86-3797BB326C3F}"
+InstallOrder = "0"
+
+[[thisMod.Instructions]]
+Action = "extract"
+Source = ["<<modDirectory>>/4k atton [tpc version].7z"]
+Destination = "<<kotorDirectory>>/Override"
+Overwrite = "True"
+[[thisMod.Instructions]]
+Action = "move"
+Source = ["<<modDirectory>>\\4k atton [tpc version]\\4k atton [tpc version]\\*.*"]
+Destination = "<<kotorDirectory>>/Override"
+Overwrite = "True"
+
+
+[[thisMod]]
+Name = "Atton with Scruff"
+Guid = "{3B513E07-1B0E-44F5-96E3-B9116CC37A43}"
+InstallOrder = "0"
+
+[[thisMod.Instructions]]
+Action = "extract"
+Source = ["<<modDirectory>>/scruffyatton.zip"]
+Destination = "<<kotorDirectory>>/Override"
+Overwrite = "True"
+[[thisMod.Instructions]]
+Action = "move"
+Source = ["<<modDirectory>>\\scruffyatton.zip\\scruffyatton\\*.*"]
+Destination = "<<kotorDirectory>>/Override"
+Overwrite = "True"
+
+
+[[thisMod]]
+Name = "Dark Harbinger - Eyes of Wound"
+Guid = "{137A2421-6F64-4585-8045-9CBB4756DA49}"
+InstallOrder = "0"
+Author = "NiuHaka"
+
+[[thisMod.Instructions]]
+Action = "extract"
+Source = ["<<modDirectory>>/Dark Harbinger.zip"]
+Destination = "<<kotorDirectory>>/Override"
+Overwrite = "True"
+[[thisMod.Instructions]]
+Action = "move"
+Source = ["<<modDirectory>>\\Dark Harbinger\\Eyes of Wound\\*.*"]
+Destination = "<<kotorDirectory>>/Override"
+Overwrite = "True"
+
+
+[[thisMod]]
+Name = "HD Vrook"
+Guid = "{CF68C6D4-3DC7-4200-A586-C22B57C5E0DC}"
+InstallOrder = "0"
+Author = "Dark Hope"
+
+[[thisMod.Instructions]]
+Action = "extract"
+Source = ["<<modDirectory>>/N_VrookH.rar"]
+Destination = "<<kotorDirectory>>/Override"
+Overwrite = "True"
+[[thisMod.Instructions]]
+Action = "move"
+Source = ["<<modDirectory>>\\N_VrookH\\*.*"]
+Destination = "<<kotorDirectory>>/Override"
+Overwrite = "True"
+
+
+[[thisMod]]
+Name = "HD Darth Nihilus"
+Guid = "{24B689F0-96A0-4B3D-9B84-827173C6D283}"
+InstallOrder = "0"
+
+[[thisMod.Instructions]]
+Action = "extract"
+Source = ["<<modDirectory>>/Darth sapiens Nihilus.rar"]
+Destination = "<<kotorDirectory>>/Override"
+Overwrite = "True"
+[[thisMod.Instructions]]
+Action = "move"
+Source = ["<<modDirectory>>\\Darth sapiens Nihilus\\*.t*"]
+Destination = "<<kotorDirectory>>/Override"
+Overwrite = "True"
+
+
+[[thisMod]]
+Name = "Darth Sion Remake"
+Guid = "{06F0BEE6-4EC5-474C-B7CF-BF7DA825CF20}"
+InstallOrder = "0"
+
+[[thisMod.Instructions]]
+Action = "extract"
+Source = ["<<modDirectory>>/bettersion.7z"]
+Destination = "<<kotorDirectory>>/Override"
+Overwrite = "True"
+[[thisMod.Instructions]]
+Action = "move"
+Source = ["<<modDirectory>>\\bettersion\\bettersion\\Override\\*"]
+Destination = "<<kotorDirectory>>/Override"
+Overwrite = "True"
+
+
+[[thisMod]]
+Name = "Lore-Friendly Mandalore"
+Guid = "{F1465F26-351C-4C80-97B8-402409B7CC14}"
+InstallOrder = "0"
+Author = "constantinople33"
+Directions = "Choose the version you want using the provided screenshots, then move the files to the Override folder."
+Description = "In old Legends canon, Mandalore's mask looks nothing at all like what it looks like ingame. This mod is an attempt to rectify this while still keeping the majority of Mandalore's aesthetic intact. It's a well-executed attempt in my opinion, though I recommend using the all-silver version, I don't really think it works otherwise."
+Language = ["All"]
+
+[[thisMod.Instructions]]
+Action = "extract"
+Source = ["<<modDirectory>>/Expanded lore friendly mandalores mask HD*.rar"]
+Destination = "<<kotorDirectory>>/Override"
+Overwrite = "True"
+[[thisMod.Instructions]]
+Action = "move"
+Source = ["<<modDirectory>>\\Expanded lore friendly mandalores mask HD*\\Expanded lore friendly mandalores mask HD*\\Most Lore friendly verison\\*.*"]
+Destination = "<<kotorDirectory>>/Override"
+Overwrite = "True"
+
+
+[[thisMod]]
+Name = "HD Visas Marr"
+Guid = "{ACF26957-BAF8-4691-A691-14576562EE04}"
+InstallOrder = "3"
+Author = "Darth_Sapiens"
+Directions = "Only move the four .dds filetype files to your override, ignore the remainder. If installing this mod alongside either the K1CP or Ultimate Character Overhaul, P_VisasBB.tpc, P_VisasH01.tpc/.tga, P_VisasHD01.tpc/.tga, and P_VisasHD02.tpc/.tga must be deleted from the override so this mod's .dds-based files will load."
+Description = "This mod improves the resolution of Visas Marr and adds some additional detail to both her LS and DS transformations."
+Language = ["All"]
+
+[[thisMod.Instructions]]
+Action = "extract"
+Source = ["<<modDirectory>>/Darth sapiens presents HD 2K Visas Marr.rar"]
+Destination = "<<kotorDirectory>>/Override"
+Overwrite = "True"
+[[thisMod.Instructions]]
+Action = "move"
+Source = ["<<modDirectory>>\\Darth sapiens presents HD 2K Visas Marr\\*.dds"]
+Destination = "<<kotorDirectory>>\\Override"
+Overwrite = "True"
+[[thisMod.Instructions]]
+Action = "delete"
+Source = ["<<kotorDirectory>>\\Override\\P_VisasBB.tpc", "<<kotorDirectory>>\\Override\\P_VisasH01.tpc", "<<kotorDirectory>>\\Override\\P_VisasH01.tga", "<<kotorDirectory>>\\Override\\P_VisasHD01.tpc", "<<kotorDirectory>>\\Override\\P_VisasHD01.tga", "<<kotorDirectory>>\\Override\\P_VisasHD02.tpc", "<<kotorDirectory>>\\Override\\P_VisasHD02.tga"]
+Destination = "<<kotorDirectory>>/Override"
+Overwrite = "True"
+
+
+[[thisMod]]
+Name = "Mira Unpoofed"
+Guid = "{B6108F87-BB23-4820-8BB1-19F911E9431B}"
+InstallOrder = "0"
+
+[[thisMod.Instructions]]
+Action = "extract"
+Source = ["<<modDirectory>>/TSL Mira Unpoofed*.7z"]
+Destination = "<<kotorDirectory>>/Override"
+Overwrite = "True"
+[[thisMod.Instructions]]
+Action = "move"
+Source = ["<<modDirectory>>\\TSL Mira Unpoofed v1.0.2.7z\\Override\\*.*"]
+Destination = "<<kotorDirectory>>/Override"
+Overwrite = "True"
+
+
+[[thisMod]]
+Name = "T3M4 HD 2K"
+Guid = "{60E2E164-4E50-41B9-BF2F-16878C34194C}"
+InstallOrder = "3"
+
+[[thisMod.Instructions]]
+Action = "extract"
+Source = ["<<modDirectory>>/Darth Sapien*T3M4 HD.rar"]
+Destination = "<<kotorDirectory>>/Override"
+Overwrite = "True"
+[[thisMod.Instructions]]
+Action = "move"
+Source = ["<<modDirectory>>\\Darth Sapien*T3M4 HD*\\*.t??", "<<modDirectory>>\\Darth Sapien*T3M4 HD*\\*.dds"]
+Destination = "<<kotorDirectory>>/Override"
+Overwrite = "True"
+[[thisMod.Instructions]]
+Action = "delete"
+Source = ["<<kotorDirectory>>\\Override\\P_t3m4_01.tpc", "<<kotorDirectory>>\\Override\\P_t3m4_01.tga"]
+Destination = "<<kotorDirectory>>/Override"
+Overwrite = "True"
+
+
+[[thisMod]]
+Name = "HD Astromechs"
+Guid = "{CE46BAD2-B95E-4AD2-BE2C-E58806BB66DD}"
+InstallOrder = "3"
+
+[[thisMod.Instructions]]
+Action = "extract"
+Source = ["<<modDirectory>>/SH_Refurbished Astromech Droids.7z"]
+Destination = "<<kotorDirectory>>/Override"
+Overwrite = "True"
+[[thisMod.Instructions]]
+Action = "move"
+Source = ["<<modDirectory>>\\SH_Refurbished Astromech Droids\\*.t*"]
+Destination = "<<kotorDirectory>>/Override"
+Overwrite = "True"
+
+
+[[thisMod]]
+Name = "War Droid HD"
+Guid = "{7B2CD83B-70AC-42D7-AF14-AF4AA716D55F}"
+InstallOrder = "0"
+Author = "Darth Sapiens"
+Description = "Reskins the war droids to HD editions. Although this mod is listed for KOTOR, it also works for KOTOR 2."
+Language = ["All"]
+
+[[thisMod.Instructions]]
+Action = "extract"
+Source = ["<<modDirectory>>/C_DrdWar.rar"]
+Destination = "<<kotorDirectory>>/Override"
+Overwrite = "True"
+[[thisMod.Instructions]]
+Action = "move"
+Destination = "<<kotorDirectory>>/Override"
+Overwrite = "True"
+
+
+[[thisMod]]
+Name = "Canonical Jedi Exile"
+Guid = "{F05D361F-6CA1-411E-BC75-0A57114AC0EB}"
+InstallOrder = "0"
+
+[[thisMod.Instructions]]
+Action = "extract"
+Source = ["<<modDirectory>>/Canonical Jedi Exile*.rar"]
+Destination = "<<kotorDirectory>>/Override"
+Overwrite = "True"
+[[thisMod.Instructions]]
+Action = "move"
+Source = ["<<modDirectory>>/Canonical Jedi Exile*/*.tga"]
+Destination = "<<kotorDirectory>>/Override"
+Overwrite = "True"
+
+
+[[thisMod]]
+Name = "Reflective Lightsaber Blades"
+Guid = "{53975AD4-6079-40E5-9715-E727A6AF2E0B}"
+InstallOrder = "0"
+Directions = "Utilize the option to modify vanilla sabers."
+Description = "With this mod, Crazy34 walked into the community, slammed down one of the most impressive mods ever made for this game, and dared us to do better. Not only have they split the blade texture in two to allow for lightsabers with cores of a different color (currently unsupported in the build release, but hopefully coming soon), they've also added dynamic reflections to each and every lightsaber across almost every area of the game. When you're fighting a Dark Jedi, you're going to see your faces bathed in shifting colors, fading and brightening as you swing your lightsabers; when you ignite your saber in a hallway, it will reflect on the floor and walls, and will realistically increase in intensity as the blade draws nearer to the surface. This is an incredible project, and easily one of the most important--and impressive--mods ever released for KOTOR. In the next few years, it could completely change the face of lightsaber modding."
+
+[[thisMod.Instructions]]
+Action = "extract"
+Source = ["<<modDirectory>>/New_Lightsaber_Blades_TSL_v_1.rar"]
+Destination = "<<kotorDirectory>>/Override"
+Overwrite = "True"
+[[thisMod.Instructions]]
+Action = "tslpatcher"
+Source = ["<<modDirectory>>\\New_Lightsaber_Blades_TSL*\\New_Lightsaber_Blades_TSL*\\TSLPatcher.exe"]
+Destination = "<<kotorDirectory>>/Override"
+Overwrite = "False"
+
+
+[[thisMod]]
+Name = "Neglected Computer Panel"
+Guid = "{A149466B-7982-4307-B6AC-BB2E226A732A}"
+InstallOrder = "3"
+
+[[thisMod.Instructions]]
+Action = "extract"
+Source = ["<<modDirectory>>\\HD Computer Panel, Damaged Version For Malachor.7z"]
+Destination = "<<kotorDirectory>>/Override"
+Overwrite = "True"
+[[thisMod.Instructions]]
+Action = "move"
+Source = ["<<modDirectory>>/HD Computer Panel, Damaged Version For Malachor/*.*"]
+Destination = "<<kotorDirectory>>/Override"
+Overwrite = "True"
+
+
+[[thisMod]]
+Name = "Improved Peragus Asteroids"
+Guid = "{D124CF22-0089-4A59-9578-C41E60419052}"
+InstallOrder = "0"
+
+[[thisMod.Instructions]]
+Action = "extract"
+Source = ["<<modDirectory>>/Improved Peragus Asteroid Fields*.zip"]
+Destination = "<<kotorDirectory>>/Override"
+Overwrite = "True"
+[[thisMod.Instructions]]
+Action = "move"
+Source = ["<<modDirectory>>\\Improved Peragus Asteroid Fields*\\*.*"]
+Destination = "<<kotorDirectory>>/Override"
+Overwrite = "True"
+
+
+[[thisMod]]
+Name = "Swoop Monitor Replacement"
+Guid = "{30024519-9731-46B2-9C5F-82D6F29FE30D}"
+InstallOrder = "0"
+
+[[thisMod.Instructions]]
+Action = "extract"
+Source = ["<<modDirectory>>/SH_Swoop Monitors.7z"]
+Destination = "<<kotorDirectory>>/Override"
+Overwrite = "False"
+[[thisMod.Instructions]]
+Action = "move"
+Source = ["<<modDirectory>>/SH_Swoop Monitors/*.*"]
+Destination = "<<kotorDirectory>>/Override"
+Overwrite = "True"
+
+
+[[thisMod]]
+Name = "HD Terminal Texture"
+Guid = "{AC69755D-FCF6-4EA8-8B72-D3C0DFBAF23D}"
+InstallOrder = "0"
+
+[[thisMod.Instructions]]
+Action = "extract"
+Source = ["<<modDirectory>>/PLC_CompPnl.rar"]
+Destination = "<<kotorDirectory>>/Override"
+Overwrite = "True"
+[[thisMod.Instructions]]
+Action = "move"
+Source = ["<<modDirectory>>/PLC_CompPnl/*.*"]
+Destination = "<<kotorDirectory>>\\Override"
+Overwrite = "True"
+
+
+[[thisMod]]
+Name = "Animated Computer Panel"
+Guid = "{1F8E73A6-C284-4A5C-99CD-182F38708483}"
+InstallOrder = "0"
+
+[[thisMod.Instructions]]
+Action = "extract"
+Source = ["<<modDirectory>>/[TSL]_Animated_Computer_Panel*.7z"]
+Destination = "<<kotorDirectory>>/Override"
+Overwrite = "True"
+[[thisMod.Instructions]]
+Action = "tslpatcher"
+Source = ["<<modDirectory>>\\[TSL]_Animated_Computer_Panel_v2.0.0\\[TSL]_Animated_Computer_Panel_v2.0.0\\Install.exe"]
+Destination = "<<kotorDirectory>>/Override"
+Overwrite = "False"
+
+
+[[thisMod]]
+Name = "HD Workbench"
+Guid = "{7E47D74C-1362-41A0-802E-9EFA3A879522}"
+InstallOrder = "0"
+
+[[thisMod.Instructions]]
+Action = "extract"
+Source = ["<<modDirectory>>/RepTab HD.rar"]
+Destination = "<<kotorDirectory>>/Override"
+Overwrite = "True"
+[[thisMod.Instructions]]
+Action = "move"
+Source = ["<<modDirectory>>/RepTab HD/*.*"]
+Destination = "<<kotorDirectory>>/Override"
+Overwrite = "True"
+
+
+[[thisMod]]
+Name = "Backdrop Improvements"
+Guid = "{C48C6BD8-684A-4394-B06E-AEA72AE2523F}"
+InstallOrder = "0"
+
+[[thisMod.Instructions]]
+Action = "extract"
+Source = ["<<modDirectory>>/TSL_Backdrop_Improvements*"]
+Destination = "<<kotorDirectory>>/Override"
+Overwrite = "True"
+[[thisMod.Instructions]]
+Action = "delete"
+Source = ["<<modDirectory>>/TSL_Backdrop_Improvements*/leh_hyper01.tga", "<<modDirectory>>/TSL_Backdrop_Improvements*/leh_hyper01.txi", "<<modDirectory>>/TSL_Backdrop_Improvements*/leh_hyper02.tga", "<<modDirectory>>/TSL_Backdrop_Improvements*/leh_hyper03.tga"]
+Destination = "<<kotorDirectory>>/Override"
+Overwrite = "False"
+[[thisMod.Instructions]]
+Action = "move"
+Source = ["<<modDirectory>>\\TSL_Backdrop_Improvements*\\To Override\\*.*"]
+Destination = "<<kotorDirectory>>/Override"
+Overwrite = "True"
+
+
+[[thisMod]]
+Name = "Citadel Station Backdrop"
+Guid = "{1412FCE3-C06C-48E8-A49C-AF6031EF4870}"
+InstallOrder = "0"
+
+[[thisMod.Instructions]]
+Action = "extract"
+Source = ["<<modDirectory>>/JC*s Citadel Station Backdrop.zip"]
+Destination = "<<kotorDirectory>>/Override"
+Overwrite = "True"
+[[thisMod.Instructions]]
+Action = "move"
+Source = ["<<modDirectory>>\\JC*s Citadel Station Backdrop.zip\\Override\\*.*"]
+Destination = "<<kotorDirectory>>/Override"
+Overwrite = "True"
+
+
+[[thisMod]]
+Name = "HQ Skyboxes II"
+Guid = "{755F471A-BBE9-40D3-9DF0-0E11C48F65BB}"
+InstallOrder = "0"
+
+[[thisMod.Instructions]]
+Action = "extract"
+Source = ["<<modDirectory>>/HQSkyboxesII_TSL.7z"]
+Destination = "<<kotorDirectory>>/Override"
+Overwrite = "True"
+[[thisMod.Instructions]]
+Action = "tslpatcher"
+Destination = "<<kotorDirectory>>/Override"
+Overwrite = "True"
+[[thisMod.Instructions]]
+Action = "move"
+Source = ["<<modDirectory>>/KOTOR 2 Community Patch*/tslpatchdata/231teld.mdl", "<<modDirectory>>/KOTOR 2 Community Patch*/tslpatchdata/231teld.mdx"]
+Destination = "<<kotorDirectory>>"
+Dependencies = ["{6777F8ED-8978-49A0-ACE2-3005EFCF1DCF}"]
+Overwrite = "True"
+
+
+[[thisMod]]
+Name = "Paragus Monitor Adjust"
+Guid = "{9316EFDF-4BAB-4EAD-A478-85BB8577ECAB}"
+InstallOrder = "0"
+
+[[thisMod.Instructions]]
+Action = "extract"
+Source = ["<<modDirectory>>/SH_Peragus Large Monitor Adjustment.7z"]
+Destination = "<<kotorDirectory>>/Override"
+Overwrite = "False"
+[[thisMod.Instructions]]
+Action = "move"
+Source = ["<<modDirectory>>/SH_Peragus Large Monitor Adjustment/*.t*"]
+Destination = "<<kotorDirectory>>/Override"
+Overwrite = "True"
+
+
+[[thisMod]]
+Name = "Replacement Peragus II"
+Guid = "{8AE71F7F-5243-489A-80A6-01CC68E0A2DC}"
+InstallOrder = "0"
+
+[[thisMod.Instructions]]
+Action = "extract"
+Source = ["<<modDirectory>>/Peragus_II_by_Trench.7z"]
+Destination = "<<kotorDirectory>>/Override"
+Overwrite = "True"
+[[thisMod.Instructions]]
+Action = "move"
+Source = ["<<modDirectory>>/Peragus_II_by_Trench/Peragus II (Original)/*.*"]
+Destination = "<<kotorDirectory>>/Override"
+Overwrite = "True"
+[[thisMod.Instructions]]
+Action = "move"
+Source = ["<<modDirectory>>\\Peragus_II_by_Trench\\Peragus II (One Replacement Screen for SH's Mod)\\*.*"]
 Destination = "<<kotorDirectory>>/Override"
 Overwrite = "True"
 

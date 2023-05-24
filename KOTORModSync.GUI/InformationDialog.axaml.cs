@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
@@ -18,6 +19,8 @@ namespace KOTORModSync.GUI
         {
             AvaloniaXamlLoader.Load(this);
         }
+
+        public static async Task ShowInformationDialog(Window parentWindow, string message) => await new InformationDialog(){ InfoText = message }.ShowDialog<bool?>(parentWindow);
 
         public static readonly AvaloniaProperty InfoTextProperty =
             AvaloniaProperty.Register<InformationDialog, string>("InfoText");

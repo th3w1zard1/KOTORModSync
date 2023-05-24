@@ -50,18 +50,22 @@ overwrite = true
 
 [[thisMod.instructions]]
 action = ""delete""
-paths = [
+source = [
     ""<<modDirectory>>\\path\\to\\mod\\file1.tpc"",
     ""<<modDirectory>>\\path\\to\\mod\\file2.tpc"",
     ""<<modDirectory>>\\path\\to\\mod\\file3.tpc""
 ]
 dependencies = ""{C5418549-6B7E-4A8C-8B8E-4AA1BC63C732}""
-overwrite = false
 
 [[thisMod.instructions]]
 action = ""move""
-source = ""<<modDirectory>>\\path\\to\\mod\\file\\to\\move""
-destination = ""C:\\Users\\****\\path\\to\\kotor2\\Override""
+source = [
+    ""<<modDirectory>>\\path\\to\\mod\\file1.tpc"",
+    ""<<modDirectory>>\\path\\to\\mod\\file2.tpc"",
+    ""<<modDirectory>>\\path\\to\\mod\\file3.tpc""
+]
+destination = ""<<kotorDirectory>>\\Override""
+overwrite = ""True""
 restrictions = ""{C5418549-6B7E-4A8C-8B8E-4AA1BC63C732}""
 
 [[thisMod.instructions]]
@@ -72,7 +76,7 @@ arguments = ""any command line arguments to pass""
 
 [[thisMod.instructions]]
 action = ""tslpatcher""
-source = [""<<modDirectory>>\\path\\to\\mod\\TSLPatcher.exe""]
+source = ""<<modDirectory>>\\path\\to\\mod\\TSLPatcher.exe""
 arguments = ""any command line arguments to pass (none available in TSLPatcher)""
 ";
 
@@ -348,56 +352,36 @@ arguments = ""any command line arguments to pass (none available in TSLPatcher)"
         {
             try
             {
-                (List<string> sourcePaths, DirectoryInfo _) = await ParsePathsAsync();
-                bool isSuccess = false; // Track the success status
-                for (int i = 0; i < sourcePaths.Count; i++)
+                (List<string> sourcePaths, _) = await ParsePathsAsync();
+                bool isSuccess = true; // Track the success status
+
+                foreach (string sourcePath in sourcePaths)
                 {
-                    var thisProgram = new FileInfo(sourcePaths[i]);
+                    if (Action == "TSLPatcher")
+                    {
+                        FileHandler.ReplaceLookupGameFolder(new DirectoryInfo(Path.GetDirectoryName(sourcePath)));
+                    }
+
+                    var thisProgram = new FileInfo(sourcePath);
                     if (!thisProgram.Exists)
                     {
-                        throw new FileNotFoundException($"The file {sourcePaths[i]} could not be located on the disk");
+                        throw new FileNotFoundException($"The file {sourcePath} could not be located on the disk");
                     }
-                    var cancellationTokenSource = new CancellationTokenSource();
-                    cancellationTokenSource.CancelAfter(TimeSpan.FromSeconds(3600)); // cancel if running longer than 30 minutes.
-                    var startInfo = new ProcessStartInfo
+                    try
                     {
-                        FileName = thisProgram.FullName,
-                        Arguments = Arguments,
-                        RedirectStandardOutput = true,
-                        UseShellExecute = false,
-                        CreateNoWindow = true
-                    };
-                    var process = new Process
-                    {
-                        StartInfo = startInfo
-                    };
-                    _ = process.Start();
-
-                    Task<string> outputTask = process.StandardOutput.ReadToEndAsync();
-
-                    while (!process.HasExited && !cancellationTokenSource.IsCancellationRequested)
-                    {
-                        await Task.Delay(100);
+                        if (!await ExecuteProcessAsync(thisProgram))
+                        {
+                            isSuccess = false;
+                            break;
+                        }
                     }
-
-                    if (!process.HasExited)
+                    catch(Exception ex)
                     {
-                        process.Kill();
-                        throw new TimeoutException("Process timed out after 30 minutes.");
-                    }
-
-                    string output = await outputTask;
-
-                    if (process.ExitCode != 0)
-                    {
-                        Logger.Log($"Process failed with exit code {process.ExitCode}. Output:\n{output}");
-                        isSuccess = false;
-                    }
-                    else
-                    {
-                        isSuccess = true;
+                        Logger.LogException(ex);
+                        return false;
                     }
                 }
+
                 return isSuccess;
             }
             catch (Exception ex)
@@ -406,6 +390,70 @@ arguments = ""any command line arguments to pass (none available in TSLPatcher)"
                 return false;
             }
         }
+
+        private async Task<bool> ExecuteProcessAsync(FileInfo programFile)
+        {
+            using (var cancellationTokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(3600)))
+            {
+                using (var process = new Process())
+                {
+                    var startInfo = process.StartInfo;
+                    startInfo.FileName = programFile.FullName;
+                    startInfo.Arguments = Arguments;
+                    startInfo.RedirectStandardOutput = true;
+                    startInfo.RedirectStandardError = true;
+                    startInfo.UseShellExecute = false;
+                    startInfo.CreateNoWindow = true;
+
+                    try
+                    {
+                        if (!process.Start())
+                        {
+                            throw new InvalidOperationException("Failed to start the process.");
+                        }
+                    }
+                    catch (System.ComponentModel.Win32Exception)
+                    {
+                        startInfo.UseShellExecute = true;
+                        startInfo.RedirectStandardOutput = false;
+                        startInfo.RedirectStandardError = false;
+
+                        if (!process.Start())
+                        {
+                            throw new InvalidOperationException("Failed to start the process.");
+                        }
+                    }
+
+                    await Task.Run(() => process.WaitForExit(), cancellationTokenSource.Token);
+
+                    if (!process.HasExited)
+                    {
+                        process.Kill();
+                        throw new TimeoutException("Process timed out after 30 minutes.");
+                    }
+
+                    string output = null;
+                    string error = null;
+                    if (startInfo.RedirectStandardOutput)
+                    {
+                        output = await process.StandardOutput.ReadToEndAsync();
+                        error = await process.StandardError.ReadToEndAsync();
+                    }
+
+                    if (process.ExitCode != 0)
+                    {
+                        Logger.Log($"Process failed with exit code {process.ExitCode}. Output:\n{output}");
+                        return false;
+                    }
+
+                    Logger.Log($"Output: {output}\n Error: {error}\n");
+                    return true;
+                }
+            }
+        }
+
+
+
 
         public async Task<bool> VerifyInstallAsync()
         {
@@ -810,11 +858,8 @@ arguments = ""any command line arguments to pass (none available in TSLPatcher)"
                             break;
                         case "patch":
                         case "tslpatcher":
-                            for (int i = 0; i < instruction.Source.Count; i++)
-                            {
-                                FileHandler.ReplaceLookupGameFolder(new DirectoryInfo(Path.GetDirectoryName(instruction.Source[i])));
-                            }
-                            success = await instruction.ExecuteTSLPatcherAsync();
+                            //success = await instruction.ExecuteTSLPatcherAsync();
+                            success = await instruction.ExecuteProgramAsync();
                             //success = success && await instruction.VerifyInstallAsync();
                             break;
                         case "execute":
@@ -875,11 +920,11 @@ arguments = ""any command line arguments to pass (none available in TSLPatcher)"
                         }
                     }*/
                 }
-                return (true, new Dictionary<FileInfo, System.Security.Cryptography.SHA1>());
+                return (true, new Dictionary<FileInfo, SHA1>());
             }
 
-            Task<(bool, Dictionary<FileInfo, System.Security.Cryptography.SHA1>)> result = ProcessComponentAsync(this);
-            if (!result.Result.Item1)
+            (bool, Dictionary<FileInfo, SHA1>) result = await ProcessComponentAsync(this);
+            if (!result.Item1)
             {
                 Logger.LogException(new Exception($"Component {this.Name} failed to install the mod correctly with {result}"));
                 return (false, null);

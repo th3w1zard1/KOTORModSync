@@ -69,22 +69,20 @@
 
         <Grid Grid.Row="1">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="220" />
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
-
-            <ScrollViewer Grid.Column="0" VerticalScrollBarVisibility="Auto">
-                <Grid>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
-                    </Grid.RowDefinitions>
-
-                    <TreeView x:Name="leftTreeView" MinHeight="350">
+            <Grid Grid.Column="0">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="350"  />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+                <ScrollViewer Grid.Column="0" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
+                    <TreeView x:Name="leftTreeView">
                         <TreeView.ItemTemplate>
                             <DataTemplate>
                                 <StackPanel Orientation="Horizontal" Margin="10">
@@ -103,44 +101,40 @@
                             </DataTemplate>
                         </TreeView.ItemTemplate>
                     </TreeView>
-
-                    <Grid Grid.Row="1" HorizontalAlignment="Center" Margin="0,1">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="Auto" />
-                        </Grid.ColumnDefinitions>
-                        <Button Grid.Column="0" Content="Add Mod" Margin="1" Click="AddComponentButton_Click"
-                                HorizontalContentAlignment="Center" VerticalContentAlignment="Center" />
-                        <Button Grid.Column="1" Content="Del Mod" Margin="1" Click="RemoveComponentButton_Click"
-                                HorizontalContentAlignment="Center" VerticalContentAlignment="Center" />
-                    </Grid>
-                    <Grid Grid.Row="2" HorizontalAlignment="Center" Margin="0,1">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="Auto" />
-                        </Grid.ColumnDefinitions>
-                        <Button Grid.Column="0" Content="▲  Up  ▲" Margin="1" Click="MoveUpButton_Click"
-                                HorizontalContentAlignment="Center" VerticalContentAlignment="Center" />
-                        <Button Grid.Column="1" Content="▼ Down ▼" Margin="1" Click="MoveDownButton_Click"
-                                HorizontalContentAlignment="Center" VerticalContentAlignment="Center" />
-                    </Grid>
-                    <Grid Grid.Row="3" HorizontalAlignment="Center" Margin="5,1">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="Auto" />
-                        </Grid.ColumnDefinitions>
-                        <Button Grid.Column="0" Content="Save Config" Margin="2,0" Click="SaveModFile_Click" />
-                        <Button Grid.Column="1" Content=" Refresh List" Click="RefreshComponents_Click" />
-                    </Grid>
-                    <StackPanel Grid.Row="4" HorizontalAlignment="Center" Margin="0,0">
-                        <Button Content="Apply Editor Changes" Click="SaveButton_Click" />
-                        <Button Content="Install Selected Mod" Margin="0,35" Click="InstallModSingle_Click" />
-                    </StackPanel>
+                </ScrollViewer>
+                <Grid Grid.Row="1" HorizontalAlignment="Center" Margin="0,1">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <Button Grid.Column="0" Content="Add Mod" Margin="1" Click="AddComponentButton_Click"
+                            HorizontalContentAlignment="Center" VerticalContentAlignment="Center" />
+                    <Button Grid.Column="1" Content="Del Mod" Margin="1" Click="RemoveComponentButton_Click"
+                            HorizontalContentAlignment="Center" VerticalContentAlignment="Center" />
                 </Grid>
-            </ScrollViewer>
-
-
-
+                <Grid Grid.Row="2" HorizontalAlignment="Center" Margin="0,1">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <Button Grid.Column="0" Content="▲  Up  ▲" Margin="1" Click="MoveUpButton_Click"
+                            HorizontalContentAlignment="Center" VerticalContentAlignment="Center" />
+                    <Button Grid.Column="1" Content="▼ Down ▼" Margin="1" Click="MoveDownButton_Click"
+                            HorizontalContentAlignment="Center" VerticalContentAlignment="Center" />
+                </Grid>
+                <Grid Grid.Row="3" HorizontalAlignment="Center" Margin="5,1">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <Button Grid.Column="0" Content="Save Config" Margin="2,0" Click="SaveModFile_Click" />
+                    <Button Grid.Column="1" Content=" Refresh List" Click="RefreshComponents_Click" />
+                </Grid>
+                <StackPanel Grid.Row="4" HorizontalAlignment="Center" Margin="0,0">
+                    <Button Content="Apply Editor Changes" Click="SaveButton_Click" />
+                    <Button Content="Install Selected Mod" Margin="0,35" Click="InstallModSingle_Click" />
+                </StackPanel>
+            </Grid>
             <Grid Grid.Column="1">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
@@ -166,7 +160,8 @@
                 <Button Content="Load Installation File" Margin="0 10" Click="LoadInstallFile_Click" />
                 <Button Content="Set Directories" Margin="0 10" Click="SetDirectories_Click"/>
                 <Button Content="Validate Config" Margin="0 10" Click="ValidateButton_Click"/>
-                <Button Content="(do not push)" Margin="0 10" Click="StartInstall_Click" />
+                <Button Content="Generate Docs from Config" Margin="0 10" Click="DocsButton_Click"/>
+                <Button Content="  Install All" Margin="0 10" Click="StartInstall_Click" />
             </StackPanel>
         </Grid>
     </Grid>

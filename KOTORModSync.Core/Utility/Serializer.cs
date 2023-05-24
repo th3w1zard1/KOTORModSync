@@ -21,6 +21,7 @@ using Tomlyn.Syntax;
 using MarkdownSharp;
 using static KOTORModSync.Core.ModDirectory;
 using Tomlyn.Model;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace KOTORModSync.Core.Utility
 {
@@ -97,76 +98,61 @@ namespace KOTORModSync.Core.Utility
             return tomlContents;
         }
 
-        /*static string GenerateModDocumentation(Nett.TomlTableArray modArray)
+        public static string GenerateModDocumentation(List<Component> componentsList)
         {
             StringBuilder sb = new StringBuilder();
-            var markdown = new Markdown();
+            const string indentation = "    ";
 
             // Loop through each 'thisMod' entry
-            foreach (Nett.TomlTable modTable in modArray)
+            foreach (var component in componentsList)
             {
                 sb.AppendLine();
 
-                // Name
-                string name = modTable.Get<string>("Name");
-                sb.AppendLine($"# {name}");
-
-                // Author
-                string author = modTable.Get<string>("Author");
-                sb.AppendLine($"**Author**: {author}");
-
-                // Description
-                string description = modTable.Get<string>("Description");
+                // Component Information
+                sb.AppendLine($"####**{component.Name}**");
+                sb.AppendLine($"**Author**: {component.Author}");
                 sb.AppendLine();
-                sb.AppendLine(description);
-
-                // Category & Tier
-                string categoryAndTier = modTable.Get<string>("Category");
-                sb.AppendLine();
-                sb.AppendLine($"**Category & Tier**: {categoryAndTier}");
-
-                // Language
-                List<string> languages = modTable.Get<List<string>>("Language");
-                bool hasEnglishLanguage = languages.Contains("English");
-                sb.AppendLine($"**Non-English Functionality**: {(hasEnglishLanguage ? "NO" : "YES")}");
-
-                // Directions
-                string directions = modTable.Get<string>("Directions");
-                sb.AppendLine();
-                sb.AppendLine("**Instructions**: ");
-                sb.AppendLine(directions);
+                sb.AppendLine($"**Description**: {component.Description}");
+                sb.AppendLine($"**Tier & Category**: {component.Tier} - {component.Category}");
+                if (component.Language != null)
+                {
+                    if (string.Equals(component.Language.FirstOrDefault(), "All", StringComparison.OrdinalIgnoreCase))
+                        sb.AppendLine($"**Supported Languages**: ALL");
+                    else
+                        sb.AppendLine($"**Supported Languages**: [{Environment.NewLine}{string.Join($",{Environment.NewLine}", component.Language.Select(item => $"{indentation}{item}"))}{Environment.NewLine}]");
+                }
+                sb.AppendLine($"**Directions**: {component.Directions}");
 
                 // Instructions
-                Tomlyn.Model.TomlTableArray instructionsArray = modTable.Get<Tomlyn.Model.TomlTableArray>("Instructions");
+                if (component.Instructions == null)
+                    continue;
+
                 sb.AppendLine();
-                sb.AppendLine("## **Instructions**");
-
-                List<Tomlyn.Model.TomlTable> instructionsList = instructionsArray.ToList();
-
-                // Get the array of Component tables
-                Tomlyn.Model.TomlTableArray componentTables = modTable.Get<Tomlyn.Model.TomlTableArray>("thisMod");
-
-                // Deserialize each TomlTable into a Component object
-                foreach (Nett.TomlTable tomlComponent in componentTables)
+                sb.AppendLine("**Installation Instructions:");
+                foreach (var instruction in component.Instructions)
                 {
-                    // Action
-                    string action = tomlComponent.Get<string>("Action");
-                    sb.AppendLine($"### **Action**: {action}");
+                    if (instruction.Action == "extract")
+                        continue;
 
-                    // Source
-                    List<string> source = tomlComponent.Get<List<string>>("Source");
-                    string sourceFormatted = FormatSourcePaths(source); // Make sure FormatSourcePaths is defined and accessible
-                    sb.AppendLine($"**To run this mod, execute**: {sourceFormatted}");
-
-                    // Overwrite
-                    string overwrite = tomlComponent.Get<string>("Overwrite");
-                    sb.AppendLine($"**Overwrite**: {overwrite}");
-
-                    sb.AppendLine();
+                    sb.AppendLine($"**Action**: {instruction.Action}");
+                    if (instruction.Action == "move")
+                        sb.AppendLine($"**Overwrite existing files?**: {((bool)instruction.Overwrite ? "NO" : "YES")}");
+                    string thisLine;
+                    if (instruction.Source != null)
+                    {
+                        thisLine = $"Source: [{Environment.NewLine}{string.Join($",{Environment.NewLine}", instruction.Source.Select(item => $"{indentation}{item}"))}{Environment.NewLine}]";
+                        if (instruction.Action != "move")
+                        {
+                            thisLine = thisLine.Replace("Source: ", "");
+                        }
+                        sb.AppendLine(thisLine);
+                    }
+                    if (instruction.Destination != null && instruction.Action == "move")
+                        sb.AppendLine($"Destination: {instruction.Destination}");
                 }
             }
             return sb.ToString();
-        }*/
+        }
 
 
         public static string SerializeComponent(Component component)
@@ -450,7 +436,11 @@ namespace KOTORModSync.Core.Utility
                         Component component = new Component();
                         component.DeserializeComponent(tomlComponent);
                         components.Add(component);
-
+                        if (component.Instructions == null)
+                        {
+                            Logger.Log($"{component.Name} is missing instructions");
+                            continue;
+                        }
                         foreach (Instruction instruction in component.Instructions)
                         {
                             instruction.ParentComponent = component;

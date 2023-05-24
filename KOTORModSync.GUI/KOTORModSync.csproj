@@ -21,20 +21,6 @@
     <TrimMode>CopyUsed</TrimMode>
   </PropertyGroup>
 
-
-  <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
-    <IncludeAllContentForSelfExtract>true</IncludeAllContentForSelfExtract>
-    <SelfContained>true</SelfContained>
-    <DebugType>portable</DebugType>
-    <PublishTrimmed>true</PublishTrimmed>
-    <PublishReadyToRun>false</PublishReadyToRun>
-    <PublishSingleFile>true</PublishSingleFile>
-    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
-    <PublishTrimmed>true</PublishTrimmed>
-    <PublishReadyToRun>true</PublishReadyToRun>
-    <TrimMode>CopyUsed</TrimMode>
-  </PropertyGroup>
-
   <ItemGroup Condition="'$(Configuration)' == 'Release'">
     <PackageReference Include="Costura.Fody" Version="5.7.0">
       <PrivateAssets>all</PrivateAssets>
@@ -72,6 +58,9 @@
     </Compile>
     <Compile Update="InformationDialog.axaml.cs">
       <DependentUpon>InformationDialog.axaml</DependentUpon>
+    </Compile>
+    <Compile Update="ProgressWindow.axaml.cs">
+      <DependentUpon>ProgressWindow.axaml</DependentUpon>
     </Compile>
   </ItemGroup>
 </Project>

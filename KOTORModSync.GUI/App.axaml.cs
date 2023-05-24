@@ -1,11 +1,10 @@
-// Licensed to the .NET Foundation under one or more agreements.
-// The .NET Foundation licenses this file to you under the MIT license.
-
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Logging;
 using Avalonia.Markup.Xaml;
 using KOTORModSync.Core;
+using System;
+using System.Threading.Tasks;
 
 namespace KOTORModSync.GUI
 {
@@ -22,6 +21,9 @@ namespace KOTORModSync.GUI
             {
                 try
                 {
+                    // Subscribe to the UnobservedTaskException event
+                    TaskScheduler.UnobservedTaskException += HandleUnobservedTaskException;
+
                     var mainWindow = new MainWindow();
                     desktop.MainWindow = mainWindow;
 
@@ -29,7 +31,7 @@ namespace KOTORModSync.GUI
                     outputWindow.Show();
                     Core.Logger.Log("Started main window");
                 }
-                catch(System.Exception ex)
+                catch (Exception ex)
                 {
                     Core.Logger.LogException(ex);
                 }
@@ -38,5 +40,11 @@ namespace KOTORModSync.GUI
             base.OnFrameworkInitializationCompleted();
         }
 
+        private void HandleUnobservedTaskException(object sender, UnobservedTaskExceptionEventArgs e)
+        {
+            // Log or handle the unobserved task exception here
+            Core.Logger.LogException(e.Exception);
+            e.SetObserved(); // Mark the exception as observed to prevent it from crashing the application
+        }
     }
 }

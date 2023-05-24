@@ -19,6 +19,8 @@ using System.Collections.ObjectModel;
 using static Nett.TomlObjectFactory;
 using Avalonia.Data.Converters;
 using System.Globalization;
+using Microsoft.TeamFoundation.WorkItemTracking.Process.WebApi.Models;
+using System.Security.Cryptography;
 
 namespace KOTORModSync.GUI
 {
@@ -127,11 +129,13 @@ namespace KOTORModSync.GUI
             return null;
         }
 
-        private async Task<string> SaveFile()
+        private async Task<string> SaveFile(List<string> defaultExt = null)
         {
+            if(defaultExt == null)
+                defaultExt = new List<string>(){ "toml", "tml" };
             SaveFileDialog dialog = new SaveFileDialog();
-            dialog.DefaultExtension = "toml";
-            dialog?.Filters?.Add(new FileDialogFilter() { Name = "Mod Sync File", Extensions = { "toml", "tml" } });
+            dialog.DefaultExtension = defaultExt.FirstOrDefault();
+            dialog?.Filters?.Add(new FileDialogFilter() { Name = "Mod Sync File", Extensions = defaultExt });
 
             // Show the dialog and wait for a result.
             Window parent = this.VisualRoot as Window;
@@ -202,9 +206,8 @@ namespace KOTORModSync.GUI
         {
             if (_mainConfig == null || MainConfig.DestinationPath == null)
             {
-                var informationDialog = new InformationDialog();
-                informationDialog.InfoText = "Please set your directories first";
-                await informationDialog.ShowDialog<bool?>(this);
+                await InformationDialog.ShowInformationDialog(this, "Please set your directories first");
+                return;
             }
             return;
         }
@@ -273,16 +276,12 @@ namespace KOTORModSync.GUI
 
         private async void SetDirectories_Click(object sender, RoutedEventArgs e)
         {
-            var informationDialog = new InformationDialog();
-            informationDialog.InfoText = "Please select your mod directory (where the archives are).";
-            await informationDialog.ShowDialog<bool?>(this);
             try
             {
+                await InformationDialog.ShowInformationDialog(this, "Please select your mod directory (where the archives live).");
                 var chosenFolder = await OpenFolder();
                 DirectoryInfo modDirectory = new DirectoryInfo(chosenFolder);
-                informationDialog = new InformationDialog();
-                informationDialog.InfoText = "Please select your KOTOR(2) directory. (e.g. \"C:\\Program Files (x86)\\Steam\\steamapps\\common\\Knights of the Old Republic II\")";
-                await informationDialog.ShowDialog<bool?>(this);
+                await InformationDialog.ShowInformationDialog(this, "Please select your KOTOR(2) directory. (e.g. \"C:\\Program Files (x86)\\Steam\\steamapps\\common\\Knights of the Old Republic II\")");
                 chosenFolder = await OpenFolder();
                 DirectoryInfo kotorInstallDir = new DirectoryInfo(chosenFolder);
                 _mainConfig.UpdateConfig(modDirectory, kotorInstallDir);
@@ -317,44 +316,68 @@ namespace KOTORModSync.GUI
             var confirmationDialogCallback = new ConfirmationDialogCallback(this);
 
             // Call the ExecuteInstructions method asynchronously using Task.Run
-            var result = await Task.Run(() => thisComponent.ExecuteInstructions(confirmationDialogCallback, _components));
-            if (!result.success)
+            try
             {
-                var informationDialog = new InformationDialog();
-                informationDialog.InfoText = $"There was a problem installing {thisComponent.Name}, please check the output window";
-                await informationDialog.ShowDialog<bool?>(this);
-                return;
+                var result = await Task.Run(() => thisComponent.ExecuteInstructions(confirmationDialogCallback, _components));
+                if (!result.success)
+                {
+                    var informationDialog = new InformationDialog();
+                    informationDialog.InfoText = $"There was a problem installing {thisComponent.Name}, please check the output window";
+                    await informationDialog.ShowDialog<bool?>(this);
+                    return;
+                }
+                else
+                {
+                    Logger.Log($"Successfully installed {thisComponent.Name}");
+                }
             }
-            else
+            catch (Exception ex)
             {
-                Logger.Log($"Successfully installed {thisComponent.Name}");
+                Logger.LogException(ex);
             }
         }
 
         private async void StartInstall_Click(object sender, RoutedEventArgs e)
         {
-            bool confirmationResult = await ConfirmationDialog.ShowConfirmationDialog(this, "yo man it's not a bait. This button will install all mods sequentially without stopping until the end is reached. If you don't want this, press no");
-            if (!confirmationResult)
-                return;
             if (_mainConfig == null || MainConfig.DestinationPath == null)
             {
-                var informationDialog = new InformationDialog();
-                informationDialog.InfoText = "Please set your directories first";
-                await informationDialog.ShowDialog<bool?>(this);
+                await InformationDialog.ShowInformationDialog(this, "Please set your directories first");
+                return;
+            }
+            if (_components.Count == 0)
+            {
+                await InformationDialog.ShowInformationDialog(this, "No instructions loaded! Press 'Load Instructions File' or create some instructions first.");
                 return;
             }
 
-            foreach (var component in _components)
+            if (!await ConfirmationDialog.ShowConfirmationDialog(this, "Really install all mods?"))
+                return;
+
+            Logger.Log("Start installing all mods...");
+            var progressWindow = new ProgressWindow();
+            progressWindow.Closed += ProgressWindowClosed;
+            progressWindow.progressBar.Value = 0;
+            progressWindow.Show();
+
+            for (int i = 0; i < _components.Count; i++)
             {
-                var confirmationDialogCallback = new ConfirmationDialogCallback(this);
+                Component component = _components[i];
+                Dispatcher.UIThread.Post(() =>
+                {
+                    progressWindow.progressTextBlock.Text = $"Installing {component.Name}...";
+                    progressWindow.progressBar.Value = 0;
+                });
+
+                // Allow the UI thread to process pending updates
+                await Task.Yield();
 
                 // Call the ExecuteInstructions method asynchronously using Task.Run
-                var result = await Task.Run(() => component.ExecuteInstructions(confirmationDialogCallback, _components));
+                Logger.Log($"Installing {component.Name}");
+                (bool success, Dictionary<FileInfo, SHA1> originalChecksums) = await component.ExecuteInstructions(new ConfirmationDialogCallback(this), _components);
 
-                if (!result.success)
+                if (!success)
                 {
-                    confirmationResult = await ConfirmationDialog.ShowConfirmationDialog(this, $"There was a problem installing {component.Name}, please check the output window. Continue with next mod anyway?");
-                    if (!confirmationResult)
+                    if (!await ConfirmationDialog.ShowConfirmationDialog(this, $"There was a problem installing {component.Name}, please check the output window. Continue with the next mod anyway?"))
                     {
                         break;
                     }
@@ -366,6 +389,48 @@ namespace KOTORModSync.GUI
             }
         }
 
+        private void ProgressWindowClosed(object sender, EventArgs e)
+        {
+            if (sender is ProgressWindow progressWindow)
+            {
+                progressWindow.Closed -= ProgressWindowClosed;
+                progressWindow.Dispose();
+            }
+        }
+
+
+
+
+
+
+        private async void DocsButton_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                string file = await SaveFile(new List<string> { "txt" });
+                if (file != null)
+                {
+                    string docs = Serializer.GenerateModDocumentation(_components);
+                    await SaveDocsToFile(file, docs);
+                    string message = $"Saved documentation of {_components.Count} mods to '{file}'";
+                    await InformationDialog.ShowInformationDialog(this, message);
+                    Logger.Log(message);
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.Log($"Error generating and saving documentation: {ex.Message}");
+                await InformationDialog.ShowInformationDialog(this, "An error occurred while generating and saving documentation.");
+            }
+        }
+
+        private async Task SaveDocsToFile(string filePath, string documentation)
+        {
+            using (StreamWriter writer = new StreamWriter(filePath))
+            {
+                await writer.WriteAsync(documentation);
+            }
+        }
 
         private ICommand itemClickCommand;
 
@@ -417,33 +482,22 @@ namespace KOTORModSync.GUI
         }
 
         private async void SaveButton_Click(object sender, RoutedEventArgs e)
-        {   if (currentComponent is null && leftTreeView.SelectedItem != null)
+        {
+            if (currentComponent is null && leftTreeView.SelectedItem is TreeViewItem selectedItem)
             {
-                var selectedItem = leftTreeView.SelectedItem as TreeViewItem;
                 currentComponent = selectedItem.Tag as Component;
             }
             if (currentComponent is null)
             {
-                var informationDialog = new InformationDialog();
-                informationDialog.InfoText = "You must select a component from the list, or create one, before saving.";
-                await informationDialog.ShowDialog<bool?>(this);
+                await InformationDialog.ShowInformationDialog(this, "You must select a component from the list, or create one, before saving.");
             }
             else if (CheckForChanges())
             {
                 bool confirmationResult = await ConfirmationDialog.ShowConfirmationDialog(this, "Are you sure you want to save?");
                 if (confirmationResult)
                 {
-                    var informationDialog = new InformationDialog();
-                    bool result = SaveChanges();
-                    if (result)
-                    {
-                        informationDialog.InfoText = "Saved successfully. Check the output window for more information.";
-                    }
-                    else
-                    {
-                        informationDialog.InfoText = "There were some problems with your syntax, please check the output window.";
-                    }
-                    await informationDialog.ShowDialog<bool?>(this);
+                    string message = SaveChanges() ? "Saved successfully. Check the output window for more information." : "There were some problems with your syntax, please check the output window.";
+                    await InformationDialog.ShowInformationDialog(this, message);
                     RefreshTreeView();
                 }
             }

@@ -1,9 +1,6 @@
-﻿using NUnit.Framework;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
-using KOTORModSync;
+﻿// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+
 using KOTORModSync.Core.Utility;
 
 namespace KOTORModSync.Tests
@@ -11,17 +8,17 @@ namespace KOTORModSync.Tests
     [TestFixture]
     public class WildcardEnumerationTests
     {
-        private string BasePath = Path.Combine(Path.GetTempPath(), "tsl mods");
+        private readonly string BasePath = Path.Combine(Path.GetTempPath(), "tsl mods");
 
         [Test]
-        public async Task EnumerateFilesWithWildcards_Should_ReturnMatchingFiles()
+        public void EnumerateFilesWithWildcards_Should_ReturnMatchingFiles()
         {
 
             // Create test directories and files
-            Directory.CreateDirectory(Path.Combine(BasePath, "Ultimate Korriban High Resolution-TPC Version-1", "Korriban HR", "Override"));
-            Directory.CreateDirectory(Path.Combine(BasePath, "Ultimate Korriban High Resolution-TPC Version-2", "Korriban HR", "Override"));
-            Directory.CreateDirectory(Path.Combine(BasePath, "Ultimate Malachor V High Resolution - TPC Version-1106-1-1-1670682360", "Malachor V HR", "Override"));
-            Directory.CreateDirectory(Path.Combine(BasePath, "Ultimate Malachor V High Resolution - TPC Version-2107-1-1-1670682361", "Malachor V HR", "Override"));
+            _ = Directory.CreateDirectory(Path.Combine(BasePath, "Ultimate Korriban High Resolution-TPC Version-1", "Korriban HR", "Override"));
+            _ = Directory.CreateDirectory(Path.Combine(BasePath, "Ultimate Korriban High Resolution-TPC Version-2", "Korriban HR", "Override"));
+            _ = Directory.CreateDirectory(Path.Combine(BasePath, "Ultimate Malachor V High Resolution - TPC Version-1106-1-1-1670682360", "Malachor V HR", "Override"));
+            _ = Directory.CreateDirectory(Path.Combine(BasePath, "Ultimate Malachor V High Resolution - TPC Version-2107-1-1-1670682361", "Malachor V HR", "Override"));
             File.WriteAllText(Path.Combine(BasePath, "Ultimate Korriban High Resolution-TPC Version-1", "Korriban HR", "Override", "file1.txt"), "Content 1");
             File.WriteAllText(Path.Combine(BasePath, "Ultimate Korriban High Resolution-TPC Version-2", "Korriban HR", "Override", "file2.txt"), "Content 2");
             File.WriteAllText(Path.Combine(BasePath, "Ultimate Malachor V High Resolution - TPC Version-1106-1-1-1670682360", "Malachor V HR", "Override", "file3.txt"), "Content 3");
@@ -44,12 +41,12 @@ namespace KOTORModSync.Tests
                 Path.Combine(BasePath, "Ultimate * High Resolution-TPC Version-*", "*", "Override", "*")
             };
 
-            foreach (var path in pathsToTest)
+            foreach (string path in pathsToTest)
             {
                 List<string> paths = new() { path };
-                var files = Serializer.FileHandler.EnumerateFilesWithWildcards(paths);
+                List<string> files = Serializer.FileHandler.EnumerateFilesWithWildcards(paths);
                 Console.WriteLine($"Files found for path: {path}");
-                foreach (var file in files)
+                foreach (string? file in files)
                 {
                     Console.WriteLine(file);
                 }
@@ -58,16 +55,15 @@ namespace KOTORModSync.Tests
 
         }
 
-
         [Test]
-        public async Task EnumerateFilesWithWildcards_ShouldNotReturnFiles()
+        public void EnumerateFilesWithWildcards_ShouldNotReturnFiles()
         {
             // Create test directories and files
-            Directory.CreateDirectory(Path.Combine(BasePath, "Ultimate Korriban High Resolution-TPC Version-1", "Korriban HR", "Override"));
-            Directory.CreateDirectory(Path.Combine(BasePath, "Ultimate Korriban High Resolution-TPC Version-2", "Korriban HR", "Override"));
-            Directory.CreateDirectory(Path.Combine(BasePath, "Ultimate Malachor V High Resolution - TPC Version-1106-1-1-1670682360", "Malachor V HR", "Override"));
-            Directory.CreateDirectory(Path.Combine(BasePath, "Ultimate Malachor V High Resolution - TPC Version-2107-1-1-1670682361", "Malachor V HR", "Override"));
-            Directory.CreateDirectory(Path.Combine(BasePath, "Ultimate_Robes_Repair_For_TSL_v1.1", "Ultimate_Robes_Repair_For_TSL_v1.1", "TSLRCM backup"));
+            _ = Directory.CreateDirectory(Path.Combine(BasePath, "Ultimate Korriban High Resolution-TPC Version-1", "Korriban HR", "Override"));
+            _ = Directory.CreateDirectory(Path.Combine(BasePath, "Ultimate Korriban High Resolution-TPC Version-2", "Korriban HR", "Override"));
+            _ = Directory.CreateDirectory(Path.Combine(BasePath, "Ultimate Malachor V High Resolution - TPC Version-1106-1-1-1670682360", "Malachor V HR", "Override"));
+            _ = Directory.CreateDirectory(Path.Combine(BasePath, "Ultimate Malachor V High Resolution - TPC Version-2107-1-1-1670682361", "Malachor V HR", "Override"));
+            _ = Directory.CreateDirectory(Path.Combine(BasePath, "Ultimate_Robes_Repair_For_TSL_v1.1", "Ultimate_Robes_Repair_For_TSL_v1.1", "TSLRCM backup"));
             File.WriteAllText(Path.Combine(BasePath, "Ultimate Korriban High Resolution-TPC Version-1", "Korriban HR", "Override", "file1.txt"), "Content 1");
             File.WriteAllText(Path.Combine(BasePath, "Ultimate Korriban High Resolution-TPC Version-2", "Korriban HR", "Override", "file2.txt"), "Content 2");
             File.WriteAllText(Path.Combine(BasePath, "Ultimate Malachor V High Resolution - TPC Version-1106-1-1-1670682360", "Malachor V HR", "Override", "file3.txt"), "Content 3");
@@ -82,9 +78,9 @@ namespace KOTORModSync.Tests
                 Path.Combine(BasePath, "Ultimate_Robes_Repair_For_TSL*", "Ultimate_Robes_Repair_For_TSL*", "*.*")
             };
 
-            foreach (var path in pathsToTest)
+            foreach (string path in pathsToTest)
             {
-                var files = Serializer.FileHandler.EnumerateFilesWithWildcards(new List<string> { path });
+                List<string> files = Serializer.FileHandler.EnumerateFilesWithWildcards(new List<string> { path });
                 Assert.That(files, Is.Empty, $"Files found for path: {path}");
             }
         }

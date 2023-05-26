@@ -1,9 +1,9 @@
-using NUnit.Framework;
-using System.Collections.Generic;
-using System.IO;
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+
+using System.Text;
 using KOTORModSync.Core;
 using KOTORModSync.Core.Utility;
-using System.Text;
 
 namespace KOTORModSync.Tests
 {
@@ -11,7 +11,7 @@ namespace KOTORModSync.Tests
     public class TOMLFileTests
     {
         private string filePath;
-        private string exampleTOML = @"
+        private readonly string exampleTOML = @"
             [[thisMod]]
             name = ""Ultimate Dantooine""
             guid = ""{B3525945-BDBD-45D8-A324-AAF328A5E13E}""
@@ -68,11 +68,9 @@ namespace KOTORModSync.Tests
         }
 
         [TearDown]
-        public void TearDown()
-        {
+        public void TearDown() =>
             // Delete the temporary file
             File.Delete(filePath);
-        }
 
         [Test]
         public void SaveAndLoadTOMLFile_MatchingComponents()
@@ -139,7 +137,6 @@ namespace KOTORModSync.Tests
             }
         }
 
-
         [Test]
         public void SaveAndLoadTOMLFile_WhitespaceTests()
         {
@@ -186,10 +183,7 @@ namespace KOTORModSync.Tests
                     if (char.IsLetter(c))
                     {
                         // Convert field name character to mixed case
-                        if (random.Next(2) == 0)
-                            convertedChar = char.ToUpper(c);
-                        else
-                            convertedChar = char.ToLower(c);
+                        convertedChar = random.Next(2) == 0 ? char.ToUpper(c) : char.ToLower(c);
                     }
                     else if (c == ']')
                     {
@@ -201,10 +195,7 @@ namespace KOTORModSync.Tests
                     if (char.IsLetter(c))
                     {
                         // Convert field value character to mixed case
-                        if (random.Next(2) == 0)
-                            convertedChar = char.ToUpper(c);
-                        else
-                            convertedChar = char.ToLower(c);
+                        convertedChar = random.Next(2) == 0 ? char.ToUpper(c) : char.ToLower(c);
                     }
                     else if (c == '[')
                     {
@@ -212,20 +203,17 @@ namespace KOTORModSync.Tests
                     }
                 }
 
-                convertedContents.Append(convertedChar);
+                _ = convertedContents.Append(convertedChar);
             }
 
             return convertedContents.ToString();
         }
 
-
-
-
         [Test]
         public void SaveAndLoadTOMLFile_EmptyComponentsList()
         {
             // Arrange
-            List<Component> originalComponents = new List<Component>();
+            List<Component> originalComponents = new();
             // Act
             Serializer.FileHandler.OutputConfigFile(originalComponents, filePath);
             List<Component> loadedComponents = Serializer.FileHandler.ReadComponentsFromFile(filePath);
@@ -238,7 +226,7 @@ namespace KOTORModSync.Tests
         public void SaveAndLoadTOMLFile_DuplicateGuids()
         {
             // Arrange
-            List<Component> originalComponents = new List<Component>
+            List<Component> originalComponents = new()
             {
                 new Component { Name = "Component 1", Guid = "{B3525945-BDBD-45D8-A324-AAF328A5E13E}" },
                 new Component { Name = "Component 2", Guid = "{C5418549-6B7E-4A8C-8B8E-4AA1BC63C732}" },
@@ -265,8 +253,8 @@ namespace KOTORModSync.Tests
         public void SaveAndLoadTOMLFile_MissingRequiredFields()
         {
             // Arrange
-            List<Component> originalComponents = new List<Component>
-        {
+            List<Component> originalComponents = new()
+            {
             new Component { Name = "Component 1" },
             new Component { Guid = "{C5418549-6B7E-4A8C-8B8E-4AA1BC63C732}" },
             new Component { InstallOrder = 3 },
@@ -317,7 +305,7 @@ namespace KOTORModSync.Tests
         public void SaveAndLoadTOMLFile_MultipleRounds()
         {
             // Arrange
-            List<List<Component>> rounds = new List<List<Component>>
+            List<List<Component>> rounds = new()
             {
                 new List<Component>
                 {

@@ -1,3 +1,6 @@
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+
 using System;
 using System.Threading.Tasks;
 using Avalonia;
@@ -12,22 +15,15 @@ namespace KOTORModSync.GUI
     {
         public static readonly AvaloniaProperty InfoTextProperty =
             AvaloniaProperty.Register<InformationDialog, string>("InfoText");
-        public InformationDialog()
-        {
-            InitializeComponent();
-        }
+        public InformationDialog() => InitializeComponent();
 
-        private void InitializeComponent()
-        {
-            AvaloniaXamlLoader.Load(this);
-        }
+        private void InitializeComponent() => AvaloniaXamlLoader.Load(this);
 
         public static async Task ShowInformationDialog(Window parentWindow, string message, string title = "Information")
         {
             var dialog = new InformationDialog { Title = title, InfoText = message };
             _ = await dialog.ShowDialog<bool?>(parentWindow);
         }
-
 
         public string InfoText
         {
@@ -41,18 +37,12 @@ namespace KOTORModSync.GUI
             UpdateInfoText();
         }
 
-        private void OKButton_Click(object sender, RoutedEventArgs e)
-        {
-            Close();
-        }
+        private void OKButton_Click(object sender, RoutedEventArgs e) => Close();
 
-        private void UpdateInfoText()
-        {
-            Dispatcher.UIThread.InvokeAsync(() =>
-            {
-                var textBlock = this.FindControl<TextBlock>("InfoTextBlock");
-                textBlock.Text = InfoText;
-            });
-        }
+        private void UpdateInfoText() => Dispatcher.UIThread.InvokeAsync(() =>
+                                                  {
+                                                      TextBlock textBlock = this.FindControl<TextBlock>("InfoTextBlock");
+                                                      textBlock.Text = InfoText;
+                                                  });
     }
 }

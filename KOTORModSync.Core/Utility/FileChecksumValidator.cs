@@ -99,7 +99,7 @@ namespace KOTORModSync.Core.Utility
                         tasks.Add(
                             Task.Run(() =>
                             {
-                                sha1.TransformBlock(data, 0, bytesRead, null, 0);
+                                _ = sha1.TransformBlock(data, 0, bytesRead, null, 0);
                             })
                         );
 
@@ -110,7 +110,7 @@ namespace KOTORModSync.Core.Utility
                         }
                     }
 
-                    sha1.TransformFinalBlock(buffer, 0, bytesRead); // Use 'bytesRead' instead of 0
+                    _ = sha1.TransformFinalBlock(buffer, 0, bytesRead); // Use 'bytesRead' instead of 0
 
                     await Task.WhenAll(tasks);
 
@@ -118,8 +118,6 @@ namespace KOTORModSync.Core.Utility
                 }
             }
         }
-
-
 
         public static async Task SaveChecksumsToFileAsync(string filePath, Dictionary<DirectoryInfo, SHA1> checksums)
         {
@@ -157,10 +155,9 @@ namespace KOTORModSync.Core.Utility
                             using (FileStream fileStream = fileInfo.OpenRead())
                             {
                                 byte[] fileBytes = new byte[fileStream.Length];
-                                await fileStream.ReadAsync(fileBytes, 0, fileBytes.Length);
+                                _ = await fileStream.ReadAsync(fileBytes, 0, fileBytes.Length);
 
-                                byte[] hashBytes;
-                                if (TryConvertHexStringToBytes(hash, out hashBytes))
+                                if (TryConvertHexStringToBytes(hash, out byte[] hashBytes))
                                 {
                                     Console.WriteLine($"Hash for {fileInfo.FullName}: {BitConverter.ToString(hashBytes)}");
 
@@ -189,7 +186,6 @@ namespace KOTORModSync.Core.Utility
 
             return checksums;
         }
-
 
         private static bool TryConvertHexStringToBytes(string hexString, out byte[] bytes)
         {

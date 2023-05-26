@@ -2,28 +2,46 @@
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <TargetFrameworks>net6.0;net462</TargetFrameworks>
+    <PublishTrimmed>false</PublishTrimmed>
     <Platforms>AnyCPU</Platforms>
     <Nullable>disable</Nullable>
     <LangVersion>7.3</LangVersion>
+    <EnableNETAnalyzers>true</EnableNETAnalyzers>
     <EnforceCodeStyleInBuild>True</EnforceCodeStyleInBuild>
+    <Platforms>AnyCPU;x64;x86</Platforms>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)' == 'Release'">
-    <IncludeAllContentForSelfExtract>false</IncludeAllContentForSelfExtract>
-    <SelfContained>false</SelfContained>
-    <PublishTrimmed>false</PublishTrimmed>
+    <IncludeAllContentForSelfExtract>true</IncludeAllContentForSelfExtract>
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+    <SelfContained>true</SelfContained>
     <PublishSingleFile>true</PublishSingleFile>
     <PublishReadyToRun>true</PublishReadyToRun>
-    <DebugType>embedded</DebugType>
-    <IncludeNativeLibrariesForSelfExtract>false</IncludeNativeLibrariesForSelfExtract>
+    <Optimize>true</Optimize>
+    <AllowOptimize>true</AllowOptimize>
+    <RemoveIntegerChecks>false</RemoveIntegerChecks>
+    <CheckForOverflowUnderflow>false</CheckForOverflowUnderflow>
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+    <AllowEditAndContinue>false</AllowEditAndContinue>
+    <DebugSymbols>false</DebugSymbols>
+    <DebugType>portable</DebugType>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
-  <ItemGroup Condition="'$(Configuration)' == 'Release'">
-    <PackageReference Include="Costura.Fody" Version="5.7.0">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
-  </ItemGroup>
-
+  <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
+    <IncludeAllContentForSelfExtract>false</IncludeAllContentForSelfExtract>
+    <IncludeNativeLibrariesForSelfExtract>false</IncludeNativeLibrariesForSelfExtract>
+    <SelfContained>false</SelfContained>
+    <PublishSingleFile>false</PublishSingleFile>
+    <PublishReadyToRun>false</PublishReadyToRun>
+    <Optimize>false</Optimize>
+    <AllowOptimize>false</AllowOptimize>
+    <RemoveIntegerChecks>true</RemoveIntegerChecks>
+    <CheckForOverflowUnderflow>true</CheckForOverflowUnderflow>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <AllowEditAndContinue>true</AllowEditAndContinue>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+  </PropertyGroup>
 
   <ItemGroup>
     <ProjectCapability Include="Avalonia" />
@@ -42,6 +60,7 @@
   <ItemGroup>
     <ProjectReference Include="..\KOTORModSync.Core\KOTORModSync.Core.csproj">
       <PrivateAssets>all</PrivateAssets>
+      <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
     </ProjectReference>
   </ItemGroup>
   

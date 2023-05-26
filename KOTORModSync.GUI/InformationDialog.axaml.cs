@@ -10,8 +10,6 @@ namespace KOTORModSync.GUI
 {
     public partial class InformationDialog : Window
     {
-        public static readonly StyledProperty<string> TitleProperty =
-            AvaloniaProperty.Register<InformationDialog, string>(nameof(Title), "Information");
         public static readonly AvaloniaProperty InfoTextProperty =
             AvaloniaProperty.Register<InformationDialog, string>("InfoText");
         public InformationDialog()

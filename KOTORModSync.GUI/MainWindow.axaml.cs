@@ -766,8 +766,9 @@ namespace KOTORModSync.GUI
             this.execute = execute ?? throw new ArgumentNullException(nameof(execute));
             this.canExecute = canExecute;
         }
-
+        #pragma warning disable CS0067
         public event EventHandler CanExecuteChanged;
+        #pragma warning restore CS0067
 
         public bool CanExecute(object parameter) => canExecute == null || canExecute(parameter);
         public void Execute(object parameter) => execute(parameter);

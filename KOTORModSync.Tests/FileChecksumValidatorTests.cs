@@ -32,7 +32,7 @@ namespace KOTORModSync.Tests
             {
                 FileInfo fileInfo = expectedChecksum.Key;
                 SHA1 sha1 = await FileChecksumValidator.CalculateSHA1Async(fileInfo);
-                actualChecksums[fileInfo.Name] = BitConverter.ToString(sha1.Hash).Replace("-", "");
+                actualChecksums[fileInfo.Name] = BitConverter.ToString(sha1!!!!!!!!.Hash).Replace("-", "");
             }
 
             // Act
@@ -132,7 +132,7 @@ namespace KOTORModSync.Tests
             string json = await File.ReadAllTextAsync(filePath);
             Dictionary<DirectoryInfo, SHA1>? loadedChecksums = JsonConvert.DeserializeObject<Dictionary<DirectoryInfo, SHA1>>(json);
 
-            Assert.That(loadedChecksums, Has.Count.EqualTo(checksums.Count));
+            Assert.That(loadedChecksums.Count, Is.EqualTo(checksums.Count));
             CollectionAssert.AreEquivalent(checksums.Keys, loadedChecksums.Keys);
             CollectionAssert.AreEquivalent(checksums.Values.Select(FileChecksumValidator.SHA1ToString), loadedChecksums.Values.Select(FileChecksumValidator.SHA1ToString));
 

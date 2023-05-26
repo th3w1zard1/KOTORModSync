@@ -18,10 +18,7 @@ using SharpCompress.Archives.Rar;
 using SharpCompress.Archives.SevenZip;
 using Tomlyn;
 using Tomlyn.Syntax;
-using MarkdownSharp;
 using static KOTORModSync.Core.ModDirectory;
-using Tomlyn.Model;
-using static System.Net.Mime.MediaTypeNames;
 
 namespace KOTORModSync.Core.Utility
 {
@@ -91,7 +88,6 @@ namespace KOTORModSync.Core.Utility
                                         .Select(line => line.Trim())
                                         .ToArray();
 
-
             // Join the lines with '\n' separator
             tomlContents = string.Join("\n", lines);
 
@@ -104,39 +100,45 @@ namespace KOTORModSync.Core.Utility
             const string indentation = "    ";
 
             // Loop through each 'thisMod' entry
-            foreach (var component in componentsList)
+            foreach (Component component in componentsList)
             {
-                sb.AppendLine();
+                _ = sb.AppendLine();
 
                 // Component Information
-                sb.AppendLine($"####**{component.Name}**");
-                sb.AppendLine($"**Author**: {component.Author}");
-                sb.AppendLine();
-                sb.AppendLine($"**Description**: {component.Description}");
-                sb.AppendLine($"**Tier & Category**: {component.Tier} - {component.Category}");
+                _ = sb.AppendLine($"####**{component.Name}**");
+                _ = sb.AppendLine($"**Author**: {component.Author}");
+                _ = sb.AppendLine();
+                _ = sb.AppendLine($"**Description**: {component.Description}");
+                _ = sb.AppendLine($"**Tier & Category**: {component.Tier} - {component.Category}");
                 if (component.Language != null)
                 {
-                    if (string.Equals(component.Language.FirstOrDefault(), "All", StringComparison.OrdinalIgnoreCase))
-                        sb.AppendLine($"**Supported Languages**: ALL");
-                    else
-                        sb.AppendLine($"**Supported Languages**: [{Environment.NewLine}{string.Join($",{Environment.NewLine}", component.Language.Select(item => $"{indentation}{item}"))}{Environment.NewLine}]");
+                    _ = string.Equals(component.Language.FirstOrDefault(), "All", StringComparison.OrdinalIgnoreCase)
+                        ? sb.AppendLine($"**Supported Languages**: ALL")
+                        : sb.AppendLine($"**Supported Languages**: [{Environment.NewLine}{string.Join($",{Environment.NewLine}", component.Language.Select(item => $"{indentation}{item}"))}{Environment.NewLine}]");
                 }
-                sb.AppendLine($"**Directions**: {component.Directions}");
+                _ = sb.AppendLine($"**Directions**: {component.Directions}");
 
                 // Instructions
                 if (component.Instructions == null)
+                {
                     continue;
+                }
 
-                sb.AppendLine();
-                sb.AppendLine("**Installation Instructions:");
-                foreach (var instruction in component.Instructions)
+                _ = sb.AppendLine();
+                _ = sb.AppendLine("**Installation Instructions:");
+                foreach (Instruction instruction in component.Instructions)
                 {
                     if (instruction.Action == "extract")
+                    {
                         continue;
+                    }
 
-                    sb.AppendLine($"**Action**: {instruction.Action}");
+                    _ = sb.AppendLine($"**Action**: {instruction.Action}");
                     if (instruction.Action == "move")
-                        sb.AppendLine($"**Overwrite existing files?**: {((bool)instruction.Overwrite ? "NO" : "YES")}");
+                    {
+                        _ = sb.AppendLine($"**Overwrite existing files?**: {(instruction.Overwrite ? "NO" : "YES")}");
+                    }
+
                     string thisLine;
                     if (instruction.Source != null)
                     {
@@ -145,15 +147,16 @@ namespace KOTORModSync.Core.Utility
                         {
                             thisLine = thisLine.Replace("Source: ", "");
                         }
-                        sb.AppendLine(thisLine);
+                        _ = sb.AppendLine(thisLine);
                     }
                     if (instruction.Destination != null && instruction.Action == "move")
-                        sb.AppendLine($"Destination: {instruction.Destination}");
+                    {
+                        _ = sb.AppendLine($"Destination: {instruction.Destination}");
+                    }
                 }
             }
             return sb.ToString();
         }
-
 
         public static string SerializeComponent(Component component)
         {
@@ -341,7 +344,9 @@ namespace KOTORModSync.Core.Utility
                 foreach (string path in uniquePaths)
                 {
                     if (string.IsNullOrEmpty(path))
+                    {
                         continue;
+                    }
 
                     try
                     {
@@ -377,7 +382,10 @@ namespace KOTORModSync.Core.Utility
                                 {
                                     string parentDirectory = Path.GetDirectoryName(currentDirectory);
                                     if (string.IsNullOrEmpty(parentDirectory) || parentDirectory == currentDirectory)
+                                    {
                                         break; // Exit the loop if no parent directory is found or if the parent directory is the same as the current directory
+                                    }
+
                                     currentDirectory = parentDirectory;
                                 }
 
@@ -406,10 +414,7 @@ namespace KOTORModSync.Core.Utility
                 return result;
             }
 
-            private static bool ContainsWildcards(string path)
-            {
-                return path.Contains("*") || path.Contains("?");
-            }
+            private static bool ContainsWildcards(string path) => path.Contains("*") || path.Contains("?");
 
             public static bool WildcardMatch(string input, string patternInput)
             {
@@ -419,7 +424,9 @@ namespace KOTORModSync.Core.Utility
 
                 // Ensure the number of levels match
                 if (inputLevels.Length != patternLevels.Length)
+                {
                     return false;
+                }
 
                 // Iterate over each level and perform wildcard matching
                 for (int i = 0; i < inputLevels.Length; i++)
@@ -429,11 +436,15 @@ namespace KOTORModSync.Core.Utility
 
                     // Check if the current level is a wildcard
                     if (patternLevel == "*" || patternLevel == "?")
+                    {
                         continue;
+                    }
 
                     // Check if the current level matches the pattern
                     if (!WildcardMatchLevel(inputLevel, patternLevel))
+                    {
                         return false;
+                    }
                 }
 
                 return true;
@@ -447,8 +458,6 @@ namespace KOTORModSync.Core.Utility
                 // Use regex to perform the wildcard matching
                 return Regex.IsMatch(input, $"^{pattern}$");
             }
-
-
 
             public static List<Component> ReadComponentsFromFile(string filePath)
             {

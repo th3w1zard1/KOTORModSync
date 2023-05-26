@@ -2,15 +2,10 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Globalization;
 using System.IO;
-using System.Reflection;
 using System.Runtime.InteropServices;
-using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace KOTORModSync.Core.Utility
@@ -51,13 +46,10 @@ namespace KOTORModSync.Core.Utility
             return maxParallelism;
         }
 
-
-
-
         public static long GetAvailableMemory()
         {
             // Check if the required command/method exists on the current platform
-            var result = TryExecuteCommand("sysctl -n hw.memsize");
+            (bool Success, string Output, string Error) result = TryExecuteCommand("sysctl -n hw.memsize");
             if (!result.Success)
             {
                 result = TryExecuteCommand("free -b");
@@ -66,7 +58,6 @@ namespace KOTORModSync.Core.Utility
                     result = TryExecuteCommand("wmic OS get FreePhysicalMemory");
                 }
             }
-
 
             if (result.Success)
             {
@@ -97,7 +88,6 @@ namespace KOTORModSync.Core.Utility
             return 4L * 1024 * 1024 * 1024; // 4GB
         }
 
-
         public static (bool Success, string Output, string Error) TryExecuteCommand(string command, int timeoutSeconds = 10)
         {
             string shellPath = GetShellExecutable();
@@ -117,7 +107,7 @@ namespace KOTORModSync.Core.Utility
                     process.StartInfo.UseShellExecute = false;
                     process.StartInfo.CreateNoWindow = true;
 
-                    process.Start();
+                    _ = process.Start();
 
                     // Wait for the process to exit or timeout
                     if (!process.WaitForExit(timeoutSeconds * 1000))
@@ -159,7 +149,6 @@ namespace KOTORModSync.Core.Utility
             return string.Empty;
         }
 
-
         public static double GetMaxDiskSpeed(string drivePath)
         {
             string command;
@@ -191,7 +180,7 @@ namespace KOTORModSync.Core.Utility
             using (Process process = new Process())
             {
                 process.StartInfo = startInfo;
-                process.Start();
+                _ = process.Start();
 
                 string output = process.StandardOutput.ReadToEnd();
                 process.WaitForExit();
@@ -228,9 +217,6 @@ namespace KOTORModSync.Core.Utility
 
             return maxSpeed;
         }
-
-
-
 
     }
 }

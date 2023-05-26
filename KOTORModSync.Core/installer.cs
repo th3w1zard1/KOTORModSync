@@ -8,23 +8,19 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Reflection;
+using System.Security.Cryptography;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Security.Cryptography;
-using KOTORModSync.Core.Utility;
 using SharpCompress.Archives;
 using SharpCompress.Archives.Rar;
 using SharpCompress.Archives.SevenZip;
-using SharpCompress.Archives.Zip;
 using SharpCompress.Common;
-using Tomlyn.Model;
-using static KOTORModSync.Core.Utility.Utility;
-using Microsoft.TeamFoundation.WorkItemTracking.WebApi.Models;
-using static KOTORModSync.Core.ModDirectory;
-using static KOTORModSync.Core.Utility.Serializer;
 using SharpCompress.Readers;
-using System.Reflection;
+using Tomlyn.Model;
+using static KOTORModSync.Core.Utility.Serializer;
+using static KOTORModSync.Core.Utility.Utility;
 
 namespace KOTORModSync.Core
 {
@@ -82,33 +78,30 @@ arguments = ""any command line arguments to pass (none available in TSLPatcher)"
 
         public static async Task<bool> ExecuteInstructionAsync(Func<Task<bool>> instructionMethod) => await instructionMethod().ConfigureAwait(false);
 
-
         private (List<string>, DirectoryInfo) ParsePaths()
         {
             var sourcePaths = new List<string>();
             // Enumerate the files/folders with wildcards and add them to the list
-            for (int i = 0; i < this.Source.Count; i++)
+            for (int i = 0; i < Source.Count; i++)
             {
-                sourcePaths.Add(Utility.Utility.ReplaceCustomVariables(this.Source[i]));
+                sourcePaths.Add(Utility.Utility.ReplaceCustomVariables(Source[i]));
             }
             sourcePaths = FileHandler.EnumerateFilesWithWildcards(sourcePaths);
             DirectoryInfo destinationPath = null;
-            if (this.Destination != null)
+            if (Destination != null)
             {
-                destinationPath = new DirectoryInfo(Utility.Utility.ReplaceCustomVariables(this.Destination));
+                destinationPath = new DirectoryInfo(Utility.Utility.ReplaceCustomVariables(Destination));
             }
-            if (sourcePaths.Count == 0)
-            {
-                throw new Exception($"Could not find any files! Source: {string.Join(", ", this.Source)}");
-            }
-            return (sourcePaths, destinationPath);
+            return sourcePaths.Count == 0
+                ? throw new Exception($"Could not find any files! Source: {string.Join(", ", Source)}")
+                : ((List<string>, DirectoryInfo))(sourcePaths, destinationPath);
         }
 
         public async Task<bool> ExtractFileAsync()
         {
             try
             {
-                (List<string> sourcePaths, DirectoryInfo _) = ParsePaths();
+                (List<string> sourcePaths, _) = ParsePaths();
                 List<Task> extractionTasks = new List<Task>();
 
                 // Use SemaphoreSlim to limit concurrent extractions
@@ -146,7 +139,7 @@ arguments = ""any command line arguments to pass (none available in TSLPatcher)"
 
                                     if (archive != null)
                                     {
-                                        var reader = archive.ExtractAllEntries();
+                                        IReader reader = archive.ExtractAllEntries();
                                         while (reader.MoveToNextEntry())
                                         {
                                             if (!reader.Entry.IsDirectory)
@@ -160,7 +153,7 @@ arguments = ""any command line arguments to pass (none available in TSLPatcher)"
                                                 if (!Directory.Exists(destinationDirectory))
                                                 {
                                                     Logger.Log($"Create directory {destinationDirectory}");
-                                                    Directory.CreateDirectory(destinationDirectory);
+                                                    _ = Directory.CreateDirectory(destinationDirectory);
                                                 }
 
                                                 await Task.Run(() =>
@@ -174,14 +167,14 @@ arguments = ""any command line arguments to pass (none available in TSLPatcher)"
                             }
                             else
                             {
-                                var ex = new ArgumentNullException($"{this.ParentComponent.Name} failed to extract file {thisFile}");
+                                var ex = new ArgumentNullException($"{ParentComponent.Name} failed to extract file {thisFile}");
                                 Logger.LogException(ex);
                                 throw ex;
                             }
                         }
                         finally
                         {
-                            semaphore.Release(); // Release the semaphore slot
+                            _ = semaphore.Release(); // Release the semaphore slot
                         }
                     }));
                 }
@@ -198,10 +191,7 @@ arguments = ""any command line arguments to pass (none available in TSLPatcher)"
             }
         }
 
-
-
-
-        public async Task<bool> DeleteFileAsync()
+        public bool DeleteFile()
         {
             try
             {
@@ -244,9 +234,7 @@ arguments = ""any command line arguments to pass (none available in TSLPatcher)"
             }
         }
 
-
-
-        public async Task<bool> MoveFileAsync()
+        public bool MoveFile()
         {
             try
             {
@@ -257,7 +245,7 @@ arguments = ""any command line arguments to pass (none available in TSLPatcher)"
                     string destinationFilePath = Path.Combine(destinationPath.FullName, fileName);
 
                     // Check if the destination file already exists
-                    if (this.Overwrite || !File.Exists(destinationFilePath))
+                    if (Overwrite || !File.Exists(destinationFilePath))
                     {
                         // Check if the destination file already exists
                         if (File.Exists(destinationFilePath))
@@ -275,7 +263,7 @@ arguments = ""any command line arguments to pass (none available in TSLPatcher)"
                         Logger.Log($"Moving {sourcePath} to {destinationFilePath}... Overwriting? {Overwrite}");
                         File.Move(sourcePath, destinationFilePath);
                     }
-                    else if (!this.Overwrite)
+                    else if (!Overwrite)
                     {
                         Logger.Log($"File already exists, but overwrite is false. Skipping file {destinationFilePath}");
                     }
@@ -317,11 +305,13 @@ arguments = ""any command line arguments to pass (none available in TSLPatcher)"
                                                                                      // arg3 = (optional) install option index
                     string args = $"\"{MainConfig.DestinationPath}\" \"{Directory.GetParent(thisProgram.FullName)}\" \"\"";
 
-                    ProcessStartInfo startInfo = new ProcessStartInfo();
-                    startInfo.CreateNoWindow = false;
-                    startInfo.FileName = Path.Combine(getResourcesDirectory(), "TSLPatcherCLI.exe");
-                    startInfo.WindowStyle = ProcessWindowStyle.Normal;
-                    startInfo.Arguments = args;
+                    ProcessStartInfo startInfo = new ProcessStartInfo
+                    {
+                        CreateNoWindow = false,
+                        FileName = Path.Combine(getResourcesDirectory(), "TSLPatcherCLI.exe"),
+                        WindowStyle = ProcessWindowStyle.Normal,
+                        Arguments = args
+                    };
 
                     var exeProcess = Process.Start(startInfo);
                     Task<string> outputTask = exeProcess.StandardOutput.ReadToEndAsync();
@@ -384,7 +374,7 @@ arguments = ""any command line arguments to pass (none available in TSLPatcher)"
                             break;
                         }
                     }
-                    catch(Exception ex)
+                    catch (Exception ex)
                     {
                         Logger.LogException(ex);
                         return false;
@@ -406,7 +396,7 @@ arguments = ""any command line arguments to pass (none available in TSLPatcher)"
             {
                 using (var process = new Process())
                 {
-                    var startInfo = process.StartInfo;
+                    ProcessStartInfo startInfo = process.StartInfo;
                     startInfo.FileName = programFile.FullName;
                     startInfo.Arguments = Arguments;
                     startInfo.RedirectStandardOutput = true;
@@ -461,10 +451,7 @@ arguments = ""any command line arguments to pass (none available in TSLPatcher)"
             }
         }
 
-
-
-
-        public async Task<bool> VerifyInstallAsync()
+        public bool VerifyInstall()
         {
             bool errors = false;
             bool found = false;
@@ -553,19 +540,19 @@ arguments = ""any command line arguments to pass (none available in TSLPatcher)"
             }
             DeserializePath(componentDict, "paths");
 
-            this.Name = GetRequiredValue<string>(componentDict, "name");
-            this.Guid = GetRequiredValue<string>(componentDict, "guid");
-            this.InstallOrder = GetValueOrDefault<int>(componentDict, "installorder");
-            this.Description = GetValueOrDefault<string>(componentDict,"description");
-            this.Directions = GetValueOrDefault<string>(componentDict, "directions");
-            this.Category = GetValueOrDefault<string>(componentDict, "category");
-            this.Tier = GetValueOrDefault<string>(componentDict, "tier");
-            this.Language = GetValueOrDefault<List<string>>(componentDict, "language");
-            this.Author = GetValueOrDefault<string>(componentDict, "author");
-            this.Dependencies = GetValueOrDefault<List<string>>(componentDict, "dependencies");
-            this.Instructions = DeserializeInstructions(GetValueOrDefault<TomlTableArray>(componentDict, "instructions"));
+            Name = GetRequiredValue<string>(componentDict, "name");
+            Guid = GetRequiredValue<string>(componentDict, "guid");
+            InstallOrder = GetValueOrDefault<int>(componentDict, "installorder");
+            Description = GetValueOrDefault<string>(componentDict, "description");
+            Directions = GetValueOrDefault<string>(componentDict, "directions");
+            Category = GetValueOrDefault<string>(componentDict, "category");
+            Tier = GetValueOrDefault<string>(componentDict, "tier");
+            Language = GetValueOrDefault<List<string>>(componentDict, "language");
+            Author = GetValueOrDefault<string>(componentDict, "author");
+            Dependencies = GetValueOrDefault<List<string>>(componentDict, "dependencies");
+            Instructions = DeserializeInstructions(GetValueOrDefault<TomlTableArray>(componentDict, "instructions"));
 
-            this.Instructions?.ForEach(instruction => instruction.ParentComponent = this);
+            Instructions?.ForEach(instruction => instruction.ParentComponent = this);
         }
 
         private static List<Instruction> DeserializeInstructions(TomlObject tomlObject)
@@ -626,7 +613,7 @@ arguments = ""any command line arguments to pass (none available in TSLPatcher)"
                     // Fix GUID strings in each list item
                     for (int i = 0; i < stringList.Count; i++)
                     {
-                        if (!System.Guid.TryParse(stringList[i], out Guid guidValue))
+                        if (!System.Guid.TryParse(stringList[i], out _))
                         {
                             // Attempt to fix common issues with GUID strings
                             string fixedGuid = FixGuidString(stringList[i]);
@@ -641,7 +628,7 @@ arguments = ""any command line arguments to pass (none available in TSLPatcher)"
                     // Fix GUID strings in each list item
                     for (int i = 0; i < stringList.Count; i++)
                     {
-                        if (!System.Guid.TryParse(stringList[i], out Guid guidValue))
+                        if (!System.Guid.TryParse(stringList[i], out _))
                         {
                             // Attempt to fix common issues with GUID strings
                             string fixedGuid = FixGuidString(stringList[i]);
@@ -661,12 +648,19 @@ arguments = ""any command line arguments to pass (none available in TSLPatcher)"
 
             // Attempt to fix common issues with GUID strings
             if (!guidString.StartsWith("{", StringComparison.Ordinal))
+            {
                 guidString = "{" + guidString;
-            if (!guidString.EndsWith("}", StringComparison.Ordinal))
-                guidString += "}";
-            if (guidString.IndexOf('-') < 0)
-                guidString = Regex.Replace(guidString, @"(\w{8})(\w{4})(\w{4})(\w{4})(\w{12})", "$1-$2-$3-$4-$5");
+            }
 
+            if (!guidString.EndsWith("}", StringComparison.Ordinal))
+            {
+                guidString += "}";
+            }
+
+            if (guidString.IndexOf('-') < 0)
+            {
+                guidString = Regex.Replace(guidString, @"(\w{8})(\w{4})(\w{4})(\w{4})(\w{12})", "$1-$2-$3-$4-$5");
+            }
 
             return guidString;
         }
@@ -692,15 +686,7 @@ arguments = ""any command line arguments to pass (none available in TSLPatcher)"
             }
         }
 
-        private static string PrefixPath(string path)
-        {
-            if (!path.StartsWith("<<modDirectory>>") && !path.StartsWith("<<kotorDirectory>>"))
-            {
-                return "<<modDirectory>>" + path;
-            }
-            return path;
-        }
-
+        private static string PrefixPath(string path) => !path.StartsWith("<<modDirectory>>") && !path.StartsWith("<<kotorDirectory>>") ? "<<modDirectory>>" + path : path;
 
         public static string FixPathFormatting(string path)
         {
@@ -817,7 +803,8 @@ arguments = ""any command line arguments to pass (none available in TSLPatcher)"
         )
         {
             // Check if we have permission to write to the Destination directory
-            if (!Utility.Utility.CanWriteToDirectory(MainConfig.DestinationPath)) {
+            if (!Utility.Utility.CanWriteToDirectory(MainConfig.DestinationPath))
+            {
                 throw new Exception("Cannot write to the destination directory.");
             }
 
@@ -870,10 +857,10 @@ arguments = ""any command line arguments to pass (none available in TSLPatcher)"
                             success = await instruction.ExtractFileAsync();
                             break;
                         case "delete":
-                            success = await instruction.DeleteFileAsync();
+                            success = instruction.DeleteFile();
                             break;
                         case "move":
-                            success = await instruction.MoveFileAsync();
+                            success = instruction.MoveFile();
                             break;
                         case "patch":
                         case "tslpatcher":
@@ -888,13 +875,13 @@ arguments = ""any command line arguments to pass (none available in TSLPatcher)"
                         case "backup": //todo
                         case "rename": //todo
                         case "confirm":
-                            /*(var sourcePaths, var something) = instruction.ParsePaths();
-                            bool confirmationResult = await confirmDialog.ShowConfirmationDialog(sourcePaths.FirstOrDefault());
-                            if (!confirmationResult)
-                            {
-                                this.Confirmations.Add(true);
-                            }
-                            break;*/
+                        /*(var sourcePaths, var something) = instruction.ParsePaths();
+                        bool confirmationResult = await confirmDialog.ShowConfirmationDialog(sourcePaths.FirstOrDefault());
+                        if (!confirmationResult)
+                        {
+                            this.Confirmations.Add(true);
+                        }
+                        break;*/
                         case "inform":
                         default:
                             // Handle unknown instruction type here
@@ -907,11 +894,15 @@ arguments = ""any command line arguments to pass (none available in TSLPatcher)"
                     {
                         Logger.LogException(new Exception(success.ToString()));
                         Logger.Log($"Instruction {instruction.Action} failed at index {i1}.");
-                        bool confirmationResult = await confirmDialog.ShowConfirmationDialog($"Error installing mod {this.Name}, would you like to execute the next instruction anyway?");
+                        bool confirmationResult = await confirmDialog.ShowConfirmationDialog($"Error installing mod {Name}, would you like to execute the next instruction anyway?");
                         if (!confirmationResult)
+                        {
                             return (false, null);
+                        }
                         else
+                        {
                             continue;
+                        }
                     }
                     /*if (instruction.ExpectedChecksums != null)
                     {
@@ -953,7 +944,7 @@ arguments = ""any command line arguments to pass (none available in TSLPatcher)"
             (bool, Dictionary<FileInfo, SHA1>) result = await ProcessComponentAsync(this);
             if (!result.Item1)
             {
-                Logger.LogException(new Exception($"Component {this.Name} failed to install the mod correctly with {result}"));
+                Logger.LogException(new Exception($"Component {Name} failed to install the mod correctly with {result}"));
                 return (false, null);
             }
 

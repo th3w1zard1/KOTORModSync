@@ -1,21 +1,9 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 using KOTORModSync.Core;
 using KOTORModSync.Core.Utility;
-using Microsoft.VisualStudio.Services.CircuitBreaker;
-using Microsoft.VisualStudio.TestPlatform.Utilities;
-using NUnit.Framework;
-using SharpCompress.Readers;
-using Moq;
 
 namespace KOTORModSync.Tests
 {
@@ -27,27 +15,27 @@ namespace KOTORModSync.Tests
             try
             {
                 Logger.Log("Testing TryExecuteCommand...");
-                var result = PlatformAgnosticMethods.TryExecuteCommand(command);
-                sharedData["success"] = result.Success;
-                sharedData["output"] = result.Output;
+                (bool Success, string Output, string Error) = PlatformAgnosticMethods.TryExecuteCommand(command);
+                sharedData["success"] = Success;
+                sharedData["output"] = Output;
             }
             catch (Exception ex) when (ex is TimeoutException)
             {
                 Logger.Log("The test timed out. Make sure the command execution is completing within the expected time.");
                 Logger.Log("Here are the currently running processes on the machine:");
-                var processes = Process.GetProcesses();
-                foreach (var process in processes)
+                Process[] processes = Process.GetProcesses();
+                foreach (Process process in processes)
                 {
                     Logger.Log($"{process.ProcessName} (ID: {process.Id})");
                 }
 
                 Logger.Log("Standard output from the timed-out process:");
-                var standardOutput = PlatformAgnosticMethods.TryExecuteCommand("echo");
-                Logger.Log(standardOutput.Output);
+                (bool Success, string Output, string Error) = PlatformAgnosticMethods.TryExecuteCommand("echo");
+                Logger.Log(Output);
             }
             finally
             {
-                completed.Set();
+                _ = completed.Set();
             }
         }
 

@@ -1,3 +1,6 @@
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+
 using System;
 using System.Threading.Tasks;
 using Avalonia;
@@ -10,15 +13,9 @@ namespace KOTORModSync.GUI
 {
     public partial class ConfirmationDialog : Window
     {
-        public ConfirmationDialog()
-        {
-            InitializeComponent();
-        }
+        public ConfirmationDialog() => InitializeComponent();
 
-        private void InitializeComponent()
-        {
-            AvaloniaXamlLoader.Load(this);
-        }
+        private void InitializeComponent() => AvaloniaXamlLoader.Load(this);
 
         public static readonly AvaloniaProperty ConfirmTextProperty =
             AvaloniaProperty.Register<ConfirmationDialog, string>(nameof(ConfirmText));
@@ -31,7 +28,7 @@ namespace KOTORModSync.GUI
 
         private void OnOpened(object sender, EventArgs e)
         {
-            var confirmTextBlock = this.FindControl<TextBlock>("confirmTextBlock");
+            TextBlock confirmTextBlock = this.FindControl<TextBlock>("confirmTextBlock");
             confirmTextBlock.Text = ConfirmText;
         }
 
@@ -39,10 +36,12 @@ namespace KOTORModSync.GUI
         {
             var tcs = new TaskCompletionSource<bool>();
 
-            Dispatcher.UIThread.InvokeAsync(() =>
+            _ = Dispatcher.UIThread.InvokeAsync(() =>
             {
-                var confirmationDialog = new ConfirmationDialog();
-                confirmationDialog.ConfirmText = confirmText;
+                var confirmationDialog = new ConfirmationDialog
+                {
+                    ConfirmText = confirmText
+                };
 
                 EventHandler<RoutedEventArgs> yesClickedHandler = null;
                 EventHandler<RoutedEventArgs> noClickedHandler = null;
@@ -82,13 +81,11 @@ namespace KOTORModSync.GUI
                 confirmationDialog.Closed += closedHandler;
                 confirmationDialog.Opened += confirmationDialog.OnOpened;
 
-                confirmationDialog.ShowDialog(parentWindow);
+                _ = confirmationDialog.ShowDialog(parentWindow);
             });
 
             return tcs.Task;
         }
-
-
 
         public static readonly RoutedEvent<RoutedEventArgs> YesButtonClickedEvent =
             RoutedEvent.Register<ConfirmationDialog, RoutedEventArgs>(nameof(YesButtonClicked), RoutingStrategies.Bubble);
@@ -108,14 +105,8 @@ namespace KOTORModSync.GUI
             remove => RemoveHandler(NoButtonClickedEvent, value);
         }
 
-        private void YesButton_Click(object sender, RoutedEventArgs e)
-        {
-            RaiseEvent(new RoutedEventArgs(YesButtonClickedEvent));
-        }
+        private void YesButton_Click(object sender, RoutedEventArgs e) => RaiseEvent(new RoutedEventArgs(YesButtonClickedEvent));
 
-        private void NoButton_Click(object sender, RoutedEventArgs e)
-        {
-            RaiseEvent(new RoutedEventArgs(NoButtonClickedEvent));
-        }
+        private void NoButton_Click(object sender, RoutedEventArgs e) => RaiseEvent(new RoutedEventArgs(NoButtonClickedEvent));
     }
 }

@@ -1,6 +1,17 @@
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+
+/* Unmerged change from project 'KOTORModSync (net6.0)'
+Before:
 using System;
+After:
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT System;
+*/
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+
 using System.Threading.Tasks;
-using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 
@@ -14,10 +25,7 @@ namespace KOTORModSync.GUI
             AttachControls();
         }
 
-        private void InitializeComponent()
-        {
-            AvaloniaXamlLoader.Load(this);
-        }
+        private void InitializeComponent() => AvaloniaXamlLoader.Load(this);
 
         private void AttachControls()
         {
@@ -31,11 +39,8 @@ namespace KOTORModSync.GUI
             progressWindow.progressTextBlock.Text = message;
             progressWindow.progressBar.Value = (double)progress;
 
-            await progressWindow.ShowDialog<bool?>(parentWindow);
+            _ = await progressWindow.ShowDialog<bool?>(parentWindow);
         }
-        public void Dispose()
-        {
-            Close();
-        }
+        public void Dispose() => Close();
     }
 }

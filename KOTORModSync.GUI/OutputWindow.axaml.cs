@@ -1,12 +1,21 @@
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+
+/* Unmerged change from project 'KOTORModSync (net6.0)'
+Before:
 using System.Linq;
+After:
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT System.Linq;
+*/
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+
 using System.Text;
 using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Layout;
-using Avalonia.LogicalTree;
 using Avalonia.Markup.Xaml;
 using Avalonia.Threading;
-using Avalonia.VisualTree;
 using KOTORModSync.Core;
 
 namespace KOTORModSync.GUI
@@ -25,10 +34,7 @@ namespace KOTORModSync.GUI
             Logger.Initialize();
         }
 
-        private void InitializeComponent()
-        {
-            AvaloniaXamlLoader.Load(this);
-        }
+        private void InitializeComponent() => AvaloniaXamlLoader.Load(this);
 
         private void InitializeControls()
         {
@@ -40,15 +46,15 @@ namespace KOTORModSync.GUI
             // Subscribe to the Logger.Logged event to capture log messages
             Logger.Logged += (message) =>
             {
-                _logBuilder.AppendLine(message);
+                _ = _logBuilder.AppendLine(message);
                 UpdateLogText();
             };
 
             // Subscribe to the Logger.ExceptionLogged event to capture exceptions
             Logger.ExceptionLogged += (ex) =>
             {
-                _logBuilder.AppendLine($"Exception: {ex.GetType().Name} - {ex.Message}");
-                _logBuilder.AppendLine($"Stack trace: {ex.StackTrace}");
+                _ = _logBuilder.AppendLine($"Exception: {ex.GetType().Name} - {ex.Message}");
+                _ = _logBuilder.AppendLine($"Stack trace: {ex.StackTrace}");
                 UpdateLogText();
             };
         }
@@ -58,25 +64,31 @@ namespace KOTORModSync.GUI
             lock (_logBuilder)
             {
                 // Create a local copy of _logBuilder to avoid accessing it from multiple threads
-                var logText = _logBuilder.ToString();
+                string logText = _logBuilder.ToString();
 
-                Dispatcher.UIThread.InvokeAsync(() =>
+                _ = Dispatcher.UIThread.InvokeAsync(() =>
                 {
+
+                    /* Unmerged change from project 'KOTORModSync (net6.0)'
+                    Before:
+                                        _logTextBox.Text = logText;
+
+                                        if (_logScrollViewer != null)
+                                        {
+                                            // Scroll to the end of the content
+                    After:
+                                        _logTextBox.Text = logText;
+
+                                        // Scroll to the end of the content
+                    */
                     _logTextBox.Text = logText;
 
-                    if (_logScrollViewer != null)
-                    {
-                        // Scroll to the end of the content
-                        _logScrollViewer.ScrollToEnd();
-                    }
+                    // Scroll to the end of the content
+                    _logScrollViewer?.ScrollToEnd();
                 });
             }
         }
 
-
-        private void logTextBox_TextChanged(object sender, AvaloniaPropertyChangedEventArgs e)
-        {
-            UpdateLogText();
-        }
+        private void logTextBox_TextChanged(object sender, AvaloniaPropertyChangedEventArgs e) => UpdateLogText();
     }
 }

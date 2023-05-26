@@ -32,7 +32,7 @@ namespace KOTORModSync.Tests
             {
                 FileInfo fileInfo = expectedChecksum.Key;
                 SHA1 sha1 = await FileChecksumValidator.CalculateSHA1Async(fileInfo);
-                actualChecksums[fileInfo.Name] = BitConverter.ToString(sha1!!!!!!!!.Hash).Replace("-", "");
+                actualChecksums[fileInfo.Name] = BitConverter.ToString(sha1.Hash).Replace("-", "");
             }
 
             // Act

@@ -31,7 +31,20 @@ namespace KOTORModSync.GUI
         private string _originalContent;
         private MainConfig _mainConfig;
         private Component currentComponent;
-        public MainWindow() => InitializeComponent();
+
+        public List<string> AvailableActions { get; } = new List<string>()
+        {
+            "execute",
+            "tslpatcher",
+            "move",
+            "delete"
+        };
+
+        public MainWindow()
+        {
+            InitializeComponent();
+            DataContext = this;
+        }
 
         private void InitializeComponent()
         {
@@ -117,6 +130,37 @@ namespace KOTORModSync.GUI
 
             return null;
         }
+
+        private async Task<List<string>> OpenFiles()
+        {
+            var dialog = new OpenFileDialog
+            {
+                AllowMultiple = true
+            };
+
+            var filter = new FileDialogFilter { Name = "Mod Sync File", Extensions = { "toml", "tml" } };
+            dialog.Filters.Add(filter);
+            dialog.Filters.Add(new FileDialogFilter { Name = "All Files", Extensions = { "*" } });
+
+            // Show the dialog and wait for a result.
+            var parent = VisualRoot as Window;
+            if (parent != null)
+            {
+                var filePaths = await dialog.ShowAsync(parent);
+                if (filePaths != null && filePaths.Length > 0)
+                {
+                    Logger.Log($"Selected files: {string.Join(", ", filePaths)}");
+                    return filePaths.ToList();
+                }
+            }
+            else
+            {
+                Logger.Log("Could not open dialog - parent window not found");
+            }
+
+            return null;
+        }
+
 
         private async Task<string> SaveFile(List<string> defaultExt = null)
         {
@@ -762,6 +806,75 @@ namespace KOTORModSync.GUI
             // Handle the selection changed event, if needed
         }
     }
+
+    public class ComboBoxItemConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            if (value is string action)
+            {
+                return new ComboBoxItem { Content = action };
+            }
+
+            return null;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            if (value is ComboBoxItem comboBoxItem)
+            {
+                return comboBoxItem.Content?.ToString();
+            }
+
+            return null;
+        }
+    }
+
+    public class EmptyCollectionConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        if (value is ICollection collection && collection.Count == 0)
+        {
+            // Create a new collection with a default value
+            return new List<string>() { string.Empty };
+        }
+
+        return value;
+    }
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        throw new NotSupportedException();
+    }
+}
+
+
+
+    public class ListToStringConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            if (value is IEnumerable<string> list)
+            {
+                return string.Join(Environment.NewLine, list);
+            }
+
+            return string.Empty;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            if (value is string text)
+            {
+                var lines = text.Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries);
+                return lines.ToList();
+            }
+
+            return Enumerable.Empty<string>();
+        }
+    }
+
     public class RelayCommand : ICommand
     {
         private readonly Action<object> execute;

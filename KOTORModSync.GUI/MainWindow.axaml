@@ -1,6 +1,7 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:local="clr-namespace:KOTORModSync.GUI"
+        xmlns:sys="clr-namespace:System;assembly=System.Runtime"
         x:Class="KOTORModSync.GUI.MainWindow"
         Title="KOTORModSync"
         Width="1200"
@@ -57,6 +58,7 @@
     </Window.Styles>
     <Window.Resources>
         <local:BooleanToArrowConverter x:Key="BooleanToArrowConverter" />
+        <local:ListToStringConverter x:Key="ListToStringConverter" />
     </Window.Resources>
     <Grid>
         <Grid.RowDefinitions>
@@ -146,7 +148,7 @@
                     </TabItem>
                     <TabItem Header="GUI Edit">
                         <TabItem.Content>
-                            <ScrollViewer>
+                            <ScrollViewer HorizontalScrollBarVisibility="Disabled">
                                 <ItemsControl x:Name="componentsItemsControl" Items="{Binding Components}">
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate>
@@ -158,70 +160,68 @@
                                                     <RowDefinition Height="Auto" />
                                                     <RowDefinition Height="Auto" />
                                                     <RowDefinition Height="Auto" />
-                                                    <RowDefinition Height="Auto" />
-                                                    <RowDefinition Height="Auto" />
-                                                    <RowDefinition Height="Auto" />
-                                                    <RowDefinition Height="Auto" />
+                                                    <RowDefinition Height="*" />
+                                                    <RowDefinition Height="*" />
+                                                    <RowDefinition Height="*" />
+                                                    <RowDefinition Height="*" />
+                                                    <RowDefinition Height="300" />
                                                 </Grid.RowDefinitions>
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="Auto" />
-                                                    <ColumnDefinition Width="*" />
-                                                </Grid.ColumnDefinitions>
 
-                                                <TextBlock Grid.Row="0" Grid.Column="0" Text="Name:" />
-                                                <TextBox Grid.Row="1" Grid.Column="0" Text="{Binding Name}" TextWrapping="Wrap"/>
+                                                <TextBlock Grid.Row="0" Text="Name:" />
+                                                <TextBox Grid.Row="1" Text="{Binding Name}" TextWrapping="Wrap"/>
 
-                                                <TextBlock Grid.Row="2" Grid.Column="0" Text="Guid:" />
-                                                <Button Grid.Row="3" Grid.Column="0" Content="Generate GUID" Click="GenerateGuidButton_Click" />
-                                                <TextBox Grid.Row="4" Grid.Column="1" Text="{Binding Guid}" />
+                                                <TextBlock Grid.Row="2" Text="Guid:" />
+                                                <Button Grid.Row="3" Content="Generate GUID" Click="GenerateGuidButton_Click" />
+                                                <TextBox Grid.Row="3" Text="{Binding Guid}" />
 
-                                                <TextBlock Grid.Row="5" Grid.Column="0" Text="Description:" />
-                                                <TextBox Grid.Row="6" Grid.Column="0" Text="{Binding Description}" AcceptsTab="True" AcceptsReturn="True" />
+                                                <TextBlock Grid.Row="6" Text="Description:" />
+                                                <TextBox Grid.Row="7" Text="{Binding Description}" TextWrapping="Wrap" AcceptsTab="True" AcceptsReturn="True" />
 
-                                                <TextBlock Grid.Row="7" Grid.Column="0" Text="Directions:" />
-                                                <TextBox Grid.Row="8" Grid.Column="0" Text="{Binding Directions}" AcceptsTab="True" AcceptsReturn="True" />
+                                                <TextBlock Grid.Row="8" Text="Directions:" />
+                                                <TextBox Grid.Row="9" Text="{Binding Directions}" TextWrapping="Wrap" AcceptsTab="True" AcceptsReturn="True" />
 
-                                                <ScrollViewer Grid.Row="10" Grid.Column="0" Height="300">
-                                                    <ItemsRepeater Items="{Binding Instructions}">
-                                                        <ItemsRepeater.ItemTemplate>
-                                                            <DataTemplate>
-                                                                <StackPanel Margin="2" HorizontalAlignment="Left">
-                                                                    <TextBlock Text="Action:" />
-                                                                    <TextBox Text="{Binding Action}" />
-                                                                    <TextBlock Text="Source:" />
-                                                                    <ItemsControl Items="{Binding Source}">
-                                                                        <ItemsControl.ItemTemplate>
-                                                                            <DataTemplate>
-                                                                                <TextBox Text="{Binding}" />
-                                                                            </DataTemplate>
-                                                                        </ItemsControl.ItemTemplate>
-                                                                    </ItemsControl>
-                                                                    <TextBlock Text="Destination:" />
-                                                                    <TextBox Text="{Binding Destination}" />
-                                                                    <TextBlock Text="Dependencies:" />
-                                                                    <ItemsControl Items="{Binding Dependencies}">
-                                                                        <ItemsControl.ItemTemplate>
-                                                                            <DataTemplate>
-                                                                                <TextBox Text="{Binding}" />
-                                                                            </DataTemplate>
-                                                                        </ItemsControl.ItemTemplate>
-                                                                    </ItemsControl>
-                                                                    <TextBlock Text="Restrictions:" />
-                                                                    <ItemsControl Items="{Binding Restrictions}">
-                                                                        <ItemsControl.ItemTemplate>
-                                                                            <DataTemplate>
-                                                                                <TextBox Text="{Binding}" />
-                                                                            </DataTemplate>
-                                                                        </ItemsControl.ItemTemplate>
-                                                                    </ItemsControl>
-                                                                    <TextBlock Text="Overwrite:" />
-                                                                    <TextBox Text="{Binding Overwrite}" />
-                                                                    <TextBlock Text="Arguments:" />
-                                                                    <TextBox Text="{Binding Arguments}" />
-                                                                </StackPanel>
-                                                            </DataTemplate>
-                                                        </ItemsRepeater.ItemTemplate>
-                                                    </ItemsRepeater>
+                                                <ScrollViewer Grid.Row="10">
+                                                    <StackPanel>
+                                                        <ItemsRepeater Items="{Binding Instructions}">
+                                                            <ItemsRepeater.ItemTemplate>
+                                                                <DataTemplate>
+                                                                    <Border BorderThickness="1" BorderBrush="LightGray" Margin="0,0,0,10">
+                                                                        <StackPanel Margin="10" HorizontalAlignment="Left">
+                                                                            <TextBlock Text="Instruction:" />
+                                                                            <StackPanel Margin="10,0,0,0">
+                                                                                <TextBlock Text="Action:" />
+                                                                                <TextBox Text="{Binding Action}" />
+                                                                                <TextBlock Text="Source:" />
+                                                                                <TextBox AcceptsReturn="True" Text="{Binding Source, Converter={StaticResource ListToStringConverter}}" />
+                                                                                <TextBlock Text="Destination:" />
+                                                                                <TextBox Text="{Binding Destination}" />
+                                                                                <TextBlock Text="Dependencies:" />
+                                                                                <ItemsControl Items="{Binding Dependencies}">
+                                                                                    <ItemsControl.ItemTemplate>
+                                                                                        <DataTemplate>
+                                                                                            <TextBox Text="{Binding}" />
+                                                                                        </DataTemplate>
+                                                                                    </ItemsControl.ItemTemplate>
+                                                                                </ItemsControl>
+                                                                                <TextBlock Text="Restrictions:" />
+                                                                                <ItemsControl Items="{Binding Restrictions}">
+                                                                                    <ItemsControl.ItemTemplate>
+                                                                                        <DataTemplate>
+                                                                                            <TextBox Text="{Binding}" />
+                                                                                        </DataTemplate>
+                                                                                    </ItemsControl.ItemTemplate>
+                                                                                </ItemsControl>
+                                                                                <TextBlock Text="Overwrite:" />
+                                                                                <TextBox Text="{Binding Overwrite}" />
+                                                                                <TextBlock Text="Arguments:" />
+                                                                                <TextBox Text="{Binding Arguments}" />
+                                                                            </StackPanel>
+                                                                        </StackPanel>
+                                                                    </Border>
+                                                                </DataTemplate>
+                                                            </ItemsRepeater.ItemTemplate>
+                                                        </ItemsRepeater>
+                                                    </StackPanel>
                                                 </ScrollViewer>
                                             </Grid>
                                         </DataTemplate>

@@ -465,6 +465,23 @@ namespace KOTORModSync.GUI
             }
         }
 
+        private void TabControl_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            // Get the selected tab item
+            var selectedItem = (sender as TabControl)?.SelectedItem as TabItem;
+
+            // Show/hide the appropriate content based on the selected tab
+            if (selectedItem?.Header.ToString() == "Tab 1")
+            {
+                rightTextBox.IsVisible=true;
+            }
+            else if (selectedItem?.Header.ToString() == "Tab 2")
+            {
+                rightTextBox.IsVisible=false;
+            }
+        }
+
+
         private void PopulateRightTextBox(Core.Component selectedComponent)
         {
             if (selectedComponent != null && rightTextBox != null)

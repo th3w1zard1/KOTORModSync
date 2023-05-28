@@ -140,8 +140,41 @@
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
+                <TabControl x:Name="tabControl" Grid.Row="1" SelectionChanged="TabControl_SelectionChanged">
+                    <TabItem Header="Raw Edit">
+                        <TextBox x:Name="rightTextBox" Margin="10" AcceptsReturn="True" TextWrapping="Wrap" Height="400" />
+                    </TabItem>
+                    <TabItem Header="GUI Edit">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="400" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
 
-                <TextBox x:Name="rightTextBox" Margin="10" AcceptsReturn="True" TextWrapping="Wrap" Height="400" />
+                            <TextBlock Text="Name:" Margin="2" Grid.Row="0" Grid.Column="0" VerticalAlignment="Center" />
+                            <TextBox x:Name="nameTextBox" Margin="2" AcceptsReturn="True" TextWrapping="Wrap" Height="10" Width="200" HorizontalAlignment="Left" Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="3"/>
+
+                            <TextBlock Text="Guid:" Margin="2" Grid.Row="1" Grid.Column="0" VerticalAlignment="Center" />
+                            <TextBox x:Name="guidTextBox" Margin="2,0,0,0" MaxWidth="350" HorizontalAlignment="Left" Grid.Row="1" Grid.Column="1" />
+                            <Button Content="Generate GUID" Click="GenerateGuidButton_Click" MinWidth="100" VerticalAlignment="Center" Grid.Row="1" Grid.Column="2" Margin="2,0,0,0" />
+
+                            <TextBlock Text="Description:" Margin="2" Grid.Row="2" Grid.Column="0" VerticalAlignment="Center" />
+                            <TextBox x:Name="descriptionTextBox" Margin="2" Width="200" Height="100" HorizontalAlignment="Left" Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="3" />
+
+                            <TextBlock Text="Directions:" Margin="2" Grid.Row="3" Grid.Column="0" VerticalAlignment="Center" />
+                            <TextBox x:Name="directionsTextBox" Margin="2" Width="200" Height="100" HorizontalAlignment="Left" Grid.Row="3" Grid.Column="1" Grid.ColumnSpan="3" />
+                        </Grid>
+                    </TabItem>
+                </TabControl>
+
 
                 <Grid Grid.Row="1" Margin="10">
                     <Grid.ColumnDefinitions>
@@ -149,10 +182,6 @@
                         <ColumnDefinition Width="Auto" />
                         <ColumnDefinition Width="*" />
                     </Grid.ColumnDefinitions>
-
-                    <Button Content="Generate GUID" Click="GenerateGuidButton_Click" MinWidth="100" VerticalAlignment="Center" />
-                    <Rectangle Width="10" />
-                    <TextBox x:Name="guidTextBox" Grid.Column="2" Width="200" HorizontalAlignment="Left" />
                 </Grid>
             </Grid>
 

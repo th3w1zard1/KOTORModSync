@@ -486,9 +486,6 @@ arguments = ""any command line arguments to pass (none available in TSLPatcher)"
 
     public class Component
     {
-        public event EventHandler<PropertyChangedEventArgs> PropertyChanged;
-
-        protected virtual void OnPropertyChanged(string propertyName) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
 
         public string Name { get; set; }
         public string Guid { get; set; }
@@ -503,6 +500,10 @@ arguments = ""any command line arguments to pass (none available in TSLPatcher)"
         public List<string> Language { get; set; }
         public string Category { get; set; }
         public DateTime SourceLastModified { get; internal set; }
+
+        public event EventHandler<PropertyChangedEventArgs> PropertyChanged;
+        protected virtual void OnPropertyChanged(string propertyName) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+
 
         public static string defaultComponent = @"
 [[thisMod]]

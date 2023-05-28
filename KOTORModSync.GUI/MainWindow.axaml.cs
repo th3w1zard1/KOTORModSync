@@ -41,20 +41,9 @@ namespace KOTORModSync.GUI
             leftTreeView = this.FindControl<TreeView>("leftTreeView");
             rightTextBox = this.FindControl<TextBox>("rightTextBox");
             rightTextBox.LostFocus += RightListBox_LostFocus; // Prevents rightListBox from being cleared when clicking elsewhere.
-            rightTextBox.PropertyChanged += (f, f2) => RightTextBox_PropertyChanged(f, f2);
             rightTextBox.DataContext = _selectedComponentProperties;
             _selectedComponentProperties = new ObservableCollection<string>();
-            guidTextBox = this.FindControl<TextBox>("guidTextBox");
-            guidTextBox.Width = rightTextBox.Bounds.Width;
             _mainConfig = new MainConfig();
-        }
-
-        private void RightTextBox_PropertyChanged(object sender, AvaloniaPropertyChangedEventArgs e)
-        {
-            if (e.Property == TextBox.BoundsProperty)
-            {
-                guidTextBox.Width = rightTextBox.Bounds.Width;
-            }
         }
 
         public static IControl Build(object data)
@@ -471,11 +460,11 @@ namespace KOTORModSync.GUI
             var selectedItem = (sender as TabControl)?.SelectedItem as TabItem;
 
             // Show/hide the appropriate content based on the selected tab
-            if (selectedItem?.Header.ToString() == "Tab 1")
+            if (selectedItem?.Header.ToString() == "Raw Edit")
             {
                 rightTextBox.IsVisible=true;
             }
-            else if (selectedItem?.Header.ToString() == "Tab 2")
+            else if (selectedItem?.Header.ToString() == "GUI Edit")
             {
                 rightTextBox.IsVisible=false;
             }
@@ -489,6 +478,10 @@ namespace KOTORModSync.GUI
                 _originalContent = Serializer.SerializeComponent(selectedComponent);
                 rightTextBox.Text = _originalContent;
                 currentComponent = selectedComponent;
+                var componentsItemsControl = this.FindControl<ItemsControl>("componentsItemsControl");
+                var componentCollection = new ObservableCollection<Component>();
+                componentsItemsControl.Items = componentCollection;
+                componentCollection.Add(currentComponent);
             }
         }
 
@@ -498,7 +491,7 @@ namespace KOTORModSync.GUI
             Guid uniqueGuid = Guid.NewGuid();
 
             // Set the generated GUID to the guidTextBox
-            guidTextBox.Text = "{" + uniqueGuid.ToString().ToUpper() + "}";
+            currentComponent.Guid = "{" + uniqueGuid.ToString().ToUpper() + "}";
         }
 
         private void RightListBox_LostFocus(object sender, RoutedEventArgs e) => e.Handled = true;

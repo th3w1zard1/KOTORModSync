@@ -19,10 +19,11 @@ Supports file validation using hashes of a game install to ensure each mod insta
 KOTORModSync is compatible with Windows7-11, Linux, and Mac, as well as anything supported by .NET Standard 2.0.
 
 
-### Linux
-Code naturally supports linux on .net 6.0 or higher. You may need additional X11 development libraries. In order to get this working on WSL I had to install the following packages:
+### Linux/Mac
+Only the x64 version is supported on Linux/Mac, all you need is .net 6.0 or higher. You may need additional X11 development libraries. In order to get this working on WSL I had to install the following packages:
 
 `sudo apt install libsm6 libice6 libx11-dev libfontconfig1 libx11-6 libx11-xcb1 libxau6 libxcb1 libxdmcp6 libxcb-xkb1 libxcb-render0 libxcb-shm0 libxcb-xfixes0 libxcb-util1 libxcb-xinerama0 libxcb-randr0 libxcb-image0 libxcb-keysyms1 libxcb-sync1 libxcb-xtest0`
-Then you can simply run the EXE like this:
+
+Then you can simply run the EXE like this in a terminal:
 
 `./KOTORModSync.exe`

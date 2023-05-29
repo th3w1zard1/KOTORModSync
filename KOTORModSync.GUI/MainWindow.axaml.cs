@@ -32,14 +32,6 @@ namespace KOTORModSync.GUI
         private MainConfig _mainConfig;
         private Component currentComponent;
 
-        public List<string> AvailableActions { get; } = new List<string>()
-        {
-            "execute",
-            "tslpatcher",
-            "move",
-            "delete"
-        };
-
         public MainWindow()
         {
             InitializeComponent();
@@ -540,23 +532,21 @@ namespace KOTORModSync.GUI
                     _ = await informationDialog.ShowDialog<bool?>(this);
                     return;
                 }
-                var confirmationDialogCallback = new ConfirmationDialogCallback(this);
                 if (thisComponent.Directions != null)
                 {
-                    _ = InformationDialog.ShowInformationDialog(this, thisComponent.Directions);
+                    bool confirm = await ConfirmationDialog.ShowConfirmationDialog(this, thisComponent.Directions + "\r\n\r\n Press Yes to execute these directions now.");
+                    if(!confirm)
+                    {
+                        Logger.Log($"User cancelled install of {thisComponent.Name}");
+                        return;
+                    }
                 }
-
-                /* Unmerged change from project 'KOTORModSync (net6.0)'
-                Before:
-                                var (success, originalChecksums) = await Task.Run(() => thisComponent.ExecuteInstructions(confirmationDialogCallback, _components));
-                After:
-                                (bool success, originalChecksums) = await Task.Run(() => thisComponent.ExecuteInstructions(confirmationDialogCallback, _components));
-                */
+                
+                var confirmationDialogCallback = new ConfirmationDialogCallback(this);
                 (bool success, Dictionary<FileInfo, SHA1> originalChecksums) = await Task.Run(() => thisComponent.ExecuteInstructions(confirmationDialogCallback, _components));
                 if (!success)
                 {
                     await InformationDialog.ShowInformationDialog(this, $"There was a problem installing {thisComponent.Name}, please check the output window");
-                    return;
                 }
                 else
                 {
@@ -676,23 +666,6 @@ namespace KOTORModSync.GUI
             }
         }
 
-        private ICommand itemClickCommand;
-
-        public ICommand ItemClickCommand => itemClickCommand ?? (itemClickCommand = new RelayCommand(ItemClick));
-
-        private void ItemClick(object parameter)
-        {
-            if (parameter is Core.Component component)
-            {
-                // Handle the item click event here
-                if (!_selectedComponents.Contains(component))
-                {
-                    _selectedComponents.Add(component);
-                }
-                LoadComponentDetails(component);
-            }
-        }
-
         private void TabControl_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             // Get the selected tab item
@@ -710,12 +683,24 @@ namespace KOTORModSync.GUI
         }
 
 
-        private void LoadComponentDetails(Component selectedComponent)
+        private async void LoadComponentDetails(Component selectedComponent)
         {
             if (selectedComponent != null && rightTextBox != null)
             {
                 _originalContent = Serializer.SerializeComponent(selectedComponent);
+
+                if (_originalContent != rightTextBox.Text && !string.IsNullOrEmpty(rightTextBox.Text))
+                {
+                    bool confirm = await ConfirmationDialog.ShowConfirmationDialog(this, "You're attempting to load the component, but there may be unsaved changes still in the editor. Really continue?");
+
+                    if (!confirm)
+                    {
+                        return;
+                    }
+                }
+
                 rightTextBox.Text = _originalContent;
+
                 currentComponent = selectedComponent;
                 var componentsItemsControl = this.FindControl<ItemsControl>("componentsItemsControl");
                 var componentCollection = new ObservableCollection<Component>();
@@ -818,7 +803,7 @@ namespace KOTORModSync.GUI
             catch (ArgumentOutOfRangeException ex)
             {
                 Logger.LogException(ex);
-                Logger.Log("Will fix this in the next version - sorry.");
+                Logger.Log("Will fix above error in a future version - sorry.");
             }
         }
 
@@ -906,12 +891,12 @@ namespace KOTORModSync.GUI
             }
         }
 
-        private void CreateTreeViewItem(Component component, TreeViewItem parentItem)
+        private async void CreateTreeViewItem(Component component, TreeViewItem parentItem)
         {
             try
             {
                 // Check if the component item is already added to the parent item
-                TreeViewItem existingItem = parentItem.Items.OfType<TreeViewItem>().FirstOrDefault(item => item.Header.ToString().Equals(component.Name));
+                TreeViewItem existingItem = parentItem.Items.OfType<TreeViewItem>().FirstOrDefault(item => item.Header.ToString().Equals(component.Name, StringComparison.Ordinal));
 
                 if (existingItem != null)
                 {
@@ -924,7 +909,13 @@ namespace KOTORModSync.GUI
                 Component duplicateComponent = _components.FirstOrDefault(c => c.Guid == component.Guid && c != component);
                 if (duplicateComponent != null)
                 {
-                    Logger.Log($"Mod {component.Name} has duplicate GUID with mod {duplicateComponent.Name}");
+                    string message = $"Component '{component.Name}' has duplicate GUID with component '{duplicateComponent.Name}'";
+                    Logger.Log(message);
+                    bool confirm = await ConfirmationDialog.ShowConfirmationDialog(this, message + $".\r\nAssign random GUID to '{duplicateComponent.Name}'? (default: NO)");
+                    if ( confirm ) {
+                        duplicateComponent.Guid = Guid.NewGuid().ToString();
+                        Logger.Log($"Replaced guid of component {duplicateComponent.Name}");
+                    }
                 }
 
                 // Create a new tree view item for the component
@@ -982,6 +973,7 @@ namespace KOTORModSync.GUI
         {
             string randomFileName = System.IO.Path.GetFileNameWithoutExtension(System.IO.Path.GetRandomFileName());
             filePath = filePath ?? $"modconfig_{randomFileName}.toml";
+            Logger.Log($"Creating backup modconfig at {filePath}");
 
             using (StreamWriter writer = new StreamWriter(filePath))
             {
@@ -991,7 +983,6 @@ namespace KOTORModSync.GUI
                 }
             }
         }
-
         private void WriteTreeViewItemToFile(TreeViewItem item, StreamWriter writer, int depth = 0, int maxDepth = int.MaxValue)
         {
             if (item.Tag is Component component)
@@ -1008,10 +999,42 @@ namespace KOTORModSync.GUI
                 }
             }
         }
-
         private void RightDataGrid_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             // Handle the selection changed event, if needed
+        }
+
+        private ICommand itemClickCommand;
+        public ICommand ItemClickCommand => itemClickCommand ?? (itemClickCommand = new RelayCommand(ItemClick));
+
+        private void ItemClick(object parameter)
+        {
+            if (parameter is Core.Component component)
+            {
+                // Handle the item click event here
+                if (!_selectedComponents.Contains(component))
+                {
+                    _selectedComponents.Add(component);
+                }
+                LoadComponentDetails(component);
+            }
+        }
+        public class RelayCommand : ICommand
+        {
+            private readonly Action<object> execute;
+            private readonly Func<object, bool> canExecute;
+
+            public RelayCommand(Action<object> execute, Func<object, bool> canExecute = null)
+            {
+                this.execute = execute ?? throw new ArgumentNullException(nameof(execute));
+                this.canExecute = canExecute;
+            }
+            #pragma warning disable CS0067 // warning is incorrect - it's used internally.
+            public event EventHandler CanExecuteChanged;
+            #pragma warning restore CS0067
+
+            public bool CanExecute(object parameter) => canExecute == null || canExecute(parameter);
+            public void Execute(object parameter) => execute(parameter);
         }
     }
 
@@ -1039,25 +1062,23 @@ namespace KOTORModSync.GUI
     }
 
     public class EmptyCollectionConverter : IValueConverter
-{
-    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
     {
-        if (value is ICollection collection && collection.Count == 0)
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            // Create a new collection with a default value
-            return new List<string>() { string.Empty };
+            if (value is ICollection collection && collection.Count == 0)
+            {
+                // Create a new collection with a default value
+                return new List<string>() { string.Empty };
+            }
+
+            return value;
         }
 
-        return value;
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            throw new NotSupportedException();
+        }
     }
-
-    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
-    {
-        throw new NotSupportedException();
-    }
-}
-
-
 
     public class ListToStringConverter : IValueConverter
     {
@@ -1081,24 +1102,6 @@ namespace KOTORModSync.GUI
 
             return Enumerable.Empty<string>();
         }
-    }
-
-    public class RelayCommand : ICommand
-    {
-        private readonly Action<object> execute;
-        private readonly Func<object, bool> canExecute;
-
-        public RelayCommand(Action<object> execute, Func<object, bool> canExecute = null)
-        {
-            this.execute = execute ?? throw new ArgumentNullException(nameof(execute));
-            this.canExecute = canExecute;
-        }
-#pragma warning disable CS0067
-        public event EventHandler CanExecuteChanged;
-#pragma warning restore CS0067
-
-        public bool CanExecute(object parameter) => canExecute == null || canExecute(parameter);
-        public void Execute(object parameter) => execute(parameter);
     }
     public class BooleanToArrowConverter : IValueConverter
     {

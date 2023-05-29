@@ -9,53 +9,9 @@
         Background="#1B232F">
 
     <Window.Styles>
-        <Style Selector="TextBlock">
-            <Setter Property="FontSize" Value="14" />
-            <Setter Property="FontWeight" Value="Normal" />
-            <Setter Property="Margin" Value="0,2" />
-            <Setter Property="Foreground" Value="White" />
-        </Style>
-        <Style Selector="Button">
-            <Setter Property="Margin" Value="0,2" />
-            <Setter Property="Padding" Value="10" />
-            <Setter Property="MinWidth" Value="100" />
-            <Setter Property="Background" Value="#4D596D" />
-            <Setter Property="Foreground" Value="White" />
-            <Setter Property="HorizontalAlignment" Value="Center" />
-            <Setter Property="VerticalAlignment" Value="Center" />
-        </Style>
-        <Style Selector="Button:PointerOver">
-            <Setter Property="Foreground" Value="White" />
-            <!-- Bright white color, doesn't work for some reason. -->
-        </Style>
-        <Style Selector="TextBox">
-            <Setter Property="Margin" Value="2" />
-            <Setter Property="Padding" Value="2" />
-            <Setter Property="MinWidth" Value="200" />
-            <Setter Property="MinHeight" Value="30" />
-            <Setter Property="Background" Value="#3E4859" />
-            <Setter Property="Foreground" Value="White" />
-            <Setter Property="BorderBrush" Value="#4D596D" />
-            <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="FontSize" Value="14" />
-        </Style>
-        <Style Selector="TreeView">
-            <Setter Property="Margin" Value="2" />
-            <Setter Property="MinWidth" Value="150" />
-            <Setter Property="Background" Value="#4D596D" />
-        </Style>
-        <Style Selector="ScrollViewer">
-            <Setter Property="VerticalScrollBarVisibility" Value="Auto" />
-            <Setter Property="HorizontalScrollBarVisibility" Value="Auto" />
-        </Style>
-        <Style Selector="StackPanel">
-            <Setter Property="Margin" Value="2" />
-        </Style>
-        <Style Selector="Rectangle">
-            <Setter Property="Width" Value="5" />
-            <Setter Property="Fill" Value="Transparent" />
-        </Style>
+        <StyleInclude Source="/Styles/KotorStyle.axaml" />
     </Window.Styles>
+
     <Window.Resources>
         <local:BooleanToArrowConverter x:Key="BooleanToArrowConverter" />
         <local:ListToStringConverter x:Key="ListToStringConverter" />
@@ -164,6 +120,8 @@
                                                     <RowDefinition Height="*" />
                                                     <RowDefinition Height="*" />
                                                     <RowDefinition Height="*" />
+                                                    <RowDefinition Height="*" />
+                                                    <RowDefinition Height="*" />
                                                     <RowDefinition Height="300" />
                                                 </Grid.RowDefinitions>
                                                 <Grid.ColumnDefinitions>
@@ -183,8 +141,9 @@
 
                                                 <TextBlock Grid.Row="8" Text="Directions:" />
                                                 <TextBox Grid.Row="9" Grid.Column="0" Text="{Binding Directions}" LostFocus="TextBox_LostFocus" Focusable="True" TextWrapping="Wrap" AcceptsTab="True" AcceptsReturn="True" />
-
-                                                <ScrollViewer Grid.Row="10">
+                                                <TextBlock Grid.Row="10" Text="Author:" />
+                                                <TextBox Grid.Row="11" Grid.Column="0" Text="{Binding Author}" LostFocus="TextBox_LostFocus" Focusable="True" TextWrapping="Wrap" AcceptsTab="True" AcceptsReturn="True" />
+                                                <ScrollViewer Grid.Row="12">
                                                     <StackPanel>
                                                         <ItemsRepeater Items="{Binding Instructions}">
                                                             <ItemsRepeater.ItemTemplate>
@@ -262,11 +221,15 @@
                 </TabControl>
             </Grid>
             <StackPanel Grid.Column="2" Orientation="Vertical" HorizontalAlignment="Right">
-                <Button Content="Load Installation File" Margin="0 10" Click="LoadInstallFile_Click" />
-                <Button Content="Set Directories" Margin="0 10" Click="SetDirectories_Click"/>
-                <Button Content="Validate Config" Margin="0 10" Click="ValidateButton_Click"/>
-                <Button Content="Generate Docs from Config" Margin="0 10" Click="DocsButton_Click"/>
-                <Button Content="  Install All" Margin="0 10" Click="StartInstall_Click" />
+                <Button Content="Load Installation File" Margin="0 5" Click="LoadInstallFile_Click" />
+                <Button Content="Set Directories" Margin="0 5" Click="SetDirectories_Click"/>
+                <Button Content="Validate Config" Margin="0 5" Click="ValidateButton_Click"/>
+                <Button Content="Generate Docs from Config" Margin="0 5" Click="DocsButton_Click"/>
+                <Button Content="  Install All" Margin="0 5" Click="StartInstall_Click" />
+                <CheckBox Content="Default Install" IsChecked="{Binding defaultInstallCheckBox}" Foreground="White" />
+                <CheckBox Content="Verbose Logging" IsChecked="{Binding verboseLoggingCheckBox}" Foreground="White" />
+                <CheckBox Content="Check me" IsChecked="{Binding IsCheckedProperty}" Foreground="White" />
+                <CheckBox Content="Check me" IsChecked="{Binding IsCheckedProperty2}" Foreground="White" />
             </StackPanel>
         </Grid>
     </Grid>

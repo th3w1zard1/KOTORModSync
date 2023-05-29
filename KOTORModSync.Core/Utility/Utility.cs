@@ -19,7 +19,7 @@ namespace KOTORModSync.Core.Utility
         {
             string normalizedPath = path.Replace("<<modDirectory>>", MainConfig.SourcePath.FullName);
             normalizedPath = normalizedPath.Replace("<<kotorDirectory>>", MainConfig.DestinationPath.FullName);
-            return Path.GetFullPath(normalizedPath);
+            return normalizedPath;
         }
         public static string RestoreCustomVariables(string fullPath)
         {

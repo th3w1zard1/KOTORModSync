@@ -65,6 +65,12 @@
       <PrivateAssets>none</PrivateAssets>
     </ProjectReference>
   </ItemGroup>
+
+  <ItemGroup>
+    <AvaloniaXaml Update="Styles\DefaultStyle.axaml">
+      <Generator>MSBuild:Compile</Generator>
+    </AvaloniaXaml>
+  </ItemGroup>
   
   <ItemGroup>
     <Compile Update="OutputWindow.axaml.cs">

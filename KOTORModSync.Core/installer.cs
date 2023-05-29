@@ -78,6 +78,9 @@ arguments = ""any command line arguments to pass (none available in TSLPatcher)"
 
         public static async Task<bool> ExecuteInstructionAsync(Func<Task<bool>> instructionMethod) => await instructionMethod().ConfigureAwait(false);
 
+        // This method will replace custom variables such as <<modDirectory>> and <<kotorDirectory>> with their actual paths.
+        // This method should not be ran before an instruction is executed.
+        // Otherwise we risk deserializing a full path early, which can lead to unsafe config injections. (e.g. malicious config file targetting sys files)
         private (List<string>, DirectoryInfo) ParsePaths()
         {
             var sourcePaths = new List<string>();
@@ -254,18 +257,14 @@ arguments = ""any command line arguments to pass (none available in TSLPatcher)"
                             // Delete the existing file
                             File.Delete(destinationFilePath);
                         }
-                        else
-                        {
-                            Logger.Log($"File doesn't exist at the destination {destinationFilePath}");
-                        }
 
                         // Move the file
-                        Logger.Log($"Moving {sourcePath} to {destinationFilePath}... Overwriting? {Overwrite}");
+                        Logger.Log($"Move '{Path.GetFileName(sourcePath)}' to '{destinationFilePath}'");
                         File.Move(sourcePath, destinationFilePath);
                     }
                     else if (!Overwrite)
                     {
-                        Logger.Log($"File already exists, but overwrite is false. Skipping file {destinationFilePath}");
+                        Logger.Log($"Skipping file {Path.GetFileName(destinationFilePath)} (Overwrite is false)");
                     }
 
                 }
@@ -814,20 +813,25 @@ arguments = ""any command line arguments to pass (none available in TSLPatcher)"
                 for (int i1 = 0; i1 < component.Instructions.Count; i1++)
                 {
                     Instruction instruction = component.Instructions[i1];
+
                     //The instruction will run if any of the following conditions are met:
                     //The instruction has no dependencies or restrictions.
-                    //The instruction has dependencies, and all of the required components are installed.
-                    //The instruction has restrictions, but none of the restricted components are installed.
+                    //The instruction has dependencies, and all of the required components are being installed.
+                    //The instruction has restrictions, but none of the restricted components are being installed.
                     bool shouldRunInstruction = true;
                     if (instruction.Dependencies != null && instruction.Dependencies.Count > 0)
                     {
                         shouldRunInstruction &= instruction.Dependencies.All(requiredGuid =>
                             componentsList.Any(checkComponent => checkComponent.Guid == requiredGuid));
+                        if(!shouldRunInstruction)
+                            Logger.Log($"Not running instruction {instruction.Action} index {i1} due to missing dependency(s): {instruction.Dependencies}");
                     }
-                    if (instruction.Restrictions != null && instruction.Restrictions.Count > 0)
+                    if (!shouldRunInstruction && instruction.Restrictions != null && instruction.Restrictions.Count > 0)
                     {
                         shouldRunInstruction &= !instruction.Restrictions.Any(restrictedGuid =>
                             componentsList.Any(checkComponent => checkComponent.Guid == restrictedGuid));
+                        if(!shouldRunInstruction)
+                            Logger.Log($"Not running instruction {instruction.Action} index {i1} due to restricted components installed: {instruction.Restrictions}");
                     }
 
                     if (!shouldRunInstruction)
@@ -884,6 +888,7 @@ arguments = ""any command line arguments to pass (none available in TSLPatcher)"
                         }
                         break;*/
                         case "inform":
+                        case "choose": //todo, will rely on future instructions in the list.
                         default:
                             // Handle unknown instruction type here
                             Logger.Log($"Unknown instruction {instruction.Action}");

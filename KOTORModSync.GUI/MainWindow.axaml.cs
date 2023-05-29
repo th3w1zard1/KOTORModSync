@@ -104,28 +104,35 @@ namespace KOTORModSync.GUI
 
         private async Task<string> OpenFile()
         {
-            OpenFileDialog dialog = new OpenFileDialog
+            try
             {
-                AllowMultiple = false
-            };
-            dialog?.Filters?.Add(new FileDialogFilter() { Name = "Mod Sync File", Extensions = { "toml", "tml" } });
-            dialog?.Filters?.Add(new FileDialogFilter() { Name = "All Files", Extensions = { "*" } });
-
-            // Show the dialog and wait for a result.
-            if (VisualRoot is Window parent)
-            {
-                string[] strings = await dialog.ShowAsync(parent);
-                string[] files = strings;
-                if (files != null && files.Length > 0)
+                OpenFileDialog dialog = new OpenFileDialog
                 {
-                    string filePath = files[0];
-                    Logger.Log($"Selected file: {filePath}");
-                    return filePath;
+                    AllowMultiple = false
+                };
+                dialog?.Filters?.Add(new FileDialogFilter() { Name = "Mod Sync File", Extensions = { "toml", "tml" } });
+                dialog?.Filters?.Add(new FileDialogFilter() { Name = "All Files", Extensions = { "*" } });
+
+                // Show the dialog and wait for a result.
+                if (VisualRoot is Window parent)
+                {
+                    string[] strings = await dialog.ShowAsync(parent);
+                    string[] files = strings;
+                    if (files != null && files.Length > 0)
+                    {
+                        string filePath = files[0];
+                        Logger.Log($"Selected file: {filePath}");
+                        return filePath;
+                    }
+                }
+                else
+                {
+                    Logger.Log("Could not open dialog - parent window not found");
                 }
             }
-            else
+            catch(Exception ex)
             {
-                Logger.Log("Could not open dialog - parent window not found");
+                Logger.LogException(ex);
             }
 
             return null;
@@ -133,29 +140,36 @@ namespace KOTORModSync.GUI
 
         private async Task<List<string>> OpenFiles()
         {
-            var dialog = new OpenFileDialog
+            try
             {
-                AllowMultiple = true
-            };
-
-            var filter = new FileDialogFilter { Name = "Mod Sync File", Extensions = { "toml", "tml" } };
-            dialog.Filters.Add(filter);
-            dialog.Filters.Add(new FileDialogFilter { Name = "All Files", Extensions = { "*" } });
-
-            // Show the dialog and wait for a result.
-            var parent = VisualRoot as Window;
-            if (parent != null)
-            {
-                var filePaths = await dialog.ShowAsync(parent);
-                if (filePaths != null && filePaths.Length > 0)
+                var dialog = new OpenFileDialog
                 {
-                    Logger.Log($"Selected files: {string.Join(", ", filePaths)}");
-                    return filePaths.ToList();
+                    AllowMultiple = true
+                };
+
+                var filter = new FileDialogFilter { Name = "Mod Sync File", Extensions = { "toml", "tml" } };
+                dialog.Filters.Add(filter);
+                dialog.Filters.Add(new FileDialogFilter { Name = "All Files", Extensions = { "*" } });
+
+                // Show the dialog and wait for a result.
+                var parent = VisualRoot as Window;
+                if (parent != null)
+                {
+                    var filePaths = await dialog.ShowAsync(parent);
+                    if (filePaths != null && filePaths.Length > 0)
+                    {
+                        Logger.Log($"Selected files: {string.Join(", ", filePaths)}");
+                        return filePaths.ToList();
+                    }
+                }
+                else
+                {
+                    Logger.Log("Could not open dialog - parent window not found");
                 }
             }
-            else
+            catch(Exception ex)
             {
-                Logger.Log("Could not open dialog - parent window not found");
+                Logger.LogException(ex);
             }
 
             return null;
@@ -164,30 +178,37 @@ namespace KOTORModSync.GUI
 
         private async Task<string> SaveFile(List<string> defaultExt = null)
         {
-            if (defaultExt == null)
+            try
             {
-                defaultExt = new List<string>() { "toml", "tml" };
-            }
-
-            SaveFileDialog dialog = new SaveFileDialog
-            {
-                DefaultExtension = defaultExt.FirstOrDefault()
-            };
-            dialog?.Filters?.Add(new FileDialogFilter() { Name = "Mod Sync File", Extensions = defaultExt });
-
-            // Show the dialog and wait for a result.
-            if (VisualRoot is Window parent)
-            {
-                string filePath = await dialog.ShowAsync(parent);
-                if (!string.IsNullOrEmpty(filePath))
+                if (defaultExt == null)
                 {
-                    Logger.Log($"Selected file: {filePath}");
-                    return filePath;
+                    defaultExt = new List<string>() { "toml", "tml" };
+                }
+
+                SaveFileDialog dialog = new SaveFileDialog
+                {
+                    DefaultExtension = defaultExt.FirstOrDefault()
+                };
+                dialog?.Filters?.Add(new FileDialogFilter() { Name = "Mod Sync File", Extensions = defaultExt });
+
+                // Show the dialog and wait for a result.
+                if (VisualRoot is Window parent)
+                {
+                    string filePath = await dialog.ShowAsync(parent);
+                    if (!string.IsNullOrEmpty(filePath))
+                    {
+                        Logger.Log($"Selected file: {filePath}");
+                        return filePath;
+                    }
+                }
+                else
+                {
+                    Logger.Log("Could not open dialog - parent window not found");
                 }
             }
-            else
+            catch(Exception ex)
             {
-                Logger.Log("Could not open dialog - parent window not found");
+                Logger.LogException(ex);
             }
 
             return null;
@@ -235,6 +256,37 @@ namespace KOTORModSync.GUI
                 }
             }
         }
+
+        private async void BrowseSourceFiles_Click(object sender, RoutedEventArgs e)
+        {
+            Button button = (Button)sender;
+
+            // Find the parent ItemsRepeater
+            ItemsRepeater repeater = (ItemsRepeater)(button.Parent.Parent.Parent.Parent.Parent);
+
+            if (repeater != null)
+            {
+                // Get the item's data context based on the clicked button
+                var item = (Instruction)button.DataContext;
+
+                if (item != null)
+                {
+                    // Get the TextBox associated with the current item
+                    var textBox = (TextBox)button.Tag;
+
+                    // Open the file dialog to select a file
+                    List<string> files = await OpenFiles();
+
+                    bool invalidFiles = files.Any(string.IsNullOrEmpty);
+                    if (!invalidFiles)
+                    {
+                        // Update the Source property in your data model
+                        item.Source = files;
+                    }
+                }
+            }
+        }
+
 
         private async void ValidateButton_Click(object sender, RoutedEventArgs e)
         {
@@ -542,6 +594,37 @@ namespace KOTORModSync.GUI
             return !string.Equals(currentContent, _originalContent);
         }
 
+        private async void TextBox_LostFocus(object sender, RoutedEventArgs e)
+        {
+            TextBox textBox = (TextBox)sender;
+
+            // code might be needed in future changes to TextBox/AvaloniaUI
+            // Retrieve the DataContext object
+            /*var dataContext = textBox.DataContext;
+
+            // Retrieve the bound property name
+            var propertyInfo = dataContext.GetType().GetProperties()
+                .FirstOrDefault(p => p.GetMethod != null && p.GetMethod.IsPublic && p.GetMethod.IsVirtual && p.PropertyType == typeof(string) && p.GetMethod.GetBaseDefinition().DeclaringType == p.GetMethod.DeclaringType);
+
+            if (propertyInfo != null)
+            {
+                // Retrieve the updated value from the TextBox
+                var updatedValue = textBox.Text;
+
+                // Set the updated value to the bound property
+                propertyInfo.SetValue(dataContext, updatedValue);
+            }*/
+
+            // Delay the collection update by a small amount
+            // otherwise it's impossible to focus another textbox
+            // another solution would be appreciated.
+            await Task.Delay(100);
+            if (!textBox.IsFocused)
+            {
+                PopulateRightTextBox(currentComponent);
+            }
+        }
+
         private async void SaveButton_Click(object sender, RoutedEventArgs e)
         {
             if (currentComponent is null && leftTreeView.SelectedItem is TreeViewItem selectedItem)
@@ -762,7 +845,6 @@ namespace KOTORModSync.GUI
             }
             catch (Exception ex)
             {
-                // Handle the exception according to your application's requirements
                 Logger.LogException(new Exception($"Error creating tree view item: {ex.Message}"));
             }
         }

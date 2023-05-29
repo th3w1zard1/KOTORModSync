@@ -166,19 +166,22 @@
                                                     <RowDefinition Height="*" />
                                                     <RowDefinition Height="300" />
                                                 </Grid.RowDefinitions>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="Auto" />
+                                                </Grid.ColumnDefinitions>
 
                                                 <TextBlock Grid.Row="0" Text="Name:" />
-                                                <TextBox Grid.Row="1" Text="{Binding Name}" TextWrapping="Wrap"/>
+                                                <TextBox Grid.Row="1" Grid.Column="0" Text="{Binding Name}" TextWrapping="Wrap"/>
 
                                                 <TextBlock Grid.Row="2" Text="Guid:" />
-                                                <Button Grid.Row="3" Content="Generate GUID" Click="GenerateGuidButton_Click" />
-                                                <TextBox Grid.Row="3" Text="{Binding Guid}" />
+                                                <TextBox Grid.Row="3" Grid.Column="0" Text="{Binding Guid}" />
 
                                                 <TextBlock Grid.Row="6" Text="Description:" />
-                                                <TextBox Grid.Row="7" Text="{Binding Description}" TextWrapping="Wrap" AcceptsTab="True" AcceptsReturn="True" />
+                                                <TextBox Grid.Row="7" Grid.Column="0" Text="{Binding Description}" TextWrapping="Wrap" AcceptsTab="True" AcceptsReturn="True" />
 
                                                 <TextBlock Grid.Row="8" Text="Directions:" />
-                                                <TextBox Grid.Row="9" Text="{Binding Directions}" TextWrapping="Wrap" AcceptsTab="True" AcceptsReturn="True" />
+                                                <TextBox Grid.Row="9" Grid.Column="0" Text="{Binding Directions}" TextWrapping="Wrap" AcceptsTab="True" AcceptsReturn="True" />
 
                                                 <ScrollViewer Grid.Row="10">
                                                     <StackPanel>
@@ -189,32 +192,55 @@
                                                                         <StackPanel Margin="10" HorizontalAlignment="Left">
                                                                             <TextBlock Text="Instruction:" />
                                                                             <StackPanel Margin="10,0,0,0">
-                                                                                <TextBlock Text="Action:" />
-                                                                                <TextBox Text="{Binding Action}" />
-                                                                                <TextBlock Text="Source:" />
-                                                                                <TextBox AcceptsReturn="True" Text="{Binding Source, Converter={StaticResource ListToStringConverter}}" />
-                                                                                <TextBlock Text="Destination:" />
-                                                                                <TextBox Text="{Binding Destination}" />
-                                                                                <TextBlock Text="Dependencies:" />
-                                                                                <ItemsControl Items="{Binding Dependencies}">
-                                                                                    <ItemsControl.ItemTemplate>
-                                                                                        <DataTemplate>
-                                                                                            <TextBox Text="{Binding}" />
-                                                                                        </DataTemplate>
-                                                                                    </ItemsControl.ItemTemplate>
-                                                                                </ItemsControl>
-                                                                                <TextBlock Text="Restrictions:" />
-                                                                                <ItemsControl Items="{Binding Restrictions}">
-                                                                                    <ItemsControl.ItemTemplate>
-                                                                                        <DataTemplate>
-                                                                                            <TextBox Text="{Binding}" />
-                                                                                        </DataTemplate>
-                                                                                    </ItemsControl.ItemTemplate>
-                                                                                </ItemsControl>
-                                                                                <TextBlock Text="Overwrite:" />
-                                                                                <TextBox Text="{Binding Overwrite}" />
-                                                                                <TextBlock Text="Arguments:" />
-                                                                                <TextBox Text="{Binding Arguments}" />
+                                                                                <Grid>
+                                                                                    <Grid.RowDefinitions>
+                                                                                        <RowDefinition Height="Auto" />
+                                                                                        <RowDefinition Height="Auto" />
+                                                                                        <RowDefinition Height="Auto" />
+                                                                                        <RowDefinition Height="Auto" />
+                                                                                        <RowDefinition Height="Auto" />
+                                                                                        <RowDefinition Height="Auto" />
+                                                                                        <RowDefinition Height="Auto" />
+                                                                                        <RowDefinition Height="Auto" />
+                                                                                        <RowDefinition Height="Auto" />
+                                                                                        <RowDefinition Height="Auto" />
+                                                                                        <RowDefinition Height="Auto" />
+                                                                                        <RowDefinition Height="Auto" />
+                                                                                        <RowDefinition Height="Auto" />
+                                                                                        <RowDefinition Height="Auto" />
+                                                                                        <RowDefinition Height="Auto" />
+                                                                                    </Grid.RowDefinitions>
+                                                                                    <Grid.ColumnDefinitions>
+                                                                                        <ColumnDefinition Width="*" />
+                                                                                        <ColumnDefinition Width="Auto" />
+                                                                                    </Grid.ColumnDefinitions>
+                                                                                    <TextBlock Grid.Row="0" Text="Action:" />
+                                                                                    <TextBox Grid.Row="1" Grid.Column="0" Text="{Binding Action}" />
+                                                                                    <TextBlock Grid.Row="3" Text="Source:" />
+                                                                                    <TextBox Grid.Row="4" Grid.Column="0" AcceptsReturn="True" Text="{Binding Source, Converter={StaticResource ListToStringConverter}}" />
+                                                                                    <TextBlock Grid.Row="5" Text="Destination:" />
+                                                                                    <TextBox Grid.Row="6" Grid.Column="0" Text="{Binding Destination}" />
+                                                                                    <TextBlock Grid.Row="7" Text="Dependencies:" />
+                                                                                    <ItemsControl Grid.Row="8" Grid.Column="0" Items="{Binding Dependencies}">
+                                                                                        <ItemsControl.ItemTemplate>
+                                                                                            <DataTemplate>
+                                                                                                <TextBox Text="{Binding}" />
+                                                                                            </DataTemplate>
+                                                                                        </ItemsControl.ItemTemplate>
+                                                                                    </ItemsControl>
+                                                                                    <TextBlock Grid.Row="9" Text="Restrictions:" />
+                                                                                    <ItemsControl Grid.Row="10" Grid.Column="0" Items="{Binding Restrictions}">
+                                                                                        <ItemsControl.ItemTemplate>
+                                                                                            <DataTemplate>
+                                                                                                <TextBox Text="{Binding}" />
+                                                                                            </DataTemplate>
+                                                                                        </ItemsControl.ItemTemplate>
+                                                                                    </ItemsControl>
+                                                                                    <TextBlock Grid.Row="11" Text="Overwrite:" />
+                                                                                    <TextBox Grid.Row="12" Grid.Column="0" Text="{Binding Overwrite}" />
+                                                                                    <TextBlock Grid.Row="13" Text="Arguments:" />
+                                                                                    <TextBox Grid.Row="14" Grid.Column="0" Text="{Binding Arguments}" />
+                                                                                </Grid>
                                                                             </StackPanel>
                                                                         </StackPanel>
                                                                     </Border>

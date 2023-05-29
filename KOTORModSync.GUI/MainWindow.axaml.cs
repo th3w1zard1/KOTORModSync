@@ -531,11 +531,8 @@ namespace KOTORModSync.GUI
 
         private void GenerateGuidButton_Click(object sender, RoutedEventArgs e)
         {
-            // Generate a unique GUID
-            Guid uniqueGuid = Guid.NewGuid();
-
-            // Set the generated GUID to the guidTextBox
-            currentComponent.Guid = "{" + uniqueGuid.ToString().ToUpper() + "}";
+            currentComponent.Guid = "{" + Guid.NewGuid().ToString().ToUpper() + "}";
+            PopulateRightTextBox(currentComponent);
         }
 
         private void RightListBox_LostFocus(object sender, RoutedEventArgs e) => e.Handled = true;
@@ -688,7 +685,7 @@ namespace KOTORModSync.GUI
                 rootItem.IsExpanded = true;
 
                 WriteTreeViewItemsToFile(new List<TreeViewItem> { rootItem }, null);
-                currentComponent = null;
+                //currentComponent = null;
             }
             catch (ArgumentException ex)
             {

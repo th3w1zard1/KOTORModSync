@@ -146,9 +146,6 @@ namespace KOTORModSync.GUI
                 {
                     AllowMultiple = true
                 };
-
-                var filter = new FileDialogFilter { Name = "Mod Sync File", Extensions = { "toml", "tml" } };
-                dialog.Filters.Add(filter);
                 dialog.Filters.Add(new FileDialogFilter { Name = "All Files", Extensions = { "*" } });
 
                 // Show the dialog and wait for a result.
@@ -174,7 +171,28 @@ namespace KOTORModSync.GUI
 
             return null;
         }
+        
+        private async Task<string> OpenFolder()
+        {
+            OpenFolderDialog dialog = new OpenFolderDialog();
 
+            // Show the dialog and wait for a result.
+            if (VisualRoot is Window parent)
+            {
+                string selectedFolder = await dialog.ShowAsync(parent);
+                if (!string.IsNullOrEmpty(selectedFolder))
+                {
+                    Logger.Log($"Selected folder: {selectedFolder}");
+                    return selectedFolder;
+                }
+            }
+            else
+            {
+                Logger.Log("Could not open folder dialog - parent window not found");
+            }
+
+            return null;
+        }
 
         private async Task<string> SaveFile(List<string> defaultExt = null)
         {
@@ -189,7 +207,9 @@ namespace KOTORModSync.GUI
                 {
                     DefaultExtension = defaultExt.FirstOrDefault()
                 };
-                dialog?.Filters?.Add(new FileDialogFilter() { Name = "Mod Sync File", Extensions = defaultExt });
+                dialog?.Filters?.Add(new FileDialogFilter { Name = "All Files", Extensions = { "*" } });
+                if(defaultExt != null)
+                    dialog?.Filters?.Add(new FileDialogFilter() { Name = "Preferred Extensions", Extensions = defaultExt });
 
                 // Show the dialog and wait for a result.
                 if (VisualRoot is Window parent)
@@ -254,39 +274,117 @@ namespace KOTORModSync.GUI
                         }
                     });
                 }
+                else {
+                    Logger.Log($"Invalid extension for file {filePath}");
+                }
             }
         }
 
         private async void BrowseSourceFiles_Click(object sender, RoutedEventArgs e)
         {
             Button button = (Button)sender;
+            // Get the item's data context based on the clicked button
+            var thisInstruction = (Instruction)button.DataContext;
 
-            // Find the parent ItemsRepeater
-            ItemsRepeater repeater = (ItemsRepeater)(button.Parent.Parent.Parent.Parent.Parent);
-
-            if (repeater != null)
+            if (thisInstruction != null)
             {
-                // Get the item's data context based on the clicked button
-                var item = (Instruction)button.DataContext;
+                // Get the TextBox associated with the current item
+                var textBox = (TextBox)button.Tag;
 
-                if (item != null)
+                // Open the file dialog to select a file
+                List<string> files = await OpenFiles();
+                if(files != null)
                 {
-                    // Get the TextBox associated with the current item
-                    var textBox = (TextBox)button.Tag;
-
-                    // Open the file dialog to select a file
-                    List<string> files = await OpenFiles();
-
                     bool invalidFiles = files.Any(string.IsNullOrEmpty);
                     if (!invalidFiles)
                     {
-                        // Update the Source property in your data model
-                        item.Source = files;
+                        // Replace path with prefixed variables.
+                        for (int i = 0; i < files.Count; i++)
+                        {
+                            string filePath = files[i];
+                            if(MainConfig.SourcePath != null)
+                                files[i] = Utility.RestoreCustomVariables(filePath);
+                            else
+                                files[i] = filePath;
+                        }
+                        if(MainConfig.SourcePath == null)
+                            Logger.Log("Not using custom variables <<kotorDirectory>> and <<modDirectory>> due to directories not being set prior.");
+                        thisInstruction.Source = files;
+                    }
+                    else {
+                        Logger.Log($"Invalid files found, please report this to the developer: '{files}'");
                     }
                 }
+                else
+                {
+                    Logger.Log("No files chosen in BrowseSourceFiles_Click, returning to previous values");
+                }
+            }
+            else
+            {
+                Logger.Log("Could not find instruction instance during BrowseSourceFiles_Click");
             }
         }
 
+        private async void BrowseDestination_Click(object sender, RoutedEventArgs e)
+        {
+            Button button = (Button)sender;
+
+            // Get the item's data context based on the clicked button
+            var thisInstruction = (Instruction)button.DataContext;
+
+            if (thisInstruction != null)
+            {
+                // Get the TextBox associated with the current item
+                var textBox = (TextBox)button.Tag;
+
+                // Open the file dialog to select a file
+                string filePath = await OpenFolder();
+                if (filePath != null)
+                {
+                    if(MainConfig.SourcePath == null)
+                    {
+                        Logger.Log("Directories not set, setting raw folder path without custom variable <<kotorDirectory>>");
+                        thisInstruction.Destination = filePath;
+                    }
+                    else
+                        thisInstruction.Destination = Utility.RestoreCustomVariables(filePath);
+                }
+                else {
+                    Logger.Log($"No file chosen in BrowseDestination_Click. Will continue using {thisInstruction.Destination}");
+                }
+            }
+            else
+            {
+                Logger.Log("Could not find instruction instance during BrowseSourceFiles_Click");
+            }
+        }
+        private void GenerateGuidButton_Click(object sender, RoutedEventArgs e)
+        {
+            currentComponent.Guid = "{" + Guid.NewGuid().ToString().ToUpper() + "}";
+            LoadComponentDetails(currentComponent);
+        }
+        private async void SaveButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (currentComponent is null && leftTreeView.SelectedItem is TreeViewItem selectedItem)
+            {
+                currentComponent = selectedItem.Tag as Component;
+            }
+            if (currentComponent is null)
+            {
+                await InformationDialog.ShowInformationDialog(this, "You must select a component from the list, or create one, before saving.");
+            }
+            else if (CheckForChanges())
+            {
+                bool confirmationResult = await ConfirmationDialog.ShowConfirmationDialog(this, "Are you sure you want to save?");
+                if (confirmationResult)
+                {
+                    string message = SaveChanges() ? "Saved successfully. Check the output window for more information." : "There were some problems with your syntax, please check the output window.";
+                    await InformationDialog.ShowInformationDialog(this, message);
+                    RefreshTreeView();
+                }
+            }
+        }
 
         private async void ValidateButton_Click(object sender, RoutedEventArgs e)
         {
@@ -317,7 +415,7 @@ namespace KOTORModSync.GUI
             // Set the example deserialized string for the new component
             rightTextBox.Text = Component.defaultComponent + Instruction.defaultInstructions;
         }
-
+        private void RefreshComponents_Click(object sender, RoutedEventArgs e) => RefreshTreeView();
         private void RemoveComponentButton_Click(object sender, RoutedEventArgs e)
         {
             // Get the selected component from the TreeView
@@ -331,31 +429,6 @@ namespace KOTORModSync.GUI
                 RefreshTreeView();
             }
         }
-
-        private void RefreshComponents_Click(object sender, RoutedEventArgs e) => RefreshTreeView();
-
-        private async Task<string> OpenFolder()
-        {
-            OpenFolderDialog dialog = new OpenFolderDialog();
-
-            // Show the dialog and wait for a result.
-            if (VisualRoot is Window parent)
-            {
-                string selectedFolder = await dialog.ShowAsync(parent);
-                if (!string.IsNullOrEmpty(selectedFolder))
-                {
-                    Logger.Log($"Selected folder: {selectedFolder}");
-                    return selectedFolder;
-                }
-            }
-            else
-            {
-                Logger.Log("Could not open folder dialog - parent window not found");
-            }
-
-            return null;
-        }
-
         private async void SetDirectories_Click(object sender, RoutedEventArgs e)
         {
             try
@@ -546,7 +619,7 @@ namespace KOTORModSync.GUI
                 {
                     _selectedComponents.Add(component);
                 }
-                PopulateRightTextBox(component);
+                LoadComponentDetails(component);
             }
         }
 
@@ -567,7 +640,7 @@ namespace KOTORModSync.GUI
         }
 
 
-        private void PopulateRightTextBox(Core.Component selectedComponent)
+        private void LoadComponentDetails(Component selectedComponent)
         {
             if (selectedComponent != null && rightTextBox != null)
             {
@@ -579,12 +652,6 @@ namespace KOTORModSync.GUI
                 componentsItemsControl.Items = componentCollection;
                 componentCollection.Add(currentComponent);
             }
-        }
-
-        private void GenerateGuidButton_Click(object sender, RoutedEventArgs e)
-        {
-            currentComponent.Guid = "{" + Guid.NewGuid().ToString().ToUpper() + "}";
-            PopulateRightTextBox(currentComponent);
         }
 
         private void RightListBox_LostFocus(object sender, RoutedEventArgs e) => e.Handled = true;
@@ -621,29 +688,7 @@ namespace KOTORModSync.GUI
             await Task.Delay(100);
             if (!textBox.IsFocused)
             {
-                PopulateRightTextBox(currentComponent);
-            }
-        }
-
-        private async void SaveButton_Click(object sender, RoutedEventArgs e)
-        {
-            if (currentComponent is null && leftTreeView.SelectedItem is TreeViewItem selectedItem)
-            {
-                currentComponent = selectedItem.Tag as Component;
-            }
-            if (currentComponent is null)
-            {
-                await InformationDialog.ShowInformationDialog(this, "You must select a component from the list, or create one, before saving.");
-            }
-            else if (CheckForChanges())
-            {
-                bool confirmationResult = await ConfirmationDialog.ShowConfirmationDialog(this, "Are you sure you want to save?");
-                if (confirmationResult)
-                {
-                    string message = SaveChanges() ? "Saved successfully. Check the output window for more information." : "There were some problems with your syntax, please check the output window.";
-                    await InformationDialog.ShowInformationDialog(this, message);
-                    RefreshTreeView();
-                }
+                LoadComponentDetails(currentComponent);
             }
         }
 

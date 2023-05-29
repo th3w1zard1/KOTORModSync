@@ -221,7 +221,8 @@
                                                                                     <TextBox Grid.Row="4" Grid.Column="0" x:Name="sourceTextBox" AcceptsReturn="True" Text="{Binding Source, Converter={StaticResource ListToStringConverter}}" />
                                                                                     <Button Grid.Row="4" Grid.Column="1" Content="Browse Files" Click="BrowseSourceFiles_Click" Tag="{Binding ElementName=sourceTextBox}" />
                                                                                     <TextBlock Grid.Row="5" Text="Destination:" />
-                                                                                    <TextBox Grid.Row="6" Grid.Column="0" Text="{Binding Destination}" LostFocus="TextBox_LostFocus" Focusable="True" />
+                                                                                    <TextBox Grid.Row="6" Grid.Column="0" x:Name="destinationTextBox" Text="{Binding Destination}" LostFocus="TextBox_LostFocus" Focusable="True" />
+                                                                                    <Button Grid.Row="6" Grid.Column="1" Content="Browse Destination" Click="BrowseDestination_Click" Tag="{Binding ElementName=destinationTextBox}" />
                                                                                     <TextBlock Grid.Row="7" Text="Dependencies:" />
                                                                                     <ItemsControl Grid.Row="8" Grid.Column="0" Items="{Binding Dependencies}">
                                                                                         <ItemsControl.ItemTemplate>

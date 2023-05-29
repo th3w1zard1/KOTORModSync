@@ -1,6 +1,7 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:local="clr-namespace:KOTORModSync.GUI"
+        xmlns:sys="clr-namespace:System;assembly=System.Runtime"
         x:Class="KOTORModSync.GUI.MainWindow"
         Title="KOTORModSync"
         Width="1200"
@@ -57,6 +58,7 @@
     </Window.Styles>
     <Window.Resources>
         <local:BooleanToArrowConverter x:Key="BooleanToArrowConverter" />
+        <local:ListToStringConverter x:Key="ListToStringConverter" />
     </Window.Resources>
     <Grid>
         <Grid.RowDefinitions>
@@ -140,22 +142,125 @@
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
+                <TabControl x:Name="tabControl" Grid.Row="1" SelectionChanged="TabControl_SelectionChanged">
+                    <TabItem Header="Raw Edit">
+                        <TextBox x:Name="rightTextBox" Margin="10" AcceptsReturn="True" TextWrapping="Wrap" Height="400" />
+                    </TabItem>
+                    <TabItem Header="GUI Edit">
+                        <TabItem.Content>
+                            <ScrollViewer HorizontalScrollBarVisibility="Disabled">
+                                <ItemsControl x:Name="componentsItemsControl" Items="{Binding Components}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Grid>
+                                                <Grid.RowDefinitions>
+                                                    <RowDefinition Height="Auto" />
+                                                    <RowDefinition Height="Auto" />
+                                                    <RowDefinition Height="Auto" />
+                                                    <RowDefinition Height="Auto" />
+                                                    <RowDefinition Height="Auto" />
+                                                    <RowDefinition Height="Auto" />
+                                                    <RowDefinition Height="*" />
+                                                    <RowDefinition Height="*" />
+                                                    <RowDefinition Height="*" />
+                                                    <RowDefinition Height="*" />
+                                                    <RowDefinition Height="300" />
+                                                </Grid.RowDefinitions>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="Auto" />
+                                                </Grid.ColumnDefinitions>
 
-                <TextBox x:Name="rightTextBox" Margin="10" AcceptsReturn="True" TextWrapping="Wrap" Height="400" />
+                                                <TextBlock Grid.Row="0" Text="Name:" />
+                                                <TextBox Grid.Row="1" Grid.Column="0" Text="{Binding Name}" LostFocus="TextBox_LostFocus" Focusable="True" TextWrapping="Wrap"/>
 
-                <Grid Grid.Row="1" Margin="10">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="*" />
-                    </Grid.ColumnDefinitions>
+                                                <TextBlock Grid.Row="2" Text="Guid:" />
+                                                <TextBox Grid.Row="3" Grid.Column="0" Text="{Binding Guid}" LostFocus="TextBox_LostFocus" Focusable="True" />
+                                                <Button Grid.Row="3" Grid.Column="1" Content="Generate GUID" Click="GenerateGuidButton_Click" />
 
-                    <Button Content="Generate GUID" Click="GenerateGuidButton_Click" MinWidth="100" VerticalAlignment="Center" />
-                    <Rectangle Width="10" />
-                    <TextBox x:Name="guidTextBox" Grid.Column="2" Width="200" HorizontalAlignment="Left" />
-                </Grid>
+                                                <TextBlock Grid.Row="6" Text="Description:" />
+                                                <TextBox Grid.Row="7" Grid.Column="0" Text="{Binding Description}" LostFocus="TextBox_LostFocus" Focusable="True" TextWrapping="Wrap" AcceptsTab="True" AcceptsReturn="True" />
+
+                                                <TextBlock Grid.Row="8" Text="Directions:" />
+                                                <TextBox Grid.Row="9" Grid.Column="0" Text="{Binding Directions}" LostFocus="TextBox_LostFocus" Focusable="True" TextWrapping="Wrap" AcceptsTab="True" AcceptsReturn="True" />
+
+                                                <ScrollViewer Grid.Row="10">
+                                                    <StackPanel>
+                                                        <ItemsRepeater Items="{Binding Instructions}">
+                                                            <ItemsRepeater.ItemTemplate>
+                                                                <DataTemplate>
+                                                                    <Border BorderThickness="1" BorderBrush="LightGray" Margin="0,0,0,10">
+                                                                        <StackPanel Margin="10" HorizontalAlignment="Left">
+                                                                            <TextBlock Text="Instruction:" />
+                                                                            <StackPanel Margin="10,0,0,0">
+                                                                                <Grid>
+                                                                                    <Grid.RowDefinitions>
+                                                                                        <RowDefinition Height="Auto" />
+                                                                                        <RowDefinition Height="Auto" />
+                                                                                        <RowDefinition Height="Auto" />
+                                                                                        <RowDefinition Height="Auto" />
+                                                                                        <RowDefinition Height="Auto" />
+                                                                                        <RowDefinition Height="Auto" />
+                                                                                        <RowDefinition Height="Auto" />
+                                                                                        <RowDefinition Height="Auto" />
+                                                                                        <RowDefinition Height="Auto" />
+                                                                                        <RowDefinition Height="Auto" />
+                                                                                        <RowDefinition Height="Auto" />
+                                                                                        <RowDefinition Height="Auto" />
+                                                                                        <RowDefinition Height="Auto" />
+                                                                                        <RowDefinition Height="Auto" />
+                                                                                        <RowDefinition Height="Auto" />
+                                                                                    </Grid.RowDefinitions>
+                                                                                    <Grid.ColumnDefinitions>
+                                                                                        <ColumnDefinition Width="*" />
+                                                                                        <ColumnDefinition Width="Auto" />
+                                                                                    </Grid.ColumnDefinitions>
+                                                                                    <TextBlock Grid.Row="0" Text="Action:" />
+                                                                                    <TextBox Grid.Row="1" Grid.Column="0" Text="{Binding Action}" LostFocus="TextBox_LostFocus" Focusable="True" />
+                                                                                    <TextBlock Grid.Row="3" Text="Source:" />
+                                                                                    <TextBox Grid.Row="4" Grid.Column="0" x:Name="sourceTextBox" AcceptsReturn="True" Text="{Binding Source, Converter={StaticResource ListToStringConverter}}" />
+                                                                                    <Button Grid.Row="4" Grid.Column="1" Content="Browse Files" Click="BrowseSourceFiles_Click" Tag="{Binding ElementName=sourceTextBox}" />
+                                                                                    <TextBlock Grid.Row="5" Text="Destination:" />
+                                                                                    <TextBox Grid.Row="6" Grid.Column="0" x:Name="destinationTextBox" Text="{Binding Destination}" LostFocus="TextBox_LostFocus" Focusable="True" />
+                                                                                    <Button Grid.Row="6" Grid.Column="1" Content="Browse Destination" Click="BrowseDestination_Click" Tag="{Binding ElementName=destinationTextBox}" />
+                                                                                    <TextBlock Grid.Row="7" Text="Dependencies:" />
+                                                                                    <ItemsControl Grid.Row="8" Grid.Column="0" Items="{Binding Dependencies}">
+                                                                                        <ItemsControl.ItemTemplate>
+                                                                                            <DataTemplate>
+                                                                                                <TextBox Text="{Binding}" LostFocus="TextBox_LostFocus" Focusable="True" />
+                                                                                            </DataTemplate>
+                                                                                        </ItemsControl.ItemTemplate>
+                                                                                    </ItemsControl>
+                                                                                    <TextBlock Grid.Row="9" Text="Restrictions:" />
+                                                                                    <ItemsControl Grid.Row="10" Grid.Column="0" Items="{Binding Restrictions}">
+                                                                                        <ItemsControl.ItemTemplate>
+                                                                                            <DataTemplate>
+                                                                                                <TextBox Text="{Binding}" LostFocus="TextBox_LostFocus" Focusable="True" />
+                                                                                            </DataTemplate>
+                                                                                        </ItemsControl.ItemTemplate>
+                                                                                    </ItemsControl>
+                                                                                    <TextBlock Grid.Row="11" Text="Overwrite:" />
+                                                                                    <TextBox Grid.Row="12" Grid.Column="0" Text="{Binding Overwrite}" LostFocus="TextBox_LostFocus" Focusable="True" />
+                                                                                    <TextBlock Grid.Row="13" Text="Arguments:" />
+                                                                                    <TextBox Grid.Row="14" Grid.Column="0" Text="{Binding Arguments}" LostFocus="TextBox_LostFocus" Focusable="True" />
+                                                                                </Grid>
+                                                                            </StackPanel>
+                                                                        </StackPanel>
+                                                                    </Border>
+                                                                </DataTemplate>
+                                                            </ItemsRepeater.ItemTemplate>
+                                                        </ItemsRepeater>
+                                                    </StackPanel>
+                                                </ScrollViewer>
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </ScrollViewer>
+                        </TabItem.Content>
+                    </TabItem>
+                </TabControl>
             </Grid>
-
             <StackPanel Grid.Column="2" Orientation="Vertical" HorizontalAlignment="Right">
                 <Button Content="Load Installation File" Margin="0 10" Click="LoadInstallFile_Click" />
                 <Button Content="Set Directories" Margin="0 10" Click="SetDirectories_Click"/>

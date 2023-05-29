@@ -4,6 +4,7 @@
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace KOTORModSync.Core.Utility
@@ -20,6 +21,13 @@ namespace KOTORModSync.Core.Utility
             normalizedPath = normalizedPath.Replace("<<kotorDirectory>>", MainConfig.DestinationPath.FullName);
             return Path.GetFullPath(normalizedPath);
         }
+        public static string RestoreCustomVariables(string fullPath)
+        {
+            string restoredPath = fullPath.Replace(MainConfig.SourcePath.FullName, "<<modDirectory>>");
+            restoredPath = restoredPath.Replace(MainConfig.DestinationPath.FullName, "<<kotorDirectory>>");
+            return restoredPath;
+        }
+
         public static bool CanWriteToDirectory(DirectoryInfo directory)
         {
             try

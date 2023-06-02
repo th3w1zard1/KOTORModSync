@@ -1,18 +1,24 @@
 The UI is a bit wacky, apologies for how it refreshes data in advance. Some quirks to know:
-- 'Raw Edit': Changes made in this mode are NOT automatically saved. You need to press 'Apply Editor Changes' to save your modifications. It will not warn you if changes to Raw Edit will be lost.
+- 'Raw Edit': Changes made in this mode are NOT automatically saved. You need to press 'Apply Editor Changes' to save your modifications.
 - 'GUI Edit': This mode allows you to directly modify mod fields. When you change text in a textbox, it immediately applies the changes to memory. However, the update may not be visible until you click away from the textbox, which may cause the screen to scroll to a different position.
 - Refreshing in 'GUI Edit': To force a refresh, simply double click on the component you are editing on the left. This will also update the 'Raw Edit' section with the latest information.
 - Variable Replacement in 'GUI Edit': The 'GUI Edit' mode automatically replaces directories with the variables <<kotorDirectory>> and <<modDirectory>>. These directories are set up using the 'Set Directories' button. If you do not see the variables automatically replaced and still see paths like C:\User***\Documents, it means you either need to refresh your component or set up the directories correctly. You can check the output window for more information.
+- Removing/adding instructions, dependencies, and restrictions are currently restricted to the Raw editor. Use the GUI editor to fine tune them.
 
-Given these quirks, I recommend the following workflow:
+General usage:
+Each mod needs at least three things:
+- A name
+- A Global Unique Identifier (GUID)
+- Some instructions.
+Everything else is optional (most of it is for docs). Make sure you press the 'Generate GUID' at least once or you'll run into conflicts with other mods.
 
-1. Add a mod with example data and apply it.
-2. Use the 'Raw' view to remove or add the instructions you want.
-3. Fine-tune everything using the 'GUI Edit' mode, which is especially useful for browsing exact file names and defining the mod's informational properties like description, directions, source, destination, etc.
 
 Additional Points to Note:
 - When you create a new mod using the 'Add Mod' button, example data is filled into the 'Raw Edit' section. Remember to press 'Apply Editor Changes' before proceeding, otherwise the example data will not be used and will not be available in the 'GUI Edit' section.
+- Everytime you press 'refresh tree view' it'll create a backup. Preventing data loss is important to me, but we'll of course remove this in a later release.
 - Some instructions may have properties like 'destination' or 'overwrite' that may not make sense for certain actions like 'run', 'tslpatcher', or 'extract'. These properties are ONLY used for the 'move' and 'delete' actions. You can ignore them for other actions as they won't be used.
-- Please note that the 'Arguments' field is currently not functional and is intended for use with TSLPatcherCLI in the future.
+- Please note that the 'Arguments' field is currently not functional and is intended for use with TSLPatcherCLI in the future. Same goes with all the checkboxes in the bottom left.
 - When extracting an archive, all contents will be extracted to a new folder in your <<modDirectory>>. The folder will be named after the archive itself. For example, if you extract 'this_mod_archive.rar', it will create a folder named 'this_mod_archive' automatically inside the <<modDirectory>>. The 'Source' property for the move/delete command will look like ["<<modDirectory>>/this_mod_archive"].
 
+Installing Mods:
+The installer is designed to install the Snigaroo modbuild according to predefined instructions. In most cases, these instructions are fixed and do not require any customization. However, for approximately 10% of mods that have flexible dependencies, the installer will run default or recommended instructions. Currently, there is no option to specify custom settings without modifying the configuration. However, a change addressing this limitation will be included in version 0.4.0 of the installer.

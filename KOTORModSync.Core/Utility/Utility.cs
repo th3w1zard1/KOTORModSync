@@ -2,10 +2,11 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Text;
 using System.Threading.Tasks;
+using JetBrains.Annotations;
 
 namespace KOTORModSync.Core.Utility
 {
@@ -15,17 +16,19 @@ namespace KOTORModSync.Core.Utility
         {
             Task<bool> ShowConfirmationDialog(string message);
         }
+
+        [CanBeNull]
         public static string ReplaceCustomVariables(string path)
         {
             string normalizedPath = path.Replace("<<modDirectory>>", MainConfig.SourcePath.FullName);
-            normalizedPath = normalizedPath.Replace("<<kotorDirectory>>", MainConfig.DestinationPath.FullName);
-            return normalizedPath;
+            return normalizedPath?.Replace("<<kotorDirectory>>", MainConfig.DestinationPath.FullName);
         }
+
+        [CanBeNull]
         public static string RestoreCustomVariables(string fullPath)
         {
             string restoredPath = fullPath.Replace(MainConfig.SourcePath.FullName, "<<modDirectory>>");
-            restoredPath = restoredPath.Replace(MainConfig.DestinationPath.FullName, "<<kotorDirectory>>");
-            return restoredPath;
+            return restoredPath?.Replace(MainConfig.DestinationPath.FullName, "<<kotorDirectory>>");
         }
 
         public static bool CanWriteToDirectory(DirectoryInfo directory)
@@ -35,6 +38,7 @@ namespace KOTORModSync.Core.Utility
                 // Attempt to create a file in the directory
                 string fileName = Path.Combine(directory.FullName, Path.GetRandomFileName());
                 using (FileStream fs = File.Create(fileName)) { }
+
                 File.Delete(fileName); // Clean up the file
                 return true;
             }
@@ -46,16 +50,17 @@ namespace KOTORModSync.Core.Utility
             {
                 Logger.LogException(ex);
                 Logger.Log($"Your pathname is too long: '{directory.FullName}'");
-                Logger.Log("Please utilize the registry patch that increases windows legacy pathlimit of 260, or move your KOTOR2 installation to a shorter directory.");
+                Logger.Log("Please utilize the registry patch that increases windows legacy path limit of 260, or move your KOTOR2 installation to a shorter directory.");
             }
             catch (Exception ex)
             {
                 Logger.Log($"Failed to access files in destination directory: {ex.Message}");
             }
+
             return false;
         }
 
-        public static async Task WaitForProcessExitAsync(Process process, string processName)
+        public static async Task WaitForProcessExitAsync([NotNull] Process process, string processName)
         {
             // Wait for the process to exit
             while (!process.HasExited)
@@ -72,12 +77,16 @@ namespace KOTORModSync.Core.Utility
 
         public static async Task<bool> ExecuteProcessAsync(string fileName, string arguments, Func<Process, Task<bool>> onExited)
         {
-            var process = new Process();
-            process.StartInfo.FileName = fileName;
-            process.StartInfo.Arguments = arguments;
-            process.StartInfo.UseShellExecute = false;
-            process.StartInfo.RedirectStandardOutput = true;
-            process.StartInfo.RedirectStandardError = true;
+            Process process = new Process
+            {
+                StartInfo = {
+                    FileName = fileName,
+                    Arguments = arguments,
+                    UseShellExecute = false,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true
+                }
+            };
 
             bool isInstallSuccessful = false;
 
@@ -101,17 +110,22 @@ namespace KOTORModSync.Core.Utility
             return isInstallSuccessful;
         }
 
+        [CanBeNull]
         public static DirectoryInfo ChooseDirectory()
         {
             Console.Write("Enter the path: ");
-            string thisPath = Console.ReadLine().Trim();
+            string thisPath = Console.ReadLine()?.Trim();
 
-            if (!Directory.Exists(thisPath))
-            {
-                Logger.Log($"Directory '{thisPath}' does not exist.");
-                return null;
-            }
-            return new DirectoryInfo(thisPath);
+            if (Directory.Exists(thisPath)) { return new DirectoryInfo(thisPath); }
+
+            Logger.Log($"Directory '{thisPath}' does not exist.");
+            return default;
+        }
+
+        public static bool IsListType<T>()
+        {
+            Type listType = typeof(T);
+            return listType.IsGenericType && listType.GetGenericTypeDefinition() == typeof(List<>);
         }
     }
 }

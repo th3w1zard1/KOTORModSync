@@ -25,97 +25,111 @@ namespace KOTORModSync.Core.Utility
             _originalChecksums = originalChecksums;
         }
 
-        public static string SHA1ToString(SHA1 sha1) => string.Concat(sha1.Hash.Select(b => b.ToString("x2")));
-        public static string StringToSHA1(string s) => string.Concat(SHA1.Create().ComputeHash(Enumerable.Range(0, s.Length)
-                                        .Where(x => x % 2 == 0)
-                                        .Select(x => Convert.ToByte(s.Substring(x, 2), 16))
-                                        .ToArray()).Select(b => b.ToString("x2")));
+        public static string Sha1ToString(SHA1 sha1) => string.Concat(sha1.Hash.Select(b => b.ToString("x2")));
+
+        public static string StringToSha1(string s)
+            => string.Concat(SHA1.Create().ComputeHash(
+                                 Enumerable.Range(0, s.Length)
+                                     .Where(x => x % 2 == 0)
+                                     .Select(x => Convert.ToByte(s.Substring(x, 2), 16))
+                                     .ToArray()).Select(b => b.ToString("x2")));
 
         public async Task<bool> ValidateChecksumsAsync()
         {
             var actualChecksums = new Dictionary<string, string>();
 
-            foreach (KeyValuePair<FileInfo, SHA1> expectedChecksum in _expectedChecksums)
+            foreach (FileInfo fileInfo in _expectedChecksums
+                    .Select(expectedChecksum => expectedChecksum.Key)
+                    .Where(fileInfo => fileInfo.Exists)
+                )
             {
-                FileInfo fileInfo = expectedChecksum.Key;
-                if (!fileInfo.Exists)
-                {
-                    continue;
-                }
-
-                SHA1 sha1 = await CalculateSHA1Async(fileInfo);
+                SHA1 sha1 = await CalculateSha1Async(fileInfo);
                 actualChecksums[fileInfo.Name] = BitConverter.ToString(sha1.Hash).Replace("-", "");
             }
 
             bool allChecksumsMatch = actualChecksums.Count == _expectedChecksums.Count
-                && actualChecksums.All(x =>
-                    _expectedChecksums.TryGetValue(new FileInfo(Path.Combine(_destinationPath, x.Key)), out SHA1 expectedSha1)
-                    && BitConverter.ToString(expectedSha1.Hash).Replace("-", "").Equals(x.Value, StringComparison.OrdinalIgnoreCase));
+                && actualChecksums
+                    .All(x =>
+                             _expectedChecksums.TryGetValue(new FileInfo(Path.Combine(_destinationPath, x.Key)), out SHA1 expectedSha1)
+                             && BitConverter.ToString(expectedSha1.Hash).Replace("-", "").Equals(x.Value, StringComparison.OrdinalIgnoreCase)
+                    );
 
-            if (!allChecksumsMatch)
+            if (allChecksumsMatch) return allChecksumsMatch;
+
+            Logger.Log("Checksum validation failed for the following files:");
+            bool thisMatch = true;
+            foreach (KeyValuePair<FileInfo, SHA1> expectedChecksum in _expectedChecksums)
             {
-                Logger.Log("Checksum validation failed for the following files:");
-                foreach (KeyValuePair<FileInfo, SHA1> expectedChecksum in _expectedChecksums)
+                FileInfo expectedFileInfo = expectedChecksum.Key;
+                SHA1 expectedSha1 = expectedChecksum.Value;
+                string expectedSha1String = BitConverter.ToString(expectedSha1.Hash).Replace("-", "");
+
+                if (!actualChecksums.TryGetValue(expectedFileInfo.Name, out string actualSha1))
                 {
-                    FileInfo expectedFileInfo = expectedChecksum.Key;
-                    SHA1 expectedSha1 = expectedChecksum.Value;
-                    string expectedSha1String = BitConverter.ToString(expectedSha1.Hash).Replace("-", "");
-
-                    string actualSha1String = "";
-                    if (actualChecksums.TryGetValue(expectedFileInfo.Name, out string actualSha1))
-                    {
-                        actualSha1String = actualSha1;
-                    }
-
-                    if (!actualSha1String.Equals(expectedSha1String, StringComparison.OrdinalIgnoreCase))
-                    {
-                        Logger.Log($"  {expectedFileInfo.FullName} - expected: {expectedSha1String}, actual: {actualSha1String}");
-                    }
+                    Logger.Log($"Problem looking up sha1 of {expectedFileInfo.FullName} - expected: {expectedSha1String}");
+                    thisMatch = false;
+                    continue;
                 }
+
+                string actualSha1String = actualSha1;
+                if (actualSha1String.Equals(expectedSha1String, StringComparison.OrdinalIgnoreCase))
+                {
+                    thisMatch = false;
+                    continue;
+                }
+
+                Logger.Log(
+                    $"  {expectedFileInfo.FullName} - expected: {expectedSha1String}, actual: {actualSha1String}");
+                thisMatch = false;
             }
 
             return allChecksumsMatch;
         }
 
-        public static async Task<SHA1> CalculateSHA1Async(FileInfo filePath)
+        public static async Task<SHA1> CalculateSha1Async(FileInfo filePath)
         {
-            using (SHA1 sha1 = SHA1.Create())
+            SHA1 sha1 = SHA1.Create();
+            using (FileStream stream = File.OpenRead(filePath.FullName))
             {
-                using (FileStream stream = File.OpenRead(filePath.FullName))
+                byte[] buffer = new byte[81920];
+                List<Task> tasks = new List<Task>(65535);
+
+                int bytesRead;
+                long totalBytesRead = 0;
+
+                while ((bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length)) > 0)
                 {
-                    byte[] buffer = new byte[81920];
-                    List<Task> tasks = new List<Task>();
+                    totalBytesRead += bytesRead;
 
-                    int bytesRead;
-                    long totalBytesRead = 0;
+                    byte[] data = new byte[bytesRead];
+                    Buffer.BlockCopy(buffer, 0, data, 0, bytesRead);
 
-                    while ((bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length)) > 0)
-                    {
-                        totalBytesRead += bytesRead;
+                    tasks.Add(
+                        Task.Run(() => _ = sha1.TransformBlock(
+                                     inputBuffer: data,
+                                     inputOffset: 0,
+                                     inputCount: bytesRead,
+                                     outputBuffer: null,
+                                     outputOffset: 0
+                                 )
+                        )
+                    );
 
-                        byte[] data = new byte[bytesRead];
-                        Buffer.BlockCopy(buffer, 0, data, 0, bytesRead);
-
-                        tasks.Add(
-                            Task.Run(() =>
-                            {
-                                _ = sha1.TransformBlock(data, 0, bytesRead, null, 0);
-                            })
-                        );
-
-                        if (tasks.Count >= Environment.ProcessorCount * 2)
-                        {
-                            await Task.WhenAll(tasks);
-                            tasks.Clear();
-                        }
-                    }
-
-                    _ = sha1.TransformFinalBlock(buffer, 0, bytesRead); // Use 'bytesRead' instead of 0
+                    if (tasks.Count < Environment.ProcessorCount * 2) continue;
 
                     await Task.WhenAll(tasks);
-
-                    return sha1;
+                    tasks.Clear();
                 }
+
+                _ = sha1.TransformFinalBlock(
+                    buffer,
+                    0,
+                    bytesRead // Use 'bytesRead' instead of 0
+                );
+
+                await Task.WhenAll(tasks);
+
+                return sha1;
             }
         }
 
@@ -128,7 +142,9 @@ namespace KOTORModSync.Core.Utility
             }
         }
 
-        public static async Task<Dictionary<FileInfo, SHA1>> LoadChecksumsFromFileAsync(FileInfo filePath)
+        public static async Task<
+            Dictionary<FileInfo, SHA1>
+        > LoadChecksumsFromFileAsync(FileInfo filePath)
         {
             if (!File.Exists(filePath.FullName))
             {
@@ -143,42 +159,44 @@ namespace KOTORModSync.Core.Utility
                 while ((line = await reader.ReadLineAsync()) != null)
                 {
                     string[] parts = line.Split(',');
-                    if (parts.Length == 2)
+                    if (parts.Length != 2) continue;
+
+                    string file = parts[0];
+                    string hash = parts[1];
+
+                    FileInfo fileInfo = new FileInfo(file);
+                    if (!fileInfo.Exists)
                     {
-                        string file = parts[0];
-                        string hash = parts[1];
+                        Logger.Log($"File does not exist: {fileInfo.FullName}");
+                        continue;
+                    }
 
-                        FileInfo fileInfo = new FileInfo(file);
-                        if (fileInfo.Exists)
+                    Logger.Log($"Reading file: {fileInfo.FullName}");
+
+                    using (FileStream fileStream = fileInfo.OpenRead())
+                    {
+                        byte[] fileBytes = new byte[fileStream.Length];
+                        _ = await fileStream.ReadAsync(fileBytes, 0, fileBytes.Length);
+
+                        if (!TryConvertHexStringToBytes(hash, out byte[] hashBytes))
                         {
-                            Console.WriteLine($"Reading file: {fileInfo.FullName}");
-                            using (FileStream fileStream = fileInfo.OpenRead())
-                            {
-                                byte[] fileBytes = new byte[fileStream.Length];
-                                _ = await fileStream.ReadAsync(fileBytes, 0, fileBytes.Length);
-
-                                if (TryConvertHexStringToBytes(hash, out byte[] hashBytes))
-                                {
-                                    Console.WriteLine($"Hash for {fileInfo.FullName}: {BitConverter.ToString(hashBytes)}");
-
-                                    SHA1 sha1 = SHA1.Create();
-                                    byte[] computedHash = sha1.ComputeHash(fileBytes);
-                                    Console.WriteLine($"Computed hash for {fileInfo.FullName}: {BitConverter.ToString(computedHash)}");
-
-                                    if (computedHash.SequenceEqual(hashBytes))
-                                    {
-                                        checksums[fileInfo] = sha1;
-                                    }
-                                }
-                                else
-                                {
-                                    Console.WriteLine($"Failed to convert hash string: {hash}");
-                                }
-                            }
+                            Logger.Log($"Failed to convert hash string: {hash}");
+                            continue;
                         }
-                        else
+
+                        Logger.Log(
+                            $"Hash for {fileInfo.FullName}: {BitConverter.ToString(hashBytes)}"
+                        );
+
+                        SHA1 sha1 = SHA1.Create();
+                        byte[] computedHash = sha1.ComputeHash(fileBytes);
+                        Logger.Log(
+                            $"Computed hash for {fileInfo.FullName}: {BitConverter.ToString(computedHash)}"
+                        );
+
+                        if (computedHash.SequenceEqual(hashBytes))
                         {
-                            Console.WriteLine($"File does not exist: {fileInfo.FullName}");
+                            checksums[fileInfo] = sha1;
                         }
                     }
                 }
@@ -199,15 +217,19 @@ namespace KOTORModSync.Core.Utility
             bytes = new byte[numberChars / 2];
             for (int i = 0; i < numberChars; i += 2)
             {
-                if (!byte.TryParse(hexString.Substring(i, 2), NumberStyles.HexNumber, null, out bytes[i / 2]))
-                {
-                    bytes = null;
-                    return false;
-                }
+                if (byte.TryParse(
+                    hexString.Substring(i, 2),
+                    NumberStyles.HexNumber,
+                    null,
+                    out bytes[i / 2]
+                ))
+                    continue;
+
+                bytes = null;
+                return false;
             }
 
             return true;
         }
-
     }
 }

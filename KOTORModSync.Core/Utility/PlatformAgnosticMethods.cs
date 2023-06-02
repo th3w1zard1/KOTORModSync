@@ -4,8 +4,10 @@
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace KOTORModSync.Core.Utility
@@ -20,11 +22,7 @@ namespace KOTORModSync.Core.Utility
             const long memoryThreshold = 2L * 1024 * 1024 * 1024; // 2GB threshold
             if (availableMemory < memoryThreshold)
             {
-                // Utilize Parallel to distribute the memory check workload across multiple threads
-                Parallel.Invoke(() =>
-                {
-                    maxParallelism = Math.Max(1, maxParallelism / 2); // Reduce parallelism by half if available memory is below the threshold
-                });
+                Parallel.Invoke(() => maxParallelism = Math.Max(1, maxParallelism / 2));
             }
 
             Task<double> maxDiskSpeedTask = Task.Run(() => GetMaxDiskSpeed(Path.GetPathRoot(thisDir.FullName)));
@@ -59,28 +57,29 @@ namespace KOTORModSync.Core.Utility
                 }
             }
 
-            if (result.Success)
+            if (!result.Success)
             {
-                string output = result.Output;
+                return 4L * 1024 * 1024 * 1024; // 4GB
+            }
 
-                // Update the regular expressions for matching memory values
-                string[] patterns = {
-                    @"\d{1,3}(,\d{3})*",                   // wmic command
-                    @"\d+\s+\d+\s+\d+\s+(\d+)",            // free command
-                    @"\d+(\.\d+)?",                        // sysctl command
-                };
+            string output = result.Output;
 
-                foreach (string pattern in patterns)
+            // Update the regular expressions for matching memory values
+            string[] patterns =
+            {
+                @"\d{1,3}(,\d{3})*",        // wmic command
+                @"\d+\s+\d+\s+\d+\s+(\d+)", // free command
+                @"\d+(\.\d+)?"              // sysctl command
+            };
+
+            foreach (string matchedValue in from pattern in patterns
+                                            select Regex.Match(output, pattern) into match
+                                            where match.Success
+                                            select match.Groups[1].Value.Replace(",", ""))
+            {
+                if (long.TryParse(matchedValue, out long availableMemory))
                 {
-                    Match match = Regex.Match(output, pattern);
-                    if (match.Success)
-                    {
-                        string matchedValue = match.Groups[1].Value.Replace(",", "");
-                        if (long.TryParse(matchedValue, out long availableMemory))
-                        {
-                            return availableMemory;
-                        }
-                    }
+                    return availableMemory;
                 }
             }
 
@@ -98,7 +97,7 @@ namespace KOTORModSync.Core.Utility
 
             try
             {
-                using (var process = new Process())
+                using (Process process = new Process())
                 {
                     process.StartInfo.FileName = shellPath;
                     process.StartInfo.Arguments = $"/c \"{command}\"";  // Use "/c" for Windows command prompt and "-c" for Unix-like shells
@@ -138,12 +137,13 @@ namespace KOTORModSync.Core.Utility
                 "bash", "/bin/bash", "/usr/bin/bash", "/usr/local/bin/bash"
             };
 
-            foreach (string executable in shellExecutables)
+            foreach (string executable in shellExecutables.Where
+            (
+                executable => File.Exists(executable) || File.Exists
+                    (Path.Combine(Environment.SystemDirectory, executable))
+                ))
             {
-                if (File.Exists(executable) || File.Exists(Path.Combine(Environment.SystemDirectory, executable)))
-                {
-                    return executable;
-                }
+                return executable;
             }
 
             return string.Empty;
@@ -157,7 +157,7 @@ namespace KOTORModSync.Core.Utility
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
                 command = "cmd.exe";
-                arguments = $"/C winsat disk -drive \"{drivePath}\" -seq -read -ransize 4096";
+                arguments = $"/C winsat disk -drive \"{drivePath}\" -seq -read -ramsize 4096";
             }
             else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux) || RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
             {
@@ -193,30 +193,90 @@ namespace KOTORModSync.Core.Utility
 
         private static double ExtractMaxDiskSpeed(string output)
         {
-            double maxSpeed = 0.0;
+            const double maxSpeed = 0.0;
 
             Regex regex = new Regex(@"([0-9,.]+)\s*(bytes/sec|MB/sec)");
             Match match = regex.Match(output);
-            if (match.Success && match.Groups.Count >= 3)
+            if (!match.Success || match.Groups.Count < 3) { return maxSpeed; }
+
+            string speedString = match.Groups[1].Value;
+            string unit = match.Groups[2].Value.ToLower();
+
+            if (!double.TryParse(speedString.Replace(",", ""), out double speed)) { return maxSpeed; }
+
+            switch (unit)
             {
-                string speedString = match.Groups[1].Value;
-                string unit = match.Groups[2].Value.ToLower();
-
-                if (double.TryParse(speedString.Replace(",", ""), out double speed))
-                {
-                    if (unit == "bytes/sec")
-                    {
-                        maxSpeed = speed / 1048576; // Convert bytes/sec to MB/sec
-                    }
-                    else if (unit == "mb/sec")
-                    {
-                        maxSpeed = speed;
-                    }
-                }
+                // Convert bytes/sec to MB/sec
+                case "bytes/sec": return speed / 1048576;
+                case "mb/sec": return speed;
+                default: return maxSpeed;
             }
-
-            return maxSpeed;
         }
 
+        public static async Task<bool> ExecuteProcessAsync(
+            FileInfo programFile,
+            string cmdlineArgs,
+            bool noAdmin = false
+        )
+        {
+            // K1CP can take ages to install, set the timeout time to two hours hour.
+            using (var cancellationTokenSource
+                = new CancellationTokenSource(TimeSpan.FromSeconds(7200)))
+                using (var process = new Process())
+                {
+                    ProcessStartInfo startInfo = process.StartInfo;
+                    startInfo.FileName = programFile.FullName;
+                    startInfo.Arguments = cmdlineArgs;
+                    startInfo.RedirectStandardOutput = true;
+                    startInfo.RedirectStandardError = true;
+                    startInfo.UseShellExecute = false;
+                    startInfo.CreateNoWindow = true;
+                    if (noAdmin)
+                    {
+                        startInfo.EnvironmentVariables["__COMPAT_LAYER"] = "RUNASHIGHEST";
+                    }
+
+                    try
+                    {
+                        if (!process.Start())
+                            throw new InvalidOperationException("Failed to start the process.");
+                    }
+                    catch (System.ComponentModel.Win32Exception)
+                    {
+                        startInfo.UseShellExecute = true;
+                        startInfo.RedirectStandardOutput = false;
+                        startInfo.RedirectStandardError = false;
+
+                        if (! process.Start())
+                            throw new InvalidOperationException("Failed to start the process.");
+                    }
+
+                    await Task.Run(() => process.WaitForExit(), cancellationTokenSource.Token);
+
+                    if (! process.HasExited)
+                    {
+                        process.Kill();
+                        throw new TimeoutException("Process timed out after 2 hours.");
+                    }
+
+                    string output = null;
+                    string error = null;
+                    if (startInfo.RedirectStandardOutput)
+                    {
+                        output = await process.StandardOutput.ReadToEndAsync();
+                        error = await process.StandardError.ReadToEndAsync();
+                    }
+
+                    if (process.ExitCode != 0)
+                    {
+                        Logger.Log($"Process failed with exit code {process.ExitCode}. Output:\n{output}");
+                        return false;
+                    }
+
+                    if (output != null || error != null)
+                        Logger.Log($"Output: {output}\n Error: {error}\n");
+                    return true;
+                }
+        }
     }
 }

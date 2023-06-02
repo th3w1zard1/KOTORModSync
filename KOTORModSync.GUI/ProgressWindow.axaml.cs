@@ -15,7 +15,7 @@ using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 
-namespace KOTORModSync.GUI
+namespace KOTORModSync
 {
     public partial class ProgressWindow : Window
     {

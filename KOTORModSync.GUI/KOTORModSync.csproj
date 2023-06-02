@@ -6,22 +6,21 @@
     <LangVersion>7.3</LangVersion>
     <EnableNETAnalyzers>true</EnableNETAnalyzers>
     <EnforceCodeStyleInBuild>True</EnforceCodeStyleInBuild>
-    <Platforms>x86;x64</Platforms>
-    <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
-    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <Platforms>x86;x64;AnyCPU</Platforms>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Platform)'=='AnyCPU' Or '$(Platform)'=='x86'">
-    <PlatformTarget>x86</PlatformTarget>
-    <RuntimeIdentifiers>win-x86</RuntimeIdentifiers>
+
+  <!-- net462 needs to explicitly be x64 and x86, other net versions are AnyCPU. See bottom of csproj file-->
+  <PropertyGroup>
+    <PlatformTarget Condition="'$(TargetFramework)'!='net462'">AnyCPU</PlatformTarget>
+    <RuntimeIdentifiers Condition="'$(Platform)'=='x86' And '$(TargetFramework)'=='net462'">win-x86</RuntimeIdentifiers>
+    <RuntimeIdentifiers Condition="'$(Platform)'=='x64' And '$(TargetFramework)'=='net462'">win-x64;win7-x64;osx-x64;linux-x64</RuntimeIdentifiers>
+    <RuntimeIdentifiers Condition="'$(TargetFramework)'!='net462'">win-x86;win-x64;win7-x64;osx-x64;linux-x64</RuntimeIdentifiers>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Platform)'=='x64'">
-    <PlatformTarget>x64</PlatformTarget>
-    <RuntimeIdentifiers>win-x64;win7-x64;osx-x64;linux-x64</RuntimeIdentifiers>
-  </PropertyGroup>
+
+  <!-- Preferences: Release should have additional error handling at the slight cost of performance. -->
   <PropertyGroup Condition="'$(Configuration)' == 'Release'">
     <PublishSingleFile>true</PublishSingleFile>
     <PublishReadyToRun>true</PublishReadyToRun>
-    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
     <Optimize>true</Optimize>
     <AllowOptimize>true</AllowOptimize>
     <RemoveIntegerChecks>false</RemoveIntegerChecks>
@@ -32,6 +31,8 @@
     <DebugType>portable</DebugType>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
+  
+  <!-- Preferences: No error handling/optimizations so we can catch any problems before Release. -->
   <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
     <PublishSingleFile>false</PublishSingleFile>
     <PublishReadyToRun>false</PublishReadyToRun>
@@ -43,6 +44,14 @@
     <AllowEditAndContinue>true</AllowEditAndContinue>
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
+  </PropertyGroup>
+
+  <!-- AvaloniaUI defs -->
+  <PropertyGroup>
+    <AvaloniaCopyWin32Dll>false</AvaloniaCopyWin32Dll>
+    <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
+    <NoWin32Manifest>true</NoWin32Manifest>
+    <ApplicationIcon>icon53.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>
@@ -61,17 +70,24 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\KOTORModSync.Core\KOTORModSync.Core.csproj">
-      <PrivateAssets>none</PrivateAssets>
-    </ProjectReference>
-  </ItemGroup>
-
-  <ItemGroup>
     <AvaloniaXaml Update="Styles\DefaultStyle.axaml">
       <Generator>MSBuild:Compile</Generator>
     </AvaloniaXaml>
   </ItemGroup>
+
   
+  <!-- Customization -->
+  <ItemGroup>
+    <Content Include="icon53.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\KOTORModSync.Core\KOTORModSync.Core.csproj">
+      <!-- I believe this builds the 'KOTORModSync.Core.dll' separate rather than packaging into EXE/another dll. -->
+      <PrivateAssets>none</PrivateAssets>
+    </ProjectReference>
+  </ItemGroup>
+  
+  <!-- All other windows defined here -->
   <ItemGroup>
     <Compile Update="OutputWindow.axaml.cs">
       <DependentUpon>OutputWindow.axaml</DependentUpon>
@@ -86,4 +102,13 @@
       <DependentUpon>ProgressWindow.axaml</DependentUpon>
     </Compile>
   </ItemGroup>
+
+  <!-- WindowsDeleteString returntype changes from int to IntPtr HRESULT after net4.x We accommodate this change by replacing with our patches. -->
+  <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
+    <Exec Command="xcopy $(SolutionDir)vendor\lib\Avalonia.Win32_net4.x_x86.dll $(TargetDir) &amp; del $(TargetDir)Avalonia.Win32.dll /F &amp; ren $(TargetDir)Avalonia.Win32_net4.x_x86.dll Avalonia.Win32.dll" />
+  </Target>
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="xcopy $(SolutionDir)vendor\lib\Avalonia.Win32_net4.x_x86.dll $(TargetDir) &amp; del $(TargetDir)Avalonia.Win32.dll /F &amp; ren $(TargetDir)Avalonia.Win32_net4.x_x86.dll Avalonia.Win32.dll" />
+  </Target>
+
 </Project>

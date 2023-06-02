@@ -18,7 +18,7 @@ using Avalonia.Markup.Xaml;
 using Avalonia.Threading;
 using KOTORModSync.Core;
 
-namespace KOTORModSync.GUI
+namespace KOTORModSync
 {
     public partial class OutputWindow : Window
     {
@@ -41,7 +41,7 @@ namespace KOTORModSync.GUI
             _logTextBox = this.FindControl<TextBox>("logTextBox");
             _logScrollViewer = this.FindControl<ScrollViewer>("logScrollViewer");
 
-            _logBuilder = new StringBuilder();
+            _logBuilder = new StringBuilder(65535);
 
             // Subscribe to the Logger.Logged event to capture log messages
             Logger.Logged += (message) =>
@@ -53,8 +53,11 @@ namespace KOTORModSync.GUI
             // Subscribe to the Logger.ExceptionLogged event to capture exceptions
             Logger.ExceptionLogged += (ex) =>
             {
-                _ = _logBuilder.AppendLine($"Exception: {ex.GetType().Name} - {ex.Message}");
-                _ = _logBuilder.AppendLine($"Stack trace: {ex.StackTrace}");
+                _ = _logBuilder
+                    .Append("Exception: ").Append(ex.GetType().Name).Append(": ")
+                    .AppendLine(ex.Message)
+                    .Append("Stack trace: ")
+                    .AppendLine(ex.StackTrace);
                 UpdateLogText();
             };
         }
@@ -68,19 +71,6 @@ namespace KOTORModSync.GUI
 
                 _ = Dispatcher.UIThread.InvokeAsync(() =>
                 {
-
-                    /* Unmerged change from project 'KOTORModSync (net6.0)'
-                    Before:
-                                        _logTextBox.Text = logText;
-
-                                        if (_logScrollViewer != null)
-                                        {
-                                            // Scroll to the end of the content
-                    After:
-                                        _logTextBox.Text = logText;
-
-                                        // Scroll to the end of the content
-                    */
                     _logTextBox.Text = logText;
 
                     // Scroll to the end of the content

@@ -1,6 +1,7 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
+using System.Diagnostics;
 using System.Text;
 using KOTORModSync.Core;
 using KOTORModSync.Core.Utility;
@@ -8,10 +9,12 @@ using KOTORModSync.Core.Utility;
 namespace KOTORModSync.Tests
 {
     [TestFixture]
-    public class TOMLFileTests
+    public class TomlFileTests
     {
-        private string filePath;
-        private readonly string exampleTOML = @"
+        private string? _filePath;
+
+        // ReSharper disable once ConvertToConstant.Local
+        private readonly string _exampleToml = @"
             [[thisMod]]
             name = ""Ultimate Dantooine""
             guid = ""{B3525945-BDBD-45D8-A324-AAF328A5E13E}""
@@ -61,41 +64,45 @@ namespace KOTORModSync.Tests
         public void SetUp()
         {
             // Create a temporary file for testing
-            filePath = Path.GetTempFileName();
+            _filePath = Path.GetTempFileName();
 
-            // Write example TOML content to the file
-            File.WriteAllText(filePath, exampleTOML);
+            // Write example TOMLIN content to the file
+            File.WriteAllText(_filePath, _exampleToml);
         }
 
         [TearDown]
-        public void TearDown() =>
+        public void TearDown()
+        {
             // Delete the temporary file
-            File.Delete(filePath);
+            Debug.Assert(_filePath != null, nameof(_filePath) + " != null");
+            File.Delete(_filePath);
+        }
 
         [Test]
         public void SaveAndLoadTOMLFile_MatchingComponents()
         {
-            // Read the original TOML file contents
-            string tomlContents = File.ReadAllText(filePath);
+            // Read the original TOMLIN file contents
+            Debug.Assert(_filePath != null, nameof(_filePath) + " != null");
+            string tomlContents = File.ReadAllText(_filePath);
 
             // Fix whitespace issues
             tomlContents = Serializer.FixWhitespaceIssues(tomlContents);
 
-            // Save the modified TOML file
+            // Save the modified TOMLIN file
             string modifiedFilePath = Path.GetTempFileName();
             File.WriteAllText(modifiedFilePath, tomlContents);
 
             // Arrange
-            List<Component> originalComponents = Serializer.FileHandler.ReadComponentsFromFile(modifiedFilePath);
+            List<Component> originalComponents = FileHelper.ReadComponentsFromFile(modifiedFilePath);
 
             // Act
-            Serializer.FileHandler.OutputConfigFile(originalComponents, modifiedFilePath);
+            FileHelper.OutputConfigFile(originalComponents, modifiedFilePath);
 
-            // Reload the modified TOML file
-            List<Component> loadedComponents = Serializer.FileHandler.ReadComponentsFromFile(modifiedFilePath);
+            // Reload the modified TOMLIN file
+            List<Component> loadedComponents = FileHelper.ReadComponentsFromFile(modifiedFilePath);
 
             // Assert
-            Assert.That(loadedComponents.Count, Is.EqualTo(originalComponents.Count));
+            Assert.That(loadedComponents, Has.Count.EqualTo(originalComponents.Count));
 
             for (int i = 0; i < originalComponents.Count; i++)
             {
@@ -111,10 +118,11 @@ namespace KOTORModSync.Tests
         public void SaveAndLoadTOMLFile_CaseInsensitive()
         {
             // Arrange
-            List<Component> originalComponents = Serializer.FileHandler.ReadComponentsFromFile(filePath);
+            List<Component> originalComponents = FileHelper.ReadComponentsFromFile(_filePath);
 
             // Modify the TOML file contents
-            string tomlContents = File.ReadAllText(filePath);
+            Debug.Assert(_filePath != null, nameof(_filePath) + " != null");
+            string tomlContents = File.ReadAllText(_filePath);
 
             // Convert field names and values to mixed case
             tomlContents = ConvertFieldNamesAndValuesToMixedCase(tomlContents);
@@ -123,10 +131,10 @@ namespace KOTORModSync.Tests
             string modifiedFilePath = Path.GetTempFileName();
             File.WriteAllText(modifiedFilePath, tomlContents);
 
-            List<Component> loadedComponents = Serializer.FileHandler.ReadComponentsFromFile(modifiedFilePath);
+            List<Component> loadedComponents = FileHelper.ReadComponentsFromFile(modifiedFilePath);
 
             // Assert
-            Assert.That(loadedComponents.Count, Is.EqualTo(originalComponents.Count));
+            Assert.That(loadedComponents, Has.Count.EqualTo(originalComponents.Count));
 
             for (int i = 0; i < originalComponents.Count; i++)
             {
@@ -141,23 +149,24 @@ namespace KOTORModSync.Tests
         public void SaveAndLoadTOMLFile_WhitespaceTests()
         {
             // Arrange
-            List<Component> originalComponents = Serializer.FileHandler.ReadComponentsFromFile(filePath);
+            List<Component> originalComponents = FileHelper.ReadComponentsFromFile(_filePath);
 
-            // Modify the TOML file contents
-            string tomlContents = File.ReadAllText(filePath);
+            // Modify the TOMLIN file contents
+            Debug.Assert(_filePath != null, nameof(_filePath) + " != null");
+            string tomlContents = File.ReadAllText(_filePath);
 
             // Add mixed line endings and extra whitespaces
             tomlContents += "    \r\n\t   \r\n\r\n\r\n";
 
-            // Save the modified TOML file
+            // Save the modified TOMLIN file
             string modifiedFilePath = Path.GetTempFileName();
             File.WriteAllText(modifiedFilePath, tomlContents);
 
             // Act
-            List<Component> loadedComponents = Serializer.FileHandler.ReadComponentsFromFile(modifiedFilePath);
+            List<Component> loadedComponents = FileHelper.ReadComponentsFromFile(modifiedFilePath);
 
             // Assert
-            Assert.That(loadedComponents.Count, Is.EqualTo(originalComponents.Count));
+            Assert.That(loadedComponents, Has.Count.EqualTo(originalComponents.Count));
 
             for (int i = 0; i < originalComponents.Count; i++)
             {
@@ -167,6 +176,7 @@ namespace KOTORModSync.Tests
                 AssertComponentEquality(originalComponent, loadedComponent);
             }
         }
+
         private static string ConvertFieldNamesAndValuesToMixedCase(string tomlContents)
         {
             var convertedContents = new StringBuilder(10000);
@@ -215,11 +225,11 @@ namespace KOTORModSync.Tests
             // Arrange
             List<Component> originalComponents = new();
             // Act
-            Serializer.FileHandler.OutputConfigFile(originalComponents, filePath);
-            List<Component> loadedComponents = Serializer.FileHandler.ReadComponentsFromFile(filePath);
+            FileHelper.OutputConfigFile(originalComponents, _filePath);
+            List<Component> loadedComponents = FileHelper.ReadComponentsFromFile(_filePath);
 
             // Assert
-            Assert.IsEmpty(loadedComponents);
+            Assert.That(loadedComponents, Is.Empty);
         }
 
         [Test]
@@ -228,17 +238,17 @@ namespace KOTORModSync.Tests
             // Arrange
             List<Component> originalComponents = new()
             {
-                new Component { Name = "Component 1", Guid = "{B3525945-BDBD-45D8-A324-AAF328A5E13E}" },
-                new Component { Name = "Component 2", Guid = "{C5418549-6B7E-4A8C-8B8E-4AA1BC63C732}" },
-                new Component { Name = "Component 3", Guid = "{B3525945-BDBD-45D8-A324-AAF328A5E13E}" },
+                new Component { Name = "Component 1", Guid = Guid.Parse("{B3525945-BDBD-45D8-A324-AAF328A5E13E}") },
+                new Component { Name = "Component 2", Guid = Guid.Parse("{C5418549-6B7E-4A8C-8B8E-4AA1BC63C732}") },
+                new Component { Name = "Component 3", Guid = Guid.Parse("{B3525945-BDBD-45D8-A324-AAF328A5E13E}") },
             };
 
             // Act
-            Serializer.FileHandler.OutputConfigFile(originalComponents, filePath);
-            List<Component> loadedComponents = Serializer.FileHandler.ReadComponentsFromFile(filePath);
+            FileHelper.OutputConfigFile(originalComponents, _filePath);
+            List<Component> loadedComponents = FileHelper.ReadComponentsFromFile(_filePath);
 
             // Assert
-            Assert.That(loadedComponents.Count, Is.EqualTo(originalComponents.Count));
+            Assert.That(loadedComponents, Has.Count.EqualTo(originalComponents.Count));
 
             for (int i = 0; i < originalComponents.Count; i++)
             {
@@ -255,17 +265,17 @@ namespace KOTORModSync.Tests
             // Arrange
             List<Component> originalComponents = new()
             {
-            new Component { Name = "Component 1" },
-            new Component { Guid = "{C5418549-6B7E-4A8C-8B8E-4AA1BC63C732}" },
-            new Component { InstallOrder = 3 },
-        };
+                new Component { Name = "Component 1" },
+                new Component { Guid = Guid.Parse("{C5418549-6B7E-4A8C-8B8E-4AA1BC63C732}") },
+                new Component { InstallOrder = 3 },
+            };
 
             // Act
-            Serializer.FileHandler.OutputConfigFile(originalComponents, filePath);
-            List<Component> loadedComponents = Serializer.FileHandler.ReadComponentsFromFile(filePath);
+            FileHelper.OutputConfigFile(originalComponents, _filePath);
+            List<Component> loadedComponents = FileHelper.ReadComponentsFromFile(_filePath);
 
             // Assert
-            Assert.That(loadedComponents.Count, Is.EqualTo(originalComponents.Count));
+            Assert.That(loadedComponents, Has.Count.EqualTo(originalComponents.Count));
 
             for (int i = 0; i < originalComponents.Count; i++)
             {
@@ -280,18 +290,18 @@ namespace KOTORModSync.Tests
         public void SaveAndLoadTOMLFile_ModifyComponents()
         {
             // Arrange
-            List<Component> originalComponents = Serializer.FileHandler.ReadComponentsFromFile(filePath);
+            List<Component> originalComponents = FileHelper.ReadComponentsFromFile(_filePath);
 
             // Modify some component properties
             originalComponents[0].Name = "Modified Name";
             originalComponents[1].InstallOrder = 5;
 
             // Act
-            Serializer.FileHandler.OutputConfigFile(originalComponents, filePath);
-            List<Component> loadedComponents = Serializer.FileHandler.ReadComponentsFromFile(filePath);
+            FileHelper.OutputConfigFile(originalComponents, _filePath);
+            List<Component> loadedComponents = FileHelper.ReadComponentsFromFile(_filePath);
 
             // Assert
-            Assert.That(loadedComponents.Count, Is.EqualTo(originalComponents.Count));
+            Assert.That(loadedComponents, Has.Count.EqualTo(originalComponents.Count));
 
             for (int i = 0; i < originalComponents.Count; i++)
             {
@@ -301,6 +311,7 @@ namespace KOTORModSync.Tests
                 AssertComponentEquality(originalComponent, loadedComponent);
             }
         }
+
         [Test]
         public void SaveAndLoadTOMLFile_MultipleRounds()
         {
@@ -309,30 +320,30 @@ namespace KOTORModSync.Tests
             {
                 new List<Component>
                 {
-                    new Component { Name = "Component 1", Guid = "{B3525945-BDBD-45D8-A324-AAF328A5E13E}" },
-                    new Component { Name = "Component 2", Guid = "{C5418549-6B7E-4A8C-8B8E-4AA1BC63C732}" },
+                    new Component { Name = "Component 1", Guid = Guid.Parse("{B3525945-BDBD-45D8-A324-AAF328A5E13E}") },
+                    new Component { Name = "Component 2", Guid = Guid.Parse("{C5418549-6B7E-4A8C-8B8E-4AA1BC63C732}") },
                 },
                 new List<Component>
                 {
-                    new Component { Name = "Component 3", Guid = "{D0F371DA-5C69-4A26-8A37-76E3A6A2A50D}" },
-                    new Component { Name = "Component 4", Guid = "{E7B27A19-9A81-4A20-B062-7D00F2603D5C}" },
-                    new Component { Name = "Component 5", Guid = "{F1B05F5D-3C06-4B64-8E39-8BEC8D22BB0A}" },
+                    new Component { Name = "Component 3", Guid = Guid.Parse("{D0F371DA-5C69-4A26-8A37-76E3A6A2A50D}") },
+                    new Component { Name = "Component 4", Guid = Guid.Parse("{E7B27A19-9A81-4A20-B062-7D00F2603D5C}") },
+                    new Component { Name = "Component 5", Guid = Guid.Parse("{F1B05F5D-3C06-4B64-8E39-8BEC8D22BB0A}") },
                 },
                 new List<Component>
                 {
-                    new Component { Name = "Component 6", Guid = "{EF04A28E-5031-4A95-A85A-9A1B29A31710}" },
-                    new Component { Name = "Component 7", Guid = "{B0373F49-ED5A-43A1-91E0-5CEB85659282}" },
-                    new Component { Name = "Component 8", Guid = "{BBDB9C8D-DA44-4859-A641-0364D6F34D12}" },
-                    new Component { Name = "Component 9", Guid = "{D6B5C60F-26A7-4595-A0E2-2DE567A376DE}" },
+                    new Component { Name = "Component 6", Guid = Guid.Parse("{EF04A28E-5031-4A95-A85A-9A1B29A31710}") },
+                    new Component { Name = "Component 7", Guid = Guid.Parse("{B0373F49-ED5A-43A1-91E0-5CEB85659282}") },
+                    new Component { Name = "Component 8", Guid = Guid.Parse("{BBDB9C8D-DA44-4859-A641-0364D6F34D12}") },
+                    new Component { Name = "Component 9", Guid = Guid.Parse("{D6B5C60F-26A7-4595-A0E2-2DE567A376DE}") },
                 }
             };
             // Act and Assert
             foreach (List<Component> components in rounds)
             {
-                Serializer.FileHandler.OutputConfigFile(components, filePath);
-                List<Component> loadedComponents = Serializer.FileHandler.ReadComponentsFromFile(filePath);
+                FileHelper.OutputConfigFile(components, _filePath);
+                List<Component> loadedComponents = FileHelper.ReadComponentsFromFile(_filePath);
 
-                Assert.That(loadedComponents.Count, Is.EqualTo(components.Count));
+                Assert.That(loadedComponents, Has.Count.EqualTo(components.Count));
 
                 for (int i = 0; i < components.Count; i++)
                 {
@@ -346,10 +357,12 @@ namespace KOTORModSync.Tests
 
         private static void AssertComponentEquality(Component expected, Component actual)
         {
-            Assert.That(actual.Name, Is.EqualTo(expected.Name));
-            Assert.That(actual.Guid, Is.EqualTo(expected.Guid));
-            Assert.That(actual.InstallOrder, Is.EqualTo(expected.InstallOrder));
-            // Add assertions for other fields if necessary
+            Assert.Multiple(() =>
+            {
+                Assert.That(actual.Name, Is.EqualTo(expected.Name));
+                Assert.That(actual.Guid, Is.EqualTo(expected.Guid));
+                Assert.That(actual.InstallOrder, Is.EqualTo(expected.InstallOrder));
+            });
         }
     }
 }

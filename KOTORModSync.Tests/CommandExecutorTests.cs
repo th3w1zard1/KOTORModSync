@@ -10,7 +10,7 @@ namespace KOTORModSync.Tests
     [TestFixture]
     public class CommandExecutorTests
     {
-        public void ExecuteCommand(string command, ManualResetEvent completed, Dictionary<string, object> sharedData)
+        private static void ExecuteCommand(string command, ManualResetEvent completed, Dictionary<string, object> sharedData)
         {
             try
             {
@@ -40,7 +40,6 @@ namespace KOTORModSync.Tests
         }
 
         [Test]
-
         [Timeout(10000)]
         public void TryExecuteCommand_ShouldReturnSuccessAndOutput()
         {
@@ -79,8 +78,12 @@ namespace KOTORModSync.Tests
             // Assert
             bool success = (bool)sharedData["success"];
             string output = (string)sharedData["output"];
-            Assert.IsTrue(success);
-            Assert.That(output, Is.EqualTo(expectedOutput));
+            Assert.Multiple(
+                () =>
+                {
+                    Assert.That(success);
+                    Assert.That(output, Is.EqualTo(expectedOutput));
+                });
         }
 
         [Test]

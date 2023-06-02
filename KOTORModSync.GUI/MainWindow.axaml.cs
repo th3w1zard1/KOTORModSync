@@ -49,6 +49,11 @@ namespace KOTORModSync
             RightTextBox = this.FindControl<TextBox>("RightTextBox");
             RightTextBox.LostFocus += RightListBox_LostFocus; // Prevents rightListBox from being cleared when clicking elsewhere.
             RightTextBox.DataContext = _selectedComponentProperties;
+            TabControl = this.FindControl<TabControl>("TabControl");
+            RawEditTabItem = this.FindControl<TabItem>("RawEditTabItem");
+            GuiEditTabItem = this.FindControl<TabItem>("GuiEditTabItem");
+            InitialTab = this.FindControl<TabItem>("InitialTab");
+            ApplyEditorButton = this.FindControl<Button>("ApplyEditorButton");
             _selectedComponentProperties = new ObservableCollection<string>();
             _mainConfig = new MainConfig();
         }
@@ -648,14 +653,24 @@ namespace KOTORModSync
         {
             if (!((sender as TabControl)?.SelectedItem is TabItem selectedItem))
                 return;
-            if (selectedItem.Header == null)
+            if (selectedItem?.Header == null)
                 return;
 
+            // Don't show content of any tabs (except the hidden one) if there's no content.
+            if (selectedItem != InitialTab && _components.Count == 0)
+                TabControl.SelectedItem = InitialTab;
+            
             // Show/hide the appropriate content based on the selected tab
-            if (selectedItem.Header.ToString() == "Raw Edit")
+            else if (selectedItem.Header.ToString() == "Raw Edit")
+            {
                 RightTextBox.IsVisible = true;
-            else if (selectedItem?.Header.ToString() == "GUI Edit")
+                ApplyEditorButton.IsVisible = true;
+            }
+            else if (selectedItem.Header.ToString() == "GUI Edit")
+            {
                 RightTextBox.IsVisible = false;
+                ApplyEditorButton.IsVisible = false;
+            }
         }
 
         private async void LoadComponentDetails(
@@ -671,7 +686,10 @@ namespace KOTORModSync
                 Logger.LogVerbose($"Loading {selectedComponent.Name}...");
                 // todo: figure out what we're doing with _originalComponent
                 _originalContent = selectedComponent.SerializeComponent();
-                if (_originalContent != RightTextBox.Text && !string.IsNullOrEmpty(RightTextBox.Text) && selectedComponent != _currentComponent)
+                if (_originalContent != RightTextBox.Text
+                    && ! string.IsNullOrEmpty(RightTextBox.Text)
+                    && selectedComponent != _currentComponent
+                    && TabControl.SelectedItem        == RawEditTabItem)
                 {
                     // double check with user before overwrite
                     if (confirmation && !await ConfirmationDialog.ShowConfirmationDialog(
@@ -683,6 +701,9 @@ namespace KOTORModSync
                         return;
                     }
                 }
+
+                // default to GuiEditTabItem.
+                if (InitialTab.IsSelected || TabControl.SelectedIndex == Int32.MaxValue) TabControl.SelectedItem = GuiEditTabItem;
 
                 // populate raw editor
                 RightTextBox.Text = _originalContent;
@@ -755,11 +776,14 @@ namespace KOTORModSync
                     int index = _components.IndexOf(selectedComponent);
                     if (index < 0)
                     {
-                        throw new IndexOutOfRangeException(
+                        var ex = new IndexOutOfRangeException(
                             "Could not find index of component."
                             + " Ensure you single clicked on a component on the left before pressing save."
                             + " Please back up your work and try again."
                         );
+                        InformationDialog.ShowInformationDialog(this, ex.Message);
+                        Logger.LogException(ex);
+                        return false;
                     }
 
                     // Update the properties of the component
@@ -893,6 +917,8 @@ namespace KOTORModSync
 
                 WriteTreeViewItemsToFile(new List<TreeViewItem> { rootItem }, null);
                 //currentComponent = null;
+
+                if (_components.Count == 0) TabControl.SelectedItem = InitialTab;
             }
             catch (ArgumentException ex)
             {
@@ -1031,10 +1057,10 @@ namespace KOTORModSync
 
         private void ItemClick(object parameter)
         {
+            // used for leftTreeView doubleclick event.
             if (parameter is Core.Component component)
             {
-                // Handle the item click event here
-                if (!_selectedComponents.Contains(component))
+                if (! _selectedComponents.Contains(component))
                 {
                     _selectedComponents.Add(component);
                 }

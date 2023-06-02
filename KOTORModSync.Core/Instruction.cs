@@ -70,8 +70,6 @@ source = ""<<modDirectory>>\\path\\to\\mod\\TSLPatcher.exe""
 arguments = ""any command line arguments to pass (none available in TSLPatcher)""
 ";
 
-        public Component ParentComponent1 => ParentComponent;
-
         public void SetParentComponent(Component parentComponent) => ParentComponent = ParentComponent;
 
         public static async Task<bool> ExecuteInstructionAsync(Func<Task<bool>> instructionMethod) => await instructionMethod().ConfigureAwait(false);

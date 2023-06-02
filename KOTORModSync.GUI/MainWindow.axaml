@@ -62,18 +62,20 @@
 					<Button Grid.Column="1" Content=" Refresh List" Click="RefreshComponents_Click" />
 				</Grid>
 				<StackPanel Grid.Row="4" HorizontalAlignment="Center" Margin="0,0">
-					<Button Content="Apply Editor Changes" Click="SaveButton_Click" />
+					<Button x:Name="ApplyEditorButton" Content="Apply Editor Changes" Click="SaveButton_Click" />
 					<Button Content="Install Selected Mod" Margin="0,35" Click="InstallModSingle_Click" />
 				</StackPanel>
 			</Grid>
 			<Grid Grid.Column="1" RowDefinitions="Auto,Auto">
 				<TabControl x:Name="TabControl" Grid.Row="1" SelectionChanged="TabControl_SelectionChanged">
-					<TabItem Header="Raw Edit">
-						<TextBox x:Name="RightTextBox" Margin="10" AcceptsReturn="True" TextWrapping="Wrap" Height="400" />
-					</TabItem>
-					<TabItem Header="GUI Edit">
+					<TabItem x:Name="InitialTab" IsVisible="False">
 						<TabItem.Content>
-							<ScrollViewer HorizontalScrollBarVisibility="Disabled" Height="400">
+							<TextBlock>Please load an instructions file or create a new instructions file by using the controls on the left.</TextBlock>
+						</TabItem.Content>
+					</TabItem>
+					<TabItem x:Name="GuiEditTabItem" Header="GUI Edit">
+						<TabItem.Content>
+							<ScrollViewer HorizontalScrollBarVisibility="Visible" VerticalScrollBarVisibility="Auto" Height="400">
 								<ItemsControl x:Name="ComponentsItemsControl" Items="{Binding Components}">
 									<ItemsControl.ItemTemplate>
 										<DataTemplate DataType="core:Component">
@@ -207,7 +209,9 @@
 							</ScrollViewer>
 						</TabItem.Content>
 					</TabItem>
-
+					<TabItem x:Name="RawEditTabItem" Header="Raw Edit">
+						<TextBox x:Name="RightTextBox" Margin="10" AcceptsReturn="True" TextWrapping="Wrap" Height="400" />
+					</TabItem>
 				</TabControl>
 			</Grid>
 			<StackPanel Grid.Column="2" Orientation="Vertical" HorizontalAlignment="Right">

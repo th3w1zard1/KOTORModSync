@@ -468,30 +468,32 @@ namespace KOTORModSync.Core.Utility
             return component;
         }
 
-        [NotNull]
         public static List<string> EnumerateFilesWithWildcards(IEnumerable<string> filesAndFolders)
         {
-            List<string> result = new List<string>(65535);
+            List<string> result = new List<string>();
 
-            foreach (string path in new HashSet<string>(filesAndFolders)
-                .Where(path => !string.IsNullOrEmpty(path)))
-            {
+            HashSet<string> uniquePaths = new HashSet<string>(filesAndFolders);
+
+            foreach ( var path in uniquePaths.Where(path => ! string.IsNullOrEmpty(path)) ) {
                 try
                 {
-                    if (CountWildcards(path) == 0) // Handle non-wildcard paths
+                    if (!ContainsWildcards(path))
                     {
-                        if (Directory.Exists(path))
+                        // Handle non-wildcard paths
+                        if (File.Exists(path))
                         {
-                            IEnumerable<string> matchingFiles = Directory.EnumerateFiles(path, "*", SearchOption.AllDirectories);
-                            result.AddRange(matchingFiles);
+                            result.Add(path);
                             continue;
                         }
 
-                        if (File.Exists(path))
-                            result.Add(path);
+                        if (! Directory.Exists(path)) { continue; }
+
+                        IEnumerable<string> matchingFiles = Directory.EnumerateFiles(path, "*", SearchOption.AllDirectories);
+                        result.AddRange(matchingFiles);
                         continue;
                     }
 
+                    // Handle wildcard paths
                     string directory = Path.GetDirectoryName(path);
 
                     if (!string.IsNullOrEmpty(directory) && Directory.Exists(directory))
@@ -503,17 +505,20 @@ namespace KOTORModSync.Core.Utility
 
                     // Handle wildcard paths
                     string currentDirectory = path;
-                    for (int wildcardsCount = CountWildcards(currentDirectory); wildcardsCount > 0; wildcardsCount--)
+
+                    while (ContainsWildcards(currentDirectory))
                     {
                         string parentDirectory = Path.GetDirectoryName(currentDirectory);
                         if (string.IsNullOrEmpty(parentDirectory) || parentDirectory == currentDirectory)
+                        {
                             break; // Exit the loop if no parent directory is found or if the parent directory is the same as the current directory
+                        }
 
                         currentDirectory = parentDirectory;
                     }
 
-                    if (string.IsNullOrEmpty(currentDirectory) || !Directory.Exists(currentDirectory))
-                        continue;
+                    if (string.IsNullOrEmpty(currentDirectory)
+                        || ! Directory.Exists(currentDirectory)) { continue; }
 
                     IEnumerable<string> checkFiles = Directory.EnumerateFiles(currentDirectory, "*", SearchOption.AllDirectories);
                     result.AddRange(checkFiles.Where(thisFile => WildcardMatch(thisFile, path)));
@@ -521,14 +526,14 @@ namespace KOTORModSync.Core.Utility
                 catch (Exception ex)
                 {
                     // Handle or log the exception as required
-                    Logger.Log($"An error occurred while processing path '{path}': {ex.Message}");
+                    Console.WriteLine($"An error occurred while processing path '{path}': {ex.Message}");
                 }
             }
 
             return result;
         }
 
-        private static int CountWildcards(string path) => path.Count(c => c == '*' || c == '?');
+        private static bool ContainsWildcards(string path) => path.Contains("*") || path.Contains("?");
 
         public static bool WildcardMatch(string input, string patternInput)
         {
@@ -538,7 +543,9 @@ namespace KOTORModSync.Core.Utility
 
             // Ensure the number of levels match
             if (inputLevels.Length != patternLevels.Length)
+            {
                 return false;
+            }
 
             // Iterate over each level and perform wildcard matching
             for (int i = 0; i < inputLevels.Length; i++)
@@ -548,11 +555,15 @@ namespace KOTORModSync.Core.Utility
 
                 // Check if the current level is a wildcard
                 if (patternLevel == "*" || patternLevel == "?")
+                {
                     continue;
+                }
 
                 // Check if the current level matches the pattern
                 if (!WildcardMatchLevel(inputLevel, patternLevel))
+                {
                     return false;
+                }
             }
 
             return true;
@@ -561,7 +572,7 @@ namespace KOTORModSync.Core.Utility
         private static bool WildcardMatchLevel(string input, string pattern)
         {
             // Replace * with .* and ? with . in the pattern
-            pattern = pattern.Replace("*", ".*").Replace('?', '.');
+            pattern = pattern.Replace("*", ".*").Replace("?", ".");
 
             // Use regex to perform the wildcard matching
             return Regex.IsMatch(input, $"^{pattern}$");

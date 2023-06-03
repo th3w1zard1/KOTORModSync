@@ -76,58 +76,58 @@
 										<TextBlock Grid.Column="0" Grid.Row="0" Text="Name:" />
 										<TextBox Grid.Column="0" Text="{Binding Name}"
 												 LostFocus="TextBox_LostFocus" Focusable="True"
-												 TextWrapping="Wrap" />
+												 TextWrapping="Wrap" Width="300"/>
 
 										<TextBlock Grid.Column="0" Text="Guid:" />
 										<DockPanel HorizontalAlignment="Left">
 											<TextBox Grid.Column="1" Text="{Binding Guid}"
-													 LostFocus="TextBox_LostFocus" Focusable="True" />
-											<Button Grid.Column="1" Content="Generate GUID" Click="GenerateGuidButton_Click" />
+													 LostFocus="TextBox_LostFocus" Focusable="True" MaxWidth="600" />
+											<Button Grid.Column="1" Content="Generate GUID" Click="GenerateGuidButton_Click"/>
 										</DockPanel>
 
 										<TextBlock Grid.Column="0" Text="Description:" />
 										<TextBox Grid.Column="0" Text="{Binding Description}"
 												 LostFocus="TextBox_LostFocus" Focusable="True"
-												 TextWrapping="Wrap" AcceptsTab="True" AcceptsReturn="True" />
+												 TextWrapping="Wrap" AcceptsTab="True" AcceptsReturn="True" MaxWidth="600"/>
 
 										<TextBlock Grid.Column="0" Text="Directions:" />
 										<TextBox Grid.Column="0" Text="{Binding Directions}"
 												 LostFocus="TextBox_LostFocus" Focusable="True"
-												 TextWrapping="Wrap" AcceptsTab="True" AcceptsReturn="True" />
+												 TextWrapping="Wrap" AcceptsTab="True" AcceptsReturn="True" MaxWidth="600"/>
 
 										<TextBlock Grid.Column="0" Text="Author:" />
 										<TextBox Grid.Column="0" Text="{Binding Author}"
 												 LostFocus="TextBox_LostFocus" Focusable="True"
-												 TextWrapping="Wrap" AcceptsTab="True" AcceptsReturn="True" />
+												 TextWrapping="Wrap" AcceptsTab="True" AcceptsReturn="True" MaxWidth="600"/>
 
 										<TextBlock Grid.Column="0" Text="Category:" />
 										<TextBox Grid.Column="0" Text="{Binding Category}"
 												 LostFocus="TextBox_LostFocus" Focusable="True"
-												 TextWrapping="Wrap" AcceptsTab="True" AcceptsReturn="True" />
+												 TextWrapping="Wrap" AcceptsTab="True" AcceptsReturn="True" MaxWidth="600"/>
 
 										<TextBlock Grid.Column="0" Text="Tier:" />
 										<TextBox Grid.Column="0" Text="{Binding Tier}"
 												 LostFocus="TextBox_LostFocus" Focusable="True"
-												 TextWrapping="Wrap" AcceptsTab="True" AcceptsReturn="True" />
+												 TextWrapping="Wrap" AcceptsTab="True" AcceptsReturn="True" MaxWidth="600"/>
 
 										<TextBlock Grid.Column="0" Text="Mod Website:" />
 										<TextBox Grid.Column="0" Text="{Binding ModLink}"
 												 LostFocus="TextBox_LostFocus" Focusable="True"
-												 TextWrapping="Wrap" AcceptsTab="True" AcceptsReturn="True" />
+												 TextWrapping="Wrap" AcceptsTab="True" AcceptsReturn="True" MaxWidth="600"/>
 										<StackPanel>
 											<ItemsRepeater Items="{Binding Instructions}">
 												<ItemsRepeater.ItemTemplate>
 													<DataTemplate DataType="core:Instruction">
-														<Border BorderThickness="1" BorderBrush="LightGray" Margin="0,0,0,10">
+														<Border BorderThickness="1" BorderBrush="LightGray" Margin="0,0,0,10" >
 															<Grid
-																RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto"
+																RowDefinitions="*,*,*,*,*,*,*,*,*,*,*,*,*,*,*"
 																ColumnDefinitions="*,Auto">
 																<TextBlock Grid.Row="0" Grid.Column="0" Text="Action:" />
 																<TextBox Grid.Row="1"
 																	Grid.Column="0"
 																	Text="{Binding Action}"
 																	LostFocus="TextBox_LostFocus"
-																	Focusable="True" />
+																	Focusable="True" MaxWidth="600"/>
 
 																<TextBlock Grid.Row="3" Grid.Column="0" Text="Source:" />
 																<TextBox Grid.Row="4"
@@ -137,7 +137,7 @@
 																	TextWrapping="Wrap"
 																	Text="{Binding Source, Converter={StaticResource ListToStringConverter}}"
 																	LostFocus="TextBox_LostFocus"
-																	Focusable="True" />
+																	Focusable="True" MaxWidth="600"/>
 
 																<Button Grid.Row="4"
 																	Grid.Column="1"
@@ -152,7 +152,7 @@
 																	TextWrapping="Wrap"
 																	Text="{Binding Destination}"
 																	LostFocus="TextBox_LostFocus"
-																	Focusable="True" />
+																	Focusable="True" MaxWidth="600"/>
 																<Button Grid.Row="6"
 																	Grid.Column="1"
 																	Content="Browse Destination"
@@ -182,14 +182,14 @@
 																	Grid.Column="0"
 																	Text="{Binding Overwrite}"
 																	LostFocus="TextBox_LostFocus"
-																	Focusable="True" />
+																	Focusable="True" MaxWidth="600"/>
 
 																<TextBlock Grid.Row="13" Grid.Column="0" Text="Arguments:" />
 																<TextBox Grid.Row="14"
 																	Grid.Column="0"
 																	Text="{Binding Arguments}"
 																	LostFocus="TextBox_LostFocus"
-																	Focusable="True" />
+																	Focusable="True" MaxWidth="600"/>
 															</Grid>
 														</Border>
 													</DataTemplate>

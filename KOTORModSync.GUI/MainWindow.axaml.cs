@@ -275,6 +275,11 @@ namespace KOTORModSync
 
                         // Set the root item collection as the items source of the tree view
                         LeftTreeView.Items = rootItemsCollection;
+
+                        // Expand the tree. Too lazy to figure out the proper way.
+                        var treeEnumerator = LeftTreeView.Items.GetEnumerator();
+                        treeEnumerator.MoveNext();
+                        LeftTreeView.ExpandSubTree((TreeViewItem)treeEnumerator.Current);
                     });
             }
             catch (Exception ex)
@@ -686,10 +691,9 @@ namespace KOTORModSync
                 Logger.LogVerbose($"Loading {selectedComponent.Name}...");
                 // todo: figure out what we're doing with _originalComponent
                 _originalContent = selectedComponent.SerializeComponent();
-                if (_originalContent != RightTextBox.Text
-                    && ! string.IsNullOrEmpty(RightTextBox.Text)
-                    && selectedComponent != _currentComponent
-                    && TabControl.SelectedItem        == RawEditTabItem)
+                if (_originalContent.Equals(RightTextBox.Text)
+                    && !string.IsNullOrEmpty(RightTextBox.Text)
+                    && selectedComponent != _currentComponent)
                 {
                     // double check with user before overwrite
                     if (confirmation && !await ConfirmationDialog.ShowConfirmationDialog(

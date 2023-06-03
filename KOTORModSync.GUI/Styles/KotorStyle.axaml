@@ -1,57 +1,99 @@
 <Styles xmlns="https://github.com/avaloniaui"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-    <Design.PreviewWith>
-        <Border Padding="20">
-            <!-- Add Controls for Previewer Here -->
-        </Border>
-    </Design.PreviewWith>
+		xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+	<Design.PreviewWith>
+		<Border Padding="20">
+			<!-- Add Controls for Previewer Here -->
+		</Border>
+	</Design.PreviewWith>
 
-    <Style Selector="TextBlock">
-        <Setter Property="FontSize" Value="14" />
-        <Setter Property="FontWeight" Value="Normal" />
-        <Setter Property="Margin" Value="0,2" />
-        <Setter Property="Foreground" Value="#33C3A2" />
-    </Style>
-    <Style Selector="Button:pointerover /template/ContentPresenter">
-        <Setter Property="Background" Value="#FFA500" />
-    </Style>
-    <Style Selector="Button">
-        <Setter Property="Margin" Value="0,2" />
-        <Setter Property="BorderThickness" Value="4" />
-        <Setter Property="BorderBrush" Value="#134D40" />
-        <Setter Property="Padding" Value="10" />
-        <Setter Property="MinWidth" Value="100" />
-        <Setter Property="Background" Value="#05110D" />
-        <Setter Property="Foreground" Value="#33C3A2" />
-        <Setter Property="HorizontalAlignment" Value="Center" />
-        <Setter Property="VerticalAlignment" Value="Center" />
-    </Style>
-    <Style Selector="TextBox">
-        <Setter Property="Margin" Value="2" />
-        <Setter Property="Padding" Value="2" />
-        <Setter Property="MinWidth" Value="200" />
-        <Setter Property="MinHeight" Value="30" />
-        <Setter Property="Background" Value="#09241D" />
-        <Setter Property="FontFamily" Value="Verdana" />
-        <Setter Property="Foreground" Value="#33C3A2" />
-        <Setter Property="BorderBrush" Value="#4D596D" />
-        <Setter Property="BorderThickness" Value="1" />
-        <Setter Property="FontSize" Value="14" />
-    </Style>
-    <Style Selector="TreeView">
-        <Setter Property="Margin" Value="2" />
-        <Setter Property="MinWidth" Value="150" />
-        <Setter Property="Background" Value="#09241D" />
-    </Style>
-    <Style Selector="ScrollViewer">
-        <Setter Property="VerticalScrollBarVisibility" Value="Auto" />
-        <Setter Property="HorizontalScrollBarVisibility" Value="Auto" />
-    </Style>
-    <Style Selector="StackPanel">
-        <Setter Property="Margin" Value="2" />
-    </Style>
-    <Style Selector="Rectangle">
-        <Setter Property="Width" Value="5" />
-        <Setter Property="Fill" Value="Transparent" />
-    </Style>
+	<Style Selector="TextBlock">
+		<Setter Property="FontSize" Value="14" />
+		<Setter Property="FontWeight" Value="Normal" />
+		<Setter Property="Margin" Value="0,2" />
+		<Setter Property="Foreground" Value="#33C3A2" />
+	</Style>
+
+	<Style Selector="Button:pointerover">
+		<Setter Property="TextBlock.Foreground" Value="#FFFFFF"/>
+		<Setter Property="Foreground" Value="#FFFFFF"/>
+	</Style>
+	<Style Selector="Button:pointerover /template/ContentPresenter">
+		<Setter Property="BorderBrush" Value="#CDFFFFFF" />
+		<Setter Property="Background" Value="#05110D" />
+		<Setter Property="TextBlock.Foreground" Value="#FFFFFF"/>
+	</Style>
+	<Style Selector="Button">
+		<Setter Property="Margin" Value="0,2" />
+		<Setter Property="BorderThickness" Value="2" />
+		<Setter Property="BorderBrush" Value="#CD134D40" />
+		<Setter Property="Padding" Value="10" />
+		<Setter Property="MinWidth" Value="100" />
+		<Setter Property="Background" Value="#05110D" />
+		<Setter Property="Foreground" Value="#33C3A2" />
+		<Setter Property="HorizontalAlignment" Value="Center" />
+		<Setter Property="VerticalAlignment" Value="Center" />
+	</Style>
+
+	<Style Selector="TextBox:focus /template/ TextBlock#PART_Watermark">
+		<Setter Property="Foreground" Value="#33C3A2" />
+		<Setter Property="Background" Value="#09241D" />
+	</Style>
+	<Style Selector="TextBox:focus /template/Border[IsFocused=True]">
+		<Setter Property="Background" Value="#09241D" />
+	</Style>
+	<Style Selector="TextBox:focus">
+		<Setter Property="Foreground" Value="#33C3A2" />
+		<Setter Property="Background" Value="#09241D" />
+	</Style>
+	<Style Selector="TextBox:focus /template/ Border#PART_BorderElement">
+		<Setter Property="BorderBrush" Value="#FFFFFF" />
+		<Setter Property="TextBlock.Foreground" Value="#09241D" />
+		<Setter Property="Background" Value="#09241D" />
+	</Style>
+	<Style Selector="TextBox:focus /template/ ContentPresenter">
+		<Setter Property="Background" Value="#09241D" />
+	</Style>
+	<Style Selector="TextBox:focus /template/ TextBlock#PART_Watermark">
+		<Setter Property="Foreground" Value="#33C3A2" />
+		<Setter Property="Background" Value="#09241D" />
+	</Style>
+	<Style Selector="TextBox:pointerover">
+		<Setter Property="Foreground" Value="#43FFD4"/>
+	</Style>
+	<Style Selector="TextBox:pointerover /template/ Border#PART_BorderElement">
+		<Setter Property="BorderBrush" Value="#FFFFFF" />
+		<Setter Property="TextBlock.Foreground" Value="#09241D" />
+		<Setter Property="Background" Value="#09241D" />
+	</Style>
+	<Style Selector="TextBox">
+		<Setter Property="CaretBrush" Value="AliceBlue" />
+		<Setter Property="Margin" Value="2" />
+		<Setter Property="Padding" Value="2" />
+		<Setter Property="Background" Value="#09241D" />
+		<Setter Property="FontFamily" Value="Verdana" />
+		<Setter Property="Foreground" Value="#33C3A2" />
+		<Setter Property="BorderBrush" Value="#134D40" />
+		<Setter Property="BorderThickness" Value="2" />
+		<Setter Property="FontSize" Value="14" />
+	</Style>
+
+	<Style Selector="TreeView">
+		<Setter Property="Margin" Value="2" />
+		<Setter Property="MinWidth" Value="150" />
+		<Setter Property="Background" Value="#09241D" />
+	</Style>
+	<Style Selector="ScrollViewer">
+		<Setter Property="VerticalScrollBarVisibility" Value="Auto" />
+		<Setter Property="HorizontalScrollBarVisibility" Value="Auto" />
+	</Style>
+	<Style Selector="StackPanel">
+		<Setter Property="Margin" Value="2" />
+	</Style>
+	<Style Selector="Rectangle">
+		<Setter Property="Width" Value="5" />
+		<Setter Property="Fill" Value="Transparent" />
+	</Style>
+	<Style Selector="Window">
+		<Setter Property="Background" Value="#05110D"/>
+	</Style>
 </Styles>

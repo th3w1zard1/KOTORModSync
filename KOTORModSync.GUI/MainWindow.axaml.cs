@@ -244,63 +244,40 @@ namespace KOTORModSync
             return null;
         }
 
-private Dictionary<Component, int> duplicateCount = new Dictionary<Component, int>();
-
-private async Task ProcessComponents(TreeViewItem rootItem)
-{
-    bool applyToAllConflicts = false;
-
-    foreach (var component in _components)
-    {
-        CreateTreeViewItem(component, rootItem);
-
-        // Check for duplicate GUID
-        Component duplicateComponent = _components.Find(c => c.Guid == component.Guid && c != component);
-
-        if (duplicateComponent == null) { continue; }
-
-        string message = $"Component '{component.Name}' has duplicate GUID with component '{duplicateComponent.Name}'";
-        Logger.Log(message);
-
-        int count = duplicateCount.ContainsKey(duplicateComponent) ? duplicateCount[duplicateComponent] + 1 : 1;
-        duplicateCount[duplicateComponent] = count;
-
-        if (count > 2 && !applyToAllConflicts)
+        private async Task ProcessComponents(TreeViewItem rootItem)
         {
-            if (count == 3)
+            int i = 0;
+            foreach (var component in _components)
             {
-                bool confirmApplyToAll = await ConfirmationDialog.ShowConfirmationDialog(this, $"Duplicate GUID conflicts for component '{duplicateComponent.Name}' have occurred {count} times.\r\nApply this action to all conflicts?");
+                CreateTreeViewItem(component, rootItem);
 
-                if (confirmApplyToAll)
+                // Check for duplicate GUID
+                Component duplicateComponent = _components.Find(c => c.Guid == component.Guid && c != component);
+
+                if (duplicateComponent == null) { continue; }
+
+                string message = $"Component '{component.Name}' has duplicate GUID with component '{duplicateComponent.Name}'";
+                Logger.Log(message);
+                bool confirm;
+
+                if (i >= 2)
+                    confirm = true;
+                else
+                    confirm = await ConfirmationDialog.ShowConfirmationDialog(
+                        this, message + $".\r\nAssign random GUID to '{duplicateComponent.Name}'? (default: NO)");
+
+                if (confirm)
                 {
-                    applyToAllConflicts = true;
+                    i++;
+                    duplicateComponent.Guid = Guid.NewGuid();
+                    Logger.Log($"Replaced GUID of component {duplicateComponent.Name}");
+                }
+                else
+                {
+                    Logger.Log($"User canceled GUID replacement for component {duplicateComponent.Name}");
                 }
             }
-
-            if (!applyToAllConflicts)
-            {
-                continue; // Skip processing this conflict if not applying to all conflicts
-            }
         }
-
-        if (applyToAllConflicts || count <= 2)
-        {
-            bool confirm = await ConfirmationDialog.ShowConfirmationDialog(this, message + $".\r\nAssign random GUID to '{duplicateComponent.Name}'? (default: NO)");
-
-            if (confirm)
-            {
-                duplicateComponent.Guid = Guid.NewGuid();
-                Logger.Log($"Replaced GUID of component {duplicateComponent.Name}");
-            }
-            else
-            {
-                Logger.Log($"User canceled GUID replacement for component {duplicateComponent.Name}");
-            }
-        }
-    }
-}
-
-
 
 
         private async void LoadInstallFile_Click(object sender, RoutedEventArgs e)

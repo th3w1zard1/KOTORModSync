@@ -71,6 +71,26 @@ namespace KOTORModSync.Core
                     Serializer.SerializeObject(this)
                 }
             };
+
+            // Loop through the "thisMod" list
+            for (int i = 0; i < rootTable["thisMod"].Count; i++)
+            {
+                // Check if the item is a Dictionary<string, object> representing a TOML table
+                if (rootTable["thisMod"][i] is Dictionary<string, object> table && table.ContainsKey("Instructions"))
+                {
+                    var instructions = table["Instructions"] as List<object>;
+
+                    // Check if the "Instructions" table is empty and remove it
+                    if (instructions == null || instructions.Count == 0)
+                    {
+                        // Remove the "Instructions" table from the root table
+                        table.Remove("Instructions");
+                        table["Instructions"] = new Tomlyn.Model.TomlTableArray();
+                        break;
+                    }
+                }
+            }
+
             string tomlString = Nett.Toml.WriteString(rootTable);
             return Serializer.FixWhitespaceIssues(tomlString);
         }
@@ -228,14 +248,13 @@ namespace KOTORModSync.Core
                 Type elementType = listType.GetGenericArguments()[0];
                 dynamic dynamicList = Activator.CreateInstance(listType);
 
-                if (targetType.IsArray)
+                if (! targetType.IsArray) { return dynamicList; }
+
+                var arrayValues = (Array)value;
+                foreach (var item in arrayValues)
                 {
-                    var arrayValues = (Array)value;
-                    foreach (var item in arrayValues)
-                    {
-                        dynamic convertedItem = Convert.ChangeType(item, elementType);
-                        dynamicList.Add(convertedItem);
-                    }
+                    dynamic convertedItem = Convert.ChangeType(item, elementType);
+                    dynamicList.Add(convertedItem);
                 }
 
                 return dynamicList;
@@ -248,7 +267,7 @@ namespace KOTORModSync.Core
 
                 Tomlyn.Model.TomlTableArray tomlTableArray = new TomlTableArray();
 
-                foreach (var tomlValue in valueTomlArray)
+                foreach (object tomlValue in valueTomlArray)
                 {
                     if (tomlValue is TomlTable table)
                     {

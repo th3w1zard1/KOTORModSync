@@ -121,11 +121,5 @@ namespace KOTORModSync.Core.Utility
             Logger.Log($"Directory '{thisPath}' does not exist.");
             return default;
         }
-
-        public static bool IsListType<T>()
-        {
-            Type listType = typeof(T);
-            return listType.IsGenericType && listType.GetGenericTypeDefinition() == typeof(List<>);
-        }
     }
 }

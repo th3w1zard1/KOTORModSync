@@ -4,13 +4,16 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Security.Cryptography;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
 using KOTORModSync.Core.Utility;
 using Nett;
+using Tomlyn.Model;
 using TomlObject = Tomlyn.Model.TomlObject;
 using TomlTable = Tomlyn.Model.TomlTable;
 using TomlTableArray = Tomlyn.Model.TomlTableArray;
@@ -104,27 +107,32 @@ namespace KOTORModSync.Core
             this.Restrictions = GetValueOrDefault<List<string>>(componentDict, "restrictions");
             this.ModLink = GetValueOrDefault<string>(componentDict, "modlink");
 
-            this.Instructions = DeserializeInstructions(GetValueOrDefault<TomlTableArray>(componentDict, "instructions"));
+            this.Instructions = DeserializeInstructions(
+                GetValueOrDefault<Tomlyn.Model.TomlTableArray>(
+                    componentDict, "instructions")
+            );
 
-            // ReSharper disable once PossibleNullReferenceException
+            if (this.Instructions.Count == 0)
+                Logger.Log($"No instructions found for component {this.Name}");
+
             this.Instructions.ForEach(instruction => instruction.SetParentComponent(this));
             Logger.Log($"Successfully deserialized component '{this.Name}'\r\n");
         }
 
-        [CanBeNull]
-        private static List<Instruction> DeserializeInstructions(TomlObject tomlObject)
+        [NotNull]
+        private static List<Instruction> DeserializeInstructions([CanBeNull]TomlTableArray tomlObject)
         {
-            if (!(tomlObject is TomlTableArray instructionsArray))
+            if (tomlObject == null)
             {
                 Logger.LogException(new Exception("Expected a TOML table array for instructions data."));
-                return null;
+                return new List<Instruction>();
             }
 
             var instructions = new List<Instruction>(65535);
 
-            for (int index = 0; index < instructionsArray.Count; index++)
+            for (int index = 0; index < tomlObject.Count; index++)
             {
-                TomlTable item = instructionsArray[index];
+                TomlTable item = tomlObject[index];
                 Dictionary<string, object> instructionDict = Utility.Serializer.ConvertTomlTableToDictionary(item);
 
                 // ConvertTomlTableToDictionary lowercase all string keys.
@@ -157,86 +165,155 @@ namespace KOTORModSync.Core
             return instructions;
         }
 
-        private static T GetRequiredValue<T>(Dictionary<string, object> dict, string key) => GetValue<T>(dict, key, true);
-        private static T GetValueOrDefault<T>(Dictionary<string, object> dict, string key) => GetValue<T>(dict, key, false);
+        [CanBeNull] private static T GetRequiredValue<T>(IReadOnlyDictionary<string, object> dict, string key) => GetValue<T>(dict, key, true);
+        [CanBeNull] private static T GetValueOrDefault<T>(IReadOnlyDictionary<string, object> dict, string key) => GetValue<T>(dict, key, false);
 
-        private static T GetValue<T>(Dictionary<string, object> dict, string key, bool required)
+        private static T GetValue<T>(IReadOnlyDictionary<string, object> dict, string key, bool required)
         {
-            if (dict == null)
-                throw new ArgumentNullException(nameof(dict));
-
-            if (key == null)
-                throw new ArgumentNullException(nameof(key));
-
-            try
+            if (!dict.TryGetValue(key, out object value))
             {
-                Type targetType = typeof(T);
-                Type listType = typeof(List<>);
-                Type guidType = typeof(Guid);
-
-                bool found = dict.TryGetValue(key, out object value);
-                if (!found)
+                string caseInsensitiveKey = dict.Keys.FirstOrDefault(k => k.Equals(key, StringComparison.OrdinalIgnoreCase));
+                if (caseInsensitiveKey == null)
                 {
                     if (required)
-                        Logger.Log($"No '{key}' key defined in dictionary.");
-                    return targetType == typeof(string) ? default : InstanceCreator.CreateInstance<T>();
-                }
-
-                if (value is T t)
-                    return t;
-
-                if (!Utility.Utility.IsListType<T>() || !(value is IEnumerable enumerable))
-                {
-                    if (!(value is string stringValue))
                     {
-                        Logger.Log($"Invalid format for '{key}' field.");
-                        return InstanceCreator.CreateInstance<T>();
+                        Logger.LogException(new Exception($"Missing or invalid '{key}' field."));
+                        return default;
                     }
 
-                    if (targetType == typeof(Guid) && Guid.TryParse(
-                        stringValue,
-                        out Guid guidValue))
-                    {
-                        return (T)(dynamic)guidValue;
-                    }
-
-                    T convertedValue = (T)Convert.ChangeType(stringValue, targetType);
-                    return convertedValue;
+                    return default;
                 }
 
-                Type elementType = targetType.GetGenericArguments().FirstOrDefault() ?? typeof(object);
-                dynamic dynamicList = Activator.CreateInstance(listType.MakeGenericType(elementType));
+                value = dict[caseInsensitiveKey];
+            }
+
+            if (value is T t)
+            {
+                return t;
+            }
+
+            var targetType = value.GetType();
+
+            if (value is string valueStr && typeof(T) == typeof(System.Guid)
+                && System.Guid.TryParse(valueStr, out Guid guid))
+                return (T)(object)guid;
+
+            if (targetType.IsGenericType && targetType.GetGenericTypeDefinition() == typeof(List<>) && value is IEnumerable enumerable)
+            {
+                Type elementType = typeof(T).GetGenericArguments()[0];
+                dynamic dynamicList = Activator.CreateInstance(typeof(List<>).MakeGenericType(elementType));
 
                 foreach (object item in enumerable)
                 {
-                    if (elementType == guidType && Guid.TryParse(item as string, out Guid guidValueInner))
-                    {
-                        dynamicList.Add(guidValueInner);
-                        continue;
-                    }
-
-                    dynamicList.Add((dynamic)item);
+                    dynamic convertedItem = Convert.ChangeType(item, elementType);
+                    dynamicList.Add(convertedItem);
                 }
 
-                if (!required || dynamicList.Count != 0)
-                    return (T)dynamicList;
-
-                Logger.Log($"Missing or invalid '{key}' field.");
-                return InstanceCreator.CreateInstance<T>();
-            }
-            catch (InvalidCastException ex)
-            {
-                string msg = $"Invalid '{key}' field type.";
-                Logger.LogException(new InvalidCastException(msg, ex));
-            }
-            catch (Exception ex) when (!required)
-            {
-                Logger.LogException(ex);
+                return dynamicList;
             }
 
-            return InstanceCreator.CreateInstance<T>(); // Create a new instance of T
+            if ((value is string valueStr2 && string.IsNullOrEmpty(valueStr2)))
+            {
+                if (required)
+                {
+                    throw new ArgumentException($"'{key}' field is null or empty.");
+                }
+
+                return default;
+            }
+
+            if (typeof(T).IsGenericType && typeof(T).GetGenericTypeDefinition() == typeof(List<>))
+            {
+                Type listType = typeof(T);
+                Type elementType = listType.GetGenericArguments()[0];
+                dynamic dynamicList = Activator.CreateInstance(listType);
+
+                if (targetType.IsArray)
+                {
+                    var arrayValues = (Array)value;
+                    foreach (var item in arrayValues)
+                    {
+                        dynamic convertedItem = Convert.ChangeType(item, elementType);
+                        dynamicList.Add(convertedItem);
+                    }
+                }
+
+                return dynamicList;
+            }
+
+            if (targetType == typeof(Tomlyn.Model.TomlArray) && value is Tomlyn.Model.TomlArray valueTomlArray)
+            {
+                if (valueTomlArray.Count == 0)
+                    return default;
+
+                Tomlyn.Model.TomlTableArray tomlTableArray = new TomlTableArray();
+
+                foreach (var tomlValue in valueTomlArray)
+                {
+                    if (tomlValue is TomlTable table)
+                    {
+                        tomlTableArray.Add(table);
+                    }
+                    else
+                    {
+                        // Handle error or invalid item
+                    }
+                }
+
+                return (T)(object)tomlTableArray;
+            }
+
+
+            try
+            {
+                T convertedValue = (T)Convert.ChangeType(value, typeof(T));
+                return convertedValue;
+            }
+            catch (InvalidCastException)
+            {
+                if (required)
+                {
+                    throw new ArgumentException($"Invalid '{key}' field type.");
+                }
+            }
+            catch (FormatException)
+            {
+                if (required)
+                {
+                    throw new ArgumentException($"Invalid format for '{key}' field.");
+                }
+            }
+
+            return default;
         }
 
+        private static bool IsEmptyValue(object value)
+        {
+            if (value == null)
+            {
+                return true;
+            }
+
+            var valueType = value.GetType();
+            if (valueType.IsValueType)
+            {
+                return false; // Value types cannot be empty
+            }
+
+            // Handle additional cases for reference types
+            // For example, check if it's an empty collection
+            if (value is ICollection collection)
+            {
+                return collection.Count == 0;
+            }
+
+            // Add more checks here for other specific types as needed
+
+            return false; // Default assumption: not empty
+        }
+
+
+        
         public async Task<(
                 bool success,
                 Dictionary<FileInfo, SHA1> originalChecksums)

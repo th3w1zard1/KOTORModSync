@@ -142,6 +142,7 @@ namespace KOTORModSync
                     Logger.Log($"Selected files: {string.Join(", ", filePaths)}");
                     return filePaths.ToList();
                 }
+
                 Logger.LogVerbose("User did not select any files.");
             }
             catch (Exception ex)
@@ -243,6 +244,65 @@ namespace KOTORModSync
             return null;
         }
 
+private Dictionary<Component, int> duplicateCount = new Dictionary<Component, int>();
+
+private async Task ProcessComponents(TreeViewItem rootItem)
+{
+    bool applyToAllConflicts = false;
+
+    foreach (var component in _components)
+    {
+        CreateTreeViewItem(component, rootItem);
+
+        // Check for duplicate GUID
+        Component duplicateComponent = _components.Find(c => c.Guid == component.Guid && c != component);
+
+        if (duplicateComponent == null) { continue; }
+
+        string message = $"Component '{component.Name}' has duplicate GUID with component '{duplicateComponent.Name}'";
+        Logger.Log(message);
+
+        int count = duplicateCount.ContainsKey(duplicateComponent) ? duplicateCount[duplicateComponent] + 1 : 1;
+        duplicateCount[duplicateComponent] = count;
+
+        if (count > 2 && !applyToAllConflicts)
+        {
+            if (count == 3)
+            {
+                bool confirmApplyToAll = await ConfirmationDialog.ShowConfirmationDialog(this, $"Duplicate GUID conflicts for component '{duplicateComponent.Name}' have occurred {count} times.\r\nApply this action to all conflicts?");
+
+                if (confirmApplyToAll)
+                {
+                    applyToAllConflicts = true;
+                }
+            }
+
+            if (!applyToAllConflicts)
+            {
+                continue; // Skip processing this conflict if not applying to all conflicts
+            }
+        }
+
+        if (applyToAllConflicts || count <= 2)
+        {
+            bool confirm = await ConfirmationDialog.ShowConfirmationDialog(this, message + $".\r\nAssign random GUID to '{duplicateComponent.Name}'? (default: NO)");
+
+            if (confirm)
+            {
+                duplicateComponent.Guid = Guid.NewGuid();
+                Logger.Log($"Replaced GUID of component {duplicateComponent.Name}");
+            }
+            else
+            {
+                Logger.Log($"User canceled GUID replacement for component {duplicateComponent.Name}");
+            }
+        }
+    }
+}
+
+
+
+
         private async void LoadInstallFile_Click(object sender, RoutedEventArgs e)
         {
             // Open the file dialog to select a file
@@ -260,33 +320,33 @@ namespace KOTORModSync
                     return;
                 }
 
+                // Load components dynamically
+                _components = FileHelper.ReadComponentsFromFile(filePath);
+                if (!(_components?.Count > 0))
+                    return;
+
+                // Clear existing items in the tree view
+                LeftTreeView.Items = new AvaloniaList<object>();
+
+                // Create the root item for the tree view
+                var rootItem = new TreeViewItem { Header = "Components" };
+                
+                // Validate the components.
+                await ProcessComponents(rootItem);
+
                 await Dispatcher.UIThread.InvokeAsync(() =>
-                    {
-                        // Load components dynamically
-                        _components = FileHelper.ReadComponentsFromFile(filePath);
-                        if (!(_components?.Count > 0))
-                            return;
+                {
+                    // Create a collection to hold the root item
+                    var rootItemsCollection = new AvaloniaList<TreeViewItem> { rootItem };
 
-                        // Clear existing items in the tree view
-                        LeftTreeView.Items = new AvaloniaList<object>();
+                    // Set the root item collection as the items source of the tree view
+                    LeftTreeView.Items = rootItemsCollection;
 
-                        // Create the root item for the tree view
-                        var rootItem = new TreeViewItem { Header = "Components" };
-
-                        // Iterate over the components and create tree view items
-                        _components.ForEach(component => CreateTreeViewItem(component, rootItem));
-
-                        // Create a collection to hold the root item
-                        var rootItemsCollection = new AvaloniaList<TreeViewItem> { rootItem };
-
-                        // Set the root item collection as the items source of the tree view
-                        LeftTreeView.Items = rootItemsCollection;
-
-                        // Expand the tree. Too lazy to figure out the proper way.
-                        var treeEnumerator = LeftTreeView.Items.GetEnumerator();
-                        treeEnumerator.MoveNext();
-                        LeftTreeView.ExpandSubTree((TreeViewItem)treeEnumerator.Current);
-                    });
+                    // Expand the tree. Too lazy to figure out the proper way.
+                    var treeEnumerator = LeftTreeView.Items.GetEnumerator();
+                    treeEnumerator.MoveNext();
+                    LeftTreeView.ExpandSubTree((TreeViewItem)treeEnumerator.Current);
+                });
             }
             catch (Exception ex)
             {
@@ -983,26 +1043,6 @@ namespace KOTORModSync
                     // Update the existing item's tag with the component
                     existingItem.Tag = component;
                     return;
-                }
-
-                // Check for duplicate GUID
-                Component duplicateComponent = _components
-                    .Find(c =>
-                    {
-                        string cName = c.Name;
-                        return c.Guid == component.Guid && c != component && cName == componentName;
-                    });
-
-                if (duplicateComponent != null)
-                {
-                    string message = $"Component '{component.Name}' has duplicate GUID with component '{duplicateComponent.Name}'";
-                    Logger.Log(message);
-                    bool confirm = await ConfirmationDialog.ShowConfirmationDialog(this, message + $".\r\nAssign random GUID to '{duplicateComponent.Name}'? (default: NO)");
-                    if (confirm)
-                    {
-                        duplicateComponent.Guid = Guid.NewGuid();
-                        Logger.Log($"Replaced guid of component {duplicateComponent.Name}");
-                    }
                 }
 
                 // Create a new tree view item for the component

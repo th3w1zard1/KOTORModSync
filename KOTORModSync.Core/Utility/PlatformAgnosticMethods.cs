@@ -222,6 +222,7 @@ namespace KOTORModSync.Core.Utility
             // K1CP can take ages to install, set the timeout time to two hours hour.
             using (var cancellationTokenSource
                 = new CancellationTokenSource(TimeSpan.FromSeconds(7200)))
+            {
                 using (var process = new Process())
                 {
                     ProcessStartInfo startInfo = process.StartInfo;
@@ -231,29 +232,53 @@ namespace KOTORModSync.Core.Utility
                     startInfo.RedirectStandardError = true;
                     startInfo.UseShellExecute = false;
                     startInfo.CreateNoWindow = true;
-                    if (noAdmin)
-                    {
-                        startInfo.EnvironmentVariables["__COMPAT_LAYER"] = "RUNASHIGHEST";
-                    }
+                    startInfo.EnvironmentVariables["__COMPAT_LAYER"] = "RUNASHIGHEST";
 
                     try
                     {
                         if (!process.Start())
                             throw new InvalidOperationException("Failed to start the process.");
                     }
-                    catch (System.ComponentModel.Win32Exception)
+                    catch (System.ComponentModel.Win32Exception ex)
                     {
+                        Logger.Log(ex.Message);
+                        Logger.Log(
+                            "The above exception is probably normal, it just means you don't have admin or something.");
                         startInfo.UseShellExecute = true;
                         startInfo.RedirectStandardOutput = false;
                         startInfo.RedirectStandardError = false;
+                        startInfo.EnvironmentVariables["__COMPAT_LAYER"] = "RUNASHIGHEST";
 
-                        if (! process.Start())
-                            throw new InvalidOperationException("Failed to start the process.");
+                        process.StartInfo = new ProcessStartInfo(startInfo.FileName, startInfo.Arguments)
+                        {
+                            RedirectStandardOutput = startInfo.RedirectStandardOutput,
+                            RedirectStandardError = startInfo.RedirectStandardError,
+                            UseShellExecute = startInfo.UseShellExecute,
+                            CreateNoWindow = startInfo.CreateNoWindow
+                        };
+
+                        try
+                        {
+                            if (!process.Start())
+                                throw new InvalidOperationException("Failed to start the process.");
+                        }
+                        catch (Exception ex2)
+                        {
+                            Logger.Log(ex2.Message);
+                            Logger.Log(
+                                "The above exception is probably normal, it just means you don't have admin or something.");
+                            startInfo.EnvironmentVariables.Remove("__COMPAT_LAYER");
+                            process.StartInfo = startInfo;
+
+                            if (!process.Start())
+                                throw new InvalidOperationException("Failed to start the process.");
+                        }
                     }
+
 
                     await Task.Run(() => process.WaitForExit(), cancellationTokenSource.Token);
 
-                    if (! process.HasExited)
+                    if (!process.HasExited)
                     {
                         process.Kill();
                         throw new TimeoutException("Process timed out after 2 hours.");
@@ -277,6 +302,7 @@ namespace KOTORModSync.Core.Utility
                         Logger.Log($"Output: {output}\n Error: {error}\n");
                     return true;
                 }
+            }
         }
     }
 }

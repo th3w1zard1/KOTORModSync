@@ -24,7 +24,7 @@
 			<ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
 				<TreeView x:Name="LeftTreeView">
 					<TreeView.ItemTemplate>
-						<DataTemplate>
+						<DataTemplate DataType="TreeViewItem">
 							<StackPanel Orientation="Horizontal" Margin="10">
 								<CheckBox IsChecked="{Binding IsSelected}" VerticalAlignment="Center" Margin="0,0,5,0" Width="40" Height="40" />
 								<ToggleButton x:Name="ArrowButton"
@@ -160,22 +160,24 @@
 																	Tag="{Binding ElementName=destinationTextBox}" />
 
 																<TextBlock Grid.Row="7" Grid.Column="0" Text="Dependencies:" />
-																<ItemsControl Grid.Row="8" Grid.Column="0" Items="{Binding Dependencies}">
-																	<ItemsControl.ItemTemplate>
-																		<DataTemplate>
-																			<TextBox Text="{Binding}" LostFocus="TextBox_LostFocus" Focusable="True" />
-																		</DataTemplate>
-																	</ItemsControl.ItemTemplate>
-																</ItemsControl>
+																<TextBox Grid.Row="8"
+																         Grid.Column="0"
+																         x:Name="dependenciesTextBox"
+																         AcceptsReturn="True"
+																         TextWrapping="Wrap"
+																         Text="{Binding Dependencies, Converter={StaticResource ListToStringConverter}}"
+																         LostFocus="TextBox_LostFocus"
+																         Focusable="True" MaxWidth="600"/>
 
 																<TextBlock Grid.Row="9" Grid.Column="0" Text="Restrictions:" />
-																<ItemsControl Grid.Row="10" Grid.Column="0" Items="{Binding Restrictions}">
-																	<ItemsControl.ItemTemplate>
-																		<DataTemplate>
-																			<TextBox Text="{Binding}" LostFocus="TextBox_LostFocus" Focusable="True" />
-																		</DataTemplate>
-																	</ItemsControl.ItemTemplate>
-																</ItemsControl>
+																<TextBox Grid.Row="10"
+																         Grid.Column="0"
+																         x:Name="restrictionsTextBox"
+																         AcceptsReturn="True"
+																         TextWrapping="Wrap"
+																         Text="{Binding Restrictions, Converter={StaticResource ListToStringConverter}}"
+																         LostFocus="TextBox_LostFocus"
+																         Focusable="True" MaxWidth="600"/>
 
 																<TextBlock Grid.Row="11" Grid.Column="0" Text="Overwrite:" />
 																<TextBox Grid.Row="12"

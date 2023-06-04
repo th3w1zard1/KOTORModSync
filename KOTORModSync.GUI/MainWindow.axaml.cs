@@ -9,6 +9,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
+using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Input;
 
@@ -33,6 +34,7 @@ namespace KOTORModSync
         private string _originalContent;
         private MainConfig _mainConfig;
         private Component _currentComponent;
+        private bool _installRunning;
 
         public MainWindow()
         {
@@ -135,8 +137,12 @@ namespace KOTORModSync
                 var filters = new List<FileDialogFilter>(10) { new FileDialogFilter { Name = "All Files", Extensions = { "*" } } };
 
                 string[] filePaths = await ShowFileDialog(false, filters, true);
-                Logger.Log($"Selected files: {string.Join(", ", filePaths)}");
-                return filePaths.ToList();
+                if (filePaths != null)
+                {
+                    Logger.Log($"Selected files: {string.Join(", ", filePaths)}");
+                    return filePaths.ToList();
+                }
+                Logger.LogVerbose("User did not select any files.");
             }
             catch (Exception ex)
             {
@@ -528,16 +534,27 @@ namespace KOTORModSync
                     }
                 }
 
+                if (_installRunning)
+                {
+                    await InformationDialog.ShowInformationDialog(
+                        this,
+                        "There's already another installation running, please check the output window.");
+                    return;
+                }
+
+                _installRunning = true;
                 var confirmationDialogCallback = new ConfirmationDialogCallback(this);
                 (bool success, Dictionary<FileInfo, SHA1> originalChecksums) = await Task.Run(() => thisComponent.ExecuteInstructions(confirmationDialogCallback, _components));
                 if (!success)
                     await InformationDialog.ShowInformationDialog(this, $"There was a problem installing {thisComponent.Name}, please check the output window");
                 else
                     Logger.Log($"Successfully installed {thisComponent.Name}");
+                _installRunning = false;
             }
             catch (Exception ex)
             {
                 Logger.LogException(ex);
+                _installRunning = false;
             }
         }
 
@@ -562,6 +579,15 @@ namespace KOTORModSync
                     return;
                 }
 
+                if (_installRunning)
+                {
+                    await InformationDialog.ShowInformationDialog(
+                        this,
+                        "There's already an installation running, please check the output window.");
+                    return;
+                }
+
+                _installRunning = true;
                 Logger.Log("Start installing all mods...");
                 var progressWindow = new ProgressWindow();
                 progressWindow.Closed += ProgressWindowClosed;
@@ -607,10 +633,13 @@ namespace KOTORModSync
                         Logger.Log($"Successfully installed {component.Name}");
                     }
                 }
+
+                _installRunning = false;
             }
             catch (Exception ex)
             {
                 Logger.LogException(ex);
+                _installRunning = false;
             }
         }
 
@@ -778,19 +807,25 @@ namespace KOTORModSync
 
                     // Find the corresponding component in the collection
                     int index = _components.IndexOf(selectedComponent);
-                    if (index < 0)
+                    // if not selected, find the index of the _currentComponent.
+                    if (index < 0 || index >= _components.Count)
+                    {
+                        index = _components.FindIndex(c => c.Equals(_currentComponent));
+                    }
+
+                    if (index < 0 && _currentComponent == null)
                     {
                         var ex = new IndexOutOfRangeException(
                             "Could not find index of component."
                             + " Ensure you single clicked on a component on the left before pressing save."
                             + " Please back up your work and try again."
                         );
-                        InformationDialog.ShowInformationDialog(this, ex.Message);
                         Logger.LogException(ex);
                         return false;
                     }
 
                     // Update the properties of the component
+
                     _components[index] = newComponent
                         ?? throw new InvalidDataException(
                             "Could not deserialize raw text into a Component instance in memory."
@@ -931,7 +966,7 @@ namespace KOTORModSync
             }
         }
 
-        private void CreateTreeViewItem(Component component, TreeViewItem parentItem)
+        private async void CreateTreeViewItem(Component component, TreeViewItem parentItem)
         {
             try
             {
@@ -953,16 +988,16 @@ namespace KOTORModSync
                 // Check for duplicate GUID
                 Component duplicateComponent = _components
                     .Find(c =>
-                          {
-                              string cName = c.Name;
-                              return c.Guid == component.Guid && c != component && cName == componentName;
-                          });
+                    {
+                        string cName = c.Name;
+                        return c.Guid == component.Guid && c != component && cName == componentName;
+                    });
 
                 if (duplicateComponent != null)
                 {
                     string message = $"Component '{component.Name}' has duplicate GUID with component '{duplicateComponent.Name}'";
                     Logger.Log(message);
-                    bool confirm = ConfirmationDialog.ShowConfirmationDialog(this, message + $".\r\nAssign random GUID to '{duplicateComponent.Name}'? (default: NO)").GetAwaiter().GetResult();
+                    bool confirm = await ConfirmationDialog.ShowConfirmationDialog(this, message + $".\r\nAssign random GUID to '{duplicateComponent.Name}'? (default: NO)");
                     if (confirm)
                     {
                         duplicateComponent.Guid = Guid.NewGuid();
@@ -981,7 +1016,9 @@ namespace KOTORModSync
                 componentItem.DoubleTapped += (sender, e) =>
                 {
                     if (_selectedComponents.Contains(component))
+                    {
                         _ = _selectedComponents.Remove(component);
+                    }
 
                     ItemClickCommand.Execute(component);
                 };
@@ -1019,7 +1056,7 @@ namespace KOTORModSync
             }
         }
 
-        private void WriteTreeViewItemsToFile(List<TreeViewItem> items, string filePath)
+        private static void WriteTreeViewItemsToFile(List<TreeViewItem> items, string filePath)
         {
             string randomFileName = System.IO.Path.GetFileNameWithoutExtension(System.IO.Path.GetRandomFileName());
             filePath = filePath ?? $"modconfig_{randomFileName}.toml";
@@ -1078,7 +1115,7 @@ namespace KOTORModSync
             private readonly Action<object> _execute;
             private readonly Func<object, bool> _canExecute;
 
-            public RelayCommand(Action<object> execute, Func<object, bool> canExecute = null)
+            public RelayCommand(Action<object> execute, [CanBeNull] Func<object, bool> canExecute = null)
             {
                 this._execute = execute ?? throw new ArgumentNullException(nameof(execute));
                 this._canExecute = canExecute;
@@ -1118,15 +1155,32 @@ namespace KOTORModSync
 
     public class ListToStringConverter : IValueConverter
     {
-        public object Convert(object value, Type targetType, object parameter, CultureInfo culture) => value is IEnumerable<string> list ? string.Join(Environment.NewLine, list) : (object)string.Empty;
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            if (!(value is IEnumerable list)) { return string.Empty; }
+
+            var serializedList = new StringBuilder();
+
+            foreach (object item in list
+                .Cast<object>()
+                .Where(item => item != null))
+            {
+                serializedList.AppendLine(item.ToString());
+            }
+
+            return serializedList.ToString();
+        }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
         {
             if (!(value is string text))
-                return Enumerable.Empty<string>();
+                return new List<string>();
 
-            string[] lines = text.Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries);
-            return lines.ToList();
+            string[] lines = text.Split(new string[] { "\r\n", "\r", "\n" }, StringSplitOptions.RemoveEmptyEntries);
+
+            if (targetType != typeof(List<Guid>)) { return lines.ToList(); }
+
+            return lines.Select(line => Guid.TryParse(line, out var guid) ? guid : Guid.Empty).ToList();
         }
     }
 

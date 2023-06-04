@@ -27,18 +27,13 @@ namespace KOTORModSync.Tests
                 expectedChecksums.Add(new FileInfo(filePath), SHA1.Create());
             }
 
-            foreach ((FileInfo fileInfo, SHA1 sha1) in
-                // Calculate the SHA1 hash for the test files
-                from fileInfo in expectedChecksums
-                    .Select(static expectedChecksum
-                                => expectedChecksum.Key)
-                let sha1 = FileChecksumValidator.CalculateSha1Async(fileInfo)
-                    .ConfigureAwait(false).GetAwaiter().GetResult()
-                select (fileInfo, sha1))
+            foreach (FileInfo fileInfo in expectedChecksums.Select(static expectedChecksum => expectedChecksum.Key))
             {
+                SHA1 sha1 = await FileChecksumValidator.CalculateSha1Async(fileInfo);
                 Assert.That(sha1.Hash, Is.Not.EqualTo(null));
-                actualChecksums[fileInfo.Name] = BitConverter.ToString(sha1.Hash).Replace("-", "");
+                actualChecksums[fileInfo.Name] = BitConverter.ToString(sha1.Hash ?? Array.Empty<byte>()).Replace("-", "");
             }
+
 
             // Act
             var validator = new FileChecksumValidator(TestFolderPath, expectedChecksums, expectedChecksums);

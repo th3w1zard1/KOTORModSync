@@ -46,6 +46,7 @@ source = [
     ""<<modDirectory>>\\path\\to\\mod\\file3.tpc""
 ]
 dependencies = ""{C5418549-6B7E-4A8C-8B8E-4AA1BC63C732}""
+overwrite = true
 
 [[thisMod.instructions]]
 action = ""move""
@@ -87,13 +88,12 @@ arguments = ""any command line arguments to pass (none available in TSLPatcher)"
             {
                 return sourcePaths.Count == 0
                     ? throw new Exception($"Could not find any files! Source: {string.Join(", ", Source)}")
-                    : ((List<string>, DirectoryInfo))(sourcePaths, destinationPath);
+                    : ((List<string>, DirectoryInfo))(sourcePaths, null);
             }
 
             destinationPath = new DirectoryInfo(
                 Utility.Utility.ReplaceCustomVariables(Destination)
-                ?? string.Empty
-            );
+                ?? throw new InvalidOperationException($"No destination set!"));
             return sourcePaths.Count == 0
                 ? throw new Exception($"Could not find any files! Source: {string.Join(", ", Source)}")
                 : ((List<string>, DirectoryInfo))(sourcePaths, destinationPath);
@@ -104,7 +104,7 @@ arguments = ""any command line arguments to pass (none available in TSLPatcher)"
             try
             {
                 (List<string> sourcePaths, _) = ParsePaths();
-                List<Task> extractionTasks = new List<Task>(1024);
+                List<Task> extractionTasks = new List<Task>(25);
 
                 // Use SemaphoreSlim to limit concurrent extractions
                 SemaphoreSlim semaphore = new SemaphoreSlim(5); // Limiting to 5 concurrent extractions
@@ -161,11 +161,15 @@ arguments = ""any command line arguments to pass (none available in TSLPatcher)"
                                     string destinationPath = Path.Combine(thisFile.Directory.FullName, destinationFolder, reader.Entry.Key);
                                     string destinationDirectory = Path.GetDirectoryName(destinationPath);
 
-                                    Logger.Log($"Extract {reader.Entry.Key} to {thisFile.Directory.FullName}");
+                                    _ = Task.Run(() =>
+                                    {
+                                        Logger.Log($"Extract {reader.Entry.Key} to {thisFile.Directory.FullName}");
+                                    });
+
 
                                     if (!Directory.Exists(destinationDirectory))
                                     {
-                                        Logger.Log($"Create directory {destinationDirectory}");
+                                        _ = Task.Run(() => Logger.Log($"Create directory {destinationDirectory}"));
                                         _ = Directory.CreateDirectory(destinationDirectory ?? string.Empty);
                                     }
 
@@ -196,9 +200,7 @@ arguments = ""any command line arguments to pass (none available in TSLPatcher)"
         {
             try
             {
-                (List<string> sourcePaths, DirectoryInfo destinationPath) = ParsePaths();
-
-                var deleteTasks = new List<Task>(65535);
+                (List<string> sourcePaths, DirectoryInfo _) = ParsePaths();
 
                 foreach (FileInfo thisFile in sourcePaths.Select(t => new FileInfo(t)))
                 {

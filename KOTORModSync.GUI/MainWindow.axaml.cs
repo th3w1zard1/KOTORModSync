@@ -506,7 +506,7 @@ namespace KOTORModSync
                 if (_mainConfig == null || MainConfig.DestinationPath == null)
                 {
                     var informationDialog = new InformationDialog
-                    { InfoText = "Please set your directories first" };
+                        { InfoText = "Please set your directories first" };
                     _ = await informationDialog.ShowDialog<bool?>(this);
                     return;
                 }

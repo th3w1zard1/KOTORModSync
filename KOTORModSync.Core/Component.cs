@@ -22,12 +22,14 @@ namespace KOTORModSync.Core
         public string Name { get; set; }
         public Guid Guid { get; set; }
         public string Author { get; set; }
-        public string Category { get; private set; }
-        public string Tier { get; private set; }
+        public string Category { get; set; }
+        public string Tier { get; set; }
         public string Description { get; set; }
         public string Directions { get; set; }
         public List<string> Dependencies { get; private set; }
         public List<string> Restrictions { get; set; }
+        public bool NonEnglishFunctionality { get; set; }
+        public string InstallationMethod { get; set; }
         public List<Instruction> Instructions { get; set; }
         public List<string> Language { get; private set; }
         public int InstallOrder { get; set; }

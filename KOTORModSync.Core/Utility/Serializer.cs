@@ -533,7 +533,7 @@ namespace KOTORModSync.Core.Utility
             return result;
         }
 
-        private static bool ContainsWildcards(string path) => path.Contains("*") || path.Contains("?");
+        private static bool ContainsWildcards(string path) => path.Contains('*') || path.Contains('?');
 
         public static bool WildcardMatch(string input, string patternInput)
         {
@@ -714,8 +714,10 @@ namespace KOTORModSync.Core.Utility
 
         public static IArchive OpenArchive(string archivePath)
         {
-            using (FileStream stream = File.OpenRead(archivePath))
+            FileStream stream = null;
+            try
             {
+                stream = File.OpenRead(archivePath);
                 if (archivePath.EndsWith(".zip"))
                     return SharpCompress.Archives.Zip.ZipArchive.Open(stream);
 
@@ -725,9 +727,18 @@ namespace KOTORModSync.Core.Utility
                 if (archivePath.EndsWith(".7z"))
                     return SevenZipArchive.Open(stream);
             }
+            catch (Exception ex)
+            {
+                // Handle any specific exception handling or logging if required
+                Logger.Log($"Error opening archive {archivePath}: {ex.Message}");
+            }
+
+            // Close the stream if it wasn't returned as an archive
+            stream?.Dispose();
 
             return null;
         }
+
 
         public static List<ArchiveEntry> TraverseArchiveEntries(string archivePath)
         {
@@ -736,7 +747,7 @@ namespace KOTORModSync.Core.Utility
             try
             {
                 IArchive archive = OpenArchive(archivePath);
-                if (archive != null)
+                if (archive == null)
                 {
                     Logger.Log($"Unsupported archive format: {Path.GetExtension(archivePath)}");
                     return archiveEntries;

@@ -244,16 +244,14 @@ namespace KOTORModSync.Core.Utility
                         Logger.Log(ex.Message);
                         Logger.Log(
                             "The above exception is probably normal, it just means you don't have admin or something.");
-                        startInfo.RedirectStandardOutput = false;
-                        startInfo.RedirectStandardError = false;
-                        startInfo.EnvironmentVariables["__COMPAT_LAYER"] = "RUNASHIGHEST";
 
                         process.StartInfo = new ProcessStartInfo(startInfo.FileName, startInfo.Arguments)
                         {
-                            RedirectStandardOutput = startInfo.RedirectStandardOutput,
-                            RedirectStandardError = startInfo.RedirectStandardError,
+                            RedirectStandardOutput = false,
+                            RedirectStandardError = false,
                             UseShellExecute = startInfo.UseShellExecute,
-                            CreateNoWindow = startInfo.CreateNoWindow
+                            CreateNoWindow = startInfo.CreateNoWindow,
+                            EnvironmentVariables = { ["__COMPAT_LAYER"] = "RUNASHIGHEST" }
                         };
 
                         try
@@ -268,12 +266,11 @@ namespace KOTORModSync.Core.Utility
                                 "The above exception is probably normal, it just means you don't have admin or something.");
                             process.StartInfo = new ProcessStartInfo(startInfo.FileName, startInfo.Arguments)
                             {
-                                RedirectStandardOutput = startInfo.RedirectStandardOutput,
-                                RedirectStandardError = startInfo.RedirectStandardError,
-                                UseShellExecute = false,
+                                RedirectStandardOutput = false,
+                                RedirectStandardError = false,
+                                UseShellExecute = true,
                                 CreateNoWindow = startInfo.CreateNoWindow
                             };
-                            startInfo.EnvironmentVariables.Remove("__COMPAT_LAYER");
                             if (!process.Start())
                                 throw new InvalidOperationException("Failed to start the process.");
                         }
@@ -290,7 +287,7 @@ namespace KOTORModSync.Core.Utility
 
                     string output = null;
                     string error = null;
-                    if (startInfo.RedirectStandardOutput)
+                    if (process.StartInfo.RedirectStandardOutput)
                     {
                         output = await process.StandardOutput.ReadToEndAsync();
                         error = await process.StandardError.ReadToEndAsync();

@@ -484,12 +484,12 @@ namespace KOTORModSync
         {
             try
             {
-                await InformationDialog.ShowInformationDialog(this, "Please select your mod directory (where the archives live).");
-                string chosenFolder = await OpenFolder();
-                DirectoryInfo modDirectory = new DirectoryInfo(chosenFolder);
                 await InformationDialog.ShowInformationDialog(this, "Please select your KOTOR(2) directory. (e.g. \"C:\\Program Files (x86)\\Steam\\steamapps\\common\\Knights of the Old Republic II\")");
-                chosenFolder = await OpenFolder();
+                string chosenFolder = await OpenFolder();
                 DirectoryInfo kotorInstallDir = new DirectoryInfo(chosenFolder);
+                await InformationDialog.ShowInformationDialog(this, "Please select your mod directory (where the archives live).");
+                chosenFolder = await OpenFolder();
+                DirectoryInfo modDirectory = new DirectoryInfo(chosenFolder);
                 _mainConfig.UpdateConfig(modDirectory, kotorInstallDir);
             }
             catch (ArgumentNullException)

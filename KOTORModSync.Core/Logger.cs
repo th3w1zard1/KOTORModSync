@@ -13,29 +13,29 @@ namespace KOTORModSync.Core
         public static event Action<string> Logged = delegate { };
         public static event Action<Exception> ExceptionLogged = delegate { };
 
-        private static readonly string LogFileName = "log.txt";
-        private static bool isInitialized = false;
-        private static readonly object initializationLock = new object();
+        private const string LogFileName = "log.txt";
+        private static bool s_isInitialized = false;
+        private static readonly object s_initializationLock = new object();
 
         public static void Initialize()
         {
-            if (!isInitialized)
+            if (s_isInitialized)
+                return;
+
+            lock (s_initializationLock)
             {
-                lock (initializationLock)
-                {
-                    if (!isInitialized)
-                    {
-                        isInitialized = true;
+                if (s_isInitialized)
+                    return;
 
-                        string logFilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, LogFileName);
+                s_isInitialized = true;
 
-                        Log($"Logging initialized at {DateTime.Now}");
+                string logFilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, LogFileName);
 
-                        // Set up unhandled exception handling
-                        AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
-                        TaskScheduler.UnobservedTaskException += TaskScheduler_UnobservedTaskException;
-                    }
-                }
+                Log($"Logging initialized at {DateTime.Now}");
+
+                // Set up unhandled exception handling
+                AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
+                TaskScheduler.UnobservedTaskException += TaskScheduler_UnobservedTaskException;
             }
         }
 
@@ -47,6 +47,14 @@ namespace KOTORModSync.Core
             File.AppendAllText(LogFileName, logMessage + Environment.NewLine);
 
             Logged.Invoke(logMessage); // Raise the Logged event
+        }
+
+        public static void LogVerbose(string message)
+        {
+            if (MainConfig.DebugLogging != null)
+            {
+                Log(message);
+            }
         }
 
         public static void LogException(Exception ex)

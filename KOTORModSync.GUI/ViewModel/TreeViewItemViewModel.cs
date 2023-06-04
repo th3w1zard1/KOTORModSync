@@ -8,79 +8,58 @@ using System.Runtime.CompilerServices;
 Before:
 using System.Threading.Tasks;
 
-namespace KOTORModSync.GUI.ViewModel
+namespace KOTORModSync.ViewModel
 After:
 using System.Threading.Tasks;
 
-namespace KOTORModSync.GUI.ViewModel
+namespace KOTORModSync.ViewModel
 */
 
 namespace KOTORModSync.ViewModel
 {
     public class TreeViewItemViewModel : INotifyPropertyChanged
     {
-        private string name;
-        private bool isSelected;
-        private bool isExpanded;
-        private ObservableCollection<TreeViewItemViewModel> childItems;
+        private string _name;
+        private bool _isSelected;
+        private bool _isExpanded;
+        private ObservableCollection<TreeViewItemViewModel> _childItems;
 
         public string Name
         {
-
-            /* Unmerged change from project 'KOTORModSync (net6.0)'
-            Before:
-                        get { return name; }
-            After:
-                        get => name; }
-            */
-            get => name;
+            get => _name;
             set
             {
-                name = value;
+                _name = value;
                 OnPropertyChanged();
             }
         }
 
         public bool IsSelected
         {
-            get => isSelected;
+            get => _isSelected;
             set
             {
-                isSelected = value;
+                _isSelected = value;
                 OnPropertyChanged();
             }
         }
 
         public bool IsExpanded
         {
-
-            /* Unmerged change from project 'KOTORModSync (net6.0)'
-            Before:
-                        get { return isExpanded; }
-            After:
-                        get => isExpanded; }
-            */
-            get => isExpanded;
+            get => _isExpanded;
             set
             {
-                isExpanded = value;
+                _isExpanded = value;
                 OnPropertyChanged();
             }
         }
 
         public ObservableCollection<TreeViewItemViewModel> ChildItems
         {
-
-            /* Unmerged change from project 'KOTORModSync (net6.0)'
-            Before:
-                        get { return childItems; }
-            After:
-                        get => childItems; }
-            */
-            get => childItems;
+            get => _childItems;
             set
             {
-                childItems = value;
+                _childItems = value;
                 OnPropertyChanged();
             }
         }
@@ -89,5 +68,4 @@ namespace KOTORModSync.ViewModel
 
         protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
     }
-
 }

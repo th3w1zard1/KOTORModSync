@@ -6,14 +6,12 @@ using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
-using KOTORModSync.Core;
 
-namespace KOTORModSync.GUI
+namespace KOTORModSync
 {
     public partial class App : Application
     {
         public override void Initialize() => AvaloniaXamlLoader.Load(this);
-
         public override void OnFrameworkInitializationCompleted()
         {
             if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
@@ -38,7 +36,7 @@ namespace KOTORModSync.GUI
 
             base.OnFrameworkInitializationCompleted();
         }
-
+        // ReSharper disable once MemberCanBeMadeStatic.Local
         private void HandleUnobservedTaskException(object sender, UnobservedTaskExceptionEventArgs e)
         {
             // Log or handle the unobserved task exception here

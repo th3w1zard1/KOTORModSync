@@ -2,9 +2,11 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using System.IO;
+using JetBrains.Annotations;
 
 namespace KOTORModSync.Core.Data
 {
+    // ReSharper disable once InconsistentNaming
     public struct NWScriptHeader
     {
         public uint FileType;
@@ -19,9 +21,10 @@ namespace KOTORModSync.Core.Data
         public uint SymbolTableOffset;
     }
 
+    // ReSharper disable once InconsistentNaming
     public static class NWScriptFileReader
     {
-        public static void ReadHeader(Stream stream, out NWScriptHeader header)
+        public static void ReadHeader([NotNull] Stream stream, out NWScriptHeader header)
         {
             BinaryReader reader = new BinaryReader(stream);
 

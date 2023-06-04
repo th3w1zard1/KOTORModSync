@@ -11,16 +11,15 @@ namespace KOTORModSync.Core
         public static DirectoryInfo SourcePath { get; private set; }
         public static DirectoryInfo DestinationPath { get; private set; }
         public static List<Component> Components { get; }
+        public static object DebugLogging { get; internal set; }
 
-        public static DirectoryInfo LastOutputDirectory;
-        public static DirectoryInfo ModConfigPath;
+        public static DirectoryInfo LastOutputDirectory { get; set; }
 
         public void UpdateConfig(DirectoryInfo sourcePath, DirectoryInfo destinationPath)
         {
             SourcePath = sourcePath;
             DestinationPath = destinationPath;
         }
-
     }
 
     public static class ModDirectory

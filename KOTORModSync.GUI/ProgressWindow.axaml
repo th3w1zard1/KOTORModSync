@@ -1,8 +1,8 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:local="clr-namespace:KOTORModSync.GUI"
+        xmlns:local="clr-namespace:KOTORModSync"
         Title="Progress Window" Width="300" Height="150"
-        x:Class="KOTORModSync.GUI.ProgressWindow">
+        x:Class="KOTORModSync.ProgressWindow">
     <Grid>
         <TextBlock x:Name="progressTextBlock" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="16" TextWrapping="Wrap" TextTrimming="CharacterEllipsis" Margin="10"/>
         <ProgressBar x:Name="progressBar" Minimum="0" Maximum="1" Value="0" HorizontalAlignment="Center" VerticalAlignment="Bottom" Width="200" Margin="10"/>

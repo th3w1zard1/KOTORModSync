@@ -3,7 +3,7 @@
 
 namespace KOTORModSync.Core.Data
 {
-    internal class Game
+    public class Game
     {
     }
 }

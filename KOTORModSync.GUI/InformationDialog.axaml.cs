@@ -9,7 +9,7 @@ using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
 using Avalonia.Threading;
 
-namespace KOTORModSync.GUI
+namespace KOTORModSync
 {
     public partial class InformationDialog : Window
     {

@@ -435,6 +435,7 @@ namespace KOTORModSync.Core.Utility
         public static Component DeserializeTomlComponent(string tomlString)
         {
             tomlString = Serializer.FixWhitespaceIssues(tomlString);
+            tomlString = tomlString.Replace("Instructions = []", "");
 
             // Parse the TOML syntax into a TomlTable
             DocumentSyntax tomlDocument = Tomlyn.Toml.Parse(tomlString);

@@ -1003,7 +1003,7 @@ namespace KOTORModSync
             }
         }
 
-        private async void CreateTreeViewItem(Component component, TreeViewItem parentItem)
+        private void CreateTreeViewItem(Component component, TreeViewItem parentItem)
         {
             try
             {

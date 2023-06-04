@@ -158,7 +158,11 @@ arguments = ""any command line arguments to pass (none available in TSLPatcher)"
                                     string destinationFolder = Path.GetFileNameWithoutExtension(thisFile.Name);
                                     if (thisFile.Directory == null) { continue; }
 
-                                    string destinationPath = Path.Combine(thisFile.Directory.FullName, destinationFolder, reader.Entry.Key);
+                                    // RAR files create an extra subdirectory level, I have no idea why...
+                                    string destinationPath = thisFile.Extension.Equals(".rar", StringComparison.OrdinalIgnoreCase)
+                                        ? Path.Combine(thisFile.Directory.FullName, reader.Entry.Key)
+                                        : Path.Combine(thisFile.Directory.FullName, destinationFolder, reader.Entry.Key);
+
                                     string destinationDirectory = Path.GetDirectoryName(destinationPath);
 
                                     _ = Task.Run(() =>

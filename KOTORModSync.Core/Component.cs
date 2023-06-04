@@ -76,19 +76,16 @@ namespace KOTORModSync.Core
             for (int i = 0; i < rootTable["thisMod"].Count; i++)
             {
                 // Check if the item is a Dictionary<string, object> representing a TOML table
-                if (rootTable["thisMod"][i] is Dictionary<string, object> table && table.ContainsKey("Instructions"))
-                {
-                    var instructions = table["Instructions"] as List<object>;
+                if (!(rootTable["thisMod"][i] is Dictionary<string, object> table
+                    && table.TryGetValue("Instructions", out object value))) { continue; }
 
-                    // Check if the "Instructions" table is empty and remove it
-                    if (instructions == null || instructions.Count == 0)
-                    {
-                        // Remove the "Instructions" table from the root table
-                        table.Remove("Instructions");
-                        table["Instructions"] = new Tomlyn.Model.TomlTableArray();
-                        break;
-                    }
-                }
+                // Check if the "Instructions" table is empty
+                if (value is List<object> instructions && instructions.Count != 0) { continue; }
+
+                // Remove the empty "Instructions" table from the root table
+                //table.Remove("Instructions");
+                //table["Instructions"] = new Tomlyn.Model.TomlTableArray();
+                break;
             }
 
             string tomlString = Nett.Toml.WriteString(rootTable);
@@ -170,8 +167,14 @@ namespace KOTORModSync.Core
                 Logger.Log($"\r\n-- Deserialize instruction #{index} action {instruction.Action}");
                 instruction.Arguments = GetValueOrDefault<string>(instructionDict, "arguments");
                 instruction.Overwrite = GetValueOrDefault<bool>(instructionDict, "overwrite");
-                instruction.Restrictions = GetValueOrDefault<List<Guid>>(instructionDict, "restrictions");
-                instruction.Dependencies = GetValueOrDefault<List<Guid>>(instructionDict, "dependencies");
+                instruction.Restrictions = GetValueOrDefault<List<string>>(instructionDict, "restrictions")?
+                    .Select(Guid.Parse)
+                    .ToList();
+
+                instruction.Dependencies = GetValueOrDefault<List<string>>(instructionDict, "dependencies")?
+                    .Select(Guid.Parse)
+                    .ToList();
+
                 instruction.Source = GetValueOrDefault<List<string>>(instructionDict, "source");
 
                 if (instruction.Action == "move")
@@ -248,10 +251,8 @@ namespace KOTORModSync.Core
                 Type elementType = listType.GetGenericArguments()[0];
                 dynamic dynamicList = Activator.CreateInstance(listType);
 
-                if (! targetType.IsArray) { return dynamicList; }
-
-                var arrayValues = (Array)value;
-                foreach (var item in arrayValues)
+                var enumerable2 = (IEnumerable)value;
+                foreach (object item in enumerable2)
                 {
                     dynamic convertedItem = Convert.ChangeType(item, elementType);
                     dynamicList.Add(convertedItem);

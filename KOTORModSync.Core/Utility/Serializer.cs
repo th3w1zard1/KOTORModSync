@@ -20,7 +20,6 @@ using SharpCompress.Archives.SevenZip;
 using Tomlyn;
 using Tomlyn.Model;
 using Tomlyn.Syntax;
-using static KOTORModSync.Core.ModDirectory;
 using TomlTable = Tomlyn.Model.TomlTable;
 
 // ReSharper disable UnusedMember.Global
@@ -572,19 +571,29 @@ namespace KOTORModSync.Core.Utility
 
         private static bool WildcardMatchLevel(string input, string pattern)
         {
+            // Escape special characters in the pattern
+            pattern = Regex.Escape(pattern);
+
             // Replace * with .* and ? with . in the pattern
-            pattern = pattern.Replace("*", ".*").Replace("?", ".");
+            pattern = pattern
+                .Replace(@"\*", ".*")
+                .Replace(@"\?", ".");
 
             // Use regex to perform the wildcard matching
             return Regex.IsMatch(input, $"^{pattern}$");
         }
+
+
+
+
 
         public static List<Component> ReadComponentsFromFile(string filePath)
         {
             try
             {
                 // Read the contents of the file into a string
-                string tomlString = File.ReadAllText(filePath);
+                string tomlString = File.ReadAllText(filePath)
+                    .Replace("Instructions = []", "");
 
                 tomlString = Serializer.FixWhitespaceIssues(tomlString);
 
@@ -684,7 +693,7 @@ namespace KOTORModSync.Core.Utility
                         continue;
 
                     var fileInfo = new Dictionary<string, object>(65535) { { "Name", file.Name }, { "Type", "file" } };
-                    List<ArchiveEntry> archiveEntries = ArchiveHelper.TraverseArchiveEntries(file.FullName);
+                    List<ModDirectory.ArchiveEntry> archiveEntries = ArchiveHelper.TraverseArchiveEntries(file.FullName);
                     var archiveRoot = new Dictionary<string, object>(65535) { { "Name", file.Name }, { "Type", "directory" }, { "Contents", archiveEntries } };
 
                     fileInfo["Contents"] = archiveRoot["Contents"];
@@ -741,9 +750,9 @@ namespace KOTORModSync.Core.Utility
         }
 
 
-        public static List<ArchiveEntry> TraverseArchiveEntries(string archivePath)
+        public static List<ModDirectory.ArchiveEntry> TraverseArchiveEntries(string archivePath)
         {
-            var archiveEntries = new List<ArchiveEntry>(65535);
+            var archiveEntries = new List<ModDirectory.ArchiveEntry>(65535);
 
             try
             {
@@ -761,7 +770,7 @@ namespace KOTORModSync.Core.Utility
                             ? '\\' // Use backslash as separator for RAR files
                             : '/'  // Use forward slash for other archive types
                     )
-                    select new ArchiveEntry { Name = pathParts[pathParts.Length - 1], Path = entry.Key }
+                    select new ModDirectory.ArchiveEntry { Name = pathParts[pathParts.Length - 1], Path = entry.Key }
                 );
             }
             catch (Exception ex)

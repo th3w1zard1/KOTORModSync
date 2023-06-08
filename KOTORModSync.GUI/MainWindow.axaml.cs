@@ -12,8 +12,6 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Input;
-
-// ReSharper disable once RedundantUsingDirective
 using Avalonia.Collections;
 using Avalonia.Controls;
 using Avalonia.Data.Converters;
@@ -28,36 +26,38 @@ namespace KOTORModSync
 {
     public partial class MainWindow : Window
     {
-        private List<Component> _components;
+        private List<Component> _components = new List<Component>();
         private readonly ObservableCollection<Component> _selectedComponents = new ObservableCollection<Component>();
         private ObservableCollection<string> _selectedComponentProperties;
         private string _originalContent;
-        private MainConfig _mainConfig;
         private Component _currentComponent;
         private bool _installRunning;
+        public MainConfig MainConfigInstance { get; set; }
 
         public MainWindow()
         {
             InitializeComponent();
+            MainConfigInstance = new MainConfig();
+            MainConfigStackPanel = this.FindControl<StackPanel>("MainConfigStackPanel");
+            MainConfigStackPanel.DataContext = MainConfigInstance;
             DataContext = this;
         }
 
         private void InitializeComponent()
         {
             AvaloniaXamlLoader.Load(this);
-            _components = new List<Component>();
-            // Find the leftTreeView control and assign it to the member variable
             LeftTreeView = this.FindControl<TreeView>("LeftTreeView");
+
             RightTextBox = this.FindControl<TextBox>("RightTextBox");
             RightTextBox.LostFocus += RightListBox_LostFocus; // Prevents rightListBox from being cleared when clicking elsewhere.
             RightTextBox.DataContext = _selectedComponentProperties;
+
             TabControl = this.FindControl<TabControl>("TabControl");
             RawEditTabItem = this.FindControl<TabItem>("RawEditTabItem");
             GuiEditTabItem = this.FindControl<TabItem>("GuiEditTabItem");
             InitialTab = this.FindControl<TabItem>("InitialTab");
             ApplyEditorButton = this.FindControl<Button>("ApplyEditorButton");
             _selectedComponentProperties = new ObservableCollection<string>();
-            _mainConfig = new MainConfig();
         }
 
         public static IControl Build(object data)
@@ -456,11 +456,30 @@ namespace KOTORModSync
         {
             try
             {
-                if (_mainConfig != null && MainConfig.DestinationPath != null)
+                if (MainConfigInstance == null || MainConfig.DestinationPath == null)
+                {
+                    await InformationDialog.ShowInformationDialog(
+                        this,
+                        "Please set your directories first");
                     return;
+                }
 
-                await InformationDialog.ShowInformationDialog(this, "Please set your directories first");
-                return;
+                bool success = true;
+                foreach (var component in _components)
+                {
+                    var validator = new ComponentValidation(component);
+                    success &= validator.Run();
+                }
+
+                string informationMessage
+                    = "There were problems with your instructions file, please check the output window for details.";
+                if (success)
+                {
+                    informationMessage
+                        = "No issues found. If you run into any issues during an install please notify the developer";
+                }
+
+                await InformationDialog.ShowInformationDialog(this, informationMessage);
             }
             catch (Exception ex)
             {
@@ -524,10 +543,11 @@ namespace KOTORModSync
                 await InformationDialog.ShowInformationDialog(this, "Please select your KOTOR(2) directory. (e.g. \"C:\\Program Files (x86)\\Steam\\steamapps\\common\\Knights of the Old Republic II\")");
                 string chosenFolder = await OpenFolder();
                 DirectoryInfo kotorInstallDir = new DirectoryInfo(chosenFolder);
+                MainConfigInstance.destinationPath = kotorInstallDir;
                 await InformationDialog.ShowInformationDialog(this, "Please select your mod directory (where the archives live).");
                 chosenFolder = await OpenFolder();
                 DirectoryInfo modDirectory = new DirectoryInfo(chosenFolder);
-                _mainConfig.UpdateConfig(modDirectory, kotorInstallDir);
+                MainConfigInstance.sourcePath = modDirectory;
             }
             catch (ArgumentNullException)
             {
@@ -540,7 +560,7 @@ namespace KOTORModSync
         {
             try
             {
-                if (_mainConfig == null || MainConfig.DestinationPath == null)
+                if (MainConfigInstance == null || MainConfig.DestinationPath == null)
                 {
                     var informationDialog = new InformationDialog
                         { InfoText = "Please set your directories first" };
@@ -599,7 +619,7 @@ namespace KOTORModSync
         {
             try
             {
-                if (_mainConfig == null || MainConfig.DestinationPath == null)
+                if (MainConfigInstance == null || MainConfig.DestinationPath == null)
                 {
                     await InformationDialog.ShowInformationDialog(this, "Please set your directories first");
                     return;
@@ -991,7 +1011,7 @@ namespace KOTORModSync
                 // Expand the root item to automatically expand the tree view
                 rootItem.IsExpanded = true;
 
-                WriteTreeViewItemsToFile(new List<TreeViewItem> { rootItem }, null);
+                //WriteTreeViewItemsToFile(new List<TreeViewItem> { rootItem }, null);
                 //currentComponent = null;
 
                 if (_components.Count == 0) TabControl.SelectedItem = InitialTab;

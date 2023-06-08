@@ -1,26 +1,83 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
+using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
+using System.Runtime.CompilerServices;
+using JetBrains.Annotations;
 
 namespace KOTORModSync.Core
 {
-    public class MainConfig
+    // there should only ever be one MainConfig instance created at any one time.
+    // instance has GET and SET access.
+    // Everyone else has readonly GET access.
+    [SuppressMessage("ReSharper", "InconsistentNaming")]
+    public class MainConfig : INotifyPropertyChanged
     {
         public static DirectoryInfo SourcePath { get; private set; }
         public static DirectoryInfo DestinationPath { get; private set; }
-        public static List<Component> Components { get; }
-        public static object DebugLogging { get; internal set; }
+        public static bool DebugLogging { get; private set; }
+        public static DirectoryInfo LastOutputDirectory { get; private set; }
+        public static bool AttemptFixes { get; private set; }
+        public static bool DefaultInstall { get; private set; }
 
-        public static DirectoryInfo LastOutputDirectory { get; set; }
-
-        public void UpdateConfig(DirectoryInfo sourcePath, DirectoryInfo destinationPath)
+        public DirectoryInfo sourcePath
         {
-            SourcePath = sourcePath;
-            DestinationPath = destinationPath;
+            get
+            {
+                return SourcePath;
+            }
+            set
+            {
+                SourcePath = value;
+                OnPropertyChanged(nameof(sourcePath));
+                OnPropertyChanged(nameof(sourcePathFullName));
+            }
+        }
+
+        [CanBeNull]
+        public string sourcePathFullName => SourcePath?.FullName;
+
+        public DirectoryInfo destinationPath
+        {
+            get
+            {
+                return DestinationPath;
+            }
+            set
+            {
+                DestinationPath = value;
+                OnPropertyChanged(nameof(destinationPath));
+                OnPropertyChanged(nameof(destinationPathFullName));
+            }
+        }
+
+        [CanBeNull]
+        public string destinationPathFullName => DestinationPath?.FullName;
+
+        public bool debugLogging { get { return DebugLogging; } set { DebugLogging = value; } }
+        public DirectoryInfo lastOutputDirectory { get { return LastOutputDirectory; } set { LastOutputDirectory = value; } }
+        public bool defaultInstall { get { return DefaultInstall; } set { DefaultInstall = value; } }
+        public bool attemptFixes { get { return AttemptFixes; } set { AttemptFixes = value; } }
+
+        public MainConfig()
+        {
+            attemptFixes = true;
+            debugLogging = true;
+            defaultInstall = true;
+        }
+
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
     }
+
 
     public static class ModDirectory
     {

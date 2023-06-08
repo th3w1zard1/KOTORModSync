@@ -43,15 +43,15 @@
 				</TreeView>
 			</ScrollViewer>
 			<Grid Grid.Row="1" Grid.Column="0" HorizontalAlignment="Stretch" Margin="0,1"
-			      RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="Auto,Auto">
+				  RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="Auto,Auto">
 				<Button Grid.Row="0" Grid.Column="0" Content="Add Mod" Margin="1" Click="AddComponentButton_Click"
 						HorizontalContentAlignment="Center" VerticalContentAlignment="Center" />
 				<Button Grid.Row="0" Grid.Column="1" Content="Del Mod" Margin="1" Click="RemoveComponentButton_Click"
-				        HorizontalContentAlignment="Center" VerticalContentAlignment="Center" />
+						HorizontalContentAlignment="Center" VerticalContentAlignment="Center" />
 				<Button Grid.Row="1" Grid.Column="0" Content="▲  Up  ▲" Margin="1" Click="MoveUpButton_Click"
-				        HorizontalContentAlignment="Center" VerticalContentAlignment="Center" />
+						HorizontalContentAlignment="Center" VerticalContentAlignment="Center" />
 				<Button Grid.Row="1" Grid.Column="1" Content="▼ Down ▼" Margin="1" Click="MoveDownButton_Click"
-				        HorizontalContentAlignment="Center" VerticalContentAlignment="Center" />
+						HorizontalContentAlignment="Center" VerticalContentAlignment="Center" />
 				<Button Grid.Row="2" Grid.Column="0" Content="Save Config" Margin="2,0" Click="SaveModFile_Click" />
 				<Button Grid.Row="2" Grid.Column="1" Content="Refresh List" Click="RefreshComponents_Click" />
 			</Grid>
@@ -161,23 +161,23 @@
 
 																<TextBlock Grid.Row="7" Grid.Column="0" Text="Dependencies:" />
 																<TextBox Grid.Row="8"
-																         Grid.Column="0"
-																         x:Name="dependenciesTextBox"
-																         AcceptsReturn="True"
-																         TextWrapping="Wrap"
-																         Text="{Binding Dependencies, Converter={StaticResource ListToStringConverter}}"
-																         LostFocus="TextBox_LostFocus"
-																         Focusable="True" MaxWidth="600"/>
+																		 Grid.Column="0"
+																		 x:Name="dependenciesTextBox"
+																		 AcceptsReturn="True"
+																		 TextWrapping="Wrap"
+																		 Text="{Binding Dependencies, Converter={StaticResource ListToStringConverter}}"
+																		 LostFocus="TextBox_LostFocus"
+																		 Focusable="True" MaxWidth="600"/>
 
 																<TextBlock Grid.Row="9" Grid.Column="0" Text="Restrictions:" />
 																<TextBox Grid.Row="10"
-																         Grid.Column="0"
-																         x:Name="restrictionsTextBox"
-																         AcceptsReturn="True"
-																         TextWrapping="Wrap"
-																         Text="{Binding Restrictions, Converter={StaticResource ListToStringConverter}}"
-																         LostFocus="TextBox_LostFocus"
-																         Focusable="True" MaxWidth="600"/>
+																		 Grid.Column="0"
+																		 x:Name="restrictionsTextBox"
+																		 AcceptsReturn="True"
+																		 TextWrapping="Wrap"
+																		 Text="{Binding Restrictions, Converter={StaticResource ListToStringConverter}}"
+																		 LostFocus="TextBox_LostFocus"
+																		 Focusable="True" MaxWidth="600"/>
 
 																<TextBlock Grid.Row="11" Grid.Column="0" Text="Overwrite:" />
 																<TextBox Grid.Row="12"
@@ -215,8 +215,15 @@
 			<Button Content="Validate Config" Margin="0 5" Click="ValidateButton_Click" />
 			<Button Content="Generate Docs from Config" Margin="0 5" Click="DocsButton_Click" />
 			<Button Content="  Install All" Margin="0 5" Click="StartInstall_Click" />
-			<CheckBox Content="Default Install" IsChecked="{Binding defaultInstallCheckBox}" Foreground="White" />
-			<CheckBox Content="Verbose Logging" IsChecked="{Binding verboseLoggingCheckBox}" Foreground="White" />
+			<StackPanel x:Name="MainConfigStackPanel" DataContext="{Binding MainConfigInstance}">
+				<CheckBox Content="Default Install" IsChecked="{Binding defaultInstall}" Foreground="White" />
+				<CheckBox Content="Verbose Logging" IsChecked="{Binding debugLogging}" Foreground="White" />
+				<CheckBox Content="Auto-Fix Config Errors" IsChecked="{Binding attemptFixes}" Foreground="White" />
+				<TextBlock Text="Mod Location:" />
+				<TextBlock Text="{Binding sourcePathFullName}" MaxWidth="600"/>
+				<TextBlock Text="Kotor Directory:" />
+				<TextBlock Text="{Binding destinationPathFullName}" MaxWidth="600"/>
+			</StackPanel>
 		</StackPanel>
 	</Grid>
 </Window>

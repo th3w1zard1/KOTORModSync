@@ -20,45 +20,46 @@ namespace KOTORModSync.Core.Utility
         [CanBeNull]
         public static string ReplaceCustomVariables(string path)
         {
-            string normalizedPath = path.Replace("<<modDirectory>>", MainConfig.SourcePath.FullName);
-            return normalizedPath?.Replace("<<kotorDirectory>>", MainConfig.DestinationPath.FullName);
+            return path.Replace("<<modDirectory>>", MainConfig.SourcePath.FullName)
+                .Replace("<<kotorDirectory>>", MainConfig.DestinationPath.FullName);
         }
 
         [CanBeNull]
         public static string RestoreCustomVariables(string fullPath)
         {
-            string restoredPath = fullPath.Replace(MainConfig.SourcePath.FullName, "<<modDirectory>>");
-            return restoredPath?.Replace(MainConfig.DestinationPath.FullName, "<<kotorDirectory>>");
+            return fullPath.Replace(MainConfig.SourcePath.FullName, "<<modDirectory>>")
+                .Replace(MainConfig.DestinationPath.FullName, "<<kotorDirectory>>");
         }
 
-        public static bool CanWriteToDirectory(DirectoryInfo directory)
+        public static bool IsDirectoryWritable(DirectoryInfo directory)
         {
             try
             {
                 // Attempt to create a file in the directory
                 string fileName = Path.Combine(directory.FullName, Path.GetRandomFileName());
-                using (FileStream fs = File.Create(fileName)) { }
-
-                File.Delete(fileName); // Clean up the file
-                return true;
+                using (File.Create(fileName))
+                {
+                    return true;
+                }
             }
             catch (UnauthorizedAccessException ex)
             {
-                Logger.Log($"Failed to access files in destination directory: {ex.Message}");
+                Logger.Log($"Failed to access files in the destination directory: {ex.Message}");
             }
             catch (PathTooLongException ex)
             {
                 Logger.LogException(ex);
-                Logger.Log($"Your pathname is too long: '{directory.FullName}'");
-                Logger.Log("Please utilize the registry patch that increases windows legacy path limit of 260, or move your KOTOR2 installation to a shorter directory.");
+                Logger.Log($"The pathname is too long: '{directory.FullName}'");
+                Logger.Log("Please utilize the registry patch that increases the Windows legacy path limit of 260 characters or move your KOTOR2 installation to a shorter directory path.");
             }
-            catch (Exception ex)
+            catch (IOException ex)
             {
-                Logger.Log($"Failed to access files in destination directory: {ex.Message}");
+                Logger.Log($"Failed to access files in the destination directory: {ex.Message}");
             }
 
             return false;
         }
+
 
         public static async Task WaitForProcessExitAsync([NotNull] Process process, string processName)
         {
@@ -75,6 +76,7 @@ namespace KOTORModSync.Core.Utility
             }
         }
 
+        // todo: merge relevant sections with PlatformAgnosticMethods.ExecuteProcessAsync
         public static async Task<bool> ExecuteProcessAsync(string fileName, string arguments, Func<Process, Task<bool>> onExited)
         {
             Process process = new Process
@@ -118,7 +120,7 @@ namespace KOTORModSync.Core.Utility
 
             if (Directory.Exists(thisPath)) { return new DirectoryInfo(thisPath); }
 
-            Logger.Log($"Directory '{thisPath}' does not exist.");
+            Console.Write($"Directory '{thisPath}' does not exist.");
             return default;
         }
     }

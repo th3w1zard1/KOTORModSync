@@ -51,7 +51,7 @@ namespace KOTORModSync.Core
 
         public static void LogVerbose(string message)
         {
-            if (MainConfig.DebugLogging != null)
+            if (MainConfig.DebugLogging)
             {
                 Log(message);
             }

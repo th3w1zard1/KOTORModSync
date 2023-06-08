@@ -90,8 +90,10 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
             if (Destination == null)
             {
                 if (! noValidate && sourcePaths.Count == 0)
+                {
                     throw new Exception(
                         $"Could not find any files! Source: {string.Join(", ", Source)}");
+                }
 
                 return (sourcePaths, null);
             }
@@ -101,12 +103,13 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                 ?? throw new InvalidOperationException("No destination set!"));
 
             if (! noValidate && sourcePaths.Count == 0)
+            {
                 throw new Exception(
                     $"Could not find any files! Source: {string.Join(", ", Source)}");
+            }
 
             return ((List<string>, DirectoryInfo))(sourcePaths, destinationPath);
         }
-
 
         public async Task<bool> ExtractFileAsync(
             Utility.Utility.IConfirmationDialogCallback confirmDialog
@@ -172,7 +175,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                                                 $"[Error] Unable to parse archive '{sourcePath}'");
                                             success = false;
                                             return;
-                                        };
+                                        }
 
                                         IReader reader = archive.ExtractAllEntries();
                                         while (reader.MoveToNextEntry())
@@ -340,7 +343,6 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                         return false;
                     }
                 }
-
 
                 return true;
             }
@@ -524,8 +526,10 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                 {
                     var tslPatcherDirectory = new DirectoryInfo(t);
                     if (! tslPatcherDirectory.Exists)
+                    {
                         throw new FileNotFoundException(
                             $"The directory {t} could not be located on the disk");
+                    }
 
                     FileHelper.ReplaceLookupGameFolder(tslPatcherDirectory);
 
@@ -630,14 +634,18 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                 foreach (string sourcePath in sourcePaths)
                 {
                     if (Action == "TSLPatcher")
+                    {
                         FileHelper.ReplaceLookupGameFolder(
                             new DirectoryInfo(
                                 Path.GetDirectoryName(sourcePath) ?? string.Empty));
+                    }
 
                     var thisProgram = new FileInfo(sourcePath);
                     if (! thisProgram.Exists)
+                    {
                         throw new FileNotFoundException(
                             $"The file {sourcePath} could not be located on the disk");
+                    }
 
                     try
                     {

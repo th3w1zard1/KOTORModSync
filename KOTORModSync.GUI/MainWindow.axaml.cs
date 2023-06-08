@@ -256,6 +256,13 @@ namespace KOTORModSync
 
                 if (duplicateComponent == null) { continue; }
 
+                if (!Guid.TryParse(duplicateComponent.Guid.ToString(), out Guid outGuid))
+                {
+                    if (MainConfig.AttemptFixes)
+                        duplicateComponent.Guid = Guid.NewGuid();
+                    Logger.Log($"[Warning] Invalid GUID for component '{component.Name}' got '{component.Guid}'");
+                }
+
                 string message = $"Component '{component.Name}' has duplicate GUID with component '{duplicateComponent.Name}'";
                 Logger.Log(message);
                 bool confirm;
@@ -270,11 +277,11 @@ namespace KOTORModSync
                 {
                     i++;
                     duplicateComponent.Guid = Guid.NewGuid();
-                    Logger.Log($"Replaced GUID of component {duplicateComponent.Name}");
+                    Logger.LogVerbose($"Replaced GUID of component {duplicateComponent.Name}");
                 }
                 else
                 {
-                    Logger.Log($"User canceled GUID replacement for component {duplicateComponent.Name}");
+                    Logger.LogVerbose($"User canceled GUID replacement for component {duplicateComponent.Name}");
                 }
             }
         }
@@ -307,7 +314,7 @@ namespace KOTORModSync
 
                 // Create the root item for the tree view
                 var rootItem = new TreeViewItem { Header = "Components" };
-                
+
                 // Validate the components.
                 await ProcessComponents(rootItem);
 
@@ -320,7 +327,7 @@ namespace KOTORModSync
                     LeftTreeView.Items = rootItemsCollection;
 
                     // Expand the tree. Too lazy to figure out the proper way.
-                    var treeEnumerator = LeftTreeView.Items.GetEnumerator();
+                    IEnumerator treeEnumerator = LeftTreeView.Items.GetEnumerator();
                     treeEnumerator.MoveNext();
                     LeftTreeView.ExpandSubTree((TreeViewItem)treeEnumerator.Current);
                 });
@@ -750,7 +757,7 @@ namespace KOTORModSync
             // Don't show content of any tabs (except the hidden one) if there's no content.
             if (selectedItem != InitialTab && _components.Count == 0)
                 TabControl.SelectedItem = InitialTab;
-            
+
             // Show/hide the appropriate content based on the selected tab
             else if (selectedItem.Header.ToString() == "Raw Edit")
             {

@@ -276,7 +276,6 @@ namespace KOTORModSync.Core.Utility
                         }
                     }
 
-
                     await Task.Run(() => process.WaitForExit(), cancellationTokenSource.Token);
 
                     if (!process.HasExited)

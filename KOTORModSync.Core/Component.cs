@@ -299,8 +299,10 @@ namespace KOTORModSync.Core
             {
                 // Check if we have permission to write to the Destination directory
                 if (! Utility.Utility.IsDirectoryWritable(MainConfig.DestinationPath))
+                {
                     throw new InvalidOperationException(
                         "[Error] Cannot write to the destination directory.");
+                }
 
                 (bool, Dictionary<FileInfo, SHA1>) result = await ProcessComponentAsync(this);
                 if (result.Item1) return (true, null);
@@ -334,8 +336,10 @@ namespace KOTORModSync.Core
                                 requiredGuid => componentsList.Any(
                                     checkComponent => checkComponent.Guid == requiredGuid));
                             if (! shouldRunInstruction)
+                            {
                                 Logger.Log(
                                     $"[Information] Skipping instruction '{instruction.Action}' index {i1} due to missing dependency(s): {instruction.Dependencies}");
+                            }
                         }
 
                         if (instruction.Restrictions?.Count > 0)
@@ -344,8 +348,10 @@ namespace KOTORModSync.Core
                                 restrictedGuid => componentsList.Any(
                                     checkComponent => checkComponent.Guid == restrictedGuid));
                             if (! shouldRunInstruction)
+                            {
                                 Logger.Log(
                                     $"[Information] Not running instruction {instruction.Action} index {i1} due to restricted components installed: {instruction.Restrictions}");
+                            }
                         }
 
                         if (! shouldRunInstruction) continue;
@@ -604,7 +610,7 @@ namespace KOTORModSync.Core
 
                     foreach (string sourcePath in instruction.Source)
                     {
-                        var result = IsSourcePathInArchives(
+                        (bool, bool) result = IsSourcePathInArchives(
                             sourcePath,
                             allArchives,
                             instruction);
@@ -889,11 +895,10 @@ namespace KOTORModSync.Core
 
         public bool Run()
         {
-            return (
-                // Verify all the instructions' paths line up with hierarchy of the archives
-                this.VerifyExtractPaths(Component)
+            // Verify all the instructions' paths line up with hierarchy of the archives
+            return this.VerifyExtractPaths(Component)
                 // Ensure all the 'Destination' keys are valid for their respective action.
-                && this.ParseDestinationWithAction(Component));
+                && this.ParseDestinationWithAction(Component);
         }
     }
 }

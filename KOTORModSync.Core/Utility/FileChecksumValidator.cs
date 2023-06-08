@@ -223,7 +223,9 @@ namespace KOTORModSync.Core.Utility
                     null,
                     out bytes[i / 2]
                 ))
+                {
                     continue;
+                }
 
                 bytes = null;
                 return false;

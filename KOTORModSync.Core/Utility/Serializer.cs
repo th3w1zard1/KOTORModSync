@@ -93,11 +93,13 @@ namespace KOTORModSync.Core.Utility
             if (!guidString.EndsWith("}", StringComparison.Ordinal)) guidString += "}";
 
             if (guidString.IndexOf('-') < 0)
+            {
                 guidString = Regex.Replace(
                     guidString,
                     @"(\w{8})(\w{4})(\w{4})(\w{4})(\w{12})",
                     "$1-$2-$3-$4-$5"
                 );
+            }
 
             return guidString;
         }
@@ -226,8 +228,10 @@ namespace KOTORModSync.Core.Utility
                 {
                     _ = sb.Append("**Action**: ").AppendLine(instruction.Action);
                     if (instruction.Action == "move")
+                    {
                         _ = sb.Append("**Overwrite existing files?**: ")
                             .AppendLine(instruction.Overwrite ? "NO" : "YES");
+                    }
 
                     if (instruction.Source != null)
                     {
@@ -583,16 +587,14 @@ namespace KOTORModSync.Core.Utility
             return Regex.IsMatch(input, $"^{pattern}$");
         }
 
-
-
-
-
         public static List<Component> ReadComponentsFromFile(string filePath)
         {
             try
             {
                 // Read the contents of the file into a string
                 string tomlString = File.ReadAllText(filePath)
+                    // the code expects instructions to always be defined. When it's not, this happens on save. Then our code errors when it sees this.
+                    // make the user experience better by just removing an empty instructions key.
                     .Replace("Instructions = []", "");
 
                 tomlString = Serializer.FixWhitespaceIssues(tomlString);
@@ -748,7 +750,6 @@ namespace KOTORModSync.Core.Utility
 
             return null;
         }
-
 
         public static List<ModDirectory.ArchiveEntry> TraverseArchiveEntries(string archivePath)
         {

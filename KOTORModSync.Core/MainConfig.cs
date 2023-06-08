@@ -78,7 +78,6 @@ namespace KOTORModSync.Core
         }
     }
 
-
     public static class ModDirectory
     {
         public class ArchiveEntry

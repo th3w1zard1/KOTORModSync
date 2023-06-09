@@ -1,0 +1,16 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+			 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+			 xmlns:local="clr-namespace:KOTORModSync.Installer.Views"
+			 xmlns:vm="clr-namespace:KOTORModSync.Installer.ViewModels;assembly=KOTORModSync.Installer"
+			 xmlns:avalonia="clr-namespace:Avalonia.Controls;assembly=Avalonia"
+             x:Class="KOTORModSync.Installer.Views.WelcomeScreenView"
+             x:DataType="vm:WelcomeScreenViewModel">
+	<Grid>
+		<TextBlock Text="{Binding WelcomeMessage}" FontSize="20" HorizontalAlignment="Center" VerticalAlignment="Center" />
+		<StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,40">
+			<Button Content="Load Instructions" Margin="5" Command="{Binding LoadInstructionsCommand}" />
+			<Button Content="Select Directories" Margin="5" Command="{Binding SelectDirectoriesCommand}" />
+			<Button Content="Next" Margin="5" Command="{Binding NextCommand}" />
+		</StackPanel>
+	</Grid>
+</UserControl>

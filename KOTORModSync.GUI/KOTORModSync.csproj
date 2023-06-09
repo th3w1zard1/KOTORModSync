@@ -101,6 +101,9 @@
     <Compile Update="OptionsDialog.axaml.cs">
       <DependentUpon>OptionsDialog.axaml</DependentUpon>
     </Compile>
+    <Compile Update="SelectInstallComponents.axaml.cs">
+      <DependentUpon>SelectInstallComponents.axaml</DependentUpon>
+    </Compile>
   </ItemGroup>
 
   <!-- WindowsDeleteString returntype changes from int to IntPtr HRESULT after net4.x We accommodate this change by replacing with our patches. -->

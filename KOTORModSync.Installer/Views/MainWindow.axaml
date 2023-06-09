@@ -1,0 +1,44 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:KOTORModSync.Installer.ViewModels"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        x:Class="KOTORModSync.Installer.Views.MainWindow"
+        x:DataType="vm:MainWindowViewModel"
+        xmlns:local="clr-namespace:KOTORModSync.Installer.Views"
+        Icon="/Assets/avalonia-logo.ico"
+        Title="KOTORModSync.Installer">
+
+    <Design.DataContext>
+        <!-- This only sets the DataContext for the previewer in an IDE,
+             to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
+        <vm:MainWindowViewModel/>
+    </Design.DataContext>
+
+    <StackPanel>
+        <ContentControl Content="{Binding CurrentScreen}">
+            <ContentControl.Resources>
+                <DataTemplate DataType="{x:Type local:WelcomeScreenViewModel}">
+                    <local:WelcomeScreenView />
+                </DataTemplate>
+
+                <DataTemplate DataType="{x:Type local:ComponentSelectionScreenViewModel}">
+                    <local:ComponentSelectionScreenView />
+                </DataTemplate>
+
+                <DataTemplate DataType="{x:Type local:ConfirmationScreenViewModel}">
+                    <local:ConfirmationScreenView />
+                </DataTemplate>
+
+                <DataTemplate DataType="{x:Type local:InstallationProgressScreenViewModel}">
+                    <local:InstallationProgressScreenView />
+                </DataTemplate>
+
+                <DataTemplate DataType="{x:Type local:ResultsScreenViewModel}">
+                    <local:ResultsScreenView />
+                </DataTemplate>
+            </ContentControl.Resources>
+        </ContentControl>
+    </StackPanel>
+</Window>

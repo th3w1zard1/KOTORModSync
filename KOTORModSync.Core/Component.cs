@@ -43,6 +43,7 @@ namespace KOTORModSync.Core
         public Dictionary<Guid, Option> Options { get; set; }
         public List<string> Language { get; private set; }
         public string ModLink { get; set; }
+        public bool IsSelected { get; set; }
         private ComponentValidation LastValidation { get; set; }
 
         /*

@@ -1,0 +1,81 @@
+<Window xmlns="https://github.com/avaloniaui"
+		xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+		xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+		xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+		xmlns:core="clr-namespace:KOTORModSync.Core;assembly=KOTORModSync.Core"
+		mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+		x:Class="KOTORModSync.SelectInstallComponents"
+		Title="SelectInstallComponents">
+<StackPanel>
+		<ContentControl Content="{Binding CurrentScreen}">
+			<ContentControl.Resources>
+				<DataTemplate DataType="{x:Type local:ComponentSelectionScreenViewModel}">
+					<StackPanel>
+						<!-- Component selection screen -->
+						<TextBlock Text="Select the components you want to install:" Margin="10"/>
+						<ListBox Items="{Binding Components}"
+								 SelectedItems="{Binding SelectedComponents}"
+								 SelectionMode="Multiple"
+								 Margin="10">
+							<ListBox.ItemTemplate>
+								<DataTemplate>
+									<StackPanel Orientation="Horizontal">
+										<CheckBox IsChecked="{Binding IsSelected}" />
+										<TextBlock Text="{Binding Name}" Margin="5,0" />
+									</StackPanel>
+								</DataTemplate>
+							</ListBox.ItemTemplate>
+						</ListBox>
+
+						<!-- Next button -->
+						<Button Content="Next" Command="{Binding NextCommand}" Margin="10"/>
+					</StackPanel>
+				</DataTemplate>
+
+				<DataTemplate DataType="{x:Type local:ConfirmationScreenViewModel}">
+					<StackPanel>
+						<!-- Confirmation screen -->
+						<TextBlock Text="Confirm the selected components:" Margin="10"/>
+						<ItemsControl ItemsSource="{Binding SelectedComponents}">
+							<ItemsControl.ItemTemplate>
+								<DataTemplate>
+									<TextBlock Text="{Binding Name}" Margin="10"/>
+								</DataTemplate>
+							</ItemsControl.ItemTemplate>
+						</ItemsControl>
+
+						<!-- Back and Next buttons -->
+						<StackPanel Orientation="Horizontal" Margin="10">
+							<Button Content="Back" Command="{Binding BackCommand}" Margin="10"/>
+							<Button Content="Next" Command="{Binding NextCommand}" Margin="10"/>
+						</StackPanel>
+					</StackPanel>
+				</DataTemplate>
+
+				<DataTemplate DataType="{x:Type local:InstallationProgressScreenViewModel}">
+					<StackPanel>
+						<!-- Installation progress screen -->
+						<TextBlock Text="Installation in progress..." Margin="10"/>
+
+						<!-- Progress bar or other progress indicator -->
+
+						<!-- Confirmation dialog -->
+						<Button Content="Next" Command="{Binding NextCommand}" Margin="10"/>
+					</StackPanel>
+				</DataTemplate>
+
+				<DataTemplate DataType="{x:Type local:ResultsScreenViewModel}">
+					<StackPanel>
+						<!-- Results screen -->
+						<TextBlock Text="Installation completed!" Margin="10"/>
+
+						<!-- Show results based on installation -->
+
+						<!-- Finish button -->
+						<Button Content="Finish" Command="{Binding FinishCommand}" Margin="10"/>
+					</StackPanel>
+				</DataTemplate>
+			</ContentControl.Resources>
+		</ContentControl>
+	</StackPanel>
+</Window>

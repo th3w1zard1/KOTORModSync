@@ -4,6 +4,8 @@
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 
 namespace KOTORModSync.Core
@@ -53,7 +55,7 @@ namespace KOTORModSync.Core
         {
             if (MainConfig.DebugLogging)
             {
-                Log(message);
+                Log("[Verbose] " + message);
             }
         }
 
@@ -61,6 +63,38 @@ namespace KOTORModSync.Core
         {
             Log($"Exception: {ex.GetType().Name} - {ex.Message}");
             Log($"Stack trace: {ex.StackTrace}");
+
+            if (MainConfig.DebugLogging)
+            {
+                // Get the current stack frame
+                StackFrame frame = new StackFrame(1, true);
+                MethodBase method = frame.GetMethod();
+                Type declaringType = method.DeclaringType;
+
+                // Get the locals for the current stack frame
+                LocalVariableInfo[] localVariables = method.GetMethodBody()?.LocalVariables?.ToArray();
+
+                // Log local variables information
+                if (localVariables != null)
+                {
+                    Log("Local Variables:");
+
+                    foreach (LocalVariableInfo local in localVariables)
+                    {
+                        string localName = method.GetMethodBody()?.LocalVariables[local.LocalIndex].ToString();
+
+                        object value = frame.GetMethod().ReflectedType?.InvokeMember(
+                            localName,
+                            BindingFlags.GetField | BindingFlags.GetProperty | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static,
+                            null,
+                            declaringType,
+                            null
+                        );
+
+                        Log($"- {localName}: {value}");
+                    }
+                }
+            }
 
             ExceptionLogged.Invoke(ex); // Raise the ExceptionLogged event
         }

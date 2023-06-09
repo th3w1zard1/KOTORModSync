@@ -15,6 +15,8 @@ namespace KOTORModSync.Core
     // instance has GET and SET access.
     // Everyone else has readonly GET access.
     [SuppressMessage("ReSharper", "InconsistentNaming")]
+    [SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "<Pending>")]
+    [SuppressMessage("CodeQuality", "IDE0079:Remove unnecessary suppression", Justification = "<Pending>")]
     public class MainConfig : INotifyPropertyChanged
     {
         public static DirectoryInfo SourcePath { get; private set; }
@@ -65,7 +67,7 @@ namespace KOTORModSync.Core
 
         public MainConfig()
         {
-            attemptFixes = true;
+            attemptFixes = false;
             debugLogging = true;
             defaultInstall = true;
         }

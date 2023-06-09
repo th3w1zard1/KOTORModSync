@@ -26,7 +26,7 @@ namespace KOTORModSync.ConsoleApp
         {
             var mod = new Component();
 
-            var nameAndModLinks = GetNameAndModLink(modText);
+            (string, string) nameAndModLinks = GetNameAndModLink(modText);
             mod.Name = GetName(nameAndModLinks);
             mod.ModLink = GetHyperlinkUrl(nameAndModLinks, "Name");
             mod.Author = GetPropertyValue(modText, "Author");

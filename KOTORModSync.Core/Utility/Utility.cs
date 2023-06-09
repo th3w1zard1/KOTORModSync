@@ -17,14 +17,17 @@ namespace KOTORModSync.Core.Utility
             Task<bool> ShowConfirmationDialog(string message);
         }
 
-        [CanBeNull]
+        public interface IOptionsDialogCallback
+        {
+            Task<string> ShowOptionsDialog(List<string> options);
+        }
+
         public static string ReplaceCustomVariables(string path)
         {
             return path.Replace("<<modDirectory>>", MainConfig.SourcePath.FullName)
                 .Replace("<<kotorDirectory>>", MainConfig.DestinationPath.FullName);
         }
 
-        [CanBeNull]
         public static string RestoreCustomVariables(string fullPath)
         {
             return fullPath.Replace(MainConfig.SourcePath.FullName, "<<modDirectory>>")
@@ -39,6 +42,7 @@ namespace KOTORModSync.Core.Utility
                 string fileName = Path.Combine(directory.FullName, Path.GetRandomFileName());
                 using (File.Create(fileName))
                 {
+                    File.Delete(fileName);
                     return true;
                 }
             }
@@ -59,7 +63,6 @@ namespace KOTORModSync.Core.Utility
 
             return false;
         }
-
 
         public static async Task WaitForProcessExitAsync([NotNull] Process process, string processName)
         {

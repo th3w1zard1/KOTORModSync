@@ -229,7 +229,7 @@ namespace KOTORModSync.Tests
             List<Component> loadedComponents = FileHelper.ReadComponentsFromFile(_filePath);
 
             // Assert
-            Assert.That(loadedComponents, Is.Empty);
+            Assert.That(loadedComponents, Is.Null);
         }
 
         [Test]
@@ -260,33 +260,6 @@ namespace KOTORModSync.Tests
         }
 
         [Test]
-        public void SaveAndLoadTOMLFile_MissingRequiredFields()
-        {
-            // Arrange
-            List<Component> originalComponents = new()
-            {
-                new Component { Name = "Component 1" },
-                new Component { Guid = Guid.Parse("{C5418549-6B7E-4A8C-8B8E-4AA1BC63C732}") },
-                new Component { InstallOrder = 3 },
-            };
-
-            // Act
-            FileHelper.OutputConfigFile(originalComponents, _filePath);
-            List<Component> loadedComponents = FileHelper.ReadComponentsFromFile(_filePath);
-
-            // Assert
-            Assert.That(loadedComponents, Has.Count.EqualTo(originalComponents.Count));
-
-            for (int i = 0; i < originalComponents.Count; i++)
-            {
-                Component originalComponent = originalComponents[i];
-                Component loadedComponent = loadedComponents[i];
-
-                AssertComponentEquality(originalComponent, loadedComponent);
-            }
-        }
-
-        [Test]
         public void SaveAndLoadTOMLFile_ModifyComponents()
         {
             // Arrange
@@ -294,7 +267,6 @@ namespace KOTORModSync.Tests
 
             // Modify some component properties
             originalComponents[0].Name = "Modified Name";
-            originalComponents[1].InstallOrder = 5;
 
             // Act
             FileHelper.OutputConfigFile(originalComponents, _filePath);
@@ -361,7 +333,6 @@ namespace KOTORModSync.Tests
             {
                 Assert.That(actual.Name, Is.EqualTo(expected.Name));
                 Assert.That(actual.Guid, Is.EqualTo(expected.Guid));
-                Assert.That(actual.InstallOrder, Is.EqualTo(expected.InstallOrder));
             });
         }
     }

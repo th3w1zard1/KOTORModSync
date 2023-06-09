@@ -1,0 +1,22 @@
+<Window xmlns="https://github.com/avaloniaui"
+		xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+		xmlns:local="clr-namespace:KOTORModSync"
+		Title="Options" Width="300" Height="150"
+		x:Class="KOTORModSync.OptionsDialog">
+	<Grid>
+		<TextBlock x:Name="optionTextBox" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="16" TextWrapping="Wrap" TextTrimming="CharacterEllipsis" Margin="10" />
+
+		<ItemsControl x:Name="optionsItemsControl" Margin="5">
+			<ItemsControl.ItemTemplate>
+				<DataTemplate>
+					<RadioButton Content="{Binding}" GroupName="OptionsGroup"/>
+				</DataTemplate>
+			</ItemsControl.ItemTemplate>
+		</ItemsControl>
+
+		<StackPanel x:Name="optionStackPanel" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="10">
+			<Button x:Name="okButton" Content="OK" Tag="OK" Click="OKButton_Click" MinWidth="80" Margin="5" />
+			<Button Content="Cancel" Tag="Cancel" MinWidth="80" Margin="5" />
+		</StackPanel>
+	</Grid>
+</Window>

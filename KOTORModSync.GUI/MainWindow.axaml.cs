@@ -41,6 +41,32 @@ namespace KOTORModSync
             MainConfigStackPanel = this.FindControl<StackPanel>("MainConfigStackPanel");
             MainConfigStackPanel.DataContext = MainConfigInstance;
             DataContext = this;
+            Testwindow();
+        }
+
+        public async void Testwindow()
+        {
+            // Create an instance of OptionsDialogCallback
+            OptionsDialogCallback optionsDialogCallback = new OptionsDialogCallback(this);
+
+            // Create a list of options
+            List<string> options = new List<string> { "Option 1", "Option 2", "Option 3" };
+
+            // Show the options dialog and get the selected option
+            string selectedOption = await optionsDialogCallback.ShowOptionsDialog(options);
+
+            // Use the selected option
+            if (selectedOption != null)
+            {
+                // Option selected, do something with it
+                Console.WriteLine("Selected option: " + selectedOption);
+            }
+            else
+            {
+                // No option selected or dialog closed
+                Console.WriteLine("No option selected or dialog closed");
+            }
+
         }
 
         private void InitializeComponent()
@@ -95,7 +121,9 @@ namespace KOTORModSync
                                : items != null
                     ))
                 {
-                    // ReSharper disable once PossibleNullReferenceException
+                    if (items == null)
+                        continue;
+
                     _ = items.Add(childItem);
                 }
 
@@ -180,11 +208,13 @@ namespace KOTORModSync
 
                 var dialog = new SaveFileDialog
                 {
-                    DefaultExtension = defaultExt.FirstOrDefault()
+                    DefaultExtension = defaultExt.FirstOrDefault(),
+                    Filters =
+                    {
+                        new FileDialogFilter { Name = "All Files", Extensions = { "*" } },
+                        new FileDialogFilter { Name = "Preferred Extensions", Extensions = defaultExt }
+                    }
                 };
-                dialog?.Filters?.Add(new FileDialogFilter { Name = "All Files", Extensions = { "*" } });
-                if (defaultExt != null)
-                    dialog?.Filters?.Add(new FileDialogFilter() { Name = "Preferred Extensions", Extensions = defaultExt });
 
                 // Show the dialog and wait for a result.
                 if (VisualRoot is Window parent)
@@ -213,7 +243,7 @@ namespace KOTORModSync
             bool isFolderDialog,
             List<FileDialogFilter> filters,
             bool allowMultiple = false
-            )
+        )
         {
             try
             {
@@ -247,12 +277,13 @@ namespace KOTORModSync
         private async Task ProcessComponents(TreeViewItem rootItem)
         {
             int i = 0;
-            foreach (var component in _components)
+            foreach (Component component in _components)
             {
                 CreateTreeViewItem(component, rootItem);
 
                 // Check for duplicate GUID
-                Component duplicateComponent = _components.Find(c => c.Guid == component.Guid && c != component);
+                Guid componentGuid = component.Guid;
+                Component duplicateComponent = _components.Find(c => c.Guid == componentGuid && c != component);
 
                 if (duplicateComponent == null) { continue; }
 
@@ -285,7 +316,6 @@ namespace KOTORModSync
                 }
             }
         }
-
 
         private async void LoadInstallFile_Click(object sender, RoutedEventArgs e)
         {
@@ -472,11 +502,15 @@ namespace KOTORModSync
                 }
 
                 bool success = true;
-                foreach (var component in _components)
+                foreach (Component component in _components)
                 {
                     var validator = new ComponentValidation(component);
                     success &= validator.Run();
                 }
+
+                // Ensure necessary directories are writable.
+                success &= Core.Utility.Utility.IsDirectoryWritable(MainConfig.DestinationPath)
+                    && Core.Utility.Utility.IsDirectoryWritable(MainConfig.SourcePath);
 
                 string informationMessage
                     = "There were problems with your instructions file, please check the output window for details.";
@@ -583,7 +617,7 @@ namespace KOTORModSync
                 else
                 {
                     var informationDialog = new InformationDialog
-                    { InfoText = "Please choose a mod to install from the left list first" };
+                        { InfoText = "Please choose a mod to install from the left list first" };
                     _ = await informationDialog.ShowDialog<bool?>(this);
                     return;
                 }
@@ -687,7 +721,7 @@ namespace KOTORModSync
                                 this,
                                 $"There was a problem installing {component.Name}, please check the output window.\n\nContinue with the next mod anyway?"
                             )
-                        )
+                            )
                         {
                             break;
                         }
@@ -1165,11 +1199,11 @@ namespace KOTORModSync
                 this._canExecute = canExecute;
             }
 
-#pragma warning disable CS0067 // warning is incorrect - it's used internally.
+        #pragma warning disable CS0067 // warning is incorrect - it's used internally.
 
             public event EventHandler CanExecuteChanged;
 
-#pragma warning restore CS0067
+        #pragma warning restore CS0067
 
             public bool CanExecute(object parameter) => _canExecute == null || _canExecute(parameter);
 
@@ -1224,7 +1258,7 @@ namespace KOTORModSync
 
             if (targetType != typeof(List<Guid>)) { return lines.ToList(); }
 
-            return lines.Select(line => Guid.TryParse(line, out var guid) ? guid : Guid.Empty).ToList();
+            return lines.Select(line => Guid.TryParse(line, out Guid guid) ? guid : Guid.Empty).ToList();
         }
     }
 

@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFrameworks>net6.0;net462</TargetFrameworks>
@@ -97,6 +97,9 @@
     </Compile>
     <Compile Update="ProgressWindow.axaml.cs">
       <DependentUpon>ProgressWindow.axaml</DependentUpon>
+    </Compile>
+    <Compile Update="OptionsDialog.axaml.cs">
+      <DependentUpon>OptionsDialog.axaml</DependentUpon>
     </Compile>
   </ItemGroup>
 

@@ -1,1 +1,7 @@
-Files that differ from the legacypc and the Aspyr version:
+todo list:
+Add preinstall screen where users can select the options/components they want.
+Integrate Options dialog to allow the user to choose customization options
+- Send Option dialog callback to ExecuteInstructions
+- Use existing code to parse the archive hierarchy to generate options dynamically when applicable.
+  -- Add the relevant code to link up the Source of an Option to the archive
+- Use existing code from Instruction to implement GUID checks for Dependencies/Restrictions

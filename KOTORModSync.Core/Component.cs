@@ -40,9 +40,10 @@ namespace KOTORModSync.Core
         public bool NonEnglishFunctionality { get; set; }
         public string InstallationMethod { get; set; }
         public List<Instruction> Instructions { get; set; }
+        public Dictionary<Guid, Option> Options { get; set; }
         public List<string> Language { get; private set; }
-        public int InstallOrder { get; set; }
         public string ModLink { get; set; }
+        private ComponentValidation LastValidation { get; set; }
 
         /*
         public DateTime SourceLastModified { get; internal set; }
@@ -120,7 +121,6 @@ namespace KOTORModSync.Core
             this.Name = GetRequiredValue<string>(componentDict, "name");
             Logger.Log($"\r\n== Deserialize next component '{this.Name}' ==");
             this.Guid = GetRequiredValue<Guid>(componentDict, "guid");
-            this.InstallOrder = GetValueOrDefault<int>(componentDict, "installorder");
             this.Description = GetValueOrDefault<string>(componentDict, "description");
             this.Directions = GetValueOrDefault<string>(componentDict, "directions");
             this.Category = GetValueOrDefault<string>(componentDict, "category");
@@ -132,11 +132,73 @@ namespace KOTORModSync.Core
             this.ModLink = GetValueOrDefault<string>(componentDict, "modlink");
 
             this.Instructions = DeserializeInstructions(
-                GetValueOrDefault<Tomlyn.Model.TomlTableArray>(componentDict, "instructions"));
-
+                GetValueOrDefault<TomlTableArray>(componentDict, "instructions"));
             this.Instructions.ForEach(instruction => instruction.SetParentComponent(this));
-            Logger.Log($"Successfully deserialized component '{this.Name}'\r\n");
+
+            this.Options = DeserializeOptions(
+                GetValueOrDefault<TomlTableArray>(componentDict, "options")
+            );
+
+            // can't validate anything if directories aren't set.
+            if (string.IsNullOrEmpty(MainConfig.SourcePath?.FullName)
+                || string.IsNullOrEmpty(MainConfig.DestinationPath?.FullName)
+                )
+                return;
+
+            // Validate and log additional errors/warnings.
+            LastValidation = new ComponentValidation(this);
+            bool prevalidate = LastValidation.Run();
+            if (prevalidate)
+            {
+                Logger.Log($"Successfully deserialized component '{this.Name}'\r\n");
+                return;
+            }
+
+            LastValidation.GetErrors().ForEach(error => Logger.Log("[Error] "       + error));
+            LastValidation.GetWarnings().ForEach(warning => Logger.Log("[Warning] " + warning));
         }
+
+        [NotNull]
+        private Dictionary<Guid, Option> DeserializeOptions([CanBeNull] TomlTableArray tomlObject)
+        {
+            if (tomlObject == null)
+            {
+                Logger.LogVerbose($"No options found for component '{this.Name}'");
+                return new Dictionary<Guid, Option>();
+            }
+
+            var options = new Dictionary<Guid, Option>(65535);
+
+            for (int index = 0;
+                 index < tomlObject.Count;
+                 index++)
+            {
+                TomlTable item = tomlObject[index];
+                Dictionary<string, object> optionDict = Utility.Serializer.ConvertTomlTableToDictionary(item);
+
+                // ConvertTomlTableToDictionary lowercase all string keys.
+                Serializer.DeserializePath(optionDict, "source");
+                Serializer.DeserializeGuidDictionary(optionDict, "restrictions");
+                Serializer.DeserializeGuidDictionary(optionDict, "dependencies");
+
+                var option = new Option();
+                option.Source = GetRequiredValue<List<string>>(optionDict, "source");
+                option.Guid = GetValueOrDefault<Guid>(optionDict, "guid");
+                option.Destination = GetRequiredValue<string>(optionDict, "destination");
+                option.Restrictions = GetValueOrDefault<List<string>>(optionDict, "restrictions")
+                    ?.Select(Guid.Parse)
+                    .ToList();
+
+                option.Dependencies = GetValueOrDefault<List<string>>(optionDict, "dependencies")
+                    ?.Select(Guid.Parse)
+                    .ToList();
+
+                options.Add(Guid.NewGuid(), option); // Generate a new GUID key for each option
+            }
+
+            return options;
+        }
+
 
         [NotNull]
         private List<Instruction> DeserializeInstructions([CanBeNull] TomlTableArray tomlObject)
@@ -203,7 +265,7 @@ namespace KOTORModSync.Core
             bool required
         )
         {
-            if (! dict.TryGetValue(key, out object value))
+            if (!dict.TryGetValue(key, out object value))
             {
                 string caseInsensitiveKey = dict.Keys.FirstOrDefault(
                     k => k.Equals(key, StringComparison.OrdinalIgnoreCase));
@@ -222,10 +284,15 @@ namespace KOTORModSync.Core
             Type targetType = value.GetType();
 
             if (value is string valueStr && typeof(T) == typeof(System.Guid)
-                && System.Guid.TryParse(valueStr, out Guid guid)) { return (T)(object)guid; }
+                && System.Guid.TryParse(valueStr, out Guid guid))
+            {
+                return (T)(object)guid;
+            }
 
-            if (targetType.IsGenericType && targetType.GetGenericTypeDefinition() == typeof(List<>)
-                && value is IEnumerable enumerable)
+            if (targetType.IsGenericType
+                && targetType.GetGenericTypeDefinition() == typeof(List<>
+                ) && value is IEnumerable enumerable
+            )
             {
                 Type elementType = typeof(T).GetGenericArguments()[0];
                 dynamic dynamicList
@@ -544,46 +611,52 @@ namespace KOTORModSync.Core
                     isError: false));
         }
 
-        public Dictionary<Component, List<string>> GetErrors(int instructionIndex)
+        public List<string> GetErrors()
+        {
+            return _validationResults
+                .Where(r => r.IsError)
+                .Select(r => r.Message)
+                .ToList();
+        }
+
+        public List<string> GetErrors(int instructionIndex)
         {
             return _validationResults
                 .Where(r => r.InstructionIndex == instructionIndex && r.IsError)
-                .GroupBy(r => r.Component)
-                .ToDictionary(g => g.Key, g => g.Select(r => r.Message).ToList());
+                .Select(r => r.Message)
+                .ToList();
         }
 
-        public Dictionary<Component, List<string>> GetErrors(Instruction instruction)
-        {
-            return _validationResults.Where(r => r.Instruction == instruction && r.IsError)
-                .GroupBy(r => r.Component)
-                .ToDictionary(g => g.Key, g => g.Select(r => r.Message).ToList());
-        }
-
-        public Dictionary<Component, List<string>> GetErrors(Component component)
-        {
-            return _validationResults.Where(r => r.Component == component && r.IsError)
-                .ToDictionary(r => r.Component, r => new List<string> { r.Message });
-        }
-
-        public Dictionary<Component, List<string>> GetWarnings(int instructionIndex)
+        public List<string> GetErrors(Instruction instruction)
         {
             return _validationResults
-                .Where(r => r.InstructionIndex == instructionIndex && ! r.IsError)
-                .GroupBy(r => r.Component)
-                .ToDictionary(g => g.Key, g => g.Select(r => r.Message).ToList());
+                .Where(r => r.Instruction == instruction && r.IsError)
+                .Select(r => r.Message)
+                .ToList();
         }
 
-        public Dictionary<Component, List<string>> GetWarnings(Instruction instruction)
+        public List<string> GetWarnings()
         {
-            return _validationResults.Where(r => r.Instruction == instruction && ! r.IsError)
-                .GroupBy(r => r.Component)
-                .ToDictionary(g => g.Key, g => g.Select(r => r.Message).ToList());
+            return _validationResults
+                .Where(r => !r.IsError)
+                .Select(r => r.Message)
+                .ToList();
         }
 
-        public Dictionary<Component, List<string>> GetWarnings(Component component)
+        public List<string> GetWarnings(int instructionIndex)
         {
-            return _validationResults.Where(r => r.Component == component && ! r.IsError)
-                .ToDictionary(r => r.Component, r => new List<string> { r.Message });
+            return _validationResults
+                .Where(r => r.InstructionIndex == instructionIndex && !r.IsError)
+                .Select(r => r.Message)
+                .ToList();
+        }
+
+        public List<string> GetWarnings(Instruction instruction)
+        {
+            return _validationResults
+                .Where(r => r.Instruction == instruction && !r.IsError)
+                .Select(r => r.Message)
+                .ToList();
         }
 
         public bool VerifyExtractPaths(Component component)
@@ -594,28 +667,62 @@ namespace KOTORModSync.Core
                 if (allArchives.Count == 0) return true;
 
                 bool success = true;
-                foreach (var instruction in component.Instructions)
+                foreach (Instruction instruction in component.Instructions)
                 {
+                    // we already checked if the archive exists in GetAllArchivesFromInstructions.
+                    if (instruction.Action.Equals("extract", StringComparison.OrdinalIgnoreCase))
+                    {
+                        continue;
+                    }
+
                     bool archiveNameFound = true;
                     if (instruction.Source == null)
                     {
                         this.AddWarning(
-                            $"Instruction does not have a 'Source' key defined",
+                            "Instruction does not have a 'Source' key defined",
                             instruction);
                         success = false;
                         continue;
                     }
 
-                    if (instruction.Action.Equals("extract")) continue;
-
-                    foreach (string sourcePath in instruction.Source)
+                    if (instruction.Source == null)
                     {
+                        this.AddError("Missing 'Source' key", instruction);
+                        continue;
+                    }
+
+                    for (int index = 0;
+                         index < instruction.Source.Count;
+                         index++)
+                    {
+                        string sourcePath = instruction.Source[index];
+                        if (sourcePath.StartsWith("<<kotorDirectory>>")) continue;
+
+                        if (instruction.Action.Equals("tslpatcher")
+                            && Path.GetExtension(sourcePath.TrimEnd('\\', '/'))
+                                .Equals(".exe", StringComparison.OrdinalIgnoreCase)
+                            )
+                        {
+                            this.AddError(
+                                "Invalid 'tslpatcher' action: Avoid using an EXE as the source path. Specify the expected output directory containing the 'tslpatcherdata' folder. For executing an EXE, use the 'execute' action instead.",
+                                instruction);
+                            if (MainConfig.AttemptFixes)
+                            {
+                                Logger.LogVerbose(
+                                    "Attempting to fix the above error automatically with the parent folder...");
+                                instruction.Source[index]
+                                    = FileHelper.GetFolderName(instruction.Source[index].TrimEnd('\\', '/'));
+                            }
+
+                            continue;
+                        }
+
                         (bool, bool) result = IsSourcePathInArchives(
                             sourcePath,
                             allArchives,
                             instruction);
                         success &= result.Item1;
-                        archiveNameFound &= result.Item2;
+                        archiveNameFound &= archiveNameFound;
                     }
 
                     if (!archiveNameFound)
@@ -638,7 +745,7 @@ namespace KOTORModSync.Core
         public bool ParseDestinationWithAction(Component component)
         {
             bool success = true;
-            foreach (var instruction in component.Instructions)
+            foreach (Instruction instruction in component.Instructions)
             {
                 DirectoryInfo destinationPath;
                 try { (_, destinationPath) = instruction.ParsePaths(true); }
@@ -662,10 +769,11 @@ namespace KOTORModSync.Core
                         {
                             success = false;
                             AddError(
-                                $"'Destination' key must be <<kotorDirectory>> or none for action 'TSLPatcher'.Got {instruction.Destination}",
+                                $"'Destination' key must be either none or string literal '<<kotorDirectory>>' for action 'TSLPatcher'. Got {instruction.Destination}",
                                 instruction);
                             if (MainConfig.AttemptFixes)
                             {
+                                Logger.Log("Fixing the above issue automatically.");
                                 instruction.Destination = "<<kotorDirectory>>";
                             }
                         }
@@ -680,15 +788,19 @@ namespace KOTORModSync.Core
                             AddError(
                                 $"'Destination' key cannot be used with this action. Got '{instruction.Destination}'",
                                 instruction);
-                            if (MainConfig.AttemptFixes) { instruction.Destination = null; }
+                            if (MainConfig.AttemptFixes)
+                            {
+                                Logger.Log("Fixing the above issue automatically.");
+                                instruction.Destination = null;
+                            }
                         }
 
                         break;
                     // rename should never use <<kotorDirectory >>\\Override
                     case "rename":
-                        if (instruction.Destination == null || instruction.Destination.Equals(
+                        if (instruction.Destination?.Equals(
                             "<<kotorDirectory>>\\Override",
-                            StringComparison.Ordinal))
+                            StringComparison.Ordinal) != false)
                         {
                             success = false;
                             AddError(
@@ -706,6 +818,7 @@ namespace KOTORModSync.Core
                                 instruction);
                             if (MainConfig.AttemptFixes)
                             {
+                                Logger.Log("Fixing the above issue automatically (setting Destination to '<<kotorDirectory>>\\Override')");
                                 instruction.Destination = "<<kotorDirectory>>\\Override";
                             }
                         }
@@ -742,7 +855,7 @@ namespace KOTORModSync.Core
         {
             List<string> allArchives = new List<string>();
 
-            foreach (var instruction in component.Instructions)
+            foreach (Instruction instruction in component.Instructions)
             {
                 if (instruction.Source == null || instruction.Action != "extract")
                     continue;
@@ -753,7 +866,7 @@ namespace KOTORModSync.Core
                     if (! ArchiveHelper.IsArchive(Path.GetExtension(realSourcePath)))
                     {
                         AddWarning(
-                            $"Archive '{Path.GetFileName(realSourcePath)}' is referenced in a non 'extract' action",
+                            $"Archive '{Path.GetFileName(realSourcePath)}' is referenced in a non 'extract' action, is this intentional?",
                             instruction);
                         continue;
                     }
@@ -801,21 +914,13 @@ namespace KOTORModSync.Core
 
             foreach (string archivePath in allArchives)
             {
-                if (instruction.Action.Equals("extract", StringComparison.OrdinalIgnoreCase))
-                {
-                    continue;
-                }
-
-                int index = sourcePath.IndexOf('\\');
-                string result = index >= 0 ? sourcePath.Substring(0, index) : sourcePath;
+                // Check if the archive name matches the first portion of the sourcePath
                 string archiveName = Path.GetFileNameWithoutExtension(archivePath);
-                if (FileHelper.WildcardMatch(
-                        archiveName,
-                        result)
-                    )
-                {
-                    archiveNameFound = true;
-                }
+                string[] pathParts = sourcePath.TrimEnd('\\').Split('\\');
+                archiveNameFound = FileHelper.WildcardMatch(archiveName, pathParts[0]);
+
+                // Remove the trailing backslash from sourcePath if it exists
+                sourcePath = sourcePath.TrimEnd('\\');
 
                 ArchivePathCode code = IsPathInArchive(sourcePath, archivePath);
 
@@ -840,7 +945,7 @@ namespace KOTORModSync.Core
                 return (false, archiveNameFound);
             }
 
-            if (! foundInAnyArchive)
+            if (!foundInAnyArchive)
             {
                 AddError($"Failed to find '{sourcePath}' in any archives!", instruction);
                 return (false, archiveNameFound);
@@ -858,36 +963,62 @@ namespace KOTORModSync.Core
 
             using (FileStream stream = File.OpenRead(archivePath))
             {
-                IArchive archive = null;
+                IArchive archive = ArchiveHelper.OpenArchive(stream, archivePath);
 
-                if (archivePath.EndsWith(".zip", StringComparison.OrdinalIgnoreCase))
-                {
-                    archive = SharpCompress.Archives.Zip.ZipArchive.Open(stream);
-                }
-                else if (archivePath.EndsWith(".rar", StringComparison.OrdinalIgnoreCase))
-                {
-                    archive = RarArchive.Open(stream);
-                }
-                else if (archivePath.EndsWith(".7z", StringComparison.OrdinalIgnoreCase))
-                {
-                    archive = SevenZipArchive.Open(stream);
-                }
+                if (archive == null)
+                    return ArchivePathCode.CouldNotOpenArchive;
 
-                if (archive == null) return ArchivePathCode.CouldNotOpenArchive;
+                // everything is extracted to a new directory named after the archive.
+                string archiveNameAppend = Path.GetFileNameWithoutExtension(archivePath) + "\\";
 
-                    foreach (var entry in archive.Entries)
+                // if the Source key represents the top level extraction directory, check that first.
+                if (FileHelper.WildcardMatch(archiveNameAppend, relativePath))
+                    return ArchivePathCode.FoundSuccessfully;
+
+                HashSet<string> folderPaths = new HashSet<string>();
+
+                foreach (IArchiveEntry entry in archive.Entries)
+                {
+                    // Append extracted directory and ensure every slash is a backslash.
+                    string itemInArchivePath = archiveNameAppend + entry.Key.Replace('/', '\\');
+
+                    // Some archives loop through folders while others don't.
+                    // Check if itemInArchivePath has an extension to determine folderName.
+                    string folderName = FileHelper.GetFolderName(itemInArchivePath);
+
+                    // Add the folder path to the list, after removing trailing slashes.
+                    if (!string.IsNullOrEmpty(folderName))
                     {
-                        string itemInArchivePath = Path.GetFileNameWithoutExtension(archivePath)
-                            + "\\" + entry.Key
-                                .Replace('/', '\\');
-
-                        if (FileHelper.WildcardMatch(itemInArchivePath, relativePath))
-                        {
-                            return ArchivePathCode.FoundSuccessfully;
-                        }
+                        folderPaths.Add(folderName.TrimEnd('\\', '/'));
                     }
 
-                Logger.LogVerbose($"[Verbose] '{relativePath}' not found in '{Path.GetFileName(archivePath)}'");
+                    // Check if itemInArchivePath matches relativePath using wildcard matching.
+                    if (FileHelper.WildcardMatch(itemInArchivePath, relativePath))
+                    {
+                        return ArchivePathCode.FoundSuccessfully;
+                    }
+                }
+
+                // check if instruction.Source matches a folder.
+                foreach (string folderPath in folderPaths)
+                {
+                    if (FileHelper.WildcardMatch(folderPath, relativePath))
+                        return ArchivePathCode.FoundSuccessfully;
+                }
+
+                // quickly parse the path so the verbose log below is accurate.
+                string result = relativePath;
+
+                bool hasMultipleBackslashes = result.Count(c => c == '\\') > 1;
+                bool endsWithBackslash = result.EndsWith("\\", StringComparison.Ordinal);
+
+                if (hasMultipleBackslashes || endsWithBackslash)
+                {
+                    result = result.Substring(result.IndexOf('\\') + 1);
+                }
+
+                // not necessarily an error as there could be other archives to loop through.
+                Logger.LogVerbose($"'{result}' not found in '{Path.GetFileName(archivePath)}'");
             }
 
             return ArchivePathCode.NotFoundInArchive;

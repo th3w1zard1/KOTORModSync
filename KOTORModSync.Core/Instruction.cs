@@ -108,7 +108,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                     $"Could not find any files! Source: {string.Join(", ", Source)}");
             }
 
-            return ((List<string>, DirectoryInfo))(sourcePaths, destinationPath);
+            return (sourcePaths, destinationPath);
         }
 
         public async Task<bool> ExtractFileAsync(
@@ -146,33 +146,17 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
 
                                     using (FileStream stream = File.OpenRead(thisFile.FullName))
                                     {
-                                        IArchive archive = null;
-
-                                        if (thisFile.Extension.Equals(
-                                            ".zip",
-                                            StringComparison.OrdinalIgnoreCase))
-                                        {
-                                            archive
-                                                = SharpCompress.Archives.Zip.ZipArchive.Open(
-                                                    stream);
-                                        }
-                                        else if (thisFile.Extension.Equals(
-                                            ".rar",
-                                            StringComparison.OrdinalIgnoreCase))
-                                        {
-                                            archive = RarArchive.Open(stream);
-                                        }
-                                        else if (thisFile.Extension.Equals(
-                                            ".7z",
-                                            StringComparison.OrdinalIgnoreCase))
-                                        {
-                                            archive = SevenZipArchive.Open(stream);
-                                        }
+                                        IArchive archive = ArchiveHelper.OpenArchive(
+                                            stream,
+                                            thisFile.FullName
+                                        );
 
                                         if (archive == null)
                                         {
-                                            Logger.Log(
-                                                $"[Error] Unable to parse archive '{sourcePath}'");
+                                            Logger.LogException(
+                                                new InvalidOperationException(
+                                                    $"Unable to parse archive '{sourcePath}'")
+                                            );
                                             success = false;
                                             return;
                                         }
@@ -218,12 +202,8 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                                                 await Task.Run(
                                                     () => reader.WriteEntryToDirectory(
                                                         destinationPath ?? string.Empty,
-                                                        new ExtractionOptions
-                                                        {
-                                                            ExtractFullPath = true,
-                                                            Overwrite = true,
-                                                            PreserveFileTime = true
-                                                        })
+                                                        ArchiveHelper.DefaultExtractionOptions
+                                                    )
                                                 );
                                             }
                                             catch (Exception)

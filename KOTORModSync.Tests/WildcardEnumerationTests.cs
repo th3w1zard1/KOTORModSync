@@ -23,7 +23,7 @@ namespace KOTORModSync.Tests
             File.WriteAllText(Path.Combine(_basePath, "Ultimate Malachor V High Resolution - TPC Version-1106-1-1-1670682360", "Malachor V HR", "Override", "file3.txt"), "Content 3");
             File.WriteAllText(Path.Combine(_basePath, "Ultimate Malachor V High Resolution - TPC Version-2107-1-1-1670682361", "Malachor V HR", "Override", "file4.txt"), "Content 4");
 
-#pragma warning disable U2U1201
+        #pragma warning disable U2U1201
             var pathsToTest = new List<string>
         #pragma warning restore U2U1201
             {

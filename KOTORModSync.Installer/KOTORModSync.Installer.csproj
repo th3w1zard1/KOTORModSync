@@ -38,5 +38,14 @@
     <Compile Update="Views\WelcomeScreenView.axaml.cs">
       <DependentUpon>WelcomeScreenView.axaml</DependentUpon>
     </Compile>
+    <Compile Update="Views\ResultsScreenView.axaml.cs">
+      <DependentUpon>ResultsScreenView.axaml</DependentUpon>
+    </Compile>
+    <Compile Update="Views\InstallationProgressView.axaml.cs">
+      <DependentUpon>InstallationProgressView.axaml</DependentUpon>
+    </Compile>
+    <Compile Update="Views\SelectComponentsView.axaml.cs">
+      <DependentUpon>SelectComponentsView.axaml</DependentUpon>
+    </Compile>
   </ItemGroup>
 </Project>

@@ -25,6 +25,11 @@ namespace KOTORModSync.Installer.ViewModels
             FinishCommand = new DelegateCommand(FinishInstallation);
         }
 
+        public ResultsViewModel()
+        {
+
+        }
+
         private void FinishInstallation()
         {
             // TODO: Implement the logic to finish the installation and close the application.

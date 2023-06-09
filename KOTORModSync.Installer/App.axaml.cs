@@ -28,17 +28,5 @@ namespace KOTORModSync.Installer
 
             base.OnFrameworkInitializationCompleted();
         }
-
-        protected override void ConfigureServices(HostBuilderContext context, IServiceCollection services)
-        {
-            // Register the navigation service
-            services.AddSingleton<INavigationService, NavigationService>();
-
-            // Register your other services here
-
-            base.ConfigureServices(context, services);
-        }
-
-
     }
 }

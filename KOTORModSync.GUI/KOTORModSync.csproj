@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFrameworks>net6.0;net462</TargetFrameworks>
@@ -53,6 +53,12 @@
     <NoWin32Manifest>true</NoWin32Manifest>
     <ApplicationIcon>icon53.ico</ApplicationIcon>
   </PropertyGroup>
+  <ItemGroup>
+    <None Remove="SelectInstallComponents.axaml2" />
+  </ItemGroup>
+  <ItemGroup>
+    <AvaloniaXaml Include="SelectInstallComponents.axaml2" />
+  </ItemGroup>
 
   <ItemGroup>
     <ProjectCapability Include="Avalonia" />
@@ -102,7 +108,7 @@
       <DependentUpon>OptionsDialog.axaml</DependentUpon>
     </Compile>
     <Compile Update="SelectInstallComponents.axaml.cs">
-      <DependentUpon>SelectInstallComponents.axaml</DependentUpon>
+      <DependentUpon>SelectInstallComponents.axaml2</DependentUpon>
     </Compile>
   </ItemGroup>
 

@@ -3,7 +3,11 @@
 			 xmlns:local="clr-namespace:KOTORModSync.Installer.Views"
 			 xmlns:vm="clr-namespace:KOTORModSync.Installer.ViewModels;assembly=KOTORModSync.Installer"
 			 xmlns:avalonia="clr-namespace:Avalonia.Controls;assembly=Avalonia"
-			 x:Class="KOTORModSync.Installer.Views.ConfirmationView">
+			 x:Class="KOTORModSync.Installer.Views.ConfirmationView"
+			 x:DataType="vm:ConfirmationViewModel">
+	<UserControl.DataContext>
+		<vm:ConfirmationViewModel />
+	</UserControl.DataContext>
 	<Grid Margin="20">
 		<StackPanel>
 			<TextBlock Text="Confirm Installation" FontSize="20" FontWeight="Bold" Margin="0,0,0,10"
@@ -11,15 +15,6 @@
 
 			<TextBlock Text="{Binding ConfirmationMessage}" Margin="0,0,0,10" FontSize="12"
 					   Foreground="Black" FontFamily="Tahoma" TextWrapping="Wrap" />
-
-			<ListBox Items="{Binding ComponentsToInstall}" SelectedItem="{Binding SelectedComponent}" Margin="0,0,0,10"
-					 BorderBrush="#FFD4D0C8" BorderThickness="1" Background="#FFF6F6F4">
-				<ListBox.ItemTemplate>
-					<DataTemplate>
-						<TextBlock Text="{Binding Name}" FontFamily="Tahoma" />
-					</DataTemplate>
-				</ListBox.ItemTemplate>
-			</ListBox>
 
 			<StackPanel Orientation="Horizontal">
 				<Button Content="Back" Command="{Binding BackCommand}" Width="80" Margin="0,0,10,0"

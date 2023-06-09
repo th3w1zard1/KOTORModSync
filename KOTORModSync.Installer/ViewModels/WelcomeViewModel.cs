@@ -10,17 +10,19 @@ namespace KOTORModSync.Installer.ViewModels
         private string _welcomeMessage;
         private bool _isInstructionsLoaded;
         private string _selectedDirectories;
-        private INavigationService _navigationService;
+        private Action<string> _navigateToSelectComponents;
 
-        public WelcomeViewModel(INavigationService navigationService)
+        public WelcomeViewModel(Action<string> navigateToSelectComponents)
         {
-            _navigationService = navigationService;
+            _navigateToSelectComponents = navigateToSelectComponents;
 
             WelcomeMessage = "KOTORModSync Installer!";
             LoadInstructionsCommand = new DelegateCommand(LoadInstructions);
             SelectDirectoriesCommand = new DelegateCommand(SelectDirectories);
             NextCommand = new DelegateCommand(NavigateToSelectComponents);
         }
+
+        public string WelcomeMessage { get; set; }
 
         private void LoadInstructions()
         {
@@ -34,17 +36,12 @@ namespace KOTORModSync.Installer.ViewModels
             // This method will be executed when the SelectDirectoriesCommand is invoked
         }
 
-        private void Next()
-        {
-            // Add your logic here for navigating to the next page
-            // This method will be executed when the NextCommand is invoked
-        }
-
-        private async void NavigateToSelectComponents()
+        private void NavigateToSelectComponents()
         {
             // Add your logic here for any necessary validation or preparation before navigating
+            // For example, you can pass the selected directories to the next view model
 
-            await _navigationService.NavigateAsync("SelectComponentsView");
+            _navigateToSelectComponents.Invoke(_selectedDirectories);
         }
 
         public bool IsInstructionsLoaded
@@ -68,7 +65,7 @@ namespace KOTORModSync.Installer.ViewModels
             WelcomeMessage = "Welcome to the Installer Application!";
             LoadInstructionsCommand = new DelegateCommand(LoadInstructions);
             SelectDirectoriesCommand = new DelegateCommand(SelectDirectories);
-            NextCommand = new DelegateCommand(Next);
+            NextCommand = new DelegateCommand(NavigateToSelectComponents);
         }
     }
 }

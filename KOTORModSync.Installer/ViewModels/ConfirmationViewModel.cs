@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using KOTORModSync.Core;
 using Prism.Mvvm;
 using Prism.Commands;
 using Prism.Regions;
@@ -7,9 +9,11 @@ namespace KOTORModSync.Installer.ViewModels
     public class ConfirmationViewModel : BindableBase, INavigationAware
     {
         private readonly IRegionManager _regionManager;
-        private readonly InstallationViewModel _installationViewModel;
+        private readonly InstallationProgressViewModel _installationProgressViewModel;
 
         private string _confirmationMessage;
+        private List<Component> _componentsToInstall;
+        private Component _selectedComponent;
 
         public string ConfirmationMessage
         {
@@ -17,18 +21,36 @@ namespace KOTORModSync.Installer.ViewModels
             set => SetProperty(ref _confirmationMessage, value);
         }
 
+        public List<Component> ComponentsToInstall
+        {
+            get => _componentsToInstall;
+            set => SetProperty(ref _componentsToInstall, value);
+        }
+
+        public Component SelectedComponent
+        {
+            get => _selectedComponent;
+            set => SetProperty(ref _selectedComponent, value);
+        }
+
         public DelegateCommand BackCommand { get; }
         public DelegateCommand NextCommand { get; }
 
-        public ConfirmationViewModel(IRegionManager regionManager, InstallationViewModel installationViewModel)
+        public ConfirmationViewModel(IRegionManager regionManager, InstallationProgressViewModel installationProgressViewModel, string confirmationMessage)
         {
             _regionManager = regionManager;
-            _installationViewModel = installationViewModel;
+            _installationProgressViewModel = installationProgressViewModel;
+            _confirmationMessage = confirmationMessage;
 
             ConfirmationMessage = "Please review the selected components before proceeding.";
 
             BackCommand = new DelegateCommand(NavigateBack);
             NextCommand = new DelegateCommand(NavigateNext);
+        }
+
+        public ConfirmationViewModel()
+        {
+
         }
 
         private void NavigateBack()

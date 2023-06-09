@@ -1,26 +1,21 @@
-// Licensed to the .NET Foundation under one or more agreements.
-// The .NET Foundation licenses this file to you under the MIT license.
-
 using Avalonia.Controls;
-using Prism.Navigation;
+using Prism.Ioc;
 
 namespace KOTORModSync.Installer.Views
 {
     public partial class MainWindow : Window
     {
-        private readonly INavigationService _navigationService;
+        public MainWindow() : this(null)
+        {
+        }
 
-        public MainWindow(INavigationService navigationService)
+        public MainWindow(IContainerProvider? containerProvider)
         {
             InitializeComponent();
-            _navigationService = navigationService;
-            NavigateToWelcome();
+            if (containerProvider != null)
+            {
+                // Initialization logic using the containerProvider
+            }
         }
-
-        private void NavigateToWelcome()
-        {
-            _navigationService.NavigateTo("WelcomeView");
-        }
-
     }
 }

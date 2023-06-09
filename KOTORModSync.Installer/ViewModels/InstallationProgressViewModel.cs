@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace KOTORModSync.Installer.ViewModels
 {
-    public class InstallationViewModel : BindableBase, INavigationAware
+    public class InstallationProgressViewModel : BindableBase, INavigationAware
     {
         private readonly IRegionManager _regionManager;
 
@@ -20,9 +20,10 @@ namespace KOTORModSync.Installer.ViewModels
         public DelegateCommand BackCommand { get; }
         public DelegateCommand NextCommand { get; }
 
-        public InstallationViewModel(IRegionManager regionManager)
+        public InstallationProgressViewModel(IRegionManager regionManager, string progressText)
         {
             _regionManager = regionManager;
+            _progressText = progressText;
 
             ProgressText = "Installation in progress...";
 

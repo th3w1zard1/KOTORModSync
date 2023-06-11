@@ -56,7 +56,7 @@ This man saved me countless amount of hours. I'd still be struggling through gam
 Ditto. There was so much KOTOR-specific things to learn, without his help I'd still be trying to deserialize encapsulated resource files. His time and patience were incredibly useful to the project and this project would be impossible without him.
 
 ### Testers:
-#####Lewok from r/KOTOR
+##### Lewok from r/KOTOR
 Thank you for helping test that obnoxious incorrect UAC elevation problem legacy Windows apps like TSLPatcher has!
 
 

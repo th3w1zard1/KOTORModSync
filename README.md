@@ -39,10 +39,10 @@ I'm honestly not sure what all you need, I was able to build and run it on both 
 
 All you need to do is build KOTORModSync.GUI, this should build the program into ./KOTORModSync.GUI/bin directory. Or run the command `dotnet build` then `dotnet run` inside KOTORModSync.GUI folder.
 
-KOTORModSync.GUI:
+#### KOTORModSync.GUI
 - Main GUI running on AvaloniaUI v0.10.x
-KOTORModSync.Core:
+#### KOTORModSync.Core
 - All the main logic is defined here.
 - Targets .net standard 2.0
-KOTORModSync.ConsoleApp
+#### KOTORModSync.ConsoleApp
 - Contains a few quickly written developer tools used to quickly test some features.

@@ -1,0 +1,51 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net6.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Folder Include="Models\" />
+    <AvaloniaResource Include="Assets\**" />
+  </ItemGroup>
+
+
+  <ItemGroup>
+    <PackageReference Include="Avalonia" Version="11.0.0-preview7" />
+    <PackageReference Include="Avalonia.Desktop" Version="11.0.0-preview7" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="11.0.0-preview7" />
+    <PackageReference Include="Avalonia.Fonts.Inter" Version="11.0.0-preview7" />
+    <!--Condition below is needed to remove Avalonia.Diagnostics package from build output in Release configuration.-->
+    <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="11.0.0-preview7" />
+    <PackageReference Include="Avalonia.ReactiveUI" Version="11.0.0-preview7" />
+    <PackageReference Include="Prism.Avalonia" Version="8.1.97.1021" />
+  </ItemGroup>
+
+
+  <ItemGroup>
+    <ProjectReference Include="..\KOTORModSync.Core\KOTORModSync.Core.csproj" />
+  </ItemGroup>
+
+
+  <ItemGroup>
+    <Compile Update="Views\ConfirmationView.axaml.cs">
+      <DependentUpon>ConfirmationView.axaml</DependentUpon>
+    </Compile>
+    <Compile Update="Views\WelcomeScreenView.axaml.cs">
+      <DependentUpon>WelcomeScreenView.axaml</DependentUpon>
+    </Compile>
+    <Compile Update="Views\ResultsScreenView.axaml.cs">
+      <DependentUpon>ResultsScreenView.axaml</DependentUpon>
+    </Compile>
+    <Compile Update="Views\InstallationProgressView.axaml.cs">
+      <DependentUpon>InstallationProgressView.axaml</DependentUpon>
+    </Compile>
+    <Compile Update="Views\SelectComponentsView.axaml.cs">
+      <DependentUpon>SelectComponentsView.axaml</DependentUpon>
+    </Compile>
+  </ItemGroup>
+</Project>

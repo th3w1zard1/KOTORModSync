@@ -53,6 +53,12 @@
     <NoWin32Manifest>true</NoWin32Manifest>
     <ApplicationIcon>icon53.ico</ApplicationIcon>
   </PropertyGroup>
+  <ItemGroup>
+    <None Remove="SelectInstallComponents.axaml2" />
+  </ItemGroup>
+  <ItemGroup>
+    <AvaloniaXaml Include="SelectInstallComponents.axaml2" />
+  </ItemGroup>
 
   <ItemGroup>
     <ProjectCapability Include="Avalonia" />
@@ -89,9 +95,6 @@
   
   <!-- All other windows defined here -->
   <ItemGroup>
-    <Compile Update="OutputWindow.axaml.cs">
-      <DependentUpon>OutputWindow.axaml</DependentUpon>
-    </Compile>
     <Compile Update="ConfirmationDialog.axaml.cs">
       <DependentUpon>ConfirmationDialog.axaml</DependentUpon>
     </Compile>
@@ -101,14 +104,20 @@
     <Compile Update="ProgressWindow.axaml.cs">
       <DependentUpon>ProgressWindow.axaml</DependentUpon>
     </Compile>
+    <Compile Update="OptionsDialog.axaml.cs">
+      <DependentUpon>OptionsDialog.axaml</DependentUpon>
+    </Compile>
+    <Compile Update="SelectInstallComponents.axaml.cs">
+      <DependentUpon>SelectInstallComponents.axaml2</DependentUpon>
+    </Compile>
   </ItemGroup>
 
   <!-- WindowsDeleteString returntype changes from int to IntPtr HRESULT after net4.x We accommodate this change by replacing with our patches. -->
   <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
-    <Exec Command="xcopy $(SolutionDir)vendor\lib\Avalonia.Win32_net4.x_x86.dll $(TargetDir) &amp; del $(TargetDir)Avalonia.Win32.dll /F &amp; ren $(TargetDir)Avalonia.Win32_net4.x_x86.dll Avalonia.Win32.dll" />
+    <Exec Command="xcopy $(SolutionDir)vendor\lib\TSLPatcherCLI.exe $(TargetDir) &amp; xcopy $(SolutionDir)vendor\lib\Avalonia.Win32_net4.x_x86.dll $(TargetDir) &amp; del $(TargetDir)Avalonia.Win32.dll /F &amp; ren $(TargetDir)Avalonia.Win32_net4.x_x86.dll Avalonia.Win32.dll" />
   </Target>
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="xcopy $(SolutionDir)vendor\lib\Avalonia.Win32_net4.x_x86.dll $(TargetDir) &amp; del $(TargetDir)Avalonia.Win32.dll /F &amp; ren $(TargetDir)Avalonia.Win32_net4.x_x86.dll Avalonia.Win32.dll" />
+    <Exec Command="xcopy $(SolutionDir)vendor\lib\TSLPatcherCLI.exe $(TargetDir) &amp; xcopy $(SolutionDir)vendor\lib\Avalonia.Win32_net4.x_x86.dll $(TargetDir) &amp; del $(TargetDir)Avalonia.Win32.dll /F &amp; ren $(TargetDir)Avalonia.Win32_net4.x_x86.dll Avalonia.Win32.dll" />
   </Target>
 
 </Project>

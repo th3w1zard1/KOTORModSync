@@ -25,13 +25,16 @@ namespace KOTORModSync
     {
         public ConfirmationDialog() => InitializeComponent();
         private void InitializeComponent() => AvaloniaXamlLoader.Load(this);
+
         public static readonly AvaloniaProperty s_confirmTextProperty =
             AvaloniaProperty.Register<ConfirmationDialog, string>(nameof(ConfirmText));
+
         public string ConfirmText
         {
             get => GetValue(s_confirmTextProperty) as string;
             set => SetValue(s_confirmTextProperty, value);
         }
+
         private void OnOpened(object sender, EventArgs e)
         {
             TextBlock confirmTextBlock = this.FindControl<TextBlock>("confirmTextBlock");

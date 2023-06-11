@@ -17,6 +17,10 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "KOTORModSync", "KOTORModSyn
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "KOTORModSync.Tests", "KOTORModSync.Tests\KOTORModSync.Tests.csproj", "{52B21526-2B8D-43BE-90DD-2A54FF631825}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KOTORModSync.Installer", "KOTORModSync.Installer\KOTORModSync.Installer.csproj", "{9C0DF438-4F31-477C-9B62-B8581CBD4BAA}"
+EndProject
+Project("{930C7802-8A8C-48F9-8165-68863BCCD9DD}") = "WixInstaller", "WixInstaller\WixInstaller.wixproj", "{7883A82E-2139-4F98-BB57-6225FC1C7E93}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -75,6 +79,30 @@ Global
 		{52B21526-2B8D-43BE-90DD-2A54FF631825}.Release|x64.Build.0 = Release|Any CPU
 		{52B21526-2B8D-43BE-90DD-2A54FF631825}.Release|x86.ActiveCfg = Release|Any CPU
 		{52B21526-2B8D-43BE-90DD-2A54FF631825}.Release|x86.Build.0 = Release|Any CPU
+		{9C0DF438-4F31-477C-9B62-B8581CBD4BAA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9C0DF438-4F31-477C-9B62-B8581CBD4BAA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9C0DF438-4F31-477C-9B62-B8581CBD4BAA}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{9C0DF438-4F31-477C-9B62-B8581CBD4BAA}.Debug|x64.Build.0 = Debug|Any CPU
+		{9C0DF438-4F31-477C-9B62-B8581CBD4BAA}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{9C0DF438-4F31-477C-9B62-B8581CBD4BAA}.Debug|x86.Build.0 = Debug|Any CPU
+		{9C0DF438-4F31-477C-9B62-B8581CBD4BAA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9C0DF438-4F31-477C-9B62-B8581CBD4BAA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9C0DF438-4F31-477C-9B62-B8581CBD4BAA}.Release|x64.ActiveCfg = Release|Any CPU
+		{9C0DF438-4F31-477C-9B62-B8581CBD4BAA}.Release|x64.Build.0 = Release|Any CPU
+		{9C0DF438-4F31-477C-9B62-B8581CBD4BAA}.Release|x86.ActiveCfg = Release|Any CPU
+		{9C0DF438-4F31-477C-9B62-B8581CBD4BAA}.Release|x86.Build.0 = Release|Any CPU
+		{7883A82E-2139-4F98-BB57-6225FC1C7E93}.Debug|Any CPU.ActiveCfg = Debug|x86
+		{7883A82E-2139-4F98-BB57-6225FC1C7E93}.Debug|Any CPU.Build.0 = Debug|x86
+		{7883A82E-2139-4F98-BB57-6225FC1C7E93}.Debug|x64.ActiveCfg = Debug|x86
+		{7883A82E-2139-4F98-BB57-6225FC1C7E93}.Debug|x64.Build.0 = Debug|x86
+		{7883A82E-2139-4F98-BB57-6225FC1C7E93}.Debug|x86.ActiveCfg = Debug|x86
+		{7883A82E-2139-4F98-BB57-6225FC1C7E93}.Debug|x86.Build.0 = Debug|x86
+		{7883A82E-2139-4F98-BB57-6225FC1C7E93}.Release|Any CPU.ActiveCfg = Release|x86
+		{7883A82E-2139-4F98-BB57-6225FC1C7E93}.Release|Any CPU.Build.0 = Release|x86
+		{7883A82E-2139-4F98-BB57-6225FC1C7E93}.Release|x64.ActiveCfg = Release|x86
+		{7883A82E-2139-4F98-BB57-6225FC1C7E93}.Release|x64.Build.0 = Release|x86
+		{7883A82E-2139-4F98-BB57-6225FC1C7E93}.Release|x86.ActiveCfg = Release|x86
+		{7883A82E-2139-4F98-BB57-6225FC1C7E93}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

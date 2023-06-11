@@ -17,7 +17,8 @@ namespace KOTORModSync.ConsoleApp
         {
             try
             {
-                if (args is null) { throw new ArgumentNullException(nameof(args)); }
+                if (args is null)
+                    throw new ArgumentNullException(nameof(args));
 
                 bool exit = false;
                 mainConfig = new MainConfig();
@@ -49,6 +50,7 @@ namespace KOTORModSync.ConsoleApp
                             Console.WriteLine(
                                 "Please specify the directory your mods are downloaded in (e.g. \"%UserProfile%\\Documents\\tslmods\")");
                             DirectoryInfo modDownloads = Utility.ChooseDirectory();
+                            mainConfig.sourcePath = modDownloads;
                             if (modDownloads == null)
                             {
                                 Console.WriteLine(
@@ -70,13 +72,12 @@ namespace KOTORModSync.ConsoleApp
                             Console.WriteLine(
                                 $"Found {modFiles.Length} mod files in directory '{modDownloads.FullName}':");
                             foreach (string modFile in modFiles)
-                            {
                                 Console.WriteLine($"  {Path.GetFileName(modFile)}");
-                            }
 
                             Console.WriteLine(
                                 "Please specify the location of your KOTOR2 installation folder (e.g. \"C:\\Program Files (x86)\\Steam\\steamapps\\common\\Knights of the Old Republic II\")");
                             DirectoryInfo kotorInstallDir = Utility.ChooseDirectory();
+                            mainConfig.destinationPath = kotorInstallDir;
                             if (kotorInstallDir == null)
                             {
                                 Console.WriteLine(
@@ -85,7 +86,6 @@ namespace KOTORModSync.ConsoleApp
                             }
 
                             Console.WriteLine("Set directory paths...");
-                            mainConfig.UpdateConfig(modDownloads, kotorInstallDir);
                             break;
 
                         case "2": break;
@@ -110,15 +110,13 @@ namespace KOTORModSync.ConsoleApp
                                 Console.WriteLine("Use same output path as last time? (y/N)");
                                 key = Console.ReadKey().KeyChar;
                                 if (char.ToLower(key) == 'n')
-                                {
-                                    MainConfig.LastOutputDirectory = null;
-                                }
+                                    mainConfig.lastOutputDirectory = null;
                             }
 
                             if (MainConfig.LastOutputDirectory == null)
                             {
                                 Console.WriteLine("Please specify the path to the output file.");
-                                MainConfig.LastOutputDirectory = Utility.ChooseDirectory();
+                                mainConfig.lastOutputDirectory = Utility.ChooseDirectory();
                             }
 
                             string outputPath = Path.Combine(
@@ -142,15 +140,13 @@ namespace KOTORModSync.ConsoleApp
                                 Console.WriteLine("Use same output path as last time? (y/N)");
                                 key = Console.ReadKey().KeyChar;
                                 if (char.ToLower(key) == 'n')
-                                {
-                                    MainConfig.LastOutputDirectory = null;
-                                }
+                                    mainConfig.lastOutputDirectory = null;
                             }
 
                             if (MainConfig.LastOutputDirectory == null)
                             {
                                 Console.WriteLine("Please specify the path to the output file.");
-                                MainConfig.LastOutputDirectory = Utility.ChooseDirectory();
+                                mainConfig.lastOutputDirectory = Utility.ChooseDirectory();
                             }
 
                             _ = Path.Combine(
@@ -186,12 +182,13 @@ namespace KOTORModSync.ConsoleApp
                                 Console.WriteLine(
                                     "Enter the output directory for parsed_reddit.toml file");
 
-                                var outPath = Console.ReadLine();
+                                string outPath = Console.ReadLine();
                                 FileHelper.OutputConfigFile(components, outPath + "\\parsed_reddit.toml");
                                 Console.WriteLine(
                                     $"File saved as 'parsed_reddit.toml' in directory {outPath}");
                             }
-                            else { Console.WriteLine("Invalid file path!"); }
+                            else
+                                Console.WriteLine("Invalid file path!");
 
                             Console.WriteLine("Press any key to exit.");
                             Console.ReadKey();

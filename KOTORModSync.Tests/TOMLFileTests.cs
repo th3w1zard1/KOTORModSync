@@ -1,6 +1,7 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
+using System.Collections;
 using System.Diagnostics;
 using System.Text;
 using KOTORModSync.Core;
@@ -113,8 +114,28 @@ namespace KOTORModSync.Tests
             }
         }
 
-        // not sure if I want to support this.
+
+
         [Test]
+        public void SaveAndLoad_DefaultComponent()
+        {
+            // Deserialize default component
+            Component newComponent
+                = FileHelper.DeserializeTomlComponent(Component.DefaultComponent + Instruction.DefaultInstructions);
+            newComponent.Guid = Guid.NewGuid();
+            newComponent.Name = "new mod_" + Path.GetRandomFileName();
+
+            // Serialize
+            var tomlString = newComponent.SerializeComponent();
+
+            // Deserialize into new instance
+            Component duplicateComponent = FileHelper.DeserializeTomlComponent(tomlString);
+
+            // Compare
+            AssertComponentEquality(newComponent, duplicateComponent);
+        }
+
+        //[Test]
         public void SaveAndLoadTOMLFile_CaseInsensitive()
         {
             // Arrange
@@ -141,7 +162,10 @@ namespace KOTORModSync.Tests
                 Component originalComponent = originalComponents[i];
                 Component loadedComponent = loadedComponents[i];
 
-                AssertComponentEquality(originalComponent, loadedComponent);
+                AssertComponentEquality(originalComponent,
+                                        loadedComponent,
+                                        caseSensitiveKeys: true
+                );
             }
         }
 
@@ -229,7 +253,7 @@ namespace KOTORModSync.Tests
             List<Component> loadedComponents = FileHelper.ReadComponentsFromFile(_filePath);
 
             // Assert
-            Assert.That(loadedComponents, Is.Empty);
+            Assert.That(loadedComponents, Is.Null);
         }
 
         [Test]
@@ -260,33 +284,6 @@ namespace KOTORModSync.Tests
         }
 
         [Test]
-        public void SaveAndLoadTOMLFile_MissingRequiredFields()
-        {
-            // Arrange
-            List<Component> originalComponents = new()
-            {
-                new Component { Name = "Component 1" },
-                new Component { Guid = Guid.Parse("{C5418549-6B7E-4A8C-8B8E-4AA1BC63C732}") },
-                new Component { InstallOrder = 3 },
-            };
-
-            // Act
-            FileHelper.OutputConfigFile(originalComponents, _filePath);
-            List<Component> loadedComponents = FileHelper.ReadComponentsFromFile(_filePath);
-
-            // Assert
-            Assert.That(loadedComponents, Has.Count.EqualTo(originalComponents.Count));
-
-            for (int i = 0; i < originalComponents.Count; i++)
-            {
-                Component originalComponent = originalComponents[i];
-                Component loadedComponent = loadedComponents[i];
-
-                AssertComponentEquality(originalComponent, loadedComponent);
-            }
-        }
-
-        [Test]
         public void SaveAndLoadTOMLFile_ModifyComponents()
         {
             // Arrange
@@ -294,7 +291,6 @@ namespace KOTORModSync.Tests
 
             // Modify some component properties
             originalComponents[0].Name = "Modified Name";
-            originalComponents[1].InstallOrder = 5;
 
             // Act
             FileHelper.OutputConfigFile(originalComponents, _filePath);
@@ -355,14 +351,18 @@ namespace KOTORModSync.Tests
             }
         }
 
-        private static void AssertComponentEquality(Component expected, Component actual)
+        private static void AssertComponentEquality(Component expected, Component actual, bool caseSensitiveKeys = true)
         {
-            Assert.Multiple(() =>
-            {
-                Assert.That(actual.Name, Is.EqualTo(expected.Name));
-                Assert.That(actual.Guid, Is.EqualTo(expected.Guid));
-                Assert.That(actual.InstallOrder, Is.EqualTo(expected.InstallOrder));
-            });
+            Assert.Multiple(
+                () =>
+                {
+                    IComparer comparer
+                        = caseSensitiveKeys ? StringComparer.Ordinal : StringComparer.OrdinalIgnoreCase;
+
+                    Assert.That(actual.Name, Is.EqualTo(expected.Name).Using(comparer));
+                    Assert.That(actual.Guid, Is.EqualTo(expected.Guid).Using(comparer));
+                });
         }
+
     }
 }

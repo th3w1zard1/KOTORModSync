@@ -59,5 +59,14 @@ Ditto. There was so much KOTOR-specific things to learn, without his help I'd st
 ##### Lewok from r/KOTOR
 Thank you for helping test that obnoxious incorrect UAC elevation problem legacy Windows apps like TSLPatcher has!
 
+#### Other notable users
+#### @Woodske
+Created TSLPatcherCLI used in the project.
+
+#### Fair-Strides
+Made TSLPatcher open-source on Github
+
+#### Stoffe
+Original creator of TSLPatcher
 
 Thank you to the entire KOTOR community.

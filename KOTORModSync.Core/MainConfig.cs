@@ -25,6 +25,15 @@ namespace KOTORModSync.Core
         public static DirectoryInfo LastOutputDirectory { get; private set; }
         public static bool AttemptFixes { get; private set; }
         public static bool DefaultInstall { get; private set; }
+        public static bool TslPatcherCli { get; private set; }
+        public static CompatibilityLevel CurrentCompatibilityLevel { get; private set; }
+
+
+        // used for the ui.
+        protected virtual void OnPropertyChanged([CallerMemberName][CanBeNull] string propertyName = null)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
 
         public DirectoryInfo sourcePath
         {
@@ -60,23 +69,49 @@ namespace KOTORModSync.Core
         [CanBeNull]
         public string destinationPathFullName => DestinationPath?.FullName;
 
-        public bool debugLogging { get { return DebugLogging; } set { DebugLogging = value; } }
-        public DirectoryInfo lastOutputDirectory { get { return LastOutputDirectory; } set { LastOutputDirectory = value; } }
-        public bool defaultInstall { get { return DefaultInstall; } set { DefaultInstall = value; } }
-        public bool attemptFixes { get { return AttemptFixes; } set { AttemptFixes = value; } }
-
-        public MainConfig()
+        public enum CompatibilityLevel
         {
-            attemptFixes = false;
-            debugLogging = true;
-            defaultInstall = true;
+            Compatible = 0,
+            MostlyCompatible = 1,
+            Untested = 2,
+            Incompatible = 3
         }
 
         public event PropertyChangedEventHandler PropertyChanged;
 
-        protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
+        public CompatibilityLevel currentCompatibilityLevel
         {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+            get => CurrentCompatibilityLevel;
+            set
+            {
+                CurrentCompatibilityLevel = value;
+                OnPropertyChanged(nameof(CurrentCompatibilityLevel));
+            }
+        }
+
+        public bool debugLogging
+        {
+            get => DebugLogging; set => DebugLogging = value;
+        }
+
+        public DirectoryInfo lastOutputDirectory
+        {
+            get => LastOutputDirectory; set => LastOutputDirectory = value;
+        }
+
+        public bool defaultInstall
+        {
+            get => DefaultInstall; set => DefaultInstall = value;
+        }
+
+        public bool attemptFixes
+        {
+            get => AttemptFixes; set => AttemptFixes = value;
+        }
+
+        public bool tslPatcherCli
+        {
+            get => TslPatcherCli; set => TslPatcherCli = value;
         }
     }
 

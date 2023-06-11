@@ -53,10 +53,10 @@ namespace KOTORModSync.Core
 
         public static void LogVerbose(string message)
         {
-            if (MainConfig.DebugLogging)
-            {
-                Log("[Verbose] " + message);
-            }
+            if (! MainConfig.DebugLogging)
+                return;
+
+            Log("[Verbose] " + message);
         }
 
         public static void LogException(Exception ex)
@@ -64,36 +64,56 @@ namespace KOTORModSync.Core
             Log($"Exception: {ex.GetType().Name} - {ex.Message}");
             Log($"Stack trace: {ex.StackTrace}");
 
-            if (MainConfig.DebugLogging)
+            if (! MainConfig.DebugLogging)
+                return;
+
+            // Get the current stack frame
+            StackFrame frame = new StackFrame(1, true);
+            MethodBase method = frame.GetMethod();
+            Type declaringType = method.DeclaringType;
+
+            // Get the locals for the current stack frame
+            LocalVariableInfo[] localVariables = method.GetMethodBody()?.LocalVariables?.ToArray();
+
+            // Log local variables information
+            if (localVariables == null)
+                return;
+
+            Log("Local Variables:");
+
+            foreach (LocalVariableInfo local in localVariables)
             {
-                // Get the current stack frame
-                StackFrame frame = new StackFrame(1, true);
-                MethodBase method = frame.GetMethod();
-                Type declaringType = method.DeclaringType;
+                string localName = method.GetMethodBody()?.LocalVariables[local.LocalIndex].ToString();
 
-                // Get the locals for the current stack frame
-                LocalVariableInfo[] localVariables = method.GetMethodBody()?.LocalVariables?.ToArray();
+                if (localName == null)
+                    continue;
 
-                // Log local variables information
-                if (localVariables != null)
-                {
-                    Log("Local Variables:");
+                if (declaringType == null)
+                    continue;
 
-                    foreach (LocalVariableInfo local in localVariables)
-                    {
-                        string localName = method.GetMethodBody()?.LocalVariables[local.LocalIndex].ToString();
+                MemberInfo[] members = declaringType.GetMember(
+                    localName,
+                    BindingFlags.GetField | BindingFlags.GetProperty | BindingFlags.Public
+                    | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static);
 
-                        object value = frame.GetMethod().ReflectedType?.InvokeMember(
-                            localName,
-                            BindingFlags.GetField | BindingFlags.GetProperty | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static,
-                            null,
-                            declaringType,
-                            null
-                        );
+                if (members.Length == 0)
+                    continue;
 
-                        Log($"- {localName}: {value}");
-                    }
+                object value = null;
+                MemberInfo member = members[0];
+                switch (member) {
+                    case FieldInfo field when field.IsPublic || field.IsAssembly || field.IsFamilyOrAssembly:
+                        value = field.GetValue(member.ReflectedType);
+                        break;
+                    case PropertyInfo property when (property.CanRead
+                        && (property.GetGetMethod(true)?.IsPublic ?? false)):
+                        {
+                            value = property.GetValue(null);
+                            break;
+                        }
                 }
+
+                Log($"- {localName}: {value}");
             }
 
             ExceptionLogged.Invoke(ex); // Raise the ExceptionLogged event
@@ -101,20 +121,20 @@ namespace KOTORModSync.Core
 
         private static void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
         {
-            if (e.ExceptionObject is Exception ex)
-            {
-                LogException(ex);
-            }
+            if (! (e.ExceptionObject is Exception ex))
+                return;
+
+            LogException(ex);
         }
 
         private static void TaskScheduler_UnobservedTaskException(object sender, UnobservedTaskExceptionEventArgs e)
         {
-            if (e.Exception != null)
+            if (e.Exception == null)
+                return;
+
+            foreach (Exception ex in e.Exception.InnerExceptions)
             {
-                foreach (Exception ex in e.Exception.InnerExceptions)
-                {
-                    LogException(ex);
-                }
+                LogException(ex);
             }
 
             e.SetObserved();

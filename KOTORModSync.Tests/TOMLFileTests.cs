@@ -1,6 +1,7 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
+using System.Collections;
 using System.Diagnostics;
 using System.Text;
 using KOTORModSync.Core;
@@ -113,8 +114,28 @@ namespace KOTORModSync.Tests
             }
         }
 
-        // not sure if I want to support this.
+
+
         [Test]
+        public void SaveAndLoad_DefaultComponent()
+        {
+            // Deserialize default component
+            Component newComponent
+                = FileHelper.DeserializeTomlComponent(Component.DefaultComponent + Instruction.DefaultInstructions);
+            newComponent.Guid = Guid.NewGuid();
+            newComponent.Name = "new mod_" + Path.GetRandomFileName();
+
+            // Serialize
+            var tomlString = newComponent.SerializeComponent();
+
+            // Deserialize into new instance
+            Component duplicateComponent = FileHelper.DeserializeTomlComponent(tomlString);
+
+            // Compare
+            AssertComponentEquality(newComponent, duplicateComponent);
+        }
+
+        //[Test]
         public void SaveAndLoadTOMLFile_CaseInsensitive()
         {
             // Arrange
@@ -141,7 +162,10 @@ namespace KOTORModSync.Tests
                 Component originalComponent = originalComponents[i];
                 Component loadedComponent = loadedComponents[i];
 
-                AssertComponentEquality(originalComponent, loadedComponent);
+                AssertComponentEquality(originalComponent,
+                                        loadedComponent,
+                                        caseSensitiveKeys: true
+                );
             }
         }
 
@@ -327,13 +351,18 @@ namespace KOTORModSync.Tests
             }
         }
 
-        private static void AssertComponentEquality(Component expected, Component actual)
+        private static void AssertComponentEquality(Component expected, Component actual, bool caseSensitiveKeys = true)
         {
-            Assert.Multiple(() =>
-            {
-                Assert.That(actual.Name, Is.EqualTo(expected.Name));
-                Assert.That(actual.Guid, Is.EqualTo(expected.Guid));
-            });
+            Assert.Multiple(
+                () =>
+                {
+                    IComparer comparer
+                        = caseSensitiveKeys ? StringComparer.Ordinal : StringComparer.OrdinalIgnoreCase;
+
+                    Assert.That(actual.Name, Is.EqualTo(expected.Name).Using(comparer));
+                    Assert.That(actual.Guid, Is.EqualTo(expected.Guid).Using(comparer));
+                });
         }
+
     }
 }

@@ -36,7 +36,7 @@ namespace KOTORModSync.Core.Utility
 
         public async Task<bool> ValidateChecksumsAsync()
         {
-            var actualChecksums = new Dictionary<string, string>();
+            Dictionary<string, string> actualChecksums = new Dictionary<string, string>();
 
             foreach (FileInfo fileInfo in _expectedChecksums
                     .Select(expectedChecksum => expectedChecksum.Key)
@@ -106,11 +106,11 @@ namespace KOTORModSync.Core.Utility
 
                     tasks.Add(
                         Task.Run(() => _ = sha1.TransformBlock(
-                                     inputBuffer: data,
-                                     inputOffset: 0,
-                                     inputCount: bytesRead,
-                                     outputBuffer: null,
-                                     outputOffset: 0
+                                     data,
+                                     0,
+                                     bytesRead,
+                                     null,
+                                     0
                                  )
                         )
                     );
@@ -147,11 +147,9 @@ namespace KOTORModSync.Core.Utility
         > LoadChecksumsFromFileAsync(FileInfo filePath)
         {
             if (!File.Exists(filePath.FullName))
-            {
                 return new Dictionary<FileInfo, SHA1>();
-            }
 
-            var checksums = new Dictionary<FileInfo, SHA1>();
+            Dictionary<FileInfo, SHA1> checksums = new Dictionary<FileInfo, SHA1>();
 
             using (StreamReader reader = new StreamReader(filePath.FullName))
             {
@@ -195,9 +193,7 @@ namespace KOTORModSync.Core.Utility
                         );
 
                         if (computedHash.SequenceEqual(hashBytes))
-                        {
                             checksums[fileInfo] = sha1;
-                        }
                     }
                 }
             }
@@ -223,9 +219,7 @@ namespace KOTORModSync.Core.Utility
                     null,
                     out bytes[i / 2]
                 ))
-                {
                     continue;
-                }
 
                 bytes = null;
                 return false;

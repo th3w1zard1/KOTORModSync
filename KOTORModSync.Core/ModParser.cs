@@ -4,13 +4,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.IO;
 using System.Text.RegularExpressions;
-using KOTORModSync.Core;
 
-namespace KOTORModSync.ConsoleApp
+namespace KOTORModSync.Core
 {
     public static class ModParser
     {
@@ -41,7 +37,7 @@ namespace KOTORModSync.ConsoleApp
 
         private static (string, string) GetNameAndModLink(string text)
         {
-            string pattern = @"\*\*(Name):\*\* \[([^]]+)\]\(([^)\s]+)\)(?: and \[\*\*Patch\*\*\]\(([^)\s]+)\))?";
+            const string pattern = @"\*\*(Name):\*\* \[([^]]+)\]\(([^)\s]+)\)(?: and \[\*\*Patch\*\*\]\(([^)\s]+)\))?";
             Match match = Regex.Match(text, pattern, RegexOptions.Singleline);
 
             if (!match.Success) { return (string.Empty, string.Empty); }
@@ -63,8 +59,8 @@ namespace KOTORModSync.ConsoleApp
 
         private static string GetName((string, string) nameAndModLink) => nameAndModLink.Item1;
 
-        private static string GetHyperlinkUrl((string, string) nameAndModLink, string linkType) =>
-            linkType.ToLower() == "name" ? nameAndModLink.Item2 : string.Empty;
+        private static string GetHyperlinkUrl((string, string) nameAndModLink, string linkType)
+            => string.Equals(linkType, "name", StringComparison.OrdinalIgnoreCase) ? nameAndModLink.Item2 : string.Empty;
 
         private static (string, string) GetCategoryAndTier(string text, string categoryTierName)
         {
@@ -91,7 +87,7 @@ namespace KOTORModSync.ConsoleApp
             while (match.Success)
             {
                 string value = match.Groups[1].Value.Trim();
-                if (!string.IsNullOrEmpty(value))
+                if (!string.IsNullOrWhiteSpace(value))
                 {
                     return value.Equals("YES", StringComparison.OrdinalIgnoreCase);
                 }

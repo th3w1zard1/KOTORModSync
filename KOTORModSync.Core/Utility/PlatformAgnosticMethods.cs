@@ -2,13 +2,18 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using System;
+using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using JetBrains.Annotations;
+using Exception = System.Exception;
 
 namespace KOTORModSync.Core.Utility
 {
@@ -21,18 +26,14 @@ namespace KOTORModSync.Core.Utility
             long availableMemory = GetAvailableMemory();
             const long memoryThreshold = 2L * 1024 * 1024 * 1024; // 2GB threshold
             if (availableMemory < memoryThreshold)
-            {
                 Parallel.Invoke(() => maxParallelism = Math.Max(1, maxParallelism / 2));
-            }
 
             Task<double> maxDiskSpeedTask = Task.Run(() => GetMaxDiskSpeed(Path.GetPathRoot(thisDir.FullName)));
             double maxDiskSpeed = await maxDiskSpeedTask;
 
             const double diskSpeedThreshold = 100.0; // MB/sec threshold
             if (maxDiskSpeed < diskSpeedThreshold)
-            {
                 maxParallelism = Math.Max(1, maxParallelism / 2); // Reduce parallelism by half if disk speed is below the threshold
-            }
 
             // Platform-agnostic fallback logic
             if (maxParallelism <= 1)
@@ -52,15 +53,11 @@ namespace KOTORModSync.Core.Utility
             {
                 result = TryExecuteCommand("free -b");
                 if (!result.Success)
-                {
                     result = TryExecuteCommand("wmic OS get FreePhysicalMemory");
-                }
             }
 
             if (!result.Success)
-            {
                 return 4L * 1024 * 1024 * 1024; // 4GB
-            }
 
             string output = result.Output;
 
@@ -76,12 +73,8 @@ namespace KOTORModSync.Core.Utility
                                             select Regex.Match(output, pattern) into match
                                             where match.Success
                                             select match.Groups[1].Value.Replace(",", ""))
-            {
                 if (long.TryParse(matchedValue, out long availableMemory))
-                {
                     return availableMemory;
-                }
-            }
 
             // Platform-agnostic fallback logic for getting available memory
             return 4L * 1024 * 1024 * 1024; // 4GB
@@ -91,9 +84,7 @@ namespace KOTORModSync.Core.Utility
         {
             string shellPath = GetShellExecutable();
             if (string.IsNullOrEmpty(shellPath))
-            {
                 return (false, string.Empty, "Unable to retrieve shell executable path.");
-            }
 
             try
             {
@@ -129,6 +120,17 @@ namespace KOTORModSync.Core.Utility
             }
         }
 
+        private static bool IsShellExecutionSupported()
+        {
+            string shellExecutable = GetShellExecutable();
+
+            // Check if a valid shell executable was found
+            bool isSupported = !string.IsNullOrEmpty(shellExecutable);
+
+            return isSupported;
+        }
+
+
         public static string GetShellExecutable()
         {
             string[] shellExecutables =
@@ -141,10 +143,8 @@ namespace KOTORModSync.Core.Utility
             (
                 executable => File.Exists(executable) || File.Exists
                     (Path.Combine(Environment.SystemDirectory, executable))
-                ))
-            {
+            ))
                 return executable;
-            }
 
             return string.Empty;
         }
@@ -165,9 +165,7 @@ namespace KOTORModSync.Core.Utility
                 arguments = $"if={drivePath} bs=1M count=256 iflag=direct";
             }
             else
-            {
                 throw new PlatformNotSupportedException("Disk performance checking is not supported on this platform.");
-            }
 
             ProcessStartInfo startInfo = new ProcessStartInfo
             {
@@ -197,12 +195,14 @@ namespace KOTORModSync.Core.Utility
 
             Regex regex = new Regex(@"([0-9,.]+)\s*(bytes/sec|MB/sec)");
             Match match = regex.Match(output);
-            if (!match.Success || match.Groups.Count < 3) { return maxSpeed; }
+            if (!match.Success || match.Groups.Count < 3)
+                return maxSpeed;
 
             string speedString = match.Groups[1].Value;
             string unit = match.Groups[2].Value.ToLower();
 
-            if (!double.TryParse(speedString.Replace(",", ""), out double speed)) { return maxSpeed; }
+            if (!double.TryParse(speedString.Replace(",", ""), out double speed))
+                return maxSpeed;
 
             switch (unit)
             {
@@ -213,96 +213,186 @@ namespace KOTORModSync.Core.Utility
             }
         }
 
-        public static async Task<bool> ExecuteProcessAsync(
-            FileInfo programFile,
-            string cmdlineArgs,
+        private static List<ProcessStartInfo> GetProcessStartInfos([CanBeNull] FileInfo programFile, [CanBeNull] string cmdlineArgs, bool noAdmin) => new List<ProcessStartInfo>
+        {
+            // top-level, preferred startinfo args. Provides the most flexibility with our code.
+            new ProcessStartInfo
+            {
+                FileName = programFile.FullName,
+                Arguments = cmdlineArgs,
+                UseShellExecute = false,
+                CreateNoWindow = false,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                RedirectStandardInput = true,
+                ErrorDialog = false,
+                EnvironmentVariables = { ["__COMPAT_LAYER"] = "RunAsHighest" }
+            },
+            // perhaps the error dialog was the problem.
+            new ProcessStartInfo
+            {
+                FileName = programFile.FullName,
+                Arguments = cmdlineArgs,
+                UseShellExecute = false,
+                CreateNoWindow = true,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                RedirectStandardInput = true,
+                EnvironmentVariables = { ["__COMPAT_LAYER"] = "RunAsHighest" }
+            },
+            // if it's not a console app or command, it needs a window.
+            new ProcessStartInfo
+            {
+                FileName = programFile.FullName,
+                Arguments = cmdlineArgs,
+                UseShellExecute = false,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                RedirectStandardInput = true,
+                EnvironmentVariables = { ["__COMPAT_LAYER"] = "RunAsHighest" }
+            },
+            // try using native shell (doesn't support output redirection)
+            new ProcessStartInfo
+            {
+                FileName = programFile.FullName,
+                Arguments = cmdlineArgs,
+                EnvironmentVariables = { ["__COMPAT_LAYER"] = "RunAsHighest" }
+            },
+            // try using native shell (doesn't support output redirection)
+            new ProcessStartInfo
+            {
+                FileName = programFile.FullName,
+                Arguments = cmdlineArgs,
+                EnvironmentVariables = { ["__COMPAT_LAYER"] = "RunAsInvoker" }
+            },
+            // guess they need admin.
+            new ProcessStartInfo
+            {
+                FileName = programFile.FullName,
+                Arguments = cmdlineArgs,
+                UseShellExecute = IsShellExecutionSupported() // not supported on all OS's.
+            }
+        };
+
+        private static async Task HandleProcessExitedAsync([CanBeNull] Process process, [CanBeNull] TaskCompletionSource<int> tcs)
+        {
+            if (tcs == null)
+                throw new ArgumentNullException(nameof(tcs));
+
+            if (process == null)
+            {
+                // Process disposed of early?
+                Logger.LogException(new NotSupportedException());
+                tcs.SetResult(-4);
+                return;
+            }
+
+            string output = process.StartInfo.RedirectStandardOutput
+                ? await process.StandardOutput.ReadToEndAsync()
+                : null;
+            string error = process.StartInfo.RedirectStandardError
+                ? await process.StandardError.ReadToEndAsync()
+                : null;
+
+            if (process.ExitCode == 0 && error == null)
+            {
+                tcs.SetResult(process.ExitCode);
+                return;
+            }
+
+            string logMessage = string.Empty;
+            if (process.ExitCode != 0)
+                logMessage += $"Process failed with exit code {process.ExitCode}. ";
+
+            StringBuilder logBuilder = new StringBuilder(logMessage);
+
+            if (output != null) logBuilder.Append("Output: ").AppendLine(output);
+            if (error != null) logBuilder.Append("Error: ").AppendLine(error);
+
+            Logger.Log(logBuilder.ToString());
+
+            // Process had an error of some sort even though ExitCode is 0?
+            tcs.SetResult(-3);
+        }
+
+
+        public static async Task<int> ExecuteProcessAsync(
+            [CanBeNull] FileInfo programFile,
+            [CanBeNull] string cmdlineArgs,
             bool noAdmin = false
         )
         {
-            // K1CP can take ages to install, set the timeout time to two hours hour.
-            using (var cancellationTokenSource
-                = new CancellationTokenSource(TimeSpan.FromSeconds(7200)))
-            {
-                using (var process = new Process())
+            if (cmdlineArgs == null)
+                throw new ArgumentNullException(nameof(cmdlineArgs));
+
+            if (programFile == null)
+                throw new ArgumentNullException(nameof(programFile));
+
+            List<ProcessStartInfo> processStartInfosWithFallbacks = GetProcessStartInfos(
+                programFile,
+                cmdlineArgs,
+                noAdmin
+            );
+
+            Exception ex = new Exception();
+            bool startedProcess = false;
+            foreach (ProcessStartInfo startInfo in processStartInfosWithFallbacks)
+                try
                 {
-                    ProcessStartInfo startInfo = process.StartInfo;
-                    startInfo.FileName = programFile.FullName;
-                    startInfo.Arguments = cmdlineArgs;
-                    startInfo.RedirectStandardOutput = true;
-                    startInfo.RedirectStandardError = true;
-                    startInfo.UseShellExecute = false;
-                    startInfo.CreateNoWindow = true;
-                    startInfo.EnvironmentVariables["__COMPAT_LAYER"] = "RUNASHIGHEST";
-
-                    try
+                    // K1CP can take ages to install, set the timeout time to an hour.
+                    using (CancellationTokenSource cancellationTokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(3600)))
+                    using (Process process = new Process())
                     {
-                        if (!process.Start())
-                            throw new InvalidOperationException("Failed to start the process.");
-                    }
-                    catch (System.ComponentModel.Win32Exception ex)
-                    {
-                        Logger.Log(ex.Message);
-                        Logger.Log(
-                            "The above exception is probably normal, it just means you don't have admin or something.");
+                        process.StartInfo = startInfo;
 
-                        process.StartInfo = new ProcessStartInfo(startInfo.FileName, startInfo.Arguments)
+                        TaskCompletionSource<int> tcs = new TaskCompletionSource<int>();
+
+                        process.Exited += async (sender, args) => await HandleProcessExitedAsync((Process)sender, tcs);
+
+                        // Handle cancellation using CancellationToken
+                        Process localProcess = process;
+                        _ = cancellationTokenSource.Token.Register(() =>
                         {
-                            RedirectStandardOutput = false,
-                            RedirectStandardError = false,
-                            UseShellExecute = startInfo.UseShellExecute,
-                            CreateNoWindow = startInfo.CreateNoWindow,
-                            EnvironmentVariables = { ["__COMPAT_LAYER"] = "RUNASHIGHEST" }
-                        };
+                            if (localProcess.HasExited) return;
 
-                        try
-                        {
-                            if (!process.Start())
-                                throw new InvalidOperationException("Failed to start the process.");
-                        }
-                        catch (Exception ex2)
-                        {
-                            Logger.Log(ex2.Message);
-                            Logger.Log(
-                                "The above exception is probably normal, it just means you don't have admin or something.");
-                            process.StartInfo = new ProcessStartInfo(startInfo.FileName, startInfo.Arguments)
-                            {
-                                RedirectStandardOutput = false,
-                                RedirectStandardError = false,
-                                UseShellExecute = true,
-                                CreateNoWindow = startInfo.CreateNoWindow
-                            };
-                            if (!process.Start())
-                                throw new InvalidOperationException("Failed to start the process.");
-                        }
+                            if (!localProcess.CloseMainWindow())
+                                localProcess.Kill();
+                            tcs.TrySetCanceled();
+                        });
+
+                        process.EnableRaisingEvents = true;
+                        process.Start();
+
+                        startedProcess = true;
+
+                        await tcs.Task;
+
+                        if (cancellationTokenSource.Token.IsCancellationRequested)
+                            throw new TimeoutException("Process timed out");
+
+                        return tcs.Task.Result;
                     }
-
-                    await Task.Run(() => process.WaitForExit(), cancellationTokenSource.Token);
-
-                    if (!process.HasExited)
-                    {
-                        process.Kill();
-                        throw new TimeoutException("Process timed out after 2 hours.");
-                    }
-
-                    string output = null;
-                    string error = null;
-                    if (process.StartInfo.RedirectStandardOutput)
-                    {
-                        output = await process.StandardOutput.ReadToEndAsync();
-                        error = await process.StandardError.ReadToEndAsync();
-                    }
-
-                    if (process.ExitCode != 0)
-                    {
-                        Logger.Log($"Process failed with exit code {process.ExitCode}. Output:\n{output}");
-                        return false;
-                    }
-
-                    if (output != null || error != null)
-                        Logger.Log($"Output: {output}\n Error: {error}\n");
-                    return true;
                 }
-            }
+                catch (Win32Exception localException)
+                {
+                    if(!MainConfig.DebugLogging)
+                        continue;
+                    Logger.Log($"Exception occurred for startInfo: {startInfo}");
+                    Logger.LogException(localException);
+                    ex = localException;
+                }
+                catch(Exception ex2)
+                {
+                    Logger.Log("An unplanned error has occured trying to run {programFile.Name}.");
+                    Logger.LogException(ex2);
+                    return -6;
+                }
+
+            if (startedProcess) return -2; // todo: figure out what scenario this return code will happen in.
+
+            Logger.Log("Process failed to start with all possible combinations of arguments.");
+            Logger.LogException(ex);
+            return -1;
         }
     }
 }

@@ -7,8 +7,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Avalonia.Platform;
+using JetBrains.Annotations;
 using KOTORModSync.Core.Utility;
-
 namespace KOTORModSync
 {
     internal sealed class OptionsDialogCallback : Utility.IOptionsDialogCallback
@@ -31,6 +32,7 @@ namespace KOTORModSync
         public static readonly AvaloniaProperty OptionsListProperty =
             AvaloniaProperty.Register<OptionsDialog, List<string>>(nameof(OptionsList));
 
+        [CanBeNull]
         public List<string> OptionsList
         {
             get => GetValue(OptionsListProperty) as List<string>;
@@ -40,7 +42,6 @@ namespace KOTORModSync
         public OptionsDialog()
         {
             InitializeComponent();
-            optionsItemsControl = this.FindControl<ItemsControl>("optionsItemsControl");
             optionTextBox = this.FindControl<TextBlock>("optionTextBox");
             optionStackPanel = this.FindControl<StackPanel>("optionStackPanel");
             okButton = this.FindControl<Button>("okButton");
@@ -54,17 +55,14 @@ namespace KOTORModSync
 
         private void OKButton_Click(object sender, RoutedEventArgs e)
         {
-            string selectedOption = null;
-            foreach (var radioButton in this.optionStackPanel.Children.OfType<RadioButton>())
-            {
-                if (!radioButton.IsChecked != true) { continue; }
+            RadioButton selectedRadioButton = optionStackPanel
+                .Children
+                .OfType<RadioButton>()
+                .SingleOrDefault(rb => rb.IsChecked == true);
 
-                selectedOption = radioButton.Content?.ToString();
-                break;
-            }
-
-            if (selectedOption != null)
+            if (selectedRadioButton != null)
             {
+                string selectedOption = selectedRadioButton.Content?.ToString();
                 OptionSelected?.Invoke(this, selectedOption);
             }
 
@@ -73,15 +71,49 @@ namespace KOTORModSync
 
         public event EventHandler<string> OptionSelected;
 
-
         private void OnOpened(object sender, EventArgs e)
         {
-            var optionStackPanel = this.FindControl<StackPanel>("optionStackPanel");
-            foreach (var option in OptionsList)
+            StackPanel optionStackPanel = this.FindControl<StackPanel>("optionStackPanel");
+
+            foreach (string option in OptionsList)
             {
-                var radioButton = new RadioButton { Content = option, GroupName = "OptionsGroup" };
+                var radioButton = new RadioButton
+                {
+                    Content = option,
+                    GroupName = "OptionsGroup"
+                };
                 optionStackPanel.Children.Add(radioButton);
             }
+
+            // Measure and arrange the optionStackPanel to update DesiredSize
+            optionStackPanel.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
+            optionStackPanel.Arrange(new Rect(optionStackPanel.DesiredSize));
+
+            // Get the actual size of the optionStackPanel including children and transformations
+            Size actualSize = optionStackPanel.Bounds.Size;
+
+            // Define padding values
+            double horizontalPadding = 100; // Padding on the left and right
+            double verticalPadding = 150;  // Padding on the top and bottom
+
+            // Calculate the desired width and height for the content with padding
+            double contentWidth = actualSize.Width   + (2 * horizontalPadding);
+            double contentHeight = actualSize.Height + (2 * verticalPadding);
+
+            // Set the width and height of the window
+            this.Width = contentWidth;
+            this.Height = contentHeight;
+
+            this.InvalidateArrange();
+            this.InvalidateMeasure();
+
+            // Center the window on the screen
+            Screen screen = Screens.ScreenFromVisual(this);
+            double screenWidth = screen.Bounds.Width;
+            double screenHeight = screen.Bounds.Height;
+            double left = (screenWidth - contentWidth)  / 2;
+            double top = (screenHeight - contentHeight) / 2;
+            this.Position = new PixelPoint((int)left, (int)top);
         }
 
         public static async Task<string> ShowOptionsDialog(Window parentWindow, List<string> optionsList)

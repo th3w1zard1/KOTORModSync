@@ -21,7 +21,6 @@ using SharpCompress.Common;
 using Tomlyn;
 using Tomlyn.Model;
 using Tomlyn.Syntax;
-using TomlTable = Tomlyn.Model.TomlTable;
 
 // ReSharper disable UnusedMember.Global
 #pragma warning disable RCS1213, IDE0051, IDE0079
@@ -50,7 +49,7 @@ namespace KOTORModSync.Core.Utility
                              i < stringList.Count;
                              i++)
                         {
-                            if (System.Guid.TryParse(stringList[i], out _)) continue;
+                            if (Guid.TryParse(stringList[i], out _)) continue;
 
                             // Attempt to fix common issues with GUID strings
                             string fixedGuid = FixGuidString(stringList[i]);
@@ -68,7 +67,7 @@ namespace KOTORModSync.Core.Utility
                              i < stringList.Count;
                              i++)
                         {
-                            if (System.Guid.TryParse(stringList[i], out _)) continue;
+                            if (Guid.TryParse(stringList[i], out _)) continue;
 
                             // Attempt to fix common issues with GUID strings
                             string fixedGuid = FixGuidString(stringList[i]);
@@ -161,10 +160,9 @@ namespace KOTORModSync.Core.Utility
                 object value = kvp.Value;
 
                 if (value is TomlTable nestedTable)
-                {
                     dict.Add(key, ConvertTomlTableToDictionary(nestedTable));
-                }
-                else { dict.Add(key, value); }
+                else
+                    dict.Add(key, value);
             }
 
             return dict;
@@ -255,7 +253,7 @@ namespace KOTORModSync.Core.Utility
 
         public static List<object> MergeLists(IEnumerable<object> list1, IEnumerable<object> list2)
         {
-            var mergedList = new List<object>(65535);
+            List<object> mergedList = new List<object>(65535);
             mergedList.AddRange(list1);
             mergedList.AddRange(list2);
             return mergedList;
@@ -265,13 +263,13 @@ namespace KOTORModSync.Core.Utility
         {
             while (enumerator.MoveNext())
             {
-                if (enumerator.Current == null) { continue; }
+                if (enumerator.Current == null)
+                    continue;
 
                 DictionaryEntry entry = (DictionaryEntry)enumerator.Current;
                 yield return new KeyValuePair<object, object>(entry.Key, entry.Value);
             }
         }
-
 
         public static object SerializeObject(object obj)
         {
@@ -279,22 +277,26 @@ namespace KOTORModSync.Core.Utility
 
             // do nothing if it's already a simple type.
             if (obj is IConvertible || obj is IFormattable || obj is IComparable)
-            {
                 return obj.ToString();
-            }
 
-            var serializedProperties = new Dictionary<string, object>();
+            // handle generic list types
+            if (obj is IList objList)
+                return SerializeList(objList);
+
+            Dictionary<string, object> serializedProperties = new Dictionary<string, object>();
 
             IEnumerable<object> members;
-
             switch ( obj ) {
+
                 // IDictionary types
                 case IDictionary mainDictionary:
                     IEnumerator enumerator = mainDictionary.GetEnumerator();
                     members = EnumerateDictionaryEntries(enumerator);
                     break;
+
                 // class instance types
-                default: members = type.GetMembers(
+                default:
+                    members = type.GetMembers(
                         BindingFlags.Public
                         | BindingFlags.Instance
                         | BindingFlags.DeclaredOnly
@@ -316,7 +318,7 @@ namespace KOTORModSync.Core.Utility
                         when property.CanRead
                         && !property.GetMethod.IsStatic
                         && !Attribute.IsDefined(property, typeof(JsonIgnoreAttribute))
-                        && (property.DeclaringType == obj.GetType()):
+                        && property.DeclaringType == obj.GetType():
                         {
                             value = property.GetValue(obj);
                             memberName = property.Name;
@@ -341,7 +343,7 @@ namespace KOTORModSync.Core.Utility
                         break;
                     case IDictionary dictionary:
                         {
-                            var tomlTable = new Tomlyn.Model.TomlTable();
+                            TomlTable tomlTable = new TomlTable();
 
                             foreach (DictionaryEntry entry in dictionary)
                             {
@@ -384,7 +386,7 @@ namespace KOTORModSync.Core.Utility
         // ReSharper disable once SuggestBaseTypeForParameter
         private static TomlArray SerializeList(IList list)
         {
-            var serializedList = new Tomlyn.Model.TomlArray();
+            TomlArray serializedList = new TomlArray();
 
             foreach (object item in list)
             {
@@ -398,13 +400,9 @@ namespace KOTORModSync.Core.Utility
                 }
 
                 if (item is IList nestedList)
-                {
                     serializedList.Add(SerializeList(nestedList));
-                }
                 else
-                {
                     serializedList.Add(SerializeObject(item));
-                }
             }
 
             return serializedList;
@@ -438,8 +436,8 @@ namespace KOTORModSync.Core.Utility
             }
 
             if (
-                objType == typeof(string)
-                && (((string)obj).Length <= 38) // A guid in string form is always less than or eq to 38 chars.
+                objType                 == typeof(string)
+                && ((string)obj).Length <= 38 // A guid in string form is always less than or eq to 38 chars.
                 && Guid.TryParse(obj.ToString(), out Guid guidConvertedValue))
             {
                 guidString = guidConvertedValue.ToString();
@@ -450,10 +448,7 @@ namespace KOTORModSync.Core.Utility
             return false;
         }
 
-        private static bool IsEnumerable(object obj)
-        {
-            return obj is IEnumerable enumerable && !(enumerable is string);
-        }
+        private static bool IsEnumerable(object obj) => obj is IEnumerable enumerable && !(enumerable is string);
     }
 
     [SuppressMessage("ReSharper", "UnusedMember.Local")]
@@ -474,18 +469,29 @@ namespace KOTORModSync.Core.Utility
                 ? Path.GetDirectoryName(itemInArchivePath)
                 : itemInArchivePath;
 
+        // Stop TSLPatcher from automatically assuming the KOTOR directory.
         public static void ReplaceLookupGameFolder(DirectoryInfo directory)
         {
             FileInfo[] iniFiles = directory.GetFiles("*.ini", SearchOption.AllDirectories);
+            if (iniFiles.Length == 0)
+                throw new InvalidOperationException("No .ini files found!");
 
             foreach (FileInfo file in iniFiles)
             {
                 string filePath = file.FullName;
                 string fileContents = File.ReadAllText(filePath);
 
-                // Replace the string 'LookupGameFolder=1' with 'LookupGameFolder=0'
-                fileContents = fileContents.Replace("LookupGameFolder=1", "LookupGameFolder=0");
+                // Create a regular expression pattern to match "LookupGameFolder=1" with optional whitespace
+                const string pattern = @"LookupGameFolder\s*=\s*1";
 
+                // Use Regex.IsMatch to check if the pattern exists in the file contents
+                if (! Regex.IsMatch(fileContents, pattern))
+                    continue;
+
+                // Use Regex.Replace to replace the pattern with "LookupGameFolder=0" (ignoring whitespace)
+                fileContents = Regex.Replace(fileContents, pattern, "LookupGameFolder=0");
+
+                // Write the modified file contents back to the file
                 File.WriteAllText(filePath, fileContents);
             }
         }
@@ -495,9 +501,7 @@ namespace KOTORModSync.Core.Utility
             StringBuilder stringBuilder = new StringBuilder(65535);
 
             foreach (Component thisComponent in components)
-            {
                 _ = stringBuilder.AppendLine(thisComponent.SerializeComponent());
-            }
 
             string tomlString = stringBuilder.ToString();
             File.WriteAllText(filePath, tomlString);
@@ -505,15 +509,15 @@ namespace KOTORModSync.Core.Utility
 
         public static async Task MoveFileAsync(string sourcePath, string destinationPath)
         {
-            using (var sourceStream = new FileStream(
+            using (FileStream sourceStream = new FileStream(
                 sourcePath,
                 FileMode.Open,
                 FileAccess.Read,
                 FileShare.Read,
-                bufferSize: 4096,
-                useAsync: true))
+                4096,
+                true))
             {
-                using (var destinationStream = new FileStream(destinationPath, FileMode.CreateNew, FileAccess.Write, FileShare.None, bufferSize: 4096, useAsync: true))
+                using (FileStream destinationStream = new FileStream(destinationPath, FileMode.CreateNew, FileAccess.Write, FileShare.None, 4096, true))
                 {
                     await sourceStream.CopyToAsync(destinationStream);
                 }
@@ -533,44 +537,40 @@ namespace KOTORModSync.Core.Utility
             tomlString = tomlString.Replace("Options = []", "");
 
             // Parse the TOML syntax into a TomlTable
-            DocumentSyntax tomlDocument = Tomlyn.Toml.Parse(tomlString);
+            DocumentSyntax tomlDocument = Toml.Parse(tomlString);
 
             // Print any errors on the syntax
             if (tomlDocument.HasErrors)
             {
                 foreach (DiagnosticMessage message in tomlDocument.Diagnostics)
-                {
                     Logger.Log(message.Message);
-                }
 
                 return null;
             }
 
-            Tomlyn.Model.TomlTable tomlTable = tomlDocument.ToModel();
+            TomlTable tomlTable = tomlDocument.ToModel();
 
             // Get the array of Component tables
 
             Component component = new Component();
 
             // Deserialize each TomlTable into a Component object
-            if (!(tomlTable["thisMod"] is Tomlyn.Model.TomlTableArray componentTables))
+            if (!(tomlTable["thisMod"] is TomlTableArray componentTables))
                 return component;
 
             foreach (TomlTable tomlComponent in componentTables)
-            {
                 component.DeserializeComponent(tomlComponent);
-            }
 
             return component;
         }
 
-        public static List<string> EnumerateFilesWithWildcards(IEnumerable<string> filesAndFolders)
+        public static List<string> EnumerateFilesWithWildcards(IEnumerable<string> filesAndFolders, bool topLevelOnly = false)
         {
             List<string> result = new List<string>();
 
             HashSet<string> uniquePaths = new HashSet<string>(filesAndFolders);
 
-            foreach (string path in uniquePaths.Where(path => ! string.IsNullOrEmpty(path)) ) {
+            foreach (string path in uniquePaths.Where(path => ! string.IsNullOrEmpty(path)) )
                 try
                 {
                     if (!ContainsWildcards(path))
@@ -582,9 +582,14 @@ namespace KOTORModSync.Core.Utility
                             continue;
                         }
 
-                        if (! Directory.Exists(path)) { continue; }
+                        if (! Directory.Exists(path))
+                            continue;
 
-                        IEnumerable<string> matchingFiles = Directory.EnumerateFiles(path, "*", SearchOption.AllDirectories);
+                        IEnumerable<string> matchingFiles;
+                        if (topLevelOnly)
+                            matchingFiles = Directory.EnumerateFiles(path, "*", SearchOption.TopDirectoryOnly);
+                        else
+                            matchingFiles = Directory.EnumerateFiles(path, "*", SearchOption.AllDirectories);
                         result.AddRange(matchingFiles);
                         continue;
                     }
@@ -594,7 +599,11 @@ namespace KOTORModSync.Core.Utility
 
                     if (!string.IsNullOrEmpty(directory) && Directory.Exists(directory))
                     {
-                        IEnumerable<string> matchingFiles = Directory.EnumerateFiles(directory, Path.GetFileName(path), SearchOption.AllDirectories);
+                        IEnumerable<string> matchingFiles;
+                        if (topLevelOnly)
+                            matchingFiles = Directory.EnumerateFiles(directory, Path.GetFileName(path), SearchOption.AllDirectories);
+                        else
+                            matchingFiles = Directory.EnumerateFiles(directory, Path.GetFileName(path), SearchOption.AllDirectories);
                         result.AddRange(matchingFiles);
                         continue;
                     }
@@ -606,17 +615,19 @@ namespace KOTORModSync.Core.Utility
                     {
                         string parentDirectory = Path.GetDirectoryName(currentDirectory);
                         if (string.IsNullOrEmpty(parentDirectory) || parentDirectory == currentDirectory)
-                        {
                             break; // Exit the loop if no parent directory is found or if the parent directory is the same as the current directory
-                        }
 
                         currentDirectory = parentDirectory;
                     }
 
-                    if (string.IsNullOrEmpty(currentDirectory)
-                        || ! Directory.Exists(currentDirectory)) { continue; }
+                    if (string.IsNullOrEmpty(currentDirectory) || ! Directory.Exists(currentDirectory))
+                        continue;
 
-                    IEnumerable<string> checkFiles = Directory.EnumerateFiles(currentDirectory, "*", SearchOption.AllDirectories);
+                    IEnumerable<string> checkFiles;
+                    if (topLevelOnly)
+                        checkFiles = Directory.EnumerateFiles(currentDirectory, "*", SearchOption.AllDirectories);
+                    else
+                        checkFiles = Directory.EnumerateFiles(currentDirectory, "*", SearchOption.TopDirectoryOnly);
                     result.AddRange(checkFiles.Where(thisFile => WildcardMatch(thisFile, path)));
                 }
                 catch (Exception ex)
@@ -624,7 +635,6 @@ namespace KOTORModSync.Core.Utility
                     // Handle or log the exception as required
                     Console.WriteLine($"An error occurred while processing path '{path}': {ex.Message}");
                 }
-            }
 
             return result;
         }
@@ -643,9 +653,7 @@ namespace KOTORModSync.Core.Utility
 
             // Ensure the number of levels match
             if (inputLevels.Length != patternLevels.Length)
-            {
                 return false;
-            }
 
             // Iterate over each level and perform wildcard matching
             for (int i = 0; i < inputLevels.Length; i++)
@@ -655,15 +663,11 @@ namespace KOTORModSync.Core.Utility
 
                 // Check if the current level is a wildcard
                 if (patternLevel == "*" || patternLevel == "?")
-                {
                     continue;
-                }
 
                 // Check if the current level matches the pattern
                 if (!WildcardMatchLevel(inputLevel, patternLevel))
-                {
                     return false;
-                }
             }
 
             return true;
@@ -696,26 +700,24 @@ namespace KOTORModSync.Core.Utility
                 tomlString = Serializer.FixWhitespaceIssues(tomlString);
 
                 // Parse the TOML syntax into a TomlTable
-                DocumentSyntax tomlDocument = Tomlyn.Toml.Parse(tomlString);
+                DocumentSyntax tomlDocument = Toml.Parse(tomlString);
 
                 // Print any errors on the syntax
                 if (tomlDocument.HasErrors)
                 {
                     foreach (DiagnosticMessage message in tomlDocument.Diagnostics)
-                    {
                         Logger.LogException(new Exception(message.Message));
-                    }
                 }
 
-                Tomlyn.Model.TomlTable tomlTable = tomlDocument.ToModel();
+                TomlTable tomlTable = tomlDocument.ToModel();
 
                 // Get the array of Component tables
-                Tomlyn.Model.TomlTableArray componentTables = tomlTable["thisMod"] as Tomlyn.Model.TomlTableArray;
+                TomlTableArray componentTables = tomlTable["thisMod"] as TomlTableArray;
 
                 List<Component> components = new List<Component>(65535);
                 foreach ((TomlObject tomlComponent, Component component) in
                     // Deserialize each TomlTable into a Component object
-                    from Tomlyn.Model.TomlObject tomlComponent in componentTables
+                    from TomlObject tomlComponent in componentTables
                     let component = new Component()
                     select (tomlComponent, component))
                 {
@@ -728,9 +730,7 @@ namespace KOTORModSync.Core.Utility
                     }
 
                     foreach (Instruction instruction in component.Instructions)
-                    {
                         instruction.SetParentComponent(component);
-                    }
                 }
 
                 return components;
@@ -773,19 +773,13 @@ namespace KOTORModSync.Core.Utility
         public static IArchive OpenArchive(Stream stream, string archivePath)
         {
             if (archivePath.EndsWith(".zip", StringComparison.OrdinalIgnoreCase))
-            {
                 return SharpCompress.Archives.Zip.ZipArchive.Open(stream);
-            }
 
             if (archivePath.EndsWith(".rar", StringComparison.OrdinalIgnoreCase))
-            {
                 return RarArchive.Open(stream);
-            }
 
             if (archivePath.EndsWith(".7z", StringComparison.OrdinalIgnoreCase))
-            {
                 return SevenZipArchive.Open(stream);
-            }
 
             return null;
         }
@@ -826,18 +820,18 @@ namespace KOTORModSync.Core.Utility
 
         public static Dictionary<string, object> GenerateArchiveTreeJson(DirectoryInfo directory)
         {
-            var root = new Dictionary<string, object>(65535) { { "Name", directory.Name }, { "Type", "directory" }, { "Contents", new List<object>() } };
+            Dictionary<string, object> root = new Dictionary<string, object>(65535) { { "Name", directory.Name }, { "Type", "directory" }, { "Contents", new List<object>() } };
 
             try
             {
                 foreach (FileInfo file in directory.EnumerateFiles("*.*", SearchOption.TopDirectoryOnly))
                 {
-                    if (!ArchiveHelper.IsArchive(file.Extension))
+                    if (!IsArchive(file.Extension))
                         continue;
 
-                    var fileInfo = new Dictionary<string, object>(65535) { { "Name", file.Name }, { "Type", "file" } };
-                    List<ModDirectory.ArchiveEntry> archiveEntries = ArchiveHelper.TraverseArchiveEntries(file.FullName);
-                    var archiveRoot = new Dictionary<string, object>(65535) { { "Name", file.Name }, { "Type", "directory" }, { "Contents", archiveEntries } };
+                    Dictionary<string, object> fileInfo = new Dictionary<string, object>(65535) { { "Name", file.Name }, { "Type", "file" } };
+                    List<ModDirectory.ArchiveEntry> archiveEntries = TraverseArchiveEntries(file.FullName);
+                    Dictionary<string, object> archiveRoot = new Dictionary<string, object>(65535) { { "Name", file.Name }, { "Type", "directory" }, { "Contents", archiveEntries } };
 
                     fileInfo["Contents"] = archiveRoot["Contents"];
 
@@ -867,7 +861,7 @@ namespace KOTORModSync.Core.Utility
 
         public static List<ModDirectory.ArchiveEntry> TraverseArchiveEntries(string archivePath)
         {
-            var archiveEntries = new List<ModDirectory.ArchiveEntry>(65535);
+            List<ModDirectory.ArchiveEntry> archiveEntries = new List<ModDirectory.ArchiveEntry>(65535);
 
             try
             {
@@ -918,7 +912,7 @@ namespace KOTORModSync.Core.Utility
                 }
                 else
                 {
-                    var child = new Dictionary<string, object>(65535) { { "Name", name }, { "Type", isFile ? "file" : "directory" }, { "Contents", new List<object>() } };
+                    Dictionary<string, object> child = new Dictionary<string, object>(65535) { { "Name", name }, { "Type", isFile ? "file" : "directory" }, { "Contents", new List<object>() } };
                     existingDirectory.Add(child);
                     currentDirectory = child;
                 }

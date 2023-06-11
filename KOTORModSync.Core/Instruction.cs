@@ -80,6 +80,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
         // This method will replace custom variables such as <<modDirectory>> and <<kotorDirectory>> with their actual paths.
         // This method should not be ran before an instruction is executed.
         // Otherwise we risk deserializing a full path early, which can lead to unsafe config injections. (e.g. malicious config file targeting sys files)
+        // ^ perhaps the above is user error though? Either way, we attempt to baby them here.
         public (List<string>, DirectoryInfo) ParsePaths(bool noValidate = false)
         {
             List<string> sourcePaths
@@ -410,12 +411,9 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                     // Check if the destination file already exists
                     if (! Overwrite && File.Exists(destinationFilePath))
                     {
-                        if (! Overwrite)
-                        {
-                            Logger.Log(
-                                $"Skipping file {Path.GetFileName(destinationFilePath)} (Overwrite is false)");
-                        }
-
+                        Logger.Log(
+                            $"Skipping file {Path.GetFileName(destinationFilePath)} (Overwrite is false)"
+                        );
                         continue;
                     }
 
@@ -428,7 +426,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                         File.Delete(destinationFilePath);
                     }
 
-                    // Move the file
+                    // Copy the file
                     Logger.Log(
                         $"Copy '{Path.GetFileName(sourcePath)}' to '{destinationFilePath}'");
 
@@ -459,11 +457,8 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                     // Check if the destination file already exists
                     if (! Overwrite && File.Exists(destinationFilePath))
                     {
-                        if (! Overwrite)
-                        {
-                            Logger.Log(
-                                $"Skipping file {Path.GetFileName(destinationFilePath)} (Overwrite is false)");
-                        }
+                        Logger.Log(
+                            $"Skipping file {Path.GetFileName(destinationFilePath)} (Overwrite is false)");
 
                         continue;
                     }
@@ -500,105 +495,64 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
             try
             {
                 (List<string> sourcePaths, _) = ParsePaths();
-                bool isSuccess = false; // Track the success status
-
                 foreach (string t in sourcePaths)
                 {
-                    var tslPatcherDirectory = new DirectoryInfo(t);
-                    if (! tslPatcherDirectory.Exists)
+                    var tslPatcherPath = t;
+                    DirectoryInfo tslPatcherDirectory;
+
+                    if (Path.HasExtension(tslPatcherPath))
                     {
-                        throw new FileNotFoundException(
-                            $"The directory {t} could not be located on the disk");
+                        // If it's a file, get the parent folder
+                        tslPatcherDirectory = new FileInfo(tslPatcherPath).Directory;
+
+                        if (tslPatcherDirectory == null || ! tslPatcherDirectory.Exists)
+                        {
+                            throw new DirectoryNotFoundException(
+                                $"The parent directory of the file {tslPatcherPath} could not be located on the disk.");
+                        }
                     }
+                    else
+                    {
+                        // It's a folder, create a DirectoryInfo instance
+                        tslPatcherDirectory = new DirectoryInfo(tslPatcherPath);
+
+                        if (! tslPatcherDirectory.Exists)
+                        {
+                            throw new DirectoryNotFoundException(
+                                $"The directory {tslPatcherPath} could not be located on the disk.");
+                        }
+                    }
+
 
                     FileHelper.ReplaceLookupGameFolder(tslPatcherDirectory);
 
-                    using (var cancellationTokenSource = new CancellationTokenSource())
-                    {
-                        using (var exeProcess = new Process())
-                        {
-                            cancellationTokenSource.CancelAfter(
-                                TimeSpan.FromSeconds(
-                                    7200)); // Cancel if running longer than 2 hours.
+                    // arg1 = swkotor directory
+                    // arg2 = mod directory (where TSLPatcher_data folder is)
+                    // arg3 = (optional) install option integer index from namespaces.ini
+                    string args
+                        = $"\"{MainConfig.DestinationPath}\" \"{MainConfig.SourcePath}\"";
+                    if (! string.IsNullOrEmpty(this.Arguments))
+                        args += " " + this.Arguments;
 
-                            // arg1 = swkotor directory
-                            // arg2 = mod directory (where TSLPatcher_data folder is)
-                            // arg3 = (optional) install option integer index from namespaces.ini
-                            string args
-                                = $"\"{MainConfig.DestinationPath}\" \"{MainConfig.SourcePath}\"";
-                            if (! string.IsNullOrEmpty(this.Arguments))
-                            {
-                                args += " " + this.Arguments;
-                            }
+                    var tslPatcherCliPath = new FileInfo(
+                        Path.Combine(
+                            FileHelper.ResourcesDirectory,
+                            "TSLPatcherCLI.exe"
+                        )
+                    );
 
-                            exeProcess.StartInfo = new ProcessStartInfo
-                            {
-                                CreateNoWindow = false,
-                                FileName
-                                    = Path.Combine(
-                                        FileHelper.ResourcesDirectory,
-                                        "TSLPatcherCLI.exe"),
-                                WindowStyle = ProcessWindowStyle.Normal,
-                                Arguments = args,
-                                EnvironmentVariables = { ["__COMPAT_LAYER"] = "RUNASHIGHEST" },
-                                RedirectStandardOutput
-                                    = true // Redirect standard output for real-time logging
-                            };
-
-                            exeProcess.OutputDataReceived += (sender, e) =>
-                            {
-                                if (string.IsNullOrEmpty(e.Data)) { return; }
-
-                                Logger.Log(e.Data); // Log output in real-time
-                            };
-
-                            var processExitedTcs
-                                = new TaskCompletionSource<
-                                    int>(); // TaskCompletionSource to signal process exit
-
-                            exeProcess.EnableRaisingEvents = true; // Enable process exit event
-                            exeProcess.Exited += (sender, e) =>
-                            {
-                                _ = processExitedTcs.TrySetResult(
-                                    exeProcess.ExitCode); // Set the exit code as the result
-                            };
-
-                            exeProcess.Start();
-                            exeProcess.BeginOutputReadLine();
-
-                            while (! exeProcess.HasExited
-                                && ! cancellationTokenSource.IsCancellationRequested)
-                            {
-                                await Task.Delay(100, cancellationTokenSource.Token);
-                            }
-
-                            if (! exeProcess.HasExited)
-                            {
-                                exeProcess.Kill();
-                                throw new TimeoutException("Process timed out after 2 hours.");
-                            }
-
-                            int exitCode
-                                = await processExitedTcs
-                                    .Task; // Wait for the process to exit and get the exit code
-
-                            if (exitCode != 0)
-                            {
-                                Logger.Log($"Process failed with exit code {exitCode}.");
-                                return false;
-                            }
-
-                            isSuccess = true;
-                        }
-                    }
+                    int retVal = await PlatformAgnosticMethods.ExecuteProcessAsync(tslPatcherCliPath, args);
+                    Logger.LogVerbose($"{tslPatcherCliPath.Name} exited with exit code {retVal}");
+                    if (retVal == 0)
+                        return true;
                 }
 
-                return isSuccess;
+                return false;
             }
             catch (Exception ex)
             {
                 Logger.LogException(ex);
-                throw; // Rethrow the exception for the caller to handle or get more information
+                throw;
             }
         }
 
@@ -613,7 +567,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
 
                 foreach (string sourcePath in sourcePaths)
                 {
-                    if (Action == "TSLPatcher")
+                    if (this.Action == "TSLPatcher")
                     {
                         FileHelper.ReplaceLookupGameFolder(
                             new DirectoryInfo(
@@ -629,7 +583,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
 
                     try
                     {
-                        if (await PlatformAgnosticMethods.ExecuteProcessAsync(thisProgram, ""))
+                        if (await PlatformAgnosticMethods.ExecuteProcessAsync(thisProgram, "") == 0)
                             continue;
 
                         isSuccess = false;

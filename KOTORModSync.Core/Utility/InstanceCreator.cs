@@ -27,9 +27,7 @@ namespace KOTORModSync.Core.Utility
             }
 
             if (type.GetConstructor(Type.EmptyTypes) != null)
-            {
                 return (T)Activator.CreateInstance(type);
-            }
 
             if (!s_cachedConstructors.TryGetValue(type, out ConstructorInfo[] constructors))
             {
@@ -43,7 +41,8 @@ namespace KOTORModSync.Core.Utility
                                                     where parameters.Length == parameterCount
                                                     let match = AreParametersCompatible(parameters, constructorParameters)
                                                     where match
-                                                    select constructor) { return (T)constructor.Invoke(constructorParameters); }
+                                                    select constructor)
+                return (T)constructor.Invoke(constructorParameters);
 
             Logger.Log($"No suitable constructor found for type '{type.Name}' with the provided parameters.");
             return default;
@@ -57,14 +56,10 @@ namespace KOTORModSync.Core.Utility
                 object constructorParameter = constructorParameters[i];
 
                 if (parameter.ParameterType.IsAssignableFrom(constructorParameter?.GetType()))
-                {
                     continue;
-                }
 
                 if (parameter.HasDefaultValue && constructorParameter == null)
-                {
                     continue;
-                }
 
                 return false;
             }

@@ -67,8 +67,8 @@ namespace KOTORModSync
 
         private async void InstallButton_Click(object sender, RoutedEventArgs e)
         {
-            var selectedComponentNames = SelectedComponents.Select(component => component.Name);
-            var message = $"Selected Components: {string.Join(", ", selectedComponentNames)}";
+            IEnumerable<string> selectedComponentNames = SelectedComponents.Select(component => component.Name);
+            string message = $"Selected Components: {string.Join(", ", selectedComponentNames)}";
 
             await InformationDialog.ShowInformationDialog(this, message, "Installation Complete");
             Close();

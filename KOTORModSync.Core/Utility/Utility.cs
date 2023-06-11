@@ -12,39 +12,24 @@ namespace KOTORModSync.Core.Utility
 {
     public static class Utility
     {
-        public interface IConfirmationDialogCallback
-        {
-            Task<bool> ShowConfirmationDialog(string message);
-        }
+        public static string ReplaceCustomVariables(string path) => path.Replace("<<modDirectory>>", MainConfig.SourcePath.FullName)
+            .Replace("<<kotorDirectory>>", MainConfig.DestinationPath.FullName);
 
-        public interface IOptionsDialogCallback
-        {
-            Task<string> ShowOptionsDialog(List<string> options);
-        }
+        public static string RestoreCustomVariables(string fullPath) => fullPath.Replace(MainConfig.SourcePath.FullName, "<<modDirectory>>")
+            .Replace(MainConfig.DestinationPath.FullName, "<<kotorDirectory>>");
 
-        public static string ReplaceCustomVariables(string path)
+        public static bool IsDirectoryWritable([CanBeNull] DirectoryInfo dirPath)
         {
-            return path.Replace("<<modDirectory>>", MainConfig.SourcePath.FullName)
-                .Replace("<<kotorDirectory>>", MainConfig.DestinationPath.FullName);
-        }
+            if (dirPath is null) throw new ArgumentNullException(nameof(dirPath));
 
-        public static string RestoreCustomVariables(string fullPath)
-        {
-            return fullPath.Replace(MainConfig.SourcePath.FullName, "<<modDirectory>>")
-                .Replace(MainConfig.DestinationPath.FullName, "<<kotorDirectory>>");
-        }
-
-        public static bool IsDirectoryWritable(DirectoryInfo directory)
-        {
             try
             {
-                // Attempt to create a file in the directory
-                string fileName = Path.Combine(directory.FullName, Path.GetRandomFileName());
-                using (File.Create(fileName))
-                {
-                    File.Delete(fileName);
-                    return true;
-                }
+                using (FileStream fs = File.Create(
+                    Path.Combine(dirPath.FullName, Path.GetRandomFileName()),
+                    1,
+                    FileOptions.DeleteOnClose)) { }
+
+                return true;
             }
             catch (UnauthorizedAccessException ex)
             {
@@ -53,7 +38,7 @@ namespace KOTORModSync.Core.Utility
             catch (PathTooLongException ex)
             {
                 Logger.LogException(ex);
-                Logger.Log($"The pathname is too long: '{directory.FullName}'");
+                Logger.Log($"The pathname is too long: '{dirPath.FullName}'");
                 Logger.Log("Please utilize the registry patch that increases the Windows legacy path limit of 260 characters or move your KOTOR2 installation to a shorter directory path.");
             }
             catch (IOException ex)
@@ -68,15 +53,11 @@ namespace KOTORModSync.Core.Utility
         {
             // Wait for the process to exit
             while (!process.HasExited)
-            {
                 await Task.Delay(1000); // 1 second is the recommended default
-            }
 
             // Make sure the process exited correctly
             if (process.ExitCode != 0)
-            {
                 throw new Exception($"The process {processName} exited with code {process.ExitCode}.");
-            }
         }
 
         // todo: merge relevant sections with PlatformAgnosticMethods.ExecuteProcessAsync
@@ -121,10 +102,21 @@ namespace KOTORModSync.Core.Utility
             Console.Write("Enter the path: ");
             string thisPath = Console.ReadLine()?.Trim();
 
-            if (Directory.Exists(thisPath)) { return new DirectoryInfo(thisPath); }
+            if (Directory.Exists(thisPath))
+                return new DirectoryInfo(thisPath);
 
             Console.Write($"Directory '{thisPath}' does not exist.");
             return default;
+        }
+
+        public interface IConfirmationDialogCallback
+        {
+            Task<bool> ShowConfirmationDialog(string message);
+        }
+
+        public interface IOptionsDialogCallback
+        {
+            Task<string> ShowOptionsDialog(List<string> options);
         }
     }
 }

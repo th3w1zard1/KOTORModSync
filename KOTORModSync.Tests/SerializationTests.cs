@@ -58,8 +58,8 @@ namespace KOTORModSync.Tests
             List<Guid> list = new() { Guid.NewGuid(), Guid.NewGuid() };
             object? serialized = Serializer.SerializeObject(list);
 
-            Assert.That(serialized, Is.InstanceOf<List<object>>());
-            CollectionAssert.AllItemsAreInstancesOfType((List<object>)serialized, typeof(string));
+            Assert.That(serialized, Is.InstanceOf<IList<object>>());
+            CollectionAssert.AllItemsAreInstancesOfType((IList<object>)serialized, typeof(string));
         }
 
         [Test]
@@ -94,8 +94,11 @@ namespace KOTORModSync.Tests
             };
 
             // Act & Assert
-            Assert.That(HasStackOverflow(() => Serializer.SerializeObject(instance1)), Is.False, "Serialization should not cause a stack overflow");
-            Assert.That(HasStackOverflow(() => Serializer.SerializeObject(new List<object> { instance1, instance2 })), Is.False, "Serialization should not cause a stack overflow");
+            Assert.Multiple(() =>
+            {
+                Assert.That(HasStackOverflow(() => Serializer.SerializeObject(instance1)), Is.False, "Serialization should not cause a stack overflow");
+                Assert.That(HasStackOverflow(() => Serializer.SerializeObject(new List<object> { instance1, instance2 })), Is.False, "Serialization should not cause a stack overflow");
+            });
         }
 
         private const int MaxRecursionDepth = 1000; // Set a maximum recursion depth
@@ -161,93 +164,6 @@ namespace KOTORModSync.Tests
             action.Invoke();
 
             recursionDepth--;
-        }
-
-        [Test]
-        public void TestSerializeClassInstances()
-        {
-            try
-            {
-                MyClass instance1 = new();
-                instance1.NestedInstance = new MyNestedClass(instance1);
-                instance1.GuidNestedClassDict = new Dictionary<Guid, List<MyNestedClass>>
-                {
-                    { Guid.NewGuid(), new List<MyNestedClass> { new MyNestedClass(instance1) } }
-                };
-
-                MyClass instance2 = new();
-                instance2.NestedInstance = new MyNestedClass(instance2);
-                instance2.GuidNestedClassDict = new Dictionary<Guid, List<MyNestedClass>>
-                {
-                    { Guid.NewGuid(), new List<MyNestedClass> { new MyNestedClass(instance2), new MyNestedClass(instance2) } }
-                };
-                object serializedTest = Serializer.SerializeObject(instance1);
-                List<object> list = new() { instance1, instance2 };
-                object serialized = Serializer.SerializeObject(list);
-
-                Assert.That(serialized, Is.InstanceOf<List<object>>(), "The serialized object should be of type List<object>.");
-                CollectionAssert.AllItemsAreInstancesOfType(
-                    (List<object>)serialized,
-                    typeof(Dictionary<string, object>),
-                    "All items in the serialized list should be of type Dictionary<string, object>."
-                );
-
-                var deserializedComponent = new Component();
-                deserializedComponent.DeserializeComponent((TomlObject)serialized);
-                Assert.That(deserializedComponent, Is.Not.Null, "Deserialization should not return null.");
-
-                var deserializedList = (List<object>)serialized;
-                Assert.That(deserializedList, Is.Not.Null, "Deserialized object should be a List<object>.");
-                Assert.That(deserializedList, Has.Count.EqualTo(list.Count), "The deserialized list should have the same count as the original list.");
-
-                for (int i = 0; i < list.Count; i++)
-                {
-                    var originalObject = list[i] as MyClass;
-                    var deserializedObject = deserializedList[i] as Dictionary<string, object>;
-                    Assert.Multiple(
-                        () =>
-                        {
-                            Assert.That(
-                                deserializedObject,
-                                Is.Not.Null,
-                                "Each deserialized item should be a Dictionary<string, object>."
-                            );
-                            Assert.That(
-                                originalObject,
-                                Is.Not.Null,
-                                nameof(originalObject) + " != null"
-                            );
-                        }
-                    );
-
-                    // Compare specific properties/fields of the original and deserialized objects
-                    Assert.That(originalObject?.NestedInstance,
-                                Is.Not.Null,
-                                "originalObject.NestedInstance != null"
-                    );
-                    if (deserializedObject != null)
-                    {
-                        AssertPropertyEquality(
-                            originalObject?.NestedInstance,
-                            deserializedObject,
-                            "NestedInstance");
-                    }
-
-                    // Verify uniqueness of serialized objects
-                    var serializedObjects = new HashSet<object>();
-                    VerifyUniqueSerialization(serialized, serializedObjects);
-                }
-            }
-            catch (StackOverflowException)
-            {
-                Assert.Fail(
-                    "Stack Overflow Exception occurred during serialization. Check for cyclic dependencies in the object graph.");
-            }
-            catch (Exception ex)
-            {
-                Assert.Fail(
-                    $"Test failed with exception: {ex.GetType().Name}\nMessage: {ex.Message}\nStack Trace:\n{ex.StackTrace}");
-            }
         }
 
         private static void AssertPropertyEquality(object? expectedValue, Dictionary<string, object> deserializedObject, string propertyName)

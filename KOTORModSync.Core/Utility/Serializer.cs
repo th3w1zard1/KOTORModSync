@@ -459,7 +459,7 @@ namespace KOTORModSync.Core.Utility
             get
             {
                 string outputDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-                return outputDirectory == null ? throw new ArgumentNullException(nameof(outputDirectory)) : Path.Combine(outputDirectory, "Resources");
+                return outputDirectory ?? throw new ArgumentNullException(nameof(outputDirectory));
             }
         }
 
@@ -585,11 +585,14 @@ namespace KOTORModSync.Core.Utility
                         if (! Directory.Exists(path))
                             continue;
 
-                        IEnumerable<string> matchingFiles;
-                        if (topLevelOnly)
-                            matchingFiles = Directory.EnumerateFiles(path, "*", SearchOption.TopDirectoryOnly);
-                        else
-                            matchingFiles = Directory.EnumerateFiles(path, "*", SearchOption.AllDirectories);
+                        IEnumerable<string> matchingFiles = Directory.EnumerateFiles(
+                            path,
+                            "*",
+                            topLevelOnly
+                                ? SearchOption.TopDirectoryOnly
+                                : SearchOption.AllDirectories
+                        );
+
                         result.AddRange(matchingFiles);
                         continue;
                     }
@@ -597,13 +600,17 @@ namespace KOTORModSync.Core.Utility
                     // Handle wildcard paths
                     string directory = Path.GetDirectoryName(path);
 
-                    if (!string.IsNullOrEmpty(directory) && Directory.Exists(directory))
+                    if (!string.IsNullOrEmpty(directory)
+                        && directory.IndexOfAny(Path.GetInvalidPathChars()) != -1
+                        && Directory.Exists(directory))
                     {
-                        IEnumerable<string> matchingFiles;
-                        if (topLevelOnly)
-                            matchingFiles = Directory.EnumerateFiles(directory, Path.GetFileName(path), SearchOption.AllDirectories);
-                        else
-                            matchingFiles = Directory.EnumerateFiles(directory, Path.GetFileName(path), SearchOption.AllDirectories);
+                        IEnumerable<string> matchingFiles = Directory.EnumerateFiles(
+                            directory,
+                            Path.GetFileName(path),
+                            topLevelOnly ? SearchOption.TopDirectoryOnly
+                                : SearchOption.AllDirectories
+                        );
+
                         result.AddRange(matchingFiles);
                         continue;
                     }
@@ -623,11 +630,14 @@ namespace KOTORModSync.Core.Utility
                     if (string.IsNullOrEmpty(currentDirectory) || ! Directory.Exists(currentDirectory))
                         continue;
 
-                    IEnumerable<string> checkFiles;
-                    if (topLevelOnly)
-                        checkFiles = Directory.EnumerateFiles(currentDirectory, "*", SearchOption.AllDirectories);
-                    else
-                        checkFiles = Directory.EnumerateFiles(currentDirectory, "*", SearchOption.TopDirectoryOnly);
+                    IEnumerable<string> checkFiles = Directory.EnumerateFiles(
+                        currentDirectory,
+                        "*",
+                        topLevelOnly
+                            ? SearchOption.TopDirectoryOnly
+                            : SearchOption.AllDirectories
+                    );
+
                     result.AddRange(checkFiles.Where(thisFile => WildcardMatch(thisFile, path)));
                 }
                 catch (Exception ex)

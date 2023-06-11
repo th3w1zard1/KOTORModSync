@@ -251,27 +251,28 @@ namespace KOTORModSync.Core.Utility
                 RedirectStandardInput = true,
                 EnvironmentVariables = { ["__COMPAT_LAYER"] = "RunAsHighest" }
             },
-            // try using native shell (doesn't support output redirection)
+            // try without redirecting output)
             new ProcessStartInfo
             {
                 FileName = programFile.FullName,
                 Arguments = cmdlineArgs,
+                UseShellExecute = false,
                 EnvironmentVariables = { ["__COMPAT_LAYER"] = "RunAsHighest" }
             },
-            // try using native shell (doesn't support output redirection)
-            new ProcessStartInfo
-            {
-                FileName = programFile.FullName,
-                Arguments = cmdlineArgs,
-                EnvironmentVariables = { ["__COMPAT_LAYER"] = "RunAsInvoker" }
-            },
-            // guess they need admin.
+            // try using native shell (doesn't support output redirection, perhaps they need admin)
             new ProcessStartInfo
             {
                 FileName = programFile.FullName,
                 Arguments = cmdlineArgs,
                 UseShellExecute = IsShellExecutionSupported() // not supported on all OS's.
+            },
+            // try using RunAsInvoker
+            new ProcessStartInfo { FileName = programFile.FullName,
+                Arguments = cmdlineArgs,
+                UseShellExecute = false,
+                EnvironmentVariables =  { ["__COMPAT_LAYER"] = "RunAsInvoker"
             }
+        },
         };
 
         private static async Task HandleProcessExitedAsync([CanBeNull] Process process, [CanBeNull] TaskCompletionSource<int> tcs)

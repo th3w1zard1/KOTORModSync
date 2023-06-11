@@ -321,7 +321,6 @@ namespace KOTORModSync
                     Logger.LogVerbose($"User canceled GUID replacement for component {duplicateComponent.Name}");
                 }
             }
-            
 
             await Dispatcher.UIThread.InvokeAsync(() =>
             {
@@ -375,7 +374,7 @@ namespace KOTORModSync
                 using (StreamReader reader = new StreamReader(filePath))
                 {
                     string fileContents = await reader.ReadToEndAsync();
-                    if(_components != null && _components.Count > 0)
+                    if (_components?.Count > 0)
                     {
                         if (!await ConfirmationDialog.ShowConfirmationDialog(this, "You already have a config loaded. Do you want to load the markdown anyway?"))
                             return;
@@ -419,9 +418,11 @@ namespace KOTORModSync
 
                 if (files.Any(string.IsNullOrEmpty))
                 {
-                    Logger.LogException(new ArgumentOutOfRangeException(
-                                            nameof(files),
-                                            $"Invalid files found, please report this to the developer: '{files}'"));
+                    Logger.LogException(
+                        new ArgumentOutOfRangeException(
+                            nameof(files),
+                            $"Invalid files found, please report this to the developer: '{files}'"
+                        ));
                 }
 
                 // Replace path with prefixed variables.

@@ -180,8 +180,9 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                                             }
 
                                             string destinationPath = Path.Combine(
-                                                thisFile.Directory.FullName,
-                                                reader.Entry.Key);
+                                                    thisFile.Directory.FullName,
+                                                    reader.Entry.Key)
+                                                .Replace('/','\\');
 
                                             if (! Directory.Exists(destinationPath))
                                             {

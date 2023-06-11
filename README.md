@@ -1,7 +1,8 @@
 # KOTORModSync
 KOTORModSync is a multi-mod installer for KOTOR games that makes it easier to install and manage mods. I usually install the Snigaroo modbuild every year or so. The last time I did so I made a mistake on a single different step 3 times in a row and had to start over each time. So I decided to build a tool to simplify the process.
 
-![image](https://github.com/th3w1zard1/KOTORModSync/assets/2219836/094af450-d300-4db5-82be-5614e6dea78e)
+![image](https://github.com/th3w1zard1/KOTORModSync/assets/2219836/d7871e62-a27d-4864-b5bb-d5f002141ac3)
+
 
 
 ## Goals

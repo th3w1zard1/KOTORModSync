@@ -34,6 +34,7 @@ namespace KOTORModSync.Tests
                 actualChecksums[fileInfo.Name] = BitConverter.ToString(sha1.Hash ?? Array.Empty<byte>()).Replace("-", "");
             }
 
+
             // Act
             var validator = new FileChecksumValidator(TestFolderPath, expectedChecksums, expectedChecksums);
             bool result = await validator.ValidateChecksumsAsync();

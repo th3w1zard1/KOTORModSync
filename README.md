@@ -46,3 +46,14 @@ All you need to do is build KOTORModSync.GUI, this should build the program into
 - Targets .net standard 2.0
 #### KOTORModSync.ConsoleApp
 - Contains a few quickly written developer tools used to quickly test some features.
+
+
+## Credit
+**Snigaroo** This man saved me countless amount of hours. I'd still be struggling through game glitches and mod-specific instructions I didn't understand. Actually I'd probably still be on Dantooine trying to determine why I'm getting visual glitches and crashes which he solved with the one word message 'grass'.
+**JCarter426** Ditto. There was so much KOTOR-specific things to learn, without his help I'd still be trying to deserialize encapsulated resource files. His time and patience were incredibly useful to the project and this project would be impossible without him.
+
+### Testers:
+Lewok from r/KOTOR: Thank you for helping test that obnoxious incorrect UAC elevation problem legacy Windows apps like TSLPatcher has!
+
+
+Thank you to the entire KOTOR community.

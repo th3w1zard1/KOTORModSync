@@ -364,3 +364,4 @@ FodyWeavers.xsd
 
 # Custom
 modconfig*.toml
+log.txt

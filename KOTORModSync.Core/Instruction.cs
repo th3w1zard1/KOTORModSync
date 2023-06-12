@@ -23,7 +23,9 @@ namespace KOTORModSync.Core
         public string Action { get; set; }
         public Guid Guid { get; set; }
         public List<string> Source { get; set; }
+        private List<string> sourcePaths { get; set; }
         public string Destination { get; set; }
+        private DirectoryInfo destinationPath { get; set; }
         public List<Guid> Dependencies { get; set; }
         public List<Guid> Restrictions { get; set; }
         public bool Overwrite { get; set; }
@@ -81,9 +83,9 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
         // This method should not be ran before an instruction is executed.
         // Otherwise we risk deserializing a full path early, which can lead to unsafe config injections. (e.g. malicious config file targeting sys files)
         // ^ perhaps the above is user error though? Either way, we attempt to baby them here.
-        public (List<string>, DirectoryInfo) ParsePaths(bool noValidate = false)
+        public void SetRealPaths(bool noValidate = false)
         {
-            List<string> sourcePaths
+            sourcePaths
                 = Source.ConvertAll(Utility.Utility.ReplaceCustomVariables);
             // Enumerate the files/folders with wildcards and add them to the list
             sourcePaths = FileHelper.EnumerateFilesWithWildcards(sourcePaths);
@@ -96,10 +98,10 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                         $"Could not find any files! Source: {string.Join(", ", Source)}");
                 }
 
-                return (sourcePaths, null);
+                return;
             }
 
-            DirectoryInfo destinationPath = new DirectoryInfo(
+            destinationPath = new DirectoryInfo(
                 Utility.Utility.ReplaceCustomVariables(Destination)
                 ?? throw new InvalidOperationException("No destination set!"));
 
@@ -109,7 +111,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                     $"Could not find any files! Source: {string.Join(", ", Source)}");
             }
 
-            return (sourcePaths, destinationPath);
+            return;
         }
 
         public async Task<bool> ExtractFileAsync(
@@ -118,7 +120,6 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
         {
             try
             {
-                (List<string> sourcePaths, _) = ParsePaths();
                 List<Task> extractionTasks = new List<Task>(25);
 
                 // Use SemaphoreSlim to limit concurrent extractions
@@ -166,44 +167,29 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                                         while (reader.MoveToNextEntry())
                                         {
                                             if (reader.Entry.IsDirectory) continue;
+                                            if (thisFile.Directory?.FullName == null) continue;
 
-                                            string destinationFolder
-                                                = Path.GetFileNameWithoutExtension(
-                                                    thisFile.Name);
-                                            if (thisFile.Directory == null)
-                                            {
-                                                _ = Task.Run(
-                                                    () => Logger.Log($"Skip {thisFile.Name}, directory cannot be determined.")
-                                                );
-
-                                                continue;
-                                            }
-
-                                            string destinationPath = Path.Combine(
-                                                    thisFile.Directory.FullName,
-                                                    reader.Entry.Key)
-                                                .Replace('/','\\');
-
-                                            if (! Directory.Exists(destinationPath))
-                                            {
-                                                _ = Task.Run(
-                                                    () => Logger.Log($"Create directory {destinationPath}")
-                                                );
-
-                                                _ = Directory.CreateDirectory(
-                                                    destinationPath ?? string.Empty);
-                                            }
-
-                                            _ = Task.Run(
-                                                () => Logger.Log(
-                                                    $"Extract {reader.Entry.Key} to {destinationPath}")
+                                            string destinationFolder = Path.GetFileNameWithoutExtension(thisFile.Name);
+                                            string destinationItemPath = Path.Combine(
+                                                thisFile.Directory.FullName,
+                                                destinationFolder,
+                                                reader.Entry.Key
                                             );
+                                            string destinationDirectory = Path.GetDirectoryName(destinationItemPath);
+
+                                            if (destinationDirectory != null && ! Directory.Exists(destinationDirectory))
+                                            {
+                                                Logger.Log($"Create directory {destinationDirectory}");
+                                                _ = Directory.CreateDirectory(destinationDirectory);
+                                            }
+
+                                            Logger.Log($"Extract {reader.Entry.Key} to {thisFile.Directory.FullName}");
 
                                             try
                                             {
                                                 await Task.Run(
                                                     () => reader.WriteEntryToDirectory(
-                                                        destinationPath ?? string.Empty,
+                                                        destinationDirectory ?? throw new InvalidOperationException(),
                                                         ArchiveHelper.DefaultExtractionOptions
                                                     )
                                                 );
@@ -299,8 +285,6 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
         {
             try
             {
-                (List<string> sourcePaths, DirectoryInfo _) = ParsePaths();
-
                 foreach (string thisFilePath in sourcePaths)
                 {
                     FileInfo thisFile = new FileInfo(thisFilePath);
@@ -401,7 +385,6 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
         {
             try
             {
-                (List<string> sourcePaths, DirectoryInfo destinationPath) = ParsePaths();
                 foreach (string sourcePath in sourcePaths)
                 {
                     string fileName = Path.GetFileName(sourcePath);
@@ -447,7 +430,6 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
         {
             try
             {
-                (List<string> sourcePaths, DirectoryInfo destinationPath) = ParsePaths();
                 foreach (string sourcePath in sourcePaths)
                 {
                     string fileName = Path.GetFileName(sourcePath);
@@ -495,7 +477,6 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
         {
             try
             {
-                (List<string> sourcePaths, _) = ParsePaths();
                 foreach (string t in sourcePaths)
                 {
                     var tslPatcherPath = t;
@@ -563,9 +544,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
         {
             try
             {
-                (List<string> sourcePaths, _) = ParsePaths();
                 bool isSuccess = true; // Track the success status
-
                 foreach (string sourcePath in sourcePaths)
                 {
                     if (this.Action == "TSLPatcher")
@@ -610,7 +589,6 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
         {
             bool errors = false;
             bool found = false;
-            (List<string> sourcePaths, DirectoryInfo _) = ParsePaths();
             foreach (string installLogFile in sourcePaths.Select(
                 sourcePath => System.IO.Path.Combine(
                     Path.GetDirectoryName(sourcePath) ?? string.Empty,

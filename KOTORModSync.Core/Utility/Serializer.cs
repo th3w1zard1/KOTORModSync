@@ -573,20 +573,24 @@ namespace KOTORModSync.Core.Utility
             foreach (string path in uniquePaths.Where(path => ! string.IsNullOrEmpty(path)) )
                 try
                 {
-                    if (!ContainsWildcards(path))
+                    string backslashPath = path
+                        .Replace('/', Path.DirectorySeparatorChar)
+                        .Replace('\\', Path.DirectorySeparatorChar);
+
+                    if (!ContainsWildcards(backslashPath))
                     {
                         // Handle non-wildcard paths
-                        if (File.Exists(path))
+                        if (File.Exists(backslashPath))
                         {
-                            result.Add(path);
+                            result.Add(backslashPath);
                             continue;
                         }
 
-                        if (! Directory.Exists(path))
+                        if (! Directory.Exists(backslashPath))
                             continue;
 
                         IEnumerable<string> matchingFiles = Directory.EnumerateFiles(
-                            path,
+                            backslashPath,
                             "*",
                             topLevelOnly
                                 ? SearchOption.TopDirectoryOnly
@@ -598,7 +602,7 @@ namespace KOTORModSync.Core.Utility
                     }
 
                     // Handle wildcard paths
-                    string directory = Path.GetDirectoryName(path);
+                    string directory = Path.GetDirectoryName(backslashPath);
 
                     if (!string.IsNullOrEmpty(directory)
                         && directory.IndexOfAny(Path.GetInvalidPathChars()) != -1
@@ -606,7 +610,7 @@ namespace KOTORModSync.Core.Utility
                     {
                         IEnumerable<string> matchingFiles = Directory.EnumerateFiles(
                             directory,
-                            Path.GetFileName(path),
+                            Path.GetFileName(backslashPath),
                             topLevelOnly ? SearchOption.TopDirectoryOnly
                                 : SearchOption.AllDirectories
                         );
@@ -616,7 +620,7 @@ namespace KOTORModSync.Core.Utility
                     }
 
                     // Handle wildcard paths
-                    string currentDirectory = path;
+                    string currentDirectory = backslashPath;
 
                     while (ContainsWildcards(currentDirectory))
                     {
@@ -638,7 +642,7 @@ namespace KOTORModSync.Core.Utility
                             : SearchOption.AllDirectories
                     );
 
-                    result.AddRange(checkFiles.Where(thisFile => WildcardMatch(thisFile, path)));
+                    result.AddRange(checkFiles.Where(thisFile => WildcardMatch(thisFile, backslashPath)));
                 }
                 catch (Exception ex)
                 {
@@ -773,7 +777,7 @@ namespace KOTORModSync.Core.Utility
     {
         public static ExtractionOptions DefaultExtractionOptions = new ExtractionOptions
         {
-            ExtractFullPath = true,
+            ExtractFullPath = false,
             Overwrite = true,
             PreserveFileTime = true
         };

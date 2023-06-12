@@ -470,6 +470,11 @@ namespace KOTORModSync.Core
                         //parse the source/destinations
 
                         bool success = false;
+
+                        // converts the custom variables and enumerates the files/folders based on wildcards
+                        instruction.SetRealPaths();
+
+
                         switch (instruction.Action.ToLower())
                         {
                             case "extract":

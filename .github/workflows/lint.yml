@@ -41,6 +41,8 @@ jobs:
     # Commit the changes
     - name: Commit changes
       run: |
+        git config --global user.email "linter_workflow@githubactions.com"
+        git config --global user.name "CSharp Lint"
         git commit -m "Auto-format code using dotnet format"
         git remote set-url origin https://github.com/$GITHUB_REPOSITORY.git
         git push --set-upstream origin $GITHUB_REF

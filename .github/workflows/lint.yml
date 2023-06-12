@@ -21,7 +21,7 @@ jobs:
     - name: Setup .NET Core
       uses: actions/setup-dotnet@v2
       with:
-        dotnet-version: '5.0.x' # SDK Version to use; x will use the latest version of the 5.0 channel
+        dotnet-version: '6.0.x' # SDK Version to use; x will use the latest version of the 5.0 channel
 
     # Format the output of dotnet format
     - name: Add dotnet-format problem matcher
@@ -31,9 +31,22 @@ jobs:
     - name: Install dotnet format
       run: dotnet tool update --global dotnet-format
 
+    # Stage the changes made by dotnet format
+    - name: Stage changes
+      run: git add .
+      
     # Run dotnet format --dry-run --check
     # By default, the task ensure the exit code is 0
     # If a file needs to be edited by dotnet format, the exit code will be a non-zero value
     # So the task will fail
     - name: Run dotnet format
-      run: dotnet format --check --verbosity diagnostic
+      run: dotnet format --verbosity diagnostic
+      
+    # Commit the changes
+    - name: Commit changes
+      run: |
+        git commit -m "Auto-format code using dotnet format"
+        git remote set-url origin https://github.com/$GITHUB_REPOSITORY.git
+        git push --set-upstream origin $GITHUB_REF
+      env:
+        GITHUB_TOKEN: ${{ secrets.WORKFLOW_ACTIONS }}

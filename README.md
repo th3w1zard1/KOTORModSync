@@ -7,6 +7,7 @@ KOTORModSync is a multi-mod installer for KOTOR games that makes it easier to in
 ## Goals
 Mod creators work really hard on their mods. It's the least we can do to install them and use them, right? However who wants to reinstall to vanilla just to spend several hours reinstalling mods, just to add 1 or 2 extra mods on top of it?
 Other modmanagers I've tried were either too difficult to configure, requiring significant changes to a hard-to-understand configuration file; or only provided limited functionality for defining new mods. KOTOR mods do have complex dependency relationships with each other in regards to compatibility.
+
 Enter KOTORMODSync.
 
 This installer creator has a built-in GUI editor, and provides serializers to parse and load the TOML instruction file. Modbuild creators can create instructions with little to no knowledge of the format and easily share with end users. End users can install everything from the instruction file with a simple click of a button. Edit any instruction and verify the configuration with built-in tools. There's also some support to dry run an install.
@@ -23,7 +24,7 @@ Supports file validation using hashes of a game install and mod files to ensure 
 KOTORModSync is compatible with Windows7-11, Linux, and Mac, as well as anything supported by .NET Standard 2.0.
 
 ### Linux/Mac
-Only the x64 version is supported on Linux/Mac, all you need is .net 6.0 or higher. You may need additional X11 development libraries. In order to get this working on WSL I had to install the following packages:
+You need NET6 or higher, the .NET Framework version I believe isn't compatible. You may need additional X11 development libraries. In order to get this working on WSL I had to install the following packages:
 
 `sudo apt install libsm6 libice6 libx11-dev libfontconfig1 libx11-6 libx11-xcb1 libxau6 libxcb1 libxdmcp6 libxcb-xkb1 libxcb-render0 libxcb-shm0 libxcb-xfixes0 libxcb-util1 libxcb-xinerama0 libxcb-randr0 libxcb-image0 libxcb-keysyms1 libxcb-sync1 libxcb-xtest0`
 
@@ -57,7 +58,7 @@ Ditto. There was so much KOTOR-specific things to learn, without his help I'd st
 
 ### Testers:
 ##### Lewok from r/KOTOR
-Thank you for helping test that obnoxious incorrect UAC elevation problem legacy Windows apps like TSLPatcher has!
+Thank you for helping test that obnoxious UAC elevation problem legacy Windows apps like TSLPatcher has!
 
 #### Other notable users
 #### @Woodske

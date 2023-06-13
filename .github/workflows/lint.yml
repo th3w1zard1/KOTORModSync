@@ -7,6 +7,7 @@ on:
 env:
   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: 1
   DOTNET_NOLOGO: true
+  GITHUB_USER: th3w1zard1
   GITHUB_REPOSITORY: KOTORModSync
 
 defaults:
@@ -46,7 +47,7 @@ jobs:
         git config --global user.name "CSharp Lint"
         git commit -m "Auto-format code using dotnet format"
         git add .
-        git remote set-url origin https://github.com/$GITHUB_REPOSITORY.git
+        git remote set-url origin https://github.com/$GITHUB_USER/$GITHUB_REPOSITORY.git
         git push --set-upstream origin $GITHUB_REF
       env:
         GITHUB_TOKEN: ${{ secrets.WORKFLOW_ACTIONS }}

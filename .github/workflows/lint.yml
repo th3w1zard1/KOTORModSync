@@ -48,10 +48,9 @@ jobs:
           git add .
           git commit -m "Auto-format code using dotnet format"
           git remote set-url origin "https://github.com/${{ secrets.WORKFLOW_ACTIONS }}/${{ github.repository }}.git"
-          if ! git push --set-upstream origin ${{ github.ref }}; then
+          if (! git push --set-upstream origin ${{ github.ref }}); then
             echo "Failed to push changes to the repository."
             exit 1
           fi
         env:
           GITHUB_TOKEN: ${{ secrets.WORKFLOW_ACTIONS }}
-

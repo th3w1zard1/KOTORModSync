@@ -436,7 +436,7 @@ namespace KOTORModSync.Core
                     {
                         Instruction instruction = component.Instructions[i1]
                             ?? throw new ArgumentException(
-                                $"[Error] instruction null at index {i1}", nameof(componentsList) );
+                                $"[Error] instruction null at index {i1}", nameof( componentsList ) );
 
                         //The instruction will run if any of the following conditions are met:
                         //The instruction has no dependencies or restrictions.
@@ -929,7 +929,7 @@ namespace KOTORModSync.Core
                         break;
                     // rename should never use <<kotorDirectory >>\\Override
                     case "rename":
-                        if ( instruction.Destination? .Equals(
+                        if ( instruction.Destination?.Equals(
                                 "<<kotorDirectory>>\\Override",
                                 StringComparison.Ordinal ) != false
                            )
@@ -945,7 +945,7 @@ namespace KOTORModSync.Core
 
                         break;
                     default:
-                        if ( destinationPath? .Exists != true )
+                        if ( destinationPath?.Exists != true )
                         {
                             success = false;
                             AddError(

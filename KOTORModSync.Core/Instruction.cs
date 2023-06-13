@@ -120,10 +120,10 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
         {
             try
             {
-                List<Task> extractionTasks = new List<Task>( 25 );
+                var extractionTasks = new List<Task>( 25 );
 
                 // Use SemaphoreSlim to limit concurrent extractions
-                SemaphoreSlim
+                var
                     semaphore = new SemaphoreSlim( 5 ); // Limiting to 5 concurrent extractions
                 bool success = true;
                 foreach ( string sourcePath in sourcePaths )
@@ -287,7 +287,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
             {
                 foreach ( string thisFilePath in sourcePaths )
                 {
-                    FileInfo thisFile = new FileInfo( thisFilePath );
+                    var thisFile = new FileInfo( thisFilePath );
 
                     if ( !Path.IsPathRooted( thisFilePath ) || !thisFile.Exists )
                     {
@@ -479,7 +479,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
             {
                 foreach ( string t in sourcePaths )
                 {
-                    var tslPatcherPath = t;
+                    string tslPatcherPath = t;
                     DirectoryInfo tslPatcherDirectory;
 
                     if ( Path.HasExtension( tslPatcherPath ) )
@@ -504,7 +504,6 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                                 $"The directory {tslPatcherPath} could not be located on the disk." );
                         }
                     }
-
 
                     FileHelper.ReplaceLookupGameFolder( tslPatcherDirectory );
 
@@ -585,35 +584,39 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
             }
         }
 
-        public bool VerifyInstall()
+        public List<string> VerifyInstall()
         {
-            bool errors = false;
-            bool found = false;
-            foreach ( string installLogFile in sourcePaths.Select(
-                sourcePath => System.IO.Path.Combine(
-                    Path.GetDirectoryName( sourcePath ) ?? string.Empty,
-                    "install.rtf" ) ) )
+            List<string> errorLines = new List<string>();
+
+            foreach ( string sourcePath in sourcePaths )
             {
-                if ( !File.Exists( installLogFile ) )
-                {
-                    Logger.Log( "Install log file not found." );
+                if ( sourcePath == null )
                     continue;
-                }
 
-                found = true;
-                string installLogContent = File.ReadAllText( installLogFile );
-                string[] bulletPoints = installLogContent.Split( '\u2022' );
+                string tslPatcherDirPath = Path.GetDirectoryName( sourcePath )
+                    ?? throw new DirectoryNotFoundException( $"Could not retrieve parent directory of {sourcePath}." );
 
-                foreach ( string bulletPoint in bulletPoints.Where(
-                    bulletPoint => bulletPoint.Contains( "Error" ) ) )
+                string fullInstallLogFile = Path.Combine(
+                    tslPatcherDirPath,
+                    "installlog.rtf"
+                );
+
+                if ( !File.Exists( fullInstallLogFile ) )
+                    throw new FileNotFoundException( "Install log file not found.", fullInstallLogFile );
+
+                string installLogContent = File.ReadAllText( fullInstallLogFile );
+                string[] lines = installLogContent.Split( '\n' );
+
+                foreach ( string thisLine in lines )
                 {
-                    Logger.Log(
-                        $"Install log contains warning or error message: {bulletPoint.Trim()}" );
-                    errors = true;
+                    if ( !thisLine.Contains( "Error: " ) )
+                        continue;
+
+                    errorLines.Add( thisLine );
                 }
             }
 
-            return found && !errors;
+            return errorLines;
         }
     }
 }

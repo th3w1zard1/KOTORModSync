@@ -28,7 +28,7 @@ namespace KOTORModSync.Core.Utility
             if ( availableMemory < memoryThreshold )
                 Parallel.Invoke( () => maxParallelism = Math.Max( 1, maxParallelism / 2 ) );
 
-            Task<double> maxDiskSpeedTask = Task.Run( () => GetMaxDiskSpeed( Path.GetPathRoot( thisDir.FullName ) ) );
+            var maxDiskSpeedTask = Task.Run( () => GetMaxDiskSpeed( Path.GetPathRoot( thisDir.FullName ) ) );
             double maxDiskSpeed = await maxDiskSpeedTask;
 
             const double diskSpeedThreshold = 100.0; // MB/sec threshold
@@ -88,7 +88,7 @@ namespace KOTORModSync.Core.Utility
 
             try
             {
-                using ( Process process = new Process() )
+                using ( var process = new Process() )
                 {
                     process.StartInfo.FileName = shellPath;
                     process.StartInfo.Arguments = $"/c \"{command}\"";  // Use "/c" for Windows command prompt and "-c" for Unix-like shells
@@ -130,7 +130,6 @@ namespace KOTORModSync.Core.Utility
             return isSupported;
         }
 
-
         public static string GetShellExecutable()
         {
             string[] shellExecutables =
@@ -167,7 +166,7 @@ namespace KOTORModSync.Core.Utility
             else
                 throw new PlatformNotSupportedException( "Disk performance checking is not supported on this platform." );
 
-            ProcessStartInfo startInfo = new ProcessStartInfo
+            var startInfo = new ProcessStartInfo
             {
                 FileName = command,
                 Arguments = arguments,
@@ -175,7 +174,7 @@ namespace KOTORModSync.Core.Utility
                 UseShellExecute = false
             };
 
-            using ( Process process = new Process() )
+            using ( var process = new Process() )
             {
                 process.StartInfo = startInfo;
                 _ = process.Start();
@@ -193,7 +192,7 @@ namespace KOTORModSync.Core.Utility
         {
             const double maxSpeed = 0.0;
 
-            Regex regex = new Regex( @"([0-9,.]+)\s*(bytes/sec|MB/sec)" );
+            var regex = new Regex( @"([0-9,.]+)\s*(bytes/sec|MB/sec)" );
             Match match = regex.Match( output );
             if ( !match.Success || match.Groups.Count < 3 )
                 return maxSpeed;
@@ -305,17 +304,19 @@ namespace KOTORModSync.Core.Utility
             if ( process.ExitCode != 0 )
                 logMessage += $"Process failed with exit code {process.ExitCode}. ";
 
-            StringBuilder logBuilder = new StringBuilder( logMessage );
+            var logBuilder = new StringBuilder( logMessage );
 
-            if ( output != null ) logBuilder.Append( "Output: " ).AppendLine( output );
-            if ( error != null ) logBuilder.Append( "Error: " ).AppendLine( error );
+            if ( output != null )
+                _ = logBuilder.Append( "Output: " ).AppendLine( output );
+
+            if ( error != null )
+                _ = logBuilder.Append( "Error: " ).AppendLine( error );
 
             Logger.Log( logBuilder.ToString() );
 
             // Process had an error of some sort even though ExitCode is 0?
             tcs.SetResult( -3 );
         }
-
 
         public static async Task<int> ExecuteProcessAsync(
             [CanBeNull] FileInfo programFile,
@@ -335,18 +336,18 @@ namespace KOTORModSync.Core.Utility
                 noAdmin
             );
 
-            Exception ex = new Exception();
+            var ex = new Exception();
             bool startedProcess = false;
             foreach ( ProcessStartInfo startInfo in processStartInfosWithFallbacks )
                 try
                 {
                     // K1CP can take ages to install, set the timeout time to an hour.
-                    using ( CancellationTokenSource cancellationTokenSource = new CancellationTokenSource( TimeSpan.FromSeconds( 3600 ) ) )
-                    using ( Process process = new Process() )
+                    using ( var cancellationTokenSource = new CancellationTokenSource( TimeSpan.FromSeconds( 3600 ) ) )
+                    using ( var process = new Process() )
                     {
                         process.StartInfo = startInfo;
 
-                        TaskCompletionSource<int> tcs = new TaskCompletionSource<int>();
+                        var tcs = new TaskCompletionSource<int>();
 
                         process.Exited += async ( sender, args ) => await HandleProcessExitedAsync( (Process)sender, tcs );
 
@@ -358,15 +359,15 @@ namespace KOTORModSync.Core.Utility
 
                             if ( !localProcess.CloseMainWindow() )
                                 localProcess.Kill();
-                            tcs.TrySetCanceled();
+                            _ = tcs.TrySetCanceled();
                         } );
 
                         process.EnableRaisingEvents = true;
-                        process.Start();
+                        _ = process.Start();
 
                         startedProcess = true;
 
-                        await tcs.Task;
+                        _ = await tcs.Task;
 
                         if ( cancellationTokenSource.Token.IsCancellationRequested )
                             throw new TimeoutException( "Process timed out" );

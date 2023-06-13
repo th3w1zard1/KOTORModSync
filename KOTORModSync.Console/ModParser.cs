@@ -26,7 +26,7 @@ namespace KOTORModSync.ConsoleApp
         {
             var mod = new Component();
 
-            var nameAndModLinks = GetNameAndModLink( modText );
+            (string, string) nameAndModLinks = GetNameAndModLink( modText );
             mod.Name = GetName( nameAndModLinks );
             mod.ModLink = GetHyperlinkUrl( nameAndModLinks, "Name" );
             mod.Author = GetPropertyValue( modText, "Author" );
@@ -44,7 +44,8 @@ namespace KOTORModSync.ConsoleApp
             string pattern = @"\*\*(Name):\*\* \[([^]]+)\]\(([^)\s]+)\)(?: and \[\*\*Patch\*\*\]\(([^)\s]+)\))?";
             Match match = Regex.Match( text, pattern, RegexOptions.Singleline );
 
-            if ( !match.Success ) { return (string.Empty, string.Empty); }
+            if ( !match.Success )
+                return (string.Empty, string.Empty);
 
             string name = match.Groups[2].Value.Trim();
             string modLink = match.Groups[3].Value.Trim();
@@ -56,7 +57,8 @@ namespace KOTORModSync.ConsoleApp
             string pattern = $@"(?i)\*\*{propertyName}:\*\* ([^_*]+)";
             Match match = Regex.Match( text, pattern, RegexOptions.Singleline );
 
-            if ( !match.Success ) { return string.Empty; }
+            if ( !match.Success )
+                return string.Empty;
 
             return match.Groups[1].Value.Trim();
         }
@@ -71,7 +73,8 @@ namespace KOTORModSync.ConsoleApp
             string pattern = $@"(?i)\*\*{categoryTierName}:\*\* ([^_*]+)";
             Match match = Regex.Match( text, pattern, RegexOptions.Singleline );
 
-            if ( !match.Success ) { return (string.Empty, string.Empty); }
+            if ( !match.Success )
+                return (string.Empty, string.Empty);
 
             string[] values = match.Groups[1].Value.Split( '/' );
             if ( values.Length == 2 )

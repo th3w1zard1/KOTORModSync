@@ -39,7 +39,7 @@ namespace KOTORModSync.Core.Utility
                 case string stringValue:
                     {
                         // Convert the string to a list of strings
-                        List<string> stringList = new List<string>( 65535 ) { stringValue };
+                        var stringList = new List<string>( 65535 ) { stringValue };
 
                         // Replace the string value with the list
                         dict[key] = stringList;
@@ -152,7 +152,7 @@ namespace KOTORModSync.Core.Utility
 
         public static Dictionary<string, object> ConvertTomlTableToDictionary( TomlTable tomlTable )
         {
-            Dictionary<string, object> dict = new Dictionary<string, object>( 65535 );
+            var dict = new Dictionary<string, object>( 65535 );
 
             foreach ( KeyValuePair<string, object> kvp in tomlTable )
             {
@@ -177,7 +177,7 @@ namespace KOTORModSync.Core.Utility
 
         public static string GenerateModDocumentation( List<Component> componentsList )
         {
-            StringBuilder sb = new StringBuilder( 50000 );
+            var sb = new StringBuilder( 50000 );
             const string indentation = "    ";
 
             // Loop through each 'thisMod' entry
@@ -253,7 +253,7 @@ namespace KOTORModSync.Core.Utility
 
         public static List<object> MergeLists( IEnumerable<object> list1, IEnumerable<object> list2 )
         {
-            List<object> mergedList = new List<object>( 65535 );
+            var mergedList = new List<object>( 65535 );
             mergedList.AddRange( list1 );
             mergedList.AddRange( list2 );
             return mergedList;
@@ -266,7 +266,7 @@ namespace KOTORModSync.Core.Utility
                 if ( enumerator.Current == null )
                     continue;
 
-                DictionaryEntry entry = (DictionaryEntry)enumerator.Current;
+                var entry = (DictionaryEntry)enumerator.Current;
                 yield return new KeyValuePair<object, object>( entry.Key, entry.Value );
             }
         }
@@ -283,12 +283,11 @@ namespace KOTORModSync.Core.Utility
             if ( obj is IList objList )
                 return SerializeList( objList );
 
-            Dictionary<string, object> serializedProperties = new Dictionary<string, object>();
+            var serializedProperties = new Dictionary<string, object>();
 
             IEnumerable<object> members;
             switch ( obj )
             {
-
                 // IDictionary types
                 case IDictionary mainDictionary:
                     IEnumerator enumerator = mainDictionary.GetEnumerator();
@@ -345,7 +344,7 @@ namespace KOTORModSync.Core.Utility
                         break;
                     case IDictionary dictionary:
                         {
-                            TomlTable tomlTable = new TomlTable();
+                            var tomlTable = new TomlTable();
 
                             foreach ( DictionaryEntry entry in dictionary )
                             {
@@ -388,7 +387,7 @@ namespace KOTORModSync.Core.Utility
         // ReSharper disable once SuggestBaseTypeForParameter
         private static TomlArray SerializeList( IList list )
         {
-            TomlArray serializedList = new TomlArray();
+            var serializedList = new TomlArray();
 
             foreach ( object item in list )
             {
@@ -500,7 +499,7 @@ namespace KOTORModSync.Core.Utility
 
         public static void OutputConfigFile( IEnumerable<Component> components, string filePath )
         {
-            StringBuilder stringBuilder = new StringBuilder( 65535 );
+            var stringBuilder = new StringBuilder( 65535 );
 
             foreach ( Component thisComponent in components )
                 _ = stringBuilder.AppendLine( thisComponent.SerializeComponent() );
@@ -511,7 +510,7 @@ namespace KOTORModSync.Core.Utility
 
         public static async Task MoveFileAsync( string sourcePath, string destinationPath )
         {
-            using ( FileStream sourceStream = new FileStream(
+            using ( var sourceStream = new FileStream(
                 sourcePath,
                 FileMode.Open,
                 FileAccess.Read,
@@ -519,7 +518,7 @@ namespace KOTORModSync.Core.Utility
                 4096,
                 true ) )
             {
-                using ( FileStream destinationStream = new FileStream( destinationPath, FileMode.CreateNew, FileAccess.Write, FileShare.None, 4096, true ) )
+                using ( var destinationStream = new FileStream( destinationPath, FileMode.CreateNew, FileAccess.Write, FileShare.None, 4096, true ) )
                 {
                     await sourceStream.CopyToAsync( destinationStream );
                 }
@@ -554,7 +553,7 @@ namespace KOTORModSync.Core.Utility
 
             // Get the array of Component tables
 
-            Component component = new Component();
+            var component = new Component();
 
             // Deserialize each TomlTable into a Component object
             if ( !( tomlTable["thisMod"] is TomlTableArray componentTables ) )
@@ -568,9 +567,9 @@ namespace KOTORModSync.Core.Utility
 
         public static List<string> EnumerateFilesWithWildcards( IEnumerable<string> filesAndFolders, bool topLevelOnly = false )
         {
-            List<string> result = new List<string>();
+            var result = new List<string>();
 
-            HashSet<string> uniquePaths = new HashSet<string>( filesAndFolders );
+            var uniquePaths = new HashSet<string>( filesAndFolders );
 
             foreach ( string path in uniquePaths.Where( path => !string.IsNullOrEmpty( path ) ) )
                 try
@@ -728,9 +727,9 @@ namespace KOTORModSync.Core.Utility
                 TomlTable tomlTable = tomlDocument.ToModel();
 
                 // Get the array of Component tables
-                TomlTableArray componentTables = tomlTable["thisMod"] as TomlTableArray;
+                var componentTables = tomlTable["thisMod"] as TomlTableArray;
 
-                List<Component> components = new List<Component>( 65535 );
+                var components = new List<Component>( 65535 );
                 foreach ( (TomlObject tomlComponent, Component component) in
                     // Deserialize each TomlTable into a Component object
                     from TomlObject tomlComponent in componentTables
@@ -836,7 +835,7 @@ namespace KOTORModSync.Core.Utility
 
         public static Dictionary<string, object> GenerateArchiveTreeJson( DirectoryInfo directory )
         {
-            Dictionary<string, object> root = new Dictionary<string, object>( 65535 ) { { "Name", directory.Name }, { "Type", "directory" }, { "Contents", new List<object>() } };
+            var root = new Dictionary<string, object>( 65535 ) { { "Name", directory.Name }, { "Type", "directory" }, { "Contents", new List<object>() } };
 
             try
             {
@@ -845,9 +844,9 @@ namespace KOTORModSync.Core.Utility
                     if ( !IsArchive( file.Extension ) )
                         continue;
 
-                    Dictionary<string, object> fileInfo = new Dictionary<string, object>( 65535 ) { { "Name", file.Name }, { "Type", "file" } };
+                    var fileInfo = new Dictionary<string, object>( 65535 ) { { "Name", file.Name }, { "Type", "file" } };
                     List<ModDirectory.ArchiveEntry> archiveEntries = TraverseArchiveEntries( file.FullName );
-                    Dictionary<string, object> archiveRoot = new Dictionary<string, object>( 65535 ) { { "Name", file.Name }, { "Type", "directory" }, { "Contents", archiveEntries } };
+                    var archiveRoot = new Dictionary<string, object>( 65535 ) { { "Name", file.Name }, { "Type", "directory" }, { "Contents", archiveEntries } };
 
                     fileInfo["Contents"] = archiveRoot["Contents"];
 
@@ -877,7 +876,7 @@ namespace KOTORModSync.Core.Utility
 
         public static List<ModDirectory.ArchiveEntry> TraverseArchiveEntries( string archivePath )
         {
-            List<ModDirectory.ArchiveEntry> archiveEntries = new List<ModDirectory.ArchiveEntry>( 65535 );
+            var archiveEntries = new List<ModDirectory.ArchiveEntry>( 65535 );
 
             try
             {
@@ -928,7 +927,7 @@ namespace KOTORModSync.Core.Utility
                 }
                 else
                 {
-                    Dictionary<string, object> child = new Dictionary<string, object>( 65535 ) { { "Name", name }, { "Type", isFile ? "file" : "directory" }, { "Contents", new List<object>() } };
+                    var child = new Dictionary<string, object>( 65535 ) { { "Name", name }, { "Type", isFile ? "file" : "directory" }, { "Contents", new List<object>() } };
                     existingDirectory.Add( child );
                     currentDirectory = child;
                 }

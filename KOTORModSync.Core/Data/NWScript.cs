@@ -27,7 +27,7 @@ namespace KOTORModSync.Core.Data
     {
         public static void ReadHeader( [NotNull] Stream stream, out NWScriptHeader header )
         {
-            BinaryReader reader = new BinaryReader( stream );
+            var reader = new BinaryReader( stream );
 
             header.FileType = reader.ReadUInt32();
             header.Version = reader.ReadUInt32();

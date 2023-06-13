@@ -51,18 +51,17 @@ namespace KOTORModSync.Tests
             string tempPath = Path.GetTempPath();
             destinationPathField?.SetValue( instruction, new DirectoryInfo( tempPath ) );
 
-            Directory.CreateDirectory( tempPath );
+            _ = Directory.CreateDirectory( tempPath );
 
-            _archiveMock.Setup( x => x.ExtractAllEntries() ).Returns( _readerMock.Object );
-            _readerMock.Setup( x => x.MoveToNextEntry() ).Returns( false );
+            _ = _archiveMock.Setup( x => x.ExtractAllEntries() ).Returns( _readerMock.Object );
+            _ = _readerMock.Setup( x => x.MoveToNextEntry() ).Returns( false );
 
             // Act
-            var result = await instruction.ExtractFileAsync( _confirmationDialogMock.Object );
+            bool result = await instruction.ExtractFileAsync( _confirmationDialogMock.Object );
 
             // Assert
             Assert.IsFalse( result );
         }
-
 
         /*[Test]
         public async Task ExtractFileAsync_InvalidArchiveFormat_FailsExtraction()
@@ -166,5 +165,4 @@ namespace KOTORModSync.Tests
             Logger.Verify(x => x.Log($"[Warning] Skipping file 'file.txt' due to lack of permissions."), Times.Once);
         }*/
     }
-
 }

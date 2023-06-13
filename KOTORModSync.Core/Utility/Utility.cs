@@ -63,7 +63,7 @@ namespace KOTORModSync.Core.Utility
         // todo: merge relevant sections with PlatformAgnosticMethods.ExecuteProcessAsync
         public static async Task<bool> ExecuteProcessAsync( string fileName, string arguments, Func<Process, Task<bool>> onExited )
         {
-            Process process = new Process
+            var process = new Process
             {
                 StartInfo = {
                     FileName = fileName,

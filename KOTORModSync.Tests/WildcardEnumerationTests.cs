@@ -48,9 +48,7 @@ namespace KOTORModSync.Tests
                 List<string> files = FileHelper.EnumerateFilesWithWildcards( paths );
                 Console.WriteLine( $"Files found for path: {path}" );
                 foreach ( string? file in files )
-                {
                     Console.WriteLine( file );
-                }
 
                 Assert.That( files, Is.Not.Empty, $"No files found for path: {path}" );
             }

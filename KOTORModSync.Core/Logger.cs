@@ -68,7 +68,7 @@ namespace KOTORModSync.Core
                 return;
 
             // Get the current stack frame
-            StackFrame frame = new StackFrame( 1, true );
+            var frame = new StackFrame( 1, true );
             MethodBase method = frame.GetMethod();
             Type declaringType = method.DeclaringType;
 
@@ -134,9 +134,7 @@ namespace KOTORModSync.Core
                 return;
 
             foreach ( Exception ex in e.Exception.InnerExceptions )
-            {
                 LogException( ex );
-            }
 
             e.SetObserved();
         }

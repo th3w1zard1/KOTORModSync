@@ -73,19 +73,19 @@ namespace KOTORModSync.Core
         public string SerializeComponent()
         {
             _ = TomlSettings.Create();
-            var rootTable = new Dictionary<string, List<object>>()
+            var rootTable = new Dictionary<string, List<object>>
             {
                 ["thisMod"] = new List<object>( 65535 ) { Serializer.SerializeObject( this ) }
             };
 
             // Loop through the "thisMod" list
             for ( int i = 0;
-                 i < rootTable["thisMod"].Count;
-                 i++ )
+                i < rootTable["thisMod"].Count;
+                i++ )
             {
                 // Check if the item is a Dictionary<string, object> representing a TOML table
                 if ( !( rootTable["thisMod"][i] is IDictionary<string, object> table
-                    && table.TryGetValue( "Instructions", out object value ) ) )
+                        && table.TryGetValue( "Instructions", out object value ) ) )
                 {
                     continue;
                 }
@@ -94,16 +94,16 @@ namespace KOTORModSync.Core
                 // Remove the empty "Instructions" table from the root table
                 if ( value is IList<object> instructions && instructions.Count != 0 )
                     continue;
-                table.Remove( "Instructions" );
+                _ = table.Remove( "Instructions" );
 
                 // Check if the "Options" table is empty
                 // Remove the empty "Options" table from the root table
                 if ( value is List<object> options && options.Count != 0 )
                     continue;
-                table.Remove( "Options" );
+                _ = table.Remove( "Options" );
 
                 // don't serialize stuff chosen during an install.
-                table.Remove( "ChosenOptions" );
+                _ = table.Remove( "ChosenOptions" );
 
                 break;
             }
@@ -125,11 +125,7 @@ namespace KOTORModSync.Core
             _tempPath = new DirectoryInfo( Path.GetTempPath() );
 
             Dictionary<string, object> componentDict
-                = Utility.Serializer.ConvertTomlTableToDictionary( componentTable );
-            if ( componentDict.TryGetValue( "path", out object pathValue ) && pathValue is string path )
-            {
-                new List<string>( 255 ).Add( path );
-            }
+                = Serializer.ConvertTomlTableToDictionary( componentTable );
 
             Serializer.DeserializePath( componentDict, "paths" );
             this.Name = GetRequiredValue<string>( componentDict, "name" );
@@ -154,17 +150,15 @@ namespace KOTORModSync.Core
             );
 
             // can't validate anything if directories aren't set.
-            if ( string.IsNullOrEmpty( MainConfig.SourcePath?.FullName )
-                || string.IsNullOrEmpty( MainConfig.DestinationPath?.FullName )
-                )
+            if ( string.IsNullOrWhiteSpace( MainConfig.SourcePath?.FullName )
+                 || string.IsNullOrWhiteSpace( MainConfig.DestinationPath?.FullName ) )
             {
                 return;
             }
 
             // Validate and log additional errors/warnings.
             this.Validator = new ComponentValidation( this );
-            bool prevalidate = this.Validator.Run();
-            if ( prevalidate )
+            if ( this.Validator.Run() )
             {
                 Logger.Log( $"Successfully deserialized component '{this.Name}'\r\n" );
                 return;
@@ -185,12 +179,9 @@ namespace KOTORModSync.Core
 
             var options = new Dictionary<Guid, Option>( 65535 );
 
-            for ( int index = 0;
-                 index < tomlObject.Count;
-                 index++ )
+            foreach ( TomlTable item in tomlObject )
             {
-                TomlTable item = tomlObject[index];
-                Dictionary<string, object> optionDict = Utility.Serializer.ConvertTomlTableToDictionary( item );
+                Dictionary<string, object> optionDict = Serializer.ConvertTomlTableToDictionary( item );
 
                 // ConvertTomlTableToDictionary lowercase all string keys.
                 Serializer.DeserializePath( optionDict, "source" );
@@ -232,7 +223,7 @@ namespace KOTORModSync.Core
             {
                 TomlTable item = tomlObject[index];
                 Dictionary<string, object> instructionDict
-                    = Utility.Serializer.ConvertTomlTableToDictionary( item );
+                    = Serializer.ConvertTomlTableToDictionary( item );
 
                 // ConvertTomlTableToDictionary lowercase all string keys.
                 Serializer.DeserializePath( instructionDict, "source" );
@@ -302,7 +293,8 @@ namespace KOTORModSync.Core
 
                 if ( caseInsensitiveKey == null )
                 {
-                    if ( !required ) { return default; }
+                    if ( !required )
+                        return default;
 
                     throw new ArgumentException( $"[Error] Missing or invalid '{key}' field." );
                 }
@@ -310,20 +302,23 @@ namespace KOTORModSync.Core
                 value = dict[caseInsensitiveKey];
             }
 
-            if ( value is T t ) { return t; }
+            if ( value is T t )
+                return t;
 
             Type targetType = value.GetType();
 
-            if ( value is string valueStr && typeof( T ) == typeof( System.Guid )
-                && System.Guid.TryParse( valueStr, out Guid guid ) )
+            if ( value is string valueStr
+                 && typeof( T ) == typeof( Guid )
+                 && Guid.TryParse( valueStr, out Guid guid )
+               )
             {
                 return (T)(object)guid;
             }
 
             if ( targetType.IsGenericType
-                && targetType.GetGenericTypeDefinition() == typeof( List<>
-                ) && value is IEnumerable enumerable
-            )
+                 && targetType.GetGenericTypeDefinition() == typeof( List<> )
+                 && value is IEnumerable enumerable
+               )
             {
                 Type elementType = typeof( T ).GetGenericArguments()[0];
                 dynamic dynamicList
@@ -360,32 +355,50 @@ namespace KOTORModSync.Core
             }
 
             if ( targetType == typeof( Tomlyn.Model.TomlArray )
-                && value is Tomlyn.Model.TomlArray valueTomlArray )
+                               && value is Tomlyn.Model.TomlArray valueTomlArray )
             {
                 if ( valueTomlArray.Count == 0 ) return default;
 
-                TomlTableArray tomlTableArray = new TomlTableArray();
-
+                var tomlTableArray = new TomlTableArray();
                 foreach ( object tomlValue in valueTomlArray )
                 {
-                    if ( tomlValue is TomlTable table ) { tomlTableArray.Add( table ); }
+                    if ( tomlValue is TomlTable table )
+                        tomlTableArray.Add( table );
                 }
 
                 return (T)(object)tomlTableArray;
             }
 
-            try { return (T)Convert.ChangeType( value, typeof( T ) ); }
+            try
+            {
+                return (T)Convert.ChangeType( value, typeof( T ) );
+            }
             catch ( InvalidCastException )
             {
-                if ( required ) { throw new ArgumentException( $"Invalid '{key}' field type." ); }
+                if ( required )
+                    throw new ArgumentException( $"Invalid '{key}' field type." );
             }
             catch ( FormatException )
             {
-                if ( required ) { throw new ArgumentException( $"Invalid format for '{key}' field." ); }
+                if ( required )
+                    throw new ArgumentException( $"Invalid format for '{key}' field." );
             }
 
             return default;
         }
+
+        public enum ExecutionResult
+        {
+            [Description( "Success" )]
+            Success,
+
+            [Description( "Directory permission denied." )]
+            DirectoryPermissionDenied,
+
+            [Description( "Component installation failed." )]
+            ComponentInstallationFailed
+        }
+
 
         public async Task<(bool success, Dictionary<FileInfo, SHA1> originalChecksums)>
             ExecuteInstructions(
@@ -404,11 +417,13 @@ namespace KOTORModSync.Core
                 }
 
                 (bool, Dictionary<FileInfo, SHA1>) result = await ProcessComponentAsync( this );
-                if ( result.Item1 ) return (true, null);
+                if ( result.Item1 )
+                    return (true, null);
 
                 Logger.LogException(
                     new Exception(
-                        $"[Error] Component {Name} failed to install the mod correctly with {result}" ) );
+                        $"[Error] Component {Name} failed to install the mod correctly with {result}" )
+                );
                 return (false, null);
 
                 async Task<(bool, Dictionary<FileInfo, SHA1>)> ProcessComponentAsync(
@@ -421,8 +436,7 @@ namespace KOTORModSync.Core
                     {
                         Instruction instruction = component.Instructions[i1]
                             ?? throw new ArgumentException(
-                                $"[Error] instruction null at index {i1}",
-                                nameof( componentsList ) );
+                                $"[Error] instruction null at index {i1}", nameof(componentsList) );
 
                         //The instruction will run if any of the following conditions are met:
                         //The instruction has no dependencies or restrictions.
@@ -496,7 +510,7 @@ namespace KOTORModSync.Core
                             case "move":
                                 success = instruction.MoveFile( confirmDialog );
                                 break;
-                            case "rename": //todo
+                            case "rename":
                                 success = instruction.RenameFile( confirmDialog );
                                 break;
                             case "patch":
@@ -508,8 +522,11 @@ namespace KOTORModSync.Core
                                 }
 
                                 success = await instruction.ExecuteProgramAsync( confirmDialog );
+                                List<string> installErrors = instruction.VerifyInstall();
+                                if ( installErrors.Count > 0 )
+                                    Logger.Log( string.Join( '\n', installErrors ) );
 
-                                //success = success && await instruction.VerifyInstallAsync();
+                                success = success && installErrors.Count > 0;
                                 break;
                             case "execute":
                             case "run":
@@ -528,11 +545,9 @@ namespace KOTORModSync.Core
                             case "choose":
                                 List<Option> options = this.ChooseOptions( instruction );
                                 List<string> optionNames = options.ConvertAll( option => option.Name );
-                                string selectedOptionName = await optionsDialog.ShowOptionsDialog( optionNames );
 
-                                if ( selectedOptionName == null )
-                                    throw new ArgumentNullException();
-
+                                string selectedOptionName = await optionsDialog.ShowOptionsDialog( optionNames )
+                                    ?? throw new ArgumentNullException();
                                 Option selectedOption = null;
 
                                 foreach ( Option option in options )
@@ -540,6 +555,7 @@ namespace KOTORModSync.Core
                                     string optionName = option.Name;
                                     if ( optionName != selectedOptionName )
                                         continue;
+
                                     selectedOption = option;
                                     break;
                                 }
@@ -564,7 +580,9 @@ namespace KOTORModSync.Core
 
                         Logger.Log( $"Instruction {instruction.Action} failed at index {i1}." );
                         bool confirmationResult = await confirmDialog.ShowConfirmationDialog(
-                            $"Error installing mod {Name}, would you like to execute the next instruction anyway?" );
+                            $"Error installing mod {Name},"
+                            + $" would you like to execute the next instruction anyway?"
+                        );
                         if ( confirmationResult )
                             continue;
 
@@ -613,7 +631,9 @@ namespace KOTORModSync.Core
             {
                 Logger.LogException( ex );
                 Logger.Log(
-                    "The above exception is not planned and has not been experienced - please report this to the developer." );
+                    "The above exception is not planned and has not been experienced."
+                    + " Please report this to the developer."
+                );
             }
 
             return (false, new Dictionary<FileInfo, SHA1>());
@@ -621,20 +641,21 @@ namespace KOTORModSync.Core
 
         private List<Option> ChooseOptions( Instruction instruction )
         {
-            List<string> archives = Validator.GetAllArchivesFromInstructions( this );
+            if ( instruction is null )
+                throw new ArgumentNullException( nameof( instruction ) );
+
+            List<string> archives = Validator.GetAllArchivesFromInstructions( component: this );
 
             if ( archives.Count == 0 )
                 throw new InvalidOperationException( "No archives found." );
 
-            List<Option> retList = new List<Option>();
-
-            foreach ( Option option in Options.Values )
-            {
-                if ( option.Source.Any( sourcePath => archives.Contains( sourcePath ) ) )
-                    retList.Add( option );
-            }
-
-            return retList;
+            return Options.Values.Where(
+                option =>
+                    option.Source.Any(
+                        sourcePath =>
+                            archives.Contains( sourcePath )
+                    )
+            ).ToList();
         }
     }
 
@@ -658,8 +679,13 @@ namespace KOTORModSync.Core
             InstructionIndex = Component.Instructions.IndexOf( instruction );
             Message = message;
             IsError = isError;
+
             Logger.Log(
-                $"{( IsError ? "[Error]" : "[Warning]" )} Component: '{Component.Name}', Instruction #{InstructionIndex + 1}, Action '{instruction.Action}'" );
+                $"{( IsError ? "[Error]" : "[Warning]" )}"
+                + $" Component: '{Component.Name}',"
+                + $" Instruction #{InstructionIndex + 1},"
+                + $" Action '{instruction.Action}'"
+            );
             Logger.Log( $"{( IsError ? "[Error]" : "[Warning]" )} {Message}" );
         }
     }
@@ -762,7 +788,8 @@ namespace KOTORModSync.Core
                     {
                         this.AddWarning(
                             "Instruction does not have a 'Source' key defined",
-                            instruction );
+                            instruction
+                        );
                         success = false;
                         continue;
                     }
@@ -773,35 +800,12 @@ namespace KOTORModSync.Core
                         continue;
                     }
 
-                    foreach ( var sourcePath in instruction.Source )
+                    foreach ( string sourcePath in instruction.Source )
                     {
                         if ( sourcePath.StartsWith( "<<kotorDirectory>>" ) )
                             continue;
 
-                        // potential change in syntax
-                        /*if (instruction.Action.Equals("tslpatcher")
-                            && Path.GetExtension(sourcePath.TrimEnd('\\', '/'))
-                                .Equals(".exe", StringComparison.OrdinalIgnoreCase)
-                            )
-                        {
-                            this.AddError(
-                                "Invalid 'tslpatcher' action: Avoid using an EXE as the source path. Specify the expected output directory containing the 'tslpatcherdata' folder. For executing an EXE, use the 'execute' action instead.",
-                                instruction);
-                            if (MainConfig.AttemptFixes)
-                            {
-                                Logger.LogVerbose(
-                                    "Attempting to fix the above error automatically with the parent folder...");
-                                instruction.Source[index]
-                                    = FileHelper.GetFolderName(instruction.Source[index].TrimEnd('\\', '/'));
-                            }
-
-                            continue;
-                        }*/
-
-                        (bool, bool) result = IsSourcePathInArchives(
-                            sourcePath,
-                            allArchives,
-                            instruction );
+                        (bool, bool) result = IsSourcePathInArchives( sourcePath, allArchives, instruction );
                         success &= result.Item1;
                         archiveNameFound &= result.Item2;
                     }
@@ -809,8 +813,10 @@ namespace KOTORModSync.Core
                     if ( !archiveNameFound )
                     {
                         AddWarning(
-                            "'Source' path does not include the archive's name as part of the extraction folder, possible FileNotFound exception.",
-                            instruction );
+                            "'Source' path does not include the archive's name as part"
+                            + " of the extraction folder, possible FileNotFound exception.",
+                            instruction
+                        );
                     }
                 }
 
@@ -825,29 +831,36 @@ namespace KOTORModSync.Core
 
         public List<string> GetAllArchivesFromInstructions( Component component )
         {
-            List<string> allArchives = new List<string>();
+            var allArchives = new List<string>();
 
             foreach ( Instruction instruction in component.Instructions )
             {
                 if ( instruction.Source == null || instruction.Action != "extract" )
                     continue;
 
-                List<string> realPaths = FileHelper.EnumerateFilesWithWildcards( instruction.Source.ConvertAll( Utility.Utility.ReplaceCustomVariables ), true );
+                List<string> realPaths = FileHelper.EnumerateFilesWithWildcards(
+                    instruction.Source.ConvertAll( Utility.Utility.ReplaceCustomVariables ),
+                    true
+                );
                 foreach ( string realSourcePath in realPaths )
                 {
                     if ( !ArchiveHelper.IsArchive( Path.GetExtension( realSourcePath ) ) )
                     {
                         AddWarning(
-                            $"Archive '{Path.GetFileName( realSourcePath )}' is referenced in a non 'extract' action. Was this intentional?",
-                            instruction );
+                            $"Archive '{Path.GetFileName( realSourcePath )}'"
+                            + $" is referenced in a non 'extract' action. Was this intentional?",
+                            instruction
+                        );
                         continue;
                     }
 
                     if ( !File.Exists( realSourcePath ) )
                     {
                         AddError(
-                            $"Missing required download: '{Path.GetFileNameWithoutExtension( realSourcePath )}'",
-                            instruction );
+                            $"Missing required download:"
+                            + $" '{Path.GetFileNameWithoutExtension( realSourcePath )}'",
+                            instruction
+                        );
                         continue;
                     }
 
@@ -865,14 +878,16 @@ namespace KOTORModSync.Core
             {
                 DirectoryInfo destinationPath = null;
                 if ( instruction.Destination != null )
+                {
                     destinationPath = new DirectoryInfo(
-                        Utility.Utility.ReplaceCustomVariables(
-                            instruction.Destination
-                        )
+                        Utility.Utility.ReplaceCustomVariables( instruction.Destination )
                     );
+                }
+
                 switch ( instruction.Action )
                 {
-                    case null: continue;
+                    case null:
+                        continue;
                     // tslpatcher must always use <<kotorDirectory>> and nothing else.
                     case "tslpatcher" when instruction.Destination == null:
                         instruction.Destination = "<<kotorDirectory>>";
@@ -881,8 +896,10 @@ namespace KOTORModSync.Core
                     case "tslpatcher" when ( !instruction.Destination.Equals( "<<kotorDirectory>>" ) ):
                         success = false;
                         AddError(
-                            $"'Destination' key must be either null or string literal '<<kotorDirectory>>' for action 'TSLPatcher'. Got {instruction.Destination}",
-                            instruction );
+                            $"'Destination' key must be either null or string literal '<<kotorDirectory>>'"
+                            + $" for this action. Got '{instruction.Destination}'",
+                            instruction
+                        );
                         if ( MainConfig.AttemptFixes )
                         {
                             Logger.Log( "Fixing the above issue automatically." );
@@ -898,8 +915,10 @@ namespace KOTORModSync.Core
 
                         success = false;
                         AddError(
-                            $"'Destination' key cannot be used with this action. Got '{instruction.Destination}'",
-                            instruction );
+                            $"'Destination' key cannot be used with this action."
+                            + $" Got '{instruction.Destination}'",
+                            instruction
+                        );
 
                         if ( !MainConfig.AttemptFixes )
                             break;
@@ -910,30 +929,37 @@ namespace KOTORModSync.Core
                         break;
                     // rename should never use <<kotorDirectory >>\\Override
                     case "rename":
-                        if ( instruction.Destination?.Equals(
-                            "<<kotorDirectory>>\\Override",
-                            StringComparison.Ordinal ) != false )
+                        if ( instruction.Destination? .Equals(
+                                "<<kotorDirectory>>\\Override",
+                                StringComparison.Ordinal ) != false
+                           )
                         {
                             success = false;
                             AddError(
-                                $"Incorrect 'Destination' format. Got '{instruction.Destination}', expected a filename.",
-                                instruction );
+                                $"Incorrect 'Destination' format."
+                                + $" Got '{instruction.Destination}',"
+                                + $" expected a filename.",
+                                instruction
+                            );
                         }
 
                         break;
                     default:
-                        if ( destinationPath?.Exists != true )
+                        if ( destinationPath? .Exists != true )
                         {
                             success = false;
                             AddError(
-                                $"Destination cannot be found! Got '{destinationPath?.FullName}'",
-                                instruction );
+                                $"Destination cannot be found!"
+                                + $" Got '{destinationPath?.FullName}'",
+                                instruction
+                            );
 
                             if ( !MainConfig.AttemptFixes )
                                 break;
 
                             Logger.Log(
-                                "Fixing the above issue automatically (setting Destination to '<<kotorDirectory>>\\Override')" );
+                                "Fixing the above issue automatically"
+                                + " (setting Destination to '<<kotorDirectory>>\\Override')" );
                             instruction.Destination = "<<kotorDirectory>>\\Override";
                         }
 
@@ -1020,7 +1046,8 @@ namespace KOTORModSync.Core
             {
                 AddError(
                     $"Invalid source path '{sourcePath}'. Reason: {errorDescription}",
-                    instruction );
+                    instruction
+                );
                 return (false, archiveNameFound);
             }
 
@@ -1054,7 +1081,7 @@ namespace KOTORModSync.Core
                 if ( FileHelper.WildcardMatch( archiveNameAppend, relativePath ) )
                     return ArchivePathCode.FoundSuccessfully;
 
-                HashSet<string> folderPaths = new HashSet<string>();
+                var folderPaths = new HashSet<string>();
 
                 foreach ( IArchiveEntry entry in archive.Entries )
                 {
@@ -1068,7 +1095,7 @@ namespace KOTORModSync.Core
                     // Add the folder path to the list, after removing trailing slashes.
                     if ( !string.IsNullOrEmpty( folderName ) )
                     {
-                        folderPaths.Add( folderName.TrimEnd( '\\', '/' ) );
+                        _ = folderPaths.Add( folderName.TrimEnd( '\\', '/' ) );
                     }
 
                     // Check if itemInArchivePath matches relativePath using wildcard matching.
@@ -1080,10 +1107,8 @@ namespace KOTORModSync.Core
 
                 // check if instruction.Source matches a folder.
                 foreach ( string folderPath in folderPaths )
-                {
                     if ( FileHelper.WildcardMatch( folderPath, relativePath ) )
                         return ArchivePathCode.FoundSuccessfully;
-                }
 
                 // quickly parse the path so the verbose log below is accurate.
                 string result = relativePath;
@@ -1103,12 +1128,10 @@ namespace KOTORModSync.Core
             return ArchivePathCode.NotFoundInArchive;
         }
 
-        public bool Run()
-        {
+        public bool Run() =>
             // Verify all the instructions' paths line up with hierarchy of the archives
-            return this.VerifyExtractPaths( Component )
-                // Ensure all the 'Destination' keys are valid for their respective action.
-                && this.ParseDestinationWithAction( Component );
-        }
+            this.VerifyExtractPaths( Component )
+                   // Ensure all the 'Destination' keys are valid for their respective action.
+                   && this.ParseDestinationWithAction( Component );
     }
 }

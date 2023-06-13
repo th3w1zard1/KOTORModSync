@@ -70,9 +70,7 @@ namespace KOTORModSync.Tests
 
             // Clean up
             foreach ( FileInfo fileInfo in expectedChecksums.Keys )
-            {
                 File.Delete( fileInfo.FullName );
-            }
 
             Directory.Delete( testFolderPath, true );
 
@@ -83,7 +81,6 @@ namespace KOTORModSync.Tests
             // Assert
             Assert.That( result, Is.False );
         }
-
 
         [Test]
         public async Task CalculateSHA1Async_ValidFile_CalculatesChecksum()
@@ -100,7 +97,6 @@ namespace KOTORModSync.Tests
             string expectedChecksum = FileChecksumValidator.StringToSha1( "test content" );
             Assert.That( actualChecksum, Is.EqualTo( expectedChecksum ) );
         }
-
 
         [Test]
         public async Task CalculateSHA1Async_FileDoesNotExist_ReturnsNull()
@@ -172,7 +168,6 @@ namespace KOTORModSync.Tests
 
                     // Check each loaded checksum
                     foreach ( KeyValuePair<FileInfo, SHA1> loadedChecksum in loadedChecksums )
-                    {
                         Assert.Multiple(
                             () =>
                             {
@@ -186,7 +181,6 @@ namespace KOTORModSync.Tests
                                     $"The loaded checksum for file '{loadedChecksum.Key.FullName}' does not match the expected value."
                                 );
                             } );
-                    }
                 }
                 finally
                 {
@@ -220,7 +214,8 @@ namespace KOTORModSync.Tests
 
         public override void WriteJson( JsonWriter writer, object? value, JsonSerializer serializer )
         {
-            if ( value is not FileInfo fileInfo ) { return; }
+            if ( value is not FileInfo fileInfo )
+                return;
 
             writer.WriteValue( fileInfo.FullName );
         }

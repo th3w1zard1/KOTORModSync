@@ -25,7 +25,7 @@ namespace KOTORModSync.Tests
         public void CreateTestDirectory()
         {
             _testDirectory = Path.Combine( Path.GetTempPath(), "DeleteDuplicateFileTests" );
-            Directory.CreateDirectory( _testDirectory );
+            _ = Directory.CreateDirectory( _testDirectory );
         }
 
         [OneTimeTearDown]
@@ -39,7 +39,7 @@ namespace KOTORModSync.Tests
         {
             // Arrange
             string directory = Path.Combine( _testDirectory, "NoDuplicates" );
-            Directory.CreateDirectory( directory );
+            _ = Directory.CreateDirectory( directory );
             string file1 = Path.Combine( directory, "file1.txt" );
             string file2 = Path.Combine( directory, "file2.png" );
             File.WriteAllText( file1, "Content 1" );
@@ -62,7 +62,7 @@ namespace KOTORModSync.Tests
         {
             // Arrange
             string directory = Path.Combine( _testDirectory, "Duplicates" );
-            Directory.CreateDirectory( directory );
+            _ = Directory.CreateDirectory( directory );
             string file1 = Path.Combine( directory, "file.txt" );
             string file2 = Path.Combine( directory, "file.png" );
             string file3 = Path.Combine( directory, "file.jpg" );
@@ -89,7 +89,7 @@ namespace KOTORModSync.Tests
         {
             // Arrange
             string directory = Path.Combine( _testDirectory, "Duplicates" );
-            Directory.CreateDirectory( directory );
+            _ = Directory.CreateDirectory( directory );
             string file1 = Path.Combine( directory, "file.txt" );
             string file2 = Path.Combine( directory, "file (1).txt" );
             string file3 = Path.Combine( directory, "file (2).txt" );
@@ -116,7 +116,7 @@ namespace KOTORModSync.Tests
         {
             // Arrange
             string directory = Path.Combine( _testDirectory, "InvalidExtension" );
-            Directory.CreateDirectory( directory );
+            _ = Directory.CreateDirectory( directory );
             string file1 = Path.Combine( directory, "file1.txt" );
             string file2 = Path.Combine( directory, "file2.png" );
             File.WriteAllText( file1, "Content 1" );
@@ -139,7 +139,7 @@ namespace KOTORModSync.Tests
         {
             // Arrange
             string directory = Path.Combine( _testDirectory, "EmptyDirectory" );
-            Directory.CreateDirectory( directory );
+            _ = Directory.CreateDirectory( directory );
             string fileExtension = ".txt";
 
             // Act
@@ -158,9 +158,9 @@ namespace KOTORModSync.Tests
         {
             // Arrange
             string directory = Path.Combine( _testDirectory, "DuplicatesWithSubdirectories" );
-            Directory.CreateDirectory( directory );
+            _ = Directory.CreateDirectory( directory );
             string subdirectory = Path.Combine( directory, "Subdirectory" );
-            Directory.CreateDirectory( subdirectory );
+            _ = Directory.CreateDirectory( subdirectory );
             string file1 = Path.Combine( directory, "file.txt" );
             string file2 = Path.Combine( subdirectory, "file.txt" );
             File.WriteAllText( file1, "Content 1" );
@@ -184,7 +184,7 @@ namespace KOTORModSync.Tests
         {
             // Arrange
             string directory = Path.Combine( _testDirectory, "DuplicatesWithCaseInsensitiveExtensions" );
-            Directory.CreateDirectory( directory );
+            _ = Directory.CreateDirectory( directory );
             string file1 = Path.Combine( directory, "file.txt" );
             string file2 = Path.Combine( directory, "file.TXT" );
             string file3 = Path.Combine( directory, "file.png" );

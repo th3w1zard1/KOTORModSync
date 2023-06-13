@@ -36,7 +36,7 @@ namespace KOTORModSync.Core.Utility
 
         public async Task<bool> ValidateChecksumsAsync()
         {
-            Dictionary<string, string> actualChecksums = new Dictionary<string, string>();
+            var actualChecksums = new Dictionary<string, string>();
 
             foreach ( FileInfo fileInfo in _expectedChecksums
                     .Select( expectedChecksum => expectedChecksum.Key )
@@ -88,11 +88,11 @@ namespace KOTORModSync.Core.Utility
 
         public static async Task<SHA1> CalculateSha1Async( FileInfo filePath )
         {
-            SHA1 sha1 = SHA1.Create();
+            var sha1 = SHA1.Create();
             using ( FileStream stream = File.OpenRead( filePath.FullName ) )
             {
                 byte[] buffer = new byte[81920];
-                List<Task> tasks = new List<Task>( 65535 );
+                var tasks = new List<Task>( 65535 );
 
                 int bytesRead;
                 long totalBytesRead = 0;
@@ -136,7 +136,7 @@ namespace KOTORModSync.Core.Utility
         public static async Task SaveChecksumsToFileAsync( string filePath, Dictionary<DirectoryInfo, SHA1> checksums )
         {
             string json = JsonConvert.SerializeObject( checksums );
-            using ( StreamWriter writer = new StreamWriter( filePath ) )
+            using ( var writer = new StreamWriter( filePath ) )
             {
                 await writer.WriteAsync( json );
             }
@@ -149,9 +149,9 @@ namespace KOTORModSync.Core.Utility
             if ( !File.Exists( filePath.FullName ) )
                 return new Dictionary<FileInfo, SHA1>();
 
-            Dictionary<FileInfo, SHA1> checksums = new Dictionary<FileInfo, SHA1>();
+            var checksums = new Dictionary<FileInfo, SHA1>();
 
-            using ( StreamReader reader = new StreamReader( filePath.FullName ) )
+            using ( var reader = new StreamReader( filePath.FullName ) )
             {
                 string line;
                 while ( ( line = await reader.ReadLineAsync() ) != null )
@@ -162,7 +162,7 @@ namespace KOTORModSync.Core.Utility
                     string file = parts[0];
                     string hash = parts[1];
 
-                    FileInfo fileInfo = new FileInfo( file );
+                    var fileInfo = new FileInfo( file );
                     if ( !fileInfo.Exists )
                     {
                         Logger.Log( $"File does not exist: {fileInfo.FullName}" );
@@ -186,7 +186,7 @@ namespace KOTORModSync.Core.Utility
                             $"Hash for {fileInfo.FullName}: {BitConverter.ToString( hashBytes )}"
                         );
 
-                        SHA1 sha1 = SHA1.Create();
+                        var sha1 = SHA1.Create();
                         byte[] computedHash = sha1.ComputeHash( fileBytes );
                         Logger.Log(
                             $"Computed hash for {fileInfo.FullName}: {BitConverter.ToString( computedHash )}"

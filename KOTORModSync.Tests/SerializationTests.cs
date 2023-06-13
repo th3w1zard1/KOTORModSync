@@ -42,7 +42,7 @@ namespace KOTORModSync.Tests
         [Test]
         public void TestSerializeGuid()
         {
-            Guid guid = Guid.NewGuid();
+            var guid = Guid.NewGuid();
             object? serialized = Serializer.SerializeObject( guid );
 
             Assert.That( serialized,
@@ -188,9 +188,7 @@ namespace KOTORModSync.Tests
                     return;
 
                 foreach ( object serializedItem in serializedList )
-                {
                     VerifyUniqueSerialization( serializedItem, serializedObjects );
-                }
 
                 return;
             }

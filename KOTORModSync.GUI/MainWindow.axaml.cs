@@ -47,10 +47,10 @@ namespace KOTORModSync
         public async void Testwindow()
         {
             // Create an instance of OptionsDialogCallback
-            OptionsDialogCallback optionsDialogCallback = new OptionsDialogCallback( this );
+            var optionsDialogCallback = new OptionsDialogCallback( this );
 
             // Create a list of options
-            List<string> options = new List<string> { "Option 1", "Option 2", "Option 3" };
+            var options = new List<string> { "Option 1", "Option 2", "Option 3" };
 
             // Show the options dialog and get the selected option
             string selectedOption = await optionsDialogCallback.ShowOptionsDialog( options );
@@ -293,7 +293,8 @@ namespace KOTORModSync
                 Guid componentGuid = component.Guid;
                 Component duplicateComponent = components.Find( c => c.Guid == componentGuid && c != component );
 
-                if ( duplicateComponent == null ) { continue; }
+                if ( duplicateComponent == null )
+                    continue;
 
                 if ( !Guid.TryParse( duplicateComponent.Guid.ToString(), out Guid outGuid ) )
                 {
@@ -332,7 +333,7 @@ namespace KOTORModSync
 
                 // Expand the tree. Too lazy to figure out the proper way.
                 IEnumerator treeEnumerator = LeftTreeView.Items.GetEnumerator();
-                treeEnumerator.MoveNext();
+                _ = treeEnumerator.MoveNext();
                 LeftTreeView.ExpandSubTree( (TreeViewItem)treeEnumerator.Current );
             } );
         }
@@ -371,7 +372,7 @@ namespace KOTORModSync
             try
             {
                 string filePath = await OpenFile();
-                using ( StreamReader reader = new StreamReader( filePath ) )
+                using ( var reader = new StreamReader( filePath ) )
                 {
                     string fileContents = await reader.ReadToEndAsync();
                     if ( _components?.Count > 0 )
@@ -395,7 +396,7 @@ namespace KOTORModSync
         {
             try
             {
-                Button button = (Button)sender;
+                var button = (Button)sender;
                 // Get the item's data context based on the clicked button
                 var thisInstruction = (Instruction)button.DataContext;
 
@@ -611,11 +612,11 @@ namespace KOTORModSync
             {
                 await InformationDialog.ShowInformationDialog( this, "Please select your KOTOR(2) directory. (e.g. \"C:\\Program Files (x86)\\Steam\\steamapps\\common\\Knights of the Old Republic II\")" );
                 string chosenFolder = await OpenFolder();
-                DirectoryInfo kotorInstallDir = new DirectoryInfo( chosenFolder );
+                var kotorInstallDir = new DirectoryInfo( chosenFolder );
                 MainConfigInstance.destinationPath = kotorInstallDir;
                 await InformationDialog.ShowInformationDialog( this, "Please select your mod directory (where the archives live)." );
                 chosenFolder = await OpenFolder();
-                DirectoryInfo modDirectory = new DirectoryInfo( chosenFolder );
+                var modDirectory = new DirectoryInfo( chosenFolder );
                 MainConfigInstance.sourcePath = modDirectory;
             }
             catch ( ArgumentNullException )
@@ -903,7 +904,7 @@ namespace KOTORModSync
 
         private async void TextBox_LostFocus( object sender, RoutedEventArgs e )
         {
-            TextBox textBox = (TextBox)sender;
+            var textBox = (TextBox)sender;
 
             // code might be needed in future changes to TextBox/AvaloniaUI
             // Retrieve the DataContext object
@@ -1080,9 +1081,7 @@ namespace KOTORModSync
 
                 // Iterate over the components and create tree view items
                 foreach ( Component component in _components )
-                {
                     CreateTreeViewItem( component, rootItem );
-                }
 
                 // Set the root item as the single item of the tree view
                 LeftTreeView.Items = new AvaloniaList<object> { rootItem };
@@ -1149,7 +1148,6 @@ namespace KOTORModSync
 
                 // Iterate over the dependencies and create tree view items
                 foreach ( string dependencyGuid in component.Dependencies )
-                {
                     try
                     {
                         // Find the dependency in the components list
@@ -1165,7 +1163,6 @@ namespace KOTORModSync
                         // Usually catches invalid guid from the user
                         Logger.LogException( ex );
                     }
-                }
             }
             catch ( Exception ex )
             {
@@ -1179,12 +1176,10 @@ namespace KOTORModSync
             filePath = filePath ?? $"modconfig_{randomFileName}.toml";
             Logger.Log( $"Creating backup modconfig at {filePath}" );
 
-            using ( StreamWriter writer = new StreamWriter( filePath ) )
+            using ( var writer = new StreamWriter( filePath ) )
             {
                 foreach ( TreeViewItem item in items )
-                {
                     WriteTreeViewItemToFile( item, writer, maxDepth: 1 );
-                }
             }
         }
 
@@ -1200,9 +1195,7 @@ namespace KOTORModSync
                 return;
 
             foreach ( TreeViewItem childItem in item.Items.OfType<TreeViewItem>() )
-            {
                 WriteTreeViewItemToFile( childItem, writer, depth + 1, maxDepth );
-            }
         }
 
         private RelayCommand _itemClickCommand;
@@ -1265,15 +1258,14 @@ namespace KOTORModSync
     {
         public object Convert( object value, Type targetType, object parameter, CultureInfo culture )
         {
-            if ( !( value is IEnumerable list ) ) { return string.Empty; }
+            if ( !( value is IEnumerable list ) )
+                return string.Empty;
 
             var serializedList = new StringBuilder();
             foreach ( object item in list
                 .Cast<object>()
                 .Where( item => item != null ) )
-            {
-                serializedList.AppendLine( item.ToString() );
-            }
+                _ = serializedList.AppendLine( item.ToString() );
 
             return serializedList.ToString();
         }
@@ -1284,7 +1276,8 @@ namespace KOTORModSync
                 return new List<string>();
 
             string[] lines = text.Split( new string[] { "\r\n", "\r", "\n" }, StringSplitOptions.RemoveEmptyEntries );
-            if ( targetType != typeof( List<Guid> ) ) { return lines.ToList(); }
+            if ( targetType != typeof( List<Guid> ) )
+                return lines.ToList();
 
             return lines.Select( line => Guid.TryParse( line, out Guid guid ) ? guid : Guid.Empty ).ToList();
         }

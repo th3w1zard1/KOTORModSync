@@ -130,12 +130,12 @@ namespace KOTORModSync
                 void ClosedHandler( object sender, EventArgs e )
                 {
                     optionsDialog.Closed -= ClosedHandler;
-                    tcs.TrySetResult( null );
+                    _ = tcs.TrySetResult( null );
                 }
 
                 optionsDialog.OptionSelected += ( sender, option ) =>
                 {
-                    tcs.TrySetResult( option );
+                    _ = tcs.TrySetResult( option );
                 };
 
                 await optionsDialog.ShowDialog( parentWindow );

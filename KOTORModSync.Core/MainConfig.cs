@@ -28,7 +28,6 @@ namespace KOTORModSync.Core
         public static bool TslPatcherCli { get; private set; }
         public static CompatibilityLevel CurrentCompatibilityLevel { get; private set; }
 
-
         // used for the ui.
         protected virtual void OnPropertyChanged( [CallerMemberName][CanBeNull] string propertyName = null )
         {

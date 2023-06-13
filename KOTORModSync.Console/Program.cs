@@ -191,7 +191,7 @@ namespace KOTORModSync.ConsoleApp
                                 Console.WriteLine( "Invalid file path!" );
 
                             Console.WriteLine( "Press any key to exit." );
-                            Console.ReadKey();
+                            _ = Console.ReadKey();
                             break;
 
                         case "7": break;

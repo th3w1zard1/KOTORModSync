@@ -114,8 +114,6 @@ namespace KOTORModSync.Tests
             }
         }
 
-
-
         [Test]
         public void SaveAndLoad_DefaultComponent()
         {
@@ -126,7 +124,7 @@ namespace KOTORModSync.Tests
             newComponent.Name = "new mod_" + Path.GetRandomFileName();
 
             // Serialize
-            var tomlString = newComponent.SerializeComponent();
+            string tomlString = newComponent.SerializeComponent();
 
             // Deserialize into new instance
             Component duplicateComponent = FileHelper.DeserializeTomlComponent( tomlString );
@@ -364,6 +362,5 @@ namespace KOTORModSync.Tests
                     Assert.That( actual.Guid, Is.EqualTo( expected.Guid ).Using( comparer ) );
                 } );
         }
-
     }
 }

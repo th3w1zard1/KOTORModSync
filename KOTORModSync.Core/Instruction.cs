@@ -521,7 +521,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                     );
 
                     Logger.Log( "Run TSLPatcher..." );
-                    ( int exitCode, string output, string error )
+                    (int exitCode, string output, string error)
                         = await PlatformAgnosticMethods.ExecuteProcessAsync( tslPatcherCliPath, args );
                     Logger.LogVerbose( $"{tslPatcherCliPath.Name} exited with exit code {exitCode}" );
 

@@ -52,7 +52,7 @@ namespace KOTORModSync.Core.Utility
             if ( result.ExitCode != 0 )
             {
                 result = TryExecuteCommand( "free -b" );
-                if ( result.ExitCode != 0)
+                if ( result.ExitCode != 0 )
                     result = TryExecuteCommand( "wmic OS get FreePhysicalMemory" );
             }
 
@@ -127,7 +127,7 @@ namespace KOTORModSync.Core.Utility
 
             foreach ( string executable in shellExecutables )
             {
-                if ( File.Exists( executable ))
+                if ( File.Exists( executable ) )
                 {
                     return executable;
                 }
@@ -277,7 +277,7 @@ namespace KOTORModSync.Core.Utility
             {
                 // Process disposed of early?
                 Logger.LogException( new NotSupportedException() );
-                tcs.SetResult( ( -4, string.Empty, string.Empty ) );
+                tcs.SetResult( (-4, string.Empty, string.Empty) );
                 return;
             }
 

@@ -1,4 +1,5 @@
 name: lint
+
 on:
   push:
     branches:
@@ -26,7 +27,7 @@ jobs:
       - name: Setup .NET Core
         uses: actions/setup-dotnet@v2
         with:
-          dotnet-version: '6.0.x' # SDK Version to use;
+          dotnet-version: '6.0.x' # SDK Version to use
 
       # Format the output of dotnet format
       - name: Add dotnet-format problem matcher
@@ -47,8 +48,7 @@ jobs:
           git config --global user.name "CSharp Lint"
           git add .
           git commit -m "Auto-format code using dotnet format"
-          git remote set-url origin "https://github.com/${{ secrets.WORKFLOW_ACTIONS }}/${{ github.repository }}.git"
-          if (! git push --set-upstream origin ${{ github.ref }}); then
+          if ! git push --set-upstream origin ${{ github.ref }}; then
             echo "Failed to push changes to the repository."
             exit 1
           fi

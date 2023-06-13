@@ -47,7 +47,11 @@ jobs:
           git config --global user.name "CSharp Lint"
           git add .
           git commit -m "Auto-format code using dotnet format"
-          git remote set-url origin "https://github.com/${{ env.GITHUB_USER }}/${{ env.GITHUB_REPOSITORY }}.git"
-          git push --set-upstream origin $GITHUB_REF
+          git remote set-url origin "https://github.com/${{ secrets.WORKFLOW_ACTIONS }}/${{ github.repository }}.git"
+          if ! git push --set-upstream origin ${{ github.ref }}; then
+            echo "Failed to push changes to the repository."
+            exit 1
+          fi
         env:
           GITHUB_TOKEN: ${{ secrets.WORKFLOW_ACTIONS }}
+

@@ -632,7 +632,7 @@ namespace KOTORModSync
                 if (MainConfigInstance == null || MainConfig.DestinationPath == null)
                 {
                     var informationDialog = new InformationDialog
-                        { InfoText = "Please set your directories first" };
+                    { InfoText = "Please set your directories first" };
                     _ = await informationDialog.ShowDialog<bool?>(this);
                     return;
                 }
@@ -645,7 +645,7 @@ namespace KOTORModSync
                 else
                 {
                     var informationDialog = new InformationDialog
-                        { InfoText = "Please choose a mod to install from the left list first" };
+                    { InfoText = "Please choose a mod to install from the left list first" };
                     _ = await informationDialog.ShowDialog<bool?>(this);
                     return;
                 }
@@ -1233,9 +1233,9 @@ namespace KOTORModSync
                 this._canExecute = canExecute;
             }
 
-        #pragma warning disable CS0067 // warning is incorrect - it's used internally.
+#pragma warning disable CS0067 // warning is incorrect - it's used internally.
             public event EventHandler CanExecuteChanged;
-        #pragma warning restore CS0067
+#pragma warning restore CS0067
 
             public bool CanExecute(object parameter) => _canExecute == null || _canExecute(parameter);
             public void Execute(object parameter) => _execute(parameter);

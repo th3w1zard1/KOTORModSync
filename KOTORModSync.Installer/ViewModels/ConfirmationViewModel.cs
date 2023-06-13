@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using KOTORModSync.Core;
-using Prism.Mvvm;
 using Prism.Commands;
+using Prism.Mvvm;
 using Prism.Regions;
 
 namespace KOTORModSync.Installer.ViewModels

@@ -376,13 +376,13 @@ namespace KOTORModSync.Core.Utility
                 }
                 catch (Win32Exception localException)
                 {
-                    if(!MainConfig.DebugLogging)
+                    if (!MainConfig.DebugLogging)
                         continue;
                     Logger.Log($"Exception occurred for startInfo: {startInfo}");
                     Logger.LogException(localException);
                     ex = localException;
                 }
-                catch(Exception ex2)
+                catch (Exception ex2)
                 {
                     Logger.Log("An unplanned error has occured trying to run {programFile.Name}.");
                     Logger.LogException(ex2);

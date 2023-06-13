@@ -286,7 +286,8 @@ namespace KOTORModSync.Core.Utility
             Dictionary<string, object> serializedProperties = new Dictionary<string, object>();
 
             IEnumerable<object> members;
-            switch ( obj ) {
+            switch (obj)
+            {
 
                 // IDictionary types
                 case IDictionary mainDictionary:
@@ -309,7 +310,8 @@ namespace KOTORModSync.Core.Utility
                 object value = null;
                 string memberName = null;
 
-                switch ( member ) {
+                switch (member)
+                {
                     case KeyValuePair<object, object> dictionaryEntry:
                         memberName = dictionaryEntry.Key.ToString();
                         value = dictionaryEntry.Value;
@@ -334,7 +336,7 @@ namespace KOTORModSync.Core.Utility
                         }
                 }
 
-                switch ( value )
+                switch (value)
                 {
                     case null:
                         continue;
@@ -436,7 +438,7 @@ namespace KOTORModSync.Core.Utility
             }
 
             if (
-                objType                 == typeof(string)
+                objType == typeof(string)
                 && ((string)obj).Length <= 38 // A guid in string form is always less than or eq to 38 chars.
                 && Guid.TryParse(obj.ToString(), out Guid guidConvertedValue))
             {
@@ -485,7 +487,7 @@ namespace KOTORModSync.Core.Utility
                 const string pattern = @"LookupGameFolder\s*=\s*1";
 
                 // Use Regex.IsMatch to check if the pattern exists in the file contents
-                if (! Regex.IsMatch(fileContents, pattern))
+                if (!Regex.IsMatch(fileContents, pattern))
                     continue;
 
                 // Use Regex.Replace to replace the pattern with "LookupGameFolder=0" (ignoring whitespace)
@@ -570,7 +572,7 @@ namespace KOTORModSync.Core.Utility
 
             HashSet<string> uniquePaths = new HashSet<string>(filesAndFolders);
 
-            foreach (string path in uniquePaths.Where(path => ! string.IsNullOrEmpty(path)) )
+            foreach (string path in uniquePaths.Where(path => !string.IsNullOrEmpty(path)))
                 try
                 {
                     string backslashPath = path
@@ -586,7 +588,7 @@ namespace KOTORModSync.Core.Utility
                             continue;
                         }
 
-                        if (! Directory.Exists(backslashPath))
+                        if (!Directory.Exists(backslashPath))
                             continue;
 
                         IEnumerable<string> matchingFiles = Directory.EnumerateFiles(
@@ -631,7 +633,7 @@ namespace KOTORModSync.Core.Utility
                         currentDirectory = parentDirectory;
                     }
 
-                    if (string.IsNullOrEmpty(currentDirectory) || ! Directory.Exists(currentDirectory))
+                    if (string.IsNullOrEmpty(currentDirectory) || !Directory.Exists(currentDirectory))
                         continue;
 
                     IEnumerable<string> checkFiles = Directory.EnumerateFiles(

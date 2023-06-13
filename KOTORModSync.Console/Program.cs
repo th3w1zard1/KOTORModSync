@@ -23,7 +23,7 @@ namespace KOTORModSync.ConsoleApp
                 bool exit = false;
                 mainConfig = new MainConfig();
 
-                while (! exit)
+                while (!exit)
                 {
                     //Console.Clear();
                     Console.WriteLine("Main Menu:");

@@ -4,7 +4,7 @@ using Prism.Mvvm;
 
 namespace KOTORModSync.Installer.ViewModels
 {
-	public class SelectComponentsViewModel : BindableBase
-	{
-	}
+    public class SelectComponentsViewModel : BindableBase
+    {
+    }
 }

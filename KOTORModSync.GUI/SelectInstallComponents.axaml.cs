@@ -1,9 +1,9 @@
-using Avalonia.Controls;
-using Avalonia.Interactivity;
-using Avalonia.Markup.Xaml;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using Avalonia.Controls;
+using Avalonia.Interactivity;
+using Avalonia.Markup.Xaml;
 using KOTORModSync.Core;
 using Component = KOTORModSync.Core.Component;
 

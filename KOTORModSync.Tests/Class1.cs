@@ -21,9 +21,9 @@ namespace KOTORModSync.Tests
     [Ignore("not finished")]
     public class FileExtractorTests
     {
-        private Mock<IConfirmationDialogCallback> _confirmationDialogMock;
-        private Mock<IArchive> _archiveMock;
-        private Mock<IReader> _readerMock;
+        private Mock<IConfirmationDialogCallback>? _confirmationDialogMock;
+        private Mock<IArchive>? _archiveMock;
+        private Mock<IReader>? _readerMock;
 
         [SetUp]
         public void SetUp()

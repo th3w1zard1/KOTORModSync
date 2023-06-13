@@ -92,7 +92,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
 
             if (Destination == null)
             {
-                if (! noValidate && sourcePaths.Count == 0)
+                if (!noValidate && sourcePaths.Count == 0)
                 {
                     throw new Exception(
                         $"Could not find any files! Source: {string.Join(", ", Source)}");
@@ -105,7 +105,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                 Utility.Utility.ReplaceCustomVariables(Destination)
                 ?? throw new InvalidOperationException("No destination set!"));
 
-            if (! noValidate && sourcePaths.Count == 0)
+            if (!noValidate && sourcePaths.Count == 0)
             {
                 throw new Exception(
                     $"Could not find any files! Source: {string.Join(", ", Source)}");
@@ -139,7 +139,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                                     var thisFile = new FileInfo(sourcePath);
                                     Logger.Log($"File path: {thisFile.FullName}");
 
-                                    if (! ArchiveHelper.IsArchive(thisFile.Extension))
+                                    if (!ArchiveHelper.IsArchive(thisFile.Extension))
                                     {
                                         Logger.Log($"[Error] {ParentComponent.Name} failed to extract file '{thisFile.Name}'. Invalid archive?");
                                         success = false;
@@ -177,7 +177,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                                             );
                                             string destinationDirectory = Path.GetDirectoryName(destinationItemPath);
 
-                                            if (destinationDirectory != null && ! Directory.Exists(destinationDirectory))
+                                            if (destinationDirectory != null && !Directory.Exists(destinationDirectory))
                                             {
                                                 Logger.Log($"Create directory {destinationDirectory}");
                                                 _ = Directory.CreateDirectory(destinationDirectory);
@@ -230,8 +230,8 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
         )
         {
             if (string.IsNullOrEmpty(directoryPath)
-                || ! Directory.Exists(directoryPath)
-                || ! Utility.Utility.IsDirectoryWritable(new DirectoryInfo(directoryPath))
+                || !Directory.Exists(directoryPath)
+                || !Utility.Utility.IsDirectoryWritable(new DirectoryInfo(directoryPath))
                 )
             {
                 throw new ArgumentException("Invalid or inaccessible directory path.");
@@ -262,8 +262,8 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                 string fileExtensionFromFile = Path.GetExtension(filePath);
 
                 if (string.IsNullOrEmpty(fileNameWithoutExtension)
-                    || ! fileNameCounts.ContainsKey(fileNameWithoutExtension)
-                    || fileNameCounts[fileNameWithoutExtension] <= 1 || ! string.Equals(
+                    || !fileNameCounts.ContainsKey(fileNameWithoutExtension)
+                    || fileNameCounts[fileNameWithoutExtension] <= 1 || !string.Equals(
                         fileExtensionFromFile,
                         fileExtension,
                         StringComparison.OrdinalIgnoreCase)) { continue; }
@@ -329,7 +329,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                 {
                     // Check if the source file already exists
                     string fileName = Path.GetFileName(sourcePath);
-                    if (! File.Exists(sourcePath))
+                    if (!File.Exists(sourcePath))
                     {
                         Logger.Log($"{fileName} does not exist!");
                         success = false;
@@ -393,7 +393,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                         fileName);
 
                     // Check if the destination file already exists
-                    if (! Overwrite && File.Exists(destinationFilePath))
+                    if (!Overwrite && File.Exists(destinationFilePath))
                     {
                         Logger.Log(
                             $"Skipping file {Path.GetFileName(destinationFilePath)} (Overwrite is false)"
@@ -438,7 +438,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                         fileName);
 
                     // Check if the destination file already exists
-                    if (! Overwrite && File.Exists(destinationFilePath))
+                    if (!Overwrite && File.Exists(destinationFilePath))
                     {
                         Logger.Log(
                             $"Skipping file {Path.GetFileName(destinationFilePath)} (Overwrite is false)");
@@ -487,7 +487,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                         // If it's a file, get the parent folder
                         tslPatcherDirectory = new FileInfo(tslPatcherPath).Directory;
 
-                        if (tslPatcherDirectory == null || ! tslPatcherDirectory.Exists)
+                        if (tslPatcherDirectory == null || !tslPatcherDirectory.Exists)
                         {
                             throw new DirectoryNotFoundException(
                                 $"The parent directory of the file {tslPatcherPath} could not be located on the disk.");
@@ -498,7 +498,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                         // It's a folder, create a DirectoryInfo instance
                         tslPatcherDirectory = new DirectoryInfo(tslPatcherPath);
 
-                        if (! tslPatcherDirectory.Exists)
+                        if (!tslPatcherDirectory.Exists)
                         {
                             throw new DirectoryNotFoundException(
                                 $"The directory {tslPatcherPath} could not be located on the disk.");
@@ -513,7 +513,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                     // arg3 = (optional) install option integer index from namespaces.ini
                     string args
                         = $"\"{MainConfig.DestinationPath}\" \"{MainConfig.SourcePath}\"";
-                    if (! string.IsNullOrEmpty(this.Arguments))
+                    if (!string.IsNullOrEmpty(this.Arguments))
                         args += " " + this.Arguments;
 
                     var tslPatcherCliPath = new FileInfo(
@@ -555,7 +555,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                     }
 
                     var thisProgram = new FileInfo(sourcePath);
-                    if (! thisProgram.Exists)
+                    if (!thisProgram.Exists)
                     {
                         throw new FileNotFoundException(
                             $"The file {sourcePath} could not be located on the disk");
@@ -594,7 +594,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                     Path.GetDirectoryName(sourcePath) ?? string.Empty,
                     "install.rtf")))
             {
-                if (! File.Exists(installLogFile))
+                if (!File.Exists(installLogFile))
                 {
                     Logger.Log("Install log file not found.");
                     continue;
@@ -613,7 +613,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                 }
             }
 
-            return found && ! errors;
+            return found && !errors;
         }
     }
 }

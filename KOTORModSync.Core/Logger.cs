@@ -53,7 +53,7 @@ namespace KOTORModSync.Core
 
         public static void LogVerbose(string message)
         {
-            if (! MainConfig.DebugLogging)
+            if (!MainConfig.DebugLogging)
                 return;
 
             Log("[Verbose] " + message);
@@ -64,7 +64,7 @@ namespace KOTORModSync.Core
             Log($"Exception: {ex.GetType().Name} - {ex.Message}");
             Log($"Stack trace: {ex.StackTrace}");
 
-            if (! MainConfig.DebugLogging)
+            if (!MainConfig.DebugLogging)
                 return;
 
             // Get the current stack frame
@@ -101,7 +101,8 @@ namespace KOTORModSync.Core
 
                 object value = null;
                 MemberInfo member = members[0];
-                switch (member) {
+                switch (member)
+                {
                     case FieldInfo field when field.IsPublic || field.IsAssembly || field.IsFamilyOrAssembly:
                         value = field.GetValue(member.ReflectedType);
                         break;
@@ -121,7 +122,7 @@ namespace KOTORModSync.Core
 
         private static void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
         {
-            if (! (e.ExceptionObject is Exception ex))
+            if (!(e.ExceptionObject is Exception ex))
                 return;
 
             LogException(ex);

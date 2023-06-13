@@ -12,7 +12,7 @@ namespace KOTORModSync.Tests
     public class SerializationTests
     {
         //[Test]
-        public void TestSerializeObject()
+        public static void TestSerializeObject()
         {
             MyClass obj = new(); // Replace MyClass with your class name
             object? serialized = Serializer.SerializeObject(obj);
@@ -63,7 +63,7 @@ namespace KOTORModSync.Tests
         }
 
         //[Test]
-        public void TestSerializeDictionaryOfGuidString()
+        public static void TestSerializeDictionaryOfGuidString()
         {
             Dictionary<Guid, string> dict = new()
             {

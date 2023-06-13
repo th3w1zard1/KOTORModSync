@@ -14,15 +14,15 @@ using JetBrains.Annotations;
 using KOTORModSync.Core;
 using KOTORModSync.Core.Utility;
 using Nett;
+using SharpCompress.Archives;
 using SharpCompress.Archives.Rar;
 using SharpCompress.Archives.SevenZip;
-using SharpCompress.Archives;
 using Tomlyn.Model;
+using static KOTORModSync.Core.Component;
 using Component = KOTORModSync.Core.Component;
 using TomlObject = Tomlyn.Model.TomlObject;
 using TomlTable = Tomlyn.Model.TomlTable;
 using TomlTableArray = Tomlyn.Model.TomlTableArray;
-using static KOTORModSync.Core.Component;
 
 namespace KOTORModSync.Core
 {
@@ -84,7 +84,7 @@ namespace KOTORModSync.Core
                  i++)
             {
                 // Check if the item is a Dictionary<string, object> representing a TOML table
-                if (! (rootTable["thisMod"][i] is IDictionary<string, object> table
+                if (!(rootTable["thisMod"][i] is IDictionary<string, object> table
                     && table.TryGetValue("Instructions", out object value)))
                     continue;
 
@@ -114,7 +114,7 @@ namespace KOTORModSync.Core
 
         public void DeserializeComponent(TomlObject tomlObject)
         {
-            if (! (tomlObject is TomlTable componentTable))
+            if (!(tomlObject is TomlTable componentTable))
             {
                 throw new ArgumentException(
                     "[TomlError] Expected a TOML table for component data.");
@@ -168,7 +168,7 @@ namespace KOTORModSync.Core
                 return;
             }
 
-            this.Validator.GetErrors().ForEach(error => Logger.Log("[Error] "       + error));
+            this.Validator.GetErrors().ForEach(error => Logger.Log("[Error] " + error));
             this.Validator.GetWarnings().ForEach(warning => Logger.Log("[Warning] " + warning));
         }
 
@@ -279,15 +279,15 @@ namespace KOTORModSync.Core
 
         [CanBeNull]
         private static T GetRequiredValue
-            < T >(IReadOnlyDictionary<string, object> dict, string key) =>
+            <T>(IReadOnlyDictionary<string, object> dict, string key) =>
             GetValue<T>(dict, key, true);
 
         [CanBeNull]
         private static T GetValueOrDefault
-            < T >(IReadOnlyDictionary<string, object> dict, string key) =>
+            <T>(IReadOnlyDictionary<string, object> dict, string key) =>
             GetValue<T>(dict, key, false);
 
-        private static T GetValue< T >(
+        private static T GetValue<T>(
             IReadOnlyDictionary<string, object> dict,
             string key,
             bool required
@@ -300,7 +300,7 @@ namespace KOTORModSync.Core
 
                 if (caseInsensitiveKey == null)
                 {
-                    if (! required) { return default; }
+                    if (!required) { return default; }
 
                     throw new ArgumentException($"[Error] Missing or invalid '{key}' field.");
                 }
@@ -385,7 +385,7 @@ namespace KOTORModSync.Core
             return default;
         }
 
-        public async Task<( bool success, Dictionary<FileInfo, SHA1> originalChecksums)>
+        public async Task<(bool success, Dictionary<FileInfo, SHA1> originalChecksums)>
             ExecuteInstructions(
                 Utility.Utility.IConfirmationDialogCallback confirmDialog,
                 Utility.Utility.IOptionsDialogCallback optionsDialog,
@@ -395,7 +395,7 @@ namespace KOTORModSync.Core
             try
             {
                 // Check if we have permission to write to the Destination directory
-                if (! Utility.Utility.IsDirectoryWritable(MainConfig.DestinationPath))
+                if (!Utility.Utility.IsDirectoryWritable(MainConfig.DestinationPath))
                 {
                     throw new InvalidOperationException(
                         "[Error] Cannot write to the destination directory.");
@@ -432,7 +432,7 @@ namespace KOTORModSync.Core
                             shouldRunInstruction = instruction.Dependencies.All(
                                 requiredGuid => componentsList.Any(
                                     checkComponent => checkComponent.Guid == requiredGuid));
-                            if (! shouldRunInstruction)
+                            if (!shouldRunInstruction)
                             {
                                 Logger.Log(
                                     $"[Information] Skipping instruction '{instruction.Action}' index {i1} due to missing dependency(s): {instruction.Dependencies}");
@@ -441,17 +441,17 @@ namespace KOTORModSync.Core
 
                         if (instruction.Restrictions?.Count > 0)
                         {
-                            shouldRunInstruction &= ! instruction.Restrictions.Any(
+                            shouldRunInstruction &= !instruction.Restrictions.Any(
                                 restrictedGuid => componentsList.Any(
                                     checkComponent => checkComponent.Guid == restrictedGuid));
-                            if (! shouldRunInstruction)
+                            if (!shouldRunInstruction)
                             {
                                 Logger.Log(
                                     $"[Information] Not running instruction {instruction.Action} index {i1} due to restricted components installed: {instruction.Restrictions}");
                             }
                         }
 
-                        if (! shouldRunInstruction) continue;
+                        if (!shouldRunInstruction) continue;
 
                         // Get the original check-sums before making any modifications
                         /*Logger.Log("Calculating game install file hashes");
@@ -658,7 +658,7 @@ namespace KOTORModSync.Core
             Message = message;
             IsError = isError;
             Logger.Log(
-                $"{(IsError ? "[Error]" : "[Warning]")} Component: '{Component.Name}', Instruction #{InstructionIndex+1}, Action '{instruction.Action}'");
+                $"{(IsError ? "[Error]" : "[Warning]")} Component: '{Component.Name}', Instruction #{InstructionIndex + 1}, Action '{instruction.Action}'");
             Logger.Log($"{(IsError ? "[Error]" : "[Warning]")} {Message}");
         }
     }
@@ -772,7 +772,8 @@ namespace KOTORModSync.Core
                         continue;
                     }
 
-                    foreach ( var sourcePath in instruction.Source ) {
+                    foreach (var sourcePath in instruction.Source)
+                    {
                         if (sourcePath.StartsWith("<<kotorDirectory>>"))
                             continue;
 
@@ -833,7 +834,7 @@ namespace KOTORModSync.Core
                 List<string> realPaths = FileHelper.EnumerateFilesWithWildcards(instruction.Source.ConvertAll(Utility.Utility.ReplaceCustomVariables), true);
                 foreach (string realSourcePath in realPaths)
                 {
-                    if (! ArchiveHelper.IsArchive(Path.GetExtension(realSourcePath)))
+                    if (!ArchiveHelper.IsArchive(Path.GetExtension(realSourcePath)))
                     {
                         AddWarning(
                             $"Archive '{Path.GetFileName(realSourcePath)}' is referenced in a non 'extract' action. Was this intentional?",
@@ -841,7 +842,7 @@ namespace KOTORModSync.Core
                         continue;
                     }
 
-                    if (! File.Exists(realSourcePath))
+                    if (!File.Exists(realSourcePath))
                     {
                         AddError(
                             $"Missing required download: '{Path.GetFileNameWithoutExtension(realSourcePath)}'",
@@ -876,7 +877,7 @@ namespace KOTORModSync.Core
                         instruction.Destination = "<<kotorDirectory>>";
                         break;
 
-                    case "tslpatcher" when (! instruction.Destination.Equals("<<kotorDirectory>>")):
+                    case "tslpatcher" when (!instruction.Destination.Equals("<<kotorDirectory>>")):
                         success = false;
                         AddError(
                             $"'Destination' key must be either null or string literal '<<kotorDirectory>>' for action 'TSLPatcher'. Got {instruction.Destination}",
@@ -899,7 +900,7 @@ namespace KOTORModSync.Core
                             $"'Destination' key cannot be used with this action. Got '{instruction.Destination}'",
                             instruction);
 
-                        if (! MainConfig.AttemptFixes)
+                        if (!MainConfig.AttemptFixes)
                             break;
 
                         Logger.Log("Fixing the above issue automatically.");
@@ -927,7 +928,7 @@ namespace KOTORModSync.Core
                                 $"Destination cannot be found! Got '{destinationPath?.FullName}'",
                                 instruction);
 
-                            if (! MainConfig.AttemptFixes)
+                            if (!MainConfig.AttemptFixes)
                                 break;
 
                             Logger.Log(
@@ -987,7 +988,7 @@ namespace KOTORModSync.Core
             sourcePath = sourcePath
                 .Replace('/', '\\')
                 .Replace("<<modDirectory>>\\", "")
-                .Replace("<<kotorDirectory>>\\","");
+                .Replace("<<kotorDirectory>>\\", "");
 
             foreach (string archivePath in allArchives)
             {
@@ -1033,7 +1034,7 @@ namespace KOTORModSync.Core
 
         private static ArchivePathCode IsPathInArchive(string relativePath, string archivePath)
         {
-            if (! ArchiveHelper.IsArchive(Path.GetExtension(archivePath)))
+            if (!ArchiveHelper.IsArchive(Path.GetExtension(archivePath)))
             {
                 return ArchivePathCode.NotAnArchive;
             }

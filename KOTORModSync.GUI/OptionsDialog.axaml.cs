@@ -1,13 +1,13 @@
-using Avalonia;
-using Avalonia.Controls;
-using Avalonia.Interactivity;
-using Avalonia.Markup.Xaml;
-using Avalonia.Threading;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Interactivity;
+using Avalonia.Markup.Xaml;
 using Avalonia.Platform;
+using Avalonia.Threading;
 using JetBrains.Annotations;
 using KOTORModSync.Core.Utility;
 namespace KOTORModSync
@@ -97,7 +97,7 @@ namespace KOTORModSync
             double verticalPadding = 150;  // Padding on the top and bottom
 
             // Calculate the desired width and height for the content with padding
-            double contentWidth = actualSize.Width   + (2 * horizontalPadding);
+            double contentWidth = actualSize.Width + (2 * horizontalPadding);
             double contentHeight = actualSize.Height + (2 * verticalPadding);
 
             // Set the width and height of the window
@@ -111,7 +111,7 @@ namespace KOTORModSync
             Screen screen = Screens.ScreenFromVisual(this);
             double screenWidth = screen.Bounds.Width;
             double screenHeight = screen.Bounds.Height;
-            double left = (screenWidth - contentWidth)  / 2;
+            double left = (screenWidth - contentWidth) / 2;
             double top = (screenHeight - contentHeight) / 2;
             this.Position = new PixelPoint((int)left, (int)top);
         }

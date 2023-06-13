@@ -1,7 +1,7 @@
-using Prism.Mvvm;
-using Prism.Commands;
-using Prism.Regions;
 using System.Threading.Tasks;
+using Prism.Commands;
+using Prism.Mvvm;
+using Prism.Regions;
 
 namespace KOTORModSync.Installer.ViewModels
 {
@@ -41,7 +41,7 @@ namespace KOTORModSync.Installer.ViewModels
             // TODO: Implement the logic to navigate to the next screen (ResultsView).
         }
 
-        private async Task PerformInstallation()
+        private static async Task PerformInstallation()
         {
             // TODO: Implement the installation logic.
             // You can use async/await or any other approach to handle the installation process.

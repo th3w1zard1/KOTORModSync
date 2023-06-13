@@ -5,12 +5,12 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using KOTORModSync.Core;
 using NUnit.Framework;
-using System.IO;
 // ReSharper disable ConvertToConstant.Local
 #pragma warning disable U2U1000, CS8618, RCS1118 // Mark local variable as const.
 
@@ -105,7 +105,7 @@ namespace KOTORModSync.Tests
             Assert.Multiple(
                 () =>
                 {
-                    Assert.That(! File.Exists(file1));
+                    Assert.That(!File.Exists(file1));
                     Assert.That(File.Exists(file2));
                     Assert.That(File.Exists(file3));
                 });
@@ -199,8 +199,8 @@ namespace KOTORModSync.Tests
             // Assert
             Assert.Multiple(() =>
             {
-                Assert.That(! File.Exists(file1));
-                Assert.That(! File.Exists(file2));
+                Assert.That(!File.Exists(file1));
+                Assert.That(!File.Exists(file2));
                 Assert.That(File.Exists(file3));
             });
         }

@@ -484,7 +484,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
 
                     if ( Path.HasExtension( tslPatcherPath ) )
                     {
-                        // If it's a file, get the parent folder
+                        // It's a file, get the parent folder.
                         tslPatcherDirectory = new FileInfo( tslPatcherPath ).Directory;
 
                         if ( tslPatcherDirectory == null || !tslPatcherDirectory.Exists )
@@ -505,15 +505,13 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                         }
                     }
 
+                    Logger.Log( "Installing TSLPatcher LookUpGameFolder hook..." );
                     FileHelper.ReplaceLookupGameFolder( tslPatcherDirectory );
 
-                    // arg1 = swkotor directory
-                    // arg2 = mod directory (where TSLPatcher_data folder is)
-                    // arg3 = (optional) install option integer index from namespaces.ini
-                    string args
-                        = $"\"{MainConfig.DestinationPath}\" \"{MainConfig.SourcePath}\"";
-                    if ( !string.IsNullOrEmpty( this.Arguments ) )
-                        args += " " + this.Arguments;
+                    string args = $@"""{MainConfig.DestinationPath}""" // arg1 = swkotor directory
+                                  + $@" ""{MainConfig.SourcePath}"""   // arg2 = mod directory (where tslpatcherdata folder is)
+                                  + ( string.IsNullOrEmpty( this.Arguments )
+                                      ? "" : $" {this.Arguments}" );   // arg3 = (optional) install option integer index from namespaces.ini
 
                     var tslPatcherCliPath = new FileInfo(
                         Path.Combine(
@@ -522,10 +520,15 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                         )
                     );
 
-                    int retVal = await PlatformAgnosticMethods.ExecuteProcessAsync( tslPatcherCliPath, args );
-                    Logger.LogVerbose( $"{tslPatcherCliPath.Name} exited with exit code {retVal}" );
-                    if ( retVal == 0 )
-                        return true;
+                    Logger.Log( "Run TSLPatcher..." );
+                    ( int exitCode, string output, string error )
+                        = await PlatformAgnosticMethods.ExecuteProcessAsync( tslPatcherCliPath, args );
+                    Logger.LogVerbose( $"{tslPatcherCliPath.Name} exited with exit code {exitCode}" );
+
+                    Logger.Log( !string.IsNullOrEmpty( output ) ? output : null );
+                    Logger.Log( !string.IsNullOrEmpty( error ) ? error : null );
+
+                    return exitCode == 0;
                 }
 
                 return false;
@@ -546,23 +549,25 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                 bool isSuccess = true; // Track the success status
                 foreach ( string sourcePath in sourcePaths )
                 {
-                    if ( this.Action == "TSLPatcher" )
-                    {
-                        FileHelper.ReplaceLookupGameFolder(
-                            new DirectoryInfo(
-                                Path.GetDirectoryName( sourcePath ) ?? string.Empty ) );
-                    }
-
-                    var thisProgram = new FileInfo( sourcePath );
-                    if ( !thisProgram.Exists )
-                    {
-                        throw new FileNotFoundException(
-                            $"The file {sourcePath} could not be located on the disk" );
-                    }
-
                     try
                     {
-                        if ( await PlatformAgnosticMethods.ExecuteProcessAsync( thisProgram, "" ) == 0 )
+                        if ( this.Action == "TSLPatcher" )
+                        {
+                            FileHelper.ReplaceLookupGameFolder(
+                                new DirectoryInfo( Path.GetDirectoryName( sourcePath ) ?? string.Empty )
+                            );
+                        }
+
+                        var thisProgram = new FileInfo( sourcePath );
+                        if ( !thisProgram.Exists )
+                        {
+                            throw new FileNotFoundException(
+                                $"The file {sourcePath} could not be located on the disk"
+                            );
+                        }
+
+                        (int exitCode, string output, string error) = await PlatformAgnosticMethods.ExecuteProcessAsync( thisProgram );
+                        if ( exitCode == 0 )
                             continue;
 
                         isSuccess = false;
@@ -584,17 +589,17 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
             }
         }
 
+        // parse TSLPatcher's installlog.rtf for errors, since there's no CLI.
         public List<string> VerifyInstall()
         {
-            List<string> errorLines = new List<string>();
-
             foreach ( string sourcePath in sourcePaths )
             {
                 if ( sourcePath == null )
                     continue;
 
-                string tslPatcherDirPath = Path.GetDirectoryName( sourcePath )
-                    ?? throw new DirectoryNotFoundException( $"Could not retrieve parent directory of {sourcePath}." );
+                string tslPatcherDirPath
+                    = Path.GetDirectoryName( sourcePath )
+                      ?? throw new DirectoryNotFoundException( $"Could not retrieve parent directory of {sourcePath}." );
 
                 string fullInstallLogFile = Path.Combine(
                     tslPatcherDirPath,
@@ -605,18 +610,16 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                     throw new FileNotFoundException( "Install log file not found.", fullInstallLogFile );
 
                 string installLogContent = File.ReadAllText( fullInstallLogFile );
-                string[] lines = installLogContent.Split( '\n' );
-
-                foreach ( string thisLine in lines )
+                foreach ( string thisLine in installLogContent.Split( '\n' ) )
                 {
                     if ( !thisLine.Contains( "Error: " ) )
                         continue;
 
-                    errorLines.Add( thisLine );
+                    new List<string>().Add( thisLine );
                 }
             }
 
-            return errorLines;
+            return new List<string>();
         }
     }
 }

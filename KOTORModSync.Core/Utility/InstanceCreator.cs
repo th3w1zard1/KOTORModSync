@@ -42,7 +42,9 @@ namespace KOTORModSync.Core.Utility
                                                      let match = AreParametersCompatible( parameters, constructorParameters )
                                                      where match
                                                      select constructor )
+            {
                 return (T)constructor.Invoke( constructorParameters );
+            }
 
             Logger.Log( $"No suitable constructor found for type '{type.Name}' with the provided parameters." );
             return default;

@@ -168,6 +168,7 @@ namespace KOTORModSync.Tests
 
                     // Check each loaded checksum
                     foreach ( KeyValuePair<FileInfo, SHA1> loadedChecksum in loadedChecksums )
+                    {
                         Assert.Multiple(
                             () =>
                             {
@@ -181,6 +182,7 @@ namespace KOTORModSync.Tests
                                     $"The loaded checksum for file '{loadedChecksum.Key.FullName}' does not match the expected value."
                                 );
                             } );
+                    }
                 }
                 finally
                 {

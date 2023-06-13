@@ -572,6 +572,7 @@ namespace KOTORModSync.Core.Utility
             var uniquePaths = new HashSet<string>( filesAndFolders );
 
             foreach ( string path in uniquePaths.Where( path => !string.IsNullOrEmpty( path ) ) )
+            {
                 try
                 {
                     string backslashPath = path
@@ -650,6 +651,7 @@ namespace KOTORModSync.Core.Utility
                     // Handle or log the exception as required
                     Console.WriteLine( $"An error occurred while processing path '{path}': {ex.Message}" );
                 }
+            }
 
             return result;
         }

@@ -355,7 +355,7 @@ namespace KOTORModSync.Core
             }
 
             if ( targetType == typeof( Tomlyn.Model.TomlArray )
-                               && value is Tomlyn.Model.TomlArray valueTomlArray )
+                 && value is Tomlyn.Model.TomlArray valueTomlArray )
             {
                 if ( valueTomlArray.Count == 0 ) return default;
 
@@ -399,7 +399,6 @@ namespace KOTORModSync.Core
             ComponentInstallationFailed
         }
 
-
         public async Task<(bool success, Dictionary<FileInfo, SHA1> originalChecksums)>
             ExecuteInstructions(
                 Utility.Utility.IConfirmationDialogCallback confirmDialog,
@@ -435,8 +434,8 @@ namespace KOTORModSync.Core
                          i1++ )
                     {
                         Instruction instruction = component.Instructions[i1]
-                            ?? throw new ArgumentException(
-                                $"[Error] instruction null at index {i1}", nameof( componentsList ) );
+                                                  ?? throw new ArgumentException(
+                                                      $"[Error] instruction null at index {i1}", nameof( componentsList ) );
 
                         //The instruction will run if any of the following conditions are met:
                         //The instruction has no dependencies or restrictions.
@@ -515,18 +514,15 @@ namespace KOTORModSync.Core
                                 break;
                             case "patch":
                             case "tslpatcher":
-                                if ( MainConfig.TslPatcherCli )
-                                {
-                                    success = await instruction.ExecuteTSLPatcherAsync( confirmDialog );
-                                    break;
-                                }
+                                success = MainConfig.TslPatcherCli
+                                    ? await instruction.ExecuteTSLPatcherAsync( confirmDialog )
+                                    : await instruction.ExecuteProgramAsync( confirmDialog );
 
-                                success = await instruction.ExecuteProgramAsync( confirmDialog );
                                 List<string> installErrors = instruction.VerifyInstall();
                                 if ( installErrors.Count > 0 )
-                                    Logger.Log( string.Join( '\n', installErrors ) );
+                                    Logger.Log( string.Join( "\n", installErrors ) );
 
-                                success = success && installErrors.Count > 0;
+                                success &= installErrors.Count > 0;
                                 break;
                             case "execute":
                             case "run":
@@ -547,7 +543,7 @@ namespace KOTORModSync.Core
                                 List<string> optionNames = options.ConvertAll( option => option.Name );
 
                                 string selectedOptionName = await optionsDialog.ShowOptionsDialog( optionNames )
-                                    ?? throw new ArgumentNullException();
+                                                            ?? throw new ArgumentNullException();
                                 Option selectedOption = null;
 
                                 foreach ( Option option in options )
@@ -1107,8 +1103,10 @@ namespace KOTORModSync.Core
 
                 // check if instruction.Source matches a folder.
                 foreach ( string folderPath in folderPaths )
+                {
                     if ( FileHelper.WildcardMatch( folderPath, relativePath ) )
                         return ArchivePathCode.FoundSuccessfully;
+                }
 
                 // quickly parse the path so the verbose log below is accurate.
                 string result = relativePath;

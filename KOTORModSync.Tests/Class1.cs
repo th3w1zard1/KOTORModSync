@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -53,11 +54,12 @@ namespace KOTORModSync.Tests
 
             _ = Directory.CreateDirectory( tempPath );
 
-            _ = _archiveMock.Setup( x => x.ExtractAllEntries() ).Returns( _readerMock.Object );
-            _ = _readerMock.Setup( x => x.MoveToNextEntry() ).Returns( false );
+            Debug.Assert( _readerMock?.Object != null, "_readerMock?.Object != null" );
+            _ = _archiveMock?.Setup( static x => x.ExtractAllEntries() ).Returns( _readerMock.Object );
+            _ = _readerMock?.Setup( static x => x.MoveToNextEntry() ).Returns( false );
 
             // Act
-            bool result = await instruction.ExtractFileAsync( _confirmationDialogMock.Object );
+            bool result = await instruction.ExtractFileAsync( _confirmationDialogMock?.Object );
 
             // Assert
             Assert.IsFalse( result );

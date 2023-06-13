@@ -541,8 +541,11 @@ namespace KOTORModSync
                 string informationMessage
                     = "There were problems with your instructions file, please check the output window for details.";
                 if ( !isWritable )
+                {
                     informationMessage
                         = "Your Mod directory and/or your KOTOR directory are not writable! Try running as admin?";
+                }
+
                 if ( success && isWritable )
                 {
                     informationMessage
@@ -1148,6 +1151,7 @@ namespace KOTORModSync
 
                 // Iterate over the dependencies and create tree view items
                 foreach ( string dependencyGuid in component.Dependencies )
+                {
                     try
                     {
                         // Find the dependency in the components list
@@ -1163,6 +1167,7 @@ namespace KOTORModSync
                         // Usually catches invalid guid from the user
                         Logger.LogException( ex );
                     }
+                }
             }
             catch ( Exception ex )
             {
@@ -1265,7 +1270,9 @@ namespace KOTORModSync
             foreach ( object item in list
                 .Cast<object>()
                 .Where( item => item != null ) )
+            {
                 _ = serializedList.AppendLine( item.ToString() );
+            }
 
             return serializedList.ToString();
         }

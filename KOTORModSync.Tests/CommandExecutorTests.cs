@@ -10,14 +10,15 @@ namespace KOTORModSync.Tests
     [TestFixture]
     public class CommandExecutorTests
     {
-        private static void ExecuteCommand( string command, ManualResetEvent completed, Dictionary<string, object> sharedData )
+        private static void ExecuteCommand( string command, EventWaitHandle completed, IDictionary<string, object> sharedData )
         {
             try
             {
                 Logger.Log( "Testing TryExecuteCommand..." );
-                (bool Success, string Output, string Error) = PlatformAgnosticMethods.TryExecuteCommand( command );
-                sharedData["success"] = Success;
-                sharedData["output"] = Output;
+                (int exitCode, string output, string error) = PlatformAgnosticMethods.TryExecuteCommand( command );
+                sharedData["success"] = exitCode == 0;
+                sharedData["output"] = output;
+                sharedData["error"] = error;
             }
             catch ( Exception ex ) when ( ex is TimeoutException )
             {
@@ -28,8 +29,8 @@ namespace KOTORModSync.Tests
                     Logger.Log( $"{process.ProcessName} (ID: {process.Id})" );
 
                 Logger.Log( "Standard output from the timed-out process:" );
-                (bool Success, string Output, string Error) = PlatformAgnosticMethods.TryExecuteCommand( "echo" );
-                Logger.Log( Output );
+                (int exitCode, string output, string error) = PlatformAgnosticMethods.TryExecuteCommand( "echo" );
+                Logger.Log( output );
             }
             finally
             {
@@ -80,7 +81,7 @@ namespace KOTORModSync.Tests
                 () =>
                 {
                     Assert.That( success );
-                    Assert.That( output, Is.EqualTo( expectedOutput ) );
+                    Assert.That( output.Trim(), Is.EqualTo( expectedOutput ) );
                 } );
         }
 

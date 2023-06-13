@@ -116,8 +116,8 @@ namespace KOTORModSync
                 var items = treeViewItem.Items as IList;
                 foreach ( TreeViewItem childItem in childItems.Values
                     .Where( childItem => childItem == null
-                               ? throw new ArgumentNullException( nameof( childItem ) )
-                               : items != null
+                        ? throw new ArgumentNullException( nameof( childItem ) )
+                        : items != null
                     ) )
                 {
                     if ( items == null )
@@ -754,8 +754,8 @@ namespace KOTORModSync
                     if ( !success )
                     {
                         if ( !await ConfirmationDialog.ShowConfirmationDialog(
-                            this,
-                            $"There was a problem installing {component.Name}, please check the output window.\n\nContinue with the next mod anyway?"
+                                this,
+                                $"There was a problem installing {component.Name}, please check the output window.\n\nContinue with the next mod anyway?"
                         ) )
                         {
                             break;
@@ -1016,8 +1016,8 @@ namespace KOTORModSync
         {
             try
             {
-                if ( !( LeftTreeView.SelectedItem is TreeViewItem selectedTreeViewItem ) ||
-                    !( selectedTreeViewItem.Parent is ItemsControl parentItemsControl ) )
+                if ( !( LeftTreeView.SelectedItem is TreeViewItem selectedTreeViewItem )
+                  || !( selectedTreeViewItem.Parent is ItemsControl parentItemsControl ) )
                 {
                     return;
                 }

@@ -162,8 +162,8 @@ namespace KOTORModSync.Tests
                 Component loadedComponent = loadedComponents[i];
 
                 AssertComponentEquality( originalComponent,
-                                        loadedComponent,
-                                        caseSensitiveKeys: true
+                    loadedComponent,
+                    caseSensitiveKeys: true
                 );
             }
         }

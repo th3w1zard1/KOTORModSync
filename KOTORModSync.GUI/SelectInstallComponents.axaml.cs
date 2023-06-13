@@ -4,7 +4,6 @@ using System.Linq;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
-using KOTORModSync.Core;
 using Component = KOTORModSync.Core.Component;
 
 namespace KOTORModSync
@@ -21,11 +20,11 @@ namespace KOTORModSync
             get => _isSelected;
             set
             {
-                if ( _isSelected != value )
-                {
-                    _isSelected = value;
-                    OnPropertyChanged( nameof( IsSelected ) );
-                }
+                if ( _isSelected == value )
+                    return;
+
+                _isSelected = value;
+                OnPropertyChanged( nameof( IsSelected ) );
             }
         }
 

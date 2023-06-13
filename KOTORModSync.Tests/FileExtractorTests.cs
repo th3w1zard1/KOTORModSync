@@ -38,28 +38,15 @@ namespace KOTORModSync.Tests
         public async Task ExtractFileAsync_InvalidArchiveFile_FailsExtraction()
         {
             // Arrange
-            var instruction = new Instruction();
+            var sourcePaths = new List<string> { "path/to/invalid/file.txt" };
+            var destinationPath = new DirectoryInfo( Path.GetTempPath() );
 
-            // Use reflection to access private members
-            FieldInfo? sourcePathsField = typeof( Instruction ).GetField(
-                "sourcePaths",
-                BindingFlags.NonPublic | BindingFlags.Instance );
-            sourcePathsField?.SetValue( instruction, new List<string>() { "path/to/invalid/file.txt" } );
-
-            FieldInfo? destinationPathField = typeof( Instruction ).GetField(
-                "destinationPath",
-                BindingFlags.NonPublic | BindingFlags.Instance );
-            string tempPath = Path.GetTempPath();
-            destinationPathField?.SetValue( instruction, new DirectoryInfo( tempPath ) );
-
-            _ = Directory.CreateDirectory( tempPath );
-
-            Debug.Assert( _readerMock?.Object != null, "_readerMock?.Object != null" );
-            _ = _archiveMock?.Setup( static x => x.ExtractAllEntries() ).Returns( _readerMock.Object );
-            _ = _readerMock?.Setup( static x => x.MoveToNextEntry() ).Returns( false );
+            var instructionMock = new Mock<Instruction>();
+            instructionMock.SetupGet( x => x.GetType().GetField( "sourcePaths", BindingFlags.NonPublic | BindingFlags.Instance ).GetValue( instructionMock.Object ) ).Returns( sourcePaths );
+            instructionMock.SetupGet( x => x.GetType().GetField( "destinationPath", BindingFlags.NonPublic | BindingFlags.Instance ).GetValue( instructionMock.Object ) ).Returns( destinationPath );
 
             // Act
-            bool result = await instruction.ExtractFileAsync( _confirmationDialogMock?.Object );
+            bool result = await instructionMock.Object.ExtractFileAsync( null );
 
             // Assert
             Assert.IsFalse( result );

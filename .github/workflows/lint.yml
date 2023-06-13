@@ -18,36 +18,36 @@ jobs:
   lint_csharp:
     runs-on: windows-2019
     steps:
-    - uses: actions/checkout@v2
-    
-    - name: Set remote URL
-      run: git remote set-url origin "https://github.com/${{ env.GITHUB_REPOSITORY }}.git"
+      - uses: actions/checkout@v2
 
-    - name: Setup .NET Core
-      uses: actions/setup-dotnet@v2
-      with:
-        dotnet-version: '6.0.x' # SDK Version to use;
+      - name: Set remote URL
+        run: git remote set-url origin "https://github.com/${{ env.GITHUB_REPOSITORY }}.git"
 
-    # Format the output of dotnet format
-    - name: Add dotnet-format problem matcher
-      uses: xt0rted/dotnet-format-problem-matcher@v1
+      - name: Setup .NET Core
+        uses: actions/setup-dotnet@v2
+        with:
+          dotnet-version: '6.0.x' # SDK Version to use;
 
-    # Install dotnet format as a global tool
-    - name: Install dotnet format
-      run: dotnet tool update --global dotnet-format
-      
-    # Run dotnet format
-    - name: Run dotnet format
-      run: dotnet format --verbosity diagnostic
-      
-    # Commit the changes
-    - name: Commit changes
-      run: |
-        git config --global user.email "linter_workflow@githubactions.com"
-        git config --global user.name "CSharp Lint"
-        git add .
-        git commit -m "Auto-format code using dotnet format"
-        git remote set-url origin https://github.com/${{GITHUB_USER}}/${{GITHUB_REPOSITORY}}.git
-        git push --set-upstream origin $GITHUB_REF
-      env:
-        GITHUB_TOKEN: ${{ secrets.WORKFLOW_ACTIONS }}
+      # Format the output of dotnet format
+      - name: Add dotnet-format problem matcher
+        uses: xt0rted/dotnet-format-problem-matcher@v1
+
+      # Install dotnet format as a global tool
+      - name: Install dotnet format
+        run: dotnet tool update --global dotnet-format
+
+      # Run dotnet format
+      - name: Run dotnet format
+        run: dotnet format --verbosity diagnostic
+
+      # Commit the changes
+      - name: Commit changes
+        run: |
+          git config --global user.email "linter_workflow@githubactions.com"
+          git config --global user.name "CSharp Lint"
+          git add .
+          git commit -m "Auto-format code using dotnet format"
+          git remote set-url origin "https://github.com/${{ env.GITHUB_USER }}/${{ env.GITHUB_REPOSITORY }}.git"
+          git push --set-upstream origin $GITHUB_REF
+        env:
+          GITHUB_TOKEN: ${{ secrets.WORKFLOW_ACTIONS }}

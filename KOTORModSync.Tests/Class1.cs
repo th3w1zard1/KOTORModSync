@@ -40,15 +40,15 @@ namespace KOTORModSync.Tests
             var instruction = new Instruction();
 
             // Use reflection to access private members
-            var sourcePathsField = typeof(Instruction).GetField(
+            FieldInfo? sourcePathsField = typeof(Instruction).GetField(
                 "sourcePaths",
                 BindingFlags.NonPublic | BindingFlags.Instance);
             sourcePathsField?.SetValue(instruction, new List<string>() { "path/to/invalid/file.txt" });
 
-            var destinationPathField = typeof(Instruction).GetField(
+            FieldInfo? destinationPathField = typeof(Instruction).GetField(
                 "destinationPath",
                 BindingFlags.NonPublic | BindingFlags.Instance);
-            var tempPath = Path.GetTempPath();
+            string tempPath = Path.GetTempPath();
             destinationPathField?.SetValue(instruction, new DirectoryInfo(tempPath));
 
             Directory.CreateDirectory(tempPath);

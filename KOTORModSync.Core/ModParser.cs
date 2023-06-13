@@ -28,7 +28,7 @@ namespace KOTORModSync.Core
             mod.Author = GetPropertyValue(modText, "Author");
             mod.Description = GetPropertyValue(modText, "Description");
             (mod.Category, mod.Tier) = GetCategoryAndTier(modText, "Category & Tier");
-            mod.NonEnglishFunctionality = GetBoolValue(modText, "Non-English Functionality");
+            mod.NonEnglishFunctionality = GetBoolValue(modText);
             mod.InstallationMethod = GetPropertyValue(modText, "Installation Method");
             mod.Directions = GetPropertyValue(modText, "Installation Instructions");
 
@@ -40,7 +40,8 @@ namespace KOTORModSync.Core
             const string pattern = @"\*\*(Name):\*\* \[([^]]+)\]\(([^)\s]+)\)(?: and \[\*\*Patch\*\*\]\(([^)\s]+)\))?";
             Match match = Regex.Match(text, pattern, RegexOptions.Singleline);
 
-            if (!match.Success) { return (string.Empty, string.Empty); }
+            if (!match.Success)
+                return (string.Empty, string.Empty);
 
             string name = match.Groups[2].Value.Trim();
             string modLink = match.Groups[3].Value.Trim();
@@ -52,7 +53,8 @@ namespace KOTORModSync.Core
             string pattern = $@"(?i)\*\*{propertyName}:\*\* ([^_*]+)";
             Match match = Regex.Match(text, pattern, RegexOptions.Singleline);
 
-            if (!match.Success) { return string.Empty; }
+            if (!match.Success)
+                return string.Empty;
 
             return match.Groups[1].Value.Trim();
         }
@@ -60,34 +62,32 @@ namespace KOTORModSync.Core
         private static string GetName((string, string) nameAndModLink) => nameAndModLink.Item1;
 
         private static string GetHyperlinkUrl((string, string) nameAndModLink, string linkType)
-            => string.Equals(linkType, "name", StringComparison.OrdinalIgnoreCase) ? nameAndModLink.Item2 : string.Empty;
+            => string.Equals(linkType, "name", StringComparison.OrdinalIgnoreCase)
+                ? nameAndModLink.Item2
+                : string.Empty;
 
         private static (string, string) GetCategoryAndTier(string text, string categoryTierName)
         {
             string pattern = $@"(?i)\*\*{categoryTierName}:\*\* ([^_*]+)";
             Match match = Regex.Match(text, pattern, RegexOptions.Singleline);
 
-            if (!match.Success) { return (string.Empty, string.Empty); }
+            if (!match.Success)
+                return (string.Empty, string.Empty);
 
             string[] values = match.Groups[1].Value.Split('/');
-            if (values.Length == 2)
-            {
-                return (values[0].Trim(), values[1].Trim());
-            }
-            else
-            {
-                return (string.Empty, string.Empty);
-            }
+            return values.Length == 2
+                ? (values[0].Trim(), values[1].Trim())
+                : (string.Empty, string.Empty);
         }
 
         private static bool GetBoolValue(string text, string propertyName)
         {
             string pattern = $@"\*\*{propertyName}:\*\* (.+)";
-            Match match = s_propertyRegex.Match(text);
+            Match match = Regex.Match(text, pattern);
             while (match.Success)
             {
                 string value = match.Groups[1].Value.Trim();
-                if (!string.IsNullOrWhiteSpace(value))
+                if (! string.IsNullOrWhiteSpace(value))
                 {
                     return value.Equals("YES", StringComparison.OrdinalIgnoreCase);
                 }

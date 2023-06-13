@@ -14,7 +14,7 @@ namespace KOTORModSync.Core.Utility
             // Merge sections and keys from iniData1
             foreach (SectionData section in iniData1.Sections)
             {
-                mergedIniData.Sections.AddSection(section.SectionName);
+                _ = mergedIniData.Sections.AddSection( section.SectionName );
                 foreach (KeyData key in section.Keys)
                     mergedIniData[section.SectionName].AddKey(key.KeyName, key.Value);
             }

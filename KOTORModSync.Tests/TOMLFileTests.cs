@@ -135,7 +135,8 @@ namespace KOTORModSync.Tests
             AssertComponentEquality(newComponent, duplicateComponent);
         }
 
-        //[Test]
+        [Test]
+        [Ignore("not sure if I want to support")]
         public void SaveAndLoadTOMLFile_CaseInsensitive()
         {
             // Arrange

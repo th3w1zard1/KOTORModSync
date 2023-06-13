@@ -86,7 +86,9 @@ namespace KOTORModSync.Core
                 // Check if the item is a Dictionary<string, object> representing a TOML table
                 if (!(rootTable["thisMod"][i] is IDictionary<string, object> table
                     && table.TryGetValue("Instructions", out object value)))
+                {
                     continue;
+                }
 
                 // Check if the "Instructions" table is empty
                 // Remove the empty "Instructions" table from the root table
@@ -473,7 +475,6 @@ namespace KOTORModSync.Core
 
                         // converts the custom variables and enumerates the files/folders based on wildcards
                         instruction.SetRealPaths();
-
 
                         switch (instruction.Action.ToLower())
                         {

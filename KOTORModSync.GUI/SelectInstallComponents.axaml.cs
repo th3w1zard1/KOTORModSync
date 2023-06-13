@@ -59,7 +59,7 @@ namespace KOTORModSync
                 // Add more components as needed
             };
 
-            Components = components.Select(component => new ComponentViewModel(component)).ToList();
+            Components = components.ConvertAll(component => new ComponentViewModel(component));
             SelectedComponents = new List<ComponentViewModel>();
 
             DataContext = this;

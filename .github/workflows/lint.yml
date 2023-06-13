@@ -19,10 +19,7 @@ jobs:
   lint_csharp:
     runs-on: windows-2019
     steps:
-      - uses: actions/checkout@v2
-
-      - name: Set remote URL
-        run: git remote set-url origin "https://github.com/${{ env.GITHUB_REPOSITORY }}.git"
+      - uses: actions/checkout@v3
 
       - name: Setup .NET Core
         uses: actions/setup-dotnet@v2
@@ -44,13 +41,10 @@ jobs:
       # Commit the changes
       - name: Commit changes
         run: |
-          git config --global user.email "linter_workflow@githubactions.com"
-          git config --global user.name "CSharp Lint"
+          git config --global user.name 'CSharp Lint'
+          git config --global user.email 'linter_workflow@githubactions.com'
           git add .
           git commit -m "Auto-format code using dotnet format"
-          if ! git push --set-upstream origin ${{ github.ref }}; then
-            echo "Failed to push changes to the repository."
-            exit 1
-          fi
+          git push
         env:
-          GITHUB_TOKEN: ${{ secrets.WORKFLOW_ACTIONS }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

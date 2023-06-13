@@ -71,44 +71,44 @@ source = ""<<modDirectory>>\\path\\to\\mod\\TSLPatcher directory""
 arguments = ""any command line arguments to pass (in TSLPatcher, this is the index of the desired option in namespaces.ini))""
 ";
 
-        public void SetParentComponent(Component parentComponent) =>
+        public void SetParentComponent( Component parentComponent ) =>
             ParentComponent = parentComponent;
 
         public static async Task<bool> ExecuteInstructionAsync(
             Func<Task<bool>> instructionMethod
         ) =>
-            await instructionMethod().ConfigureAwait(false);
+            await instructionMethod().ConfigureAwait( false );
 
         // This method will replace custom variables such as <<modDirectory>> and <<kotorDirectory>> with their actual paths.
         // This method should not be ran before an instruction is executed.
         // Otherwise we risk deserializing a full path early, which can lead to unsafe config injections. (e.g. malicious config file targeting sys files)
         // ^ perhaps the above is user error though? Either way, we attempt to baby them here.
-        public void SetRealPaths(bool noValidate = false)
+        public void SetRealPaths( bool noValidate = false )
         {
             sourcePaths
-                = Source.ConvertAll(Utility.Utility.ReplaceCustomVariables);
+                = Source.ConvertAll( Utility.Utility.ReplaceCustomVariables );
             // Enumerate the files/folders with wildcards and add them to the list
-            sourcePaths = FileHelper.EnumerateFilesWithWildcards(sourcePaths);
+            sourcePaths = FileHelper.EnumerateFilesWithWildcards( sourcePaths );
 
-            if (Destination == null)
+            if ( Destination == null )
             {
-                if (!noValidate && sourcePaths.Count == 0)
+                if ( !noValidate && sourcePaths.Count == 0 )
                 {
                     throw new Exception(
-                        $"Could not find any files! Source: {string.Join(", ", Source)}");
+                        $"Could not find any files! Source: {string.Join( ", ", Source )}" );
                 }
 
                 return;
             }
 
             destinationPath = new DirectoryInfo(
-                Utility.Utility.ReplaceCustomVariables(Destination)
-                ?? throw new InvalidOperationException("No destination set!"));
+                Utility.Utility.ReplaceCustomVariables( Destination )
+                ?? throw new InvalidOperationException( "No destination set!" ) );
 
-            if (!noValidate && sourcePaths.Count == 0)
+            if ( !noValidate && sourcePaths.Count == 0 )
             {
                 throw new Exception(
-                    $"Could not find any files! Source: {string.Join(", ", Source)}");
+                    $"Could not find any files! Source: {string.Join( ", ", Source )}" );
             }
 
             return;
@@ -120,13 +120,13 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
         {
             try
             {
-                List<Task> extractionTasks = new List<Task>(25);
+                List<Task> extractionTasks = new List<Task>( 25 );
 
                 // Use SemaphoreSlim to limit concurrent extractions
                 SemaphoreSlim
-                    semaphore = new SemaphoreSlim(5); // Limiting to 5 concurrent extractions
+                    semaphore = new SemaphoreSlim( 5 ); // Limiting to 5 concurrent extractions
                 bool success = true;
-                foreach (string sourcePath in sourcePaths)
+                foreach ( string sourcePath in sourcePaths )
                 {
                     await semaphore.WaitAsync(); // Acquire a semaphore slot
 
@@ -136,54 +136,54 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                             {
                                 try
                                 {
-                                    var thisFile = new FileInfo(sourcePath);
-                                    Logger.Log($"File path: {thisFile.FullName}");
+                                    var thisFile = new FileInfo( sourcePath );
+                                    Logger.Log( $"File path: {thisFile.FullName}" );
 
-                                    if (!ArchiveHelper.IsArchive(thisFile.Extension))
+                                    if ( !ArchiveHelper.IsArchive( thisFile.Extension ) )
                                     {
-                                        Logger.Log($"[Error] {ParentComponent.Name} failed to extract file '{thisFile.Name}'. Invalid archive?");
+                                        Logger.Log( $"[Error] {ParentComponent.Name} failed to extract file '{thisFile.Name}'. Invalid archive?" );
                                         success = false;
                                         return;
                                     }
 
-                                    using (FileStream stream = File.OpenRead(thisFile.FullName))
+                                    using ( FileStream stream = File.OpenRead( thisFile.FullName ) )
                                     {
                                         IArchive archive = ArchiveHelper.OpenArchive(
                                             stream,
                                             thisFile.FullName
                                         );
 
-                                        if (archive == null)
+                                        if ( archive == null )
                                         {
                                             Logger.LogException(
                                                 new InvalidOperationException(
-                                                    $"Unable to parse archive '{sourcePath}'")
+                                                    $"Unable to parse archive '{sourcePath}'" )
                                             );
                                             success = false;
                                             return;
                                         }
 
                                         IReader reader = archive.ExtractAllEntries();
-                                        while (reader.MoveToNextEntry())
+                                        while ( reader.MoveToNextEntry() )
                                         {
-                                            if (reader.Entry.IsDirectory) continue;
-                                            if (thisFile.Directory?.FullName == null) continue;
+                                            if ( reader.Entry.IsDirectory ) continue;
+                                            if ( thisFile.Directory?.FullName == null ) continue;
 
-                                            string destinationFolder = Path.GetFileNameWithoutExtension(thisFile.Name);
+                                            string destinationFolder = Path.GetFileNameWithoutExtension( thisFile.Name );
                                             string destinationItemPath = Path.Combine(
                                                 thisFile.Directory.FullName,
                                                 destinationFolder,
                                                 reader.Entry.Key
                                             );
-                                            string destinationDirectory = Path.GetDirectoryName(destinationItemPath);
+                                            string destinationDirectory = Path.GetDirectoryName( destinationItemPath );
 
-                                            if (destinationDirectory != null && !Directory.Exists(destinationDirectory))
+                                            if ( destinationDirectory != null && !Directory.Exists( destinationDirectory ) )
                                             {
-                                                Logger.Log($"Create directory {destinationDirectory}");
-                                                _ = Directory.CreateDirectory(destinationDirectory);
+                                                Logger.Log( $"Create directory {destinationDirectory}" );
+                                                _ = Directory.CreateDirectory( destinationDirectory );
                                             }
 
-                                            Logger.Log($"Extract {reader.Entry.Key} to {thisFile.Directory.FullName}");
+                                            Logger.Log( $"Extract {reader.Entry.Key} to {thisFile.Directory.FullName}" );
 
                                             try
                                             {
@@ -194,10 +194,10 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                                                     )
                                                 );
                                             }
-                                            catch (Exception)
+                                            catch ( Exception )
                                             {
                                                 await Task.Run(
-                                                    () => Logger.Log($"[Warning] Skipping file '{reader.Entry.Key}' due to lack of permissions.")
+                                                    () => Logger.Log( $"[Warning] Skipping file '{reader.Entry.Key}' due to lack of permissions." )
                                                 );
                                             }
                                         }
@@ -207,18 +207,18 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                                 {
                                     _ = semaphore.Release(); // Release the semaphore slot
                                 }
-                            }));
+                            } ) );
                 }
 
                 await Task.WhenAll(
-                    extractionTasks); // Wait for all extraction tasks to complete
+                    extractionTasks ); // Wait for all extraction tasks to complete
 
                 return success; // Extraction succeeded
             }
-            catch (Exception ex)
+            catch ( Exception ex )
             {
                 // Handle any exceptions that occurred during extraction
-                Logger.LogException(ex);
+                Logger.LogException( ex );
                 return false; // Extraction failed
             }
         }
@@ -229,24 +229,24 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
             Utility.Utility.IConfirmationDialogCallback confirmDialog
         )
         {
-            if (string.IsNullOrEmpty(directoryPath)
-                || !Directory.Exists(directoryPath)
-                || !Utility.Utility.IsDirectoryWritable(new DirectoryInfo(directoryPath))
+            if ( string.IsNullOrEmpty( directoryPath )
+                || !Directory.Exists( directoryPath )
+                || !Utility.Utility.IsDirectoryWritable( new DirectoryInfo( directoryPath ) )
                 )
             {
-                throw new ArgumentException("Invalid or inaccessible directory path.");
+                throw new ArgumentException( "Invalid or inaccessible directory path." );
             }
 
-            string[] files = Directory.GetFiles(directoryPath);
+            string[] files = Directory.GetFiles( directoryPath );
             var fileNameCounts = new Dictionary<string, int>();
 
-            foreach (string filePath in files)
+            foreach ( string filePath in files )
             {
-                string fileNameWithoutExtension = Path.GetFileNameWithoutExtension(filePath);
+                string fileNameWithoutExtension = Path.GetFileNameWithoutExtension( filePath );
 
-                if (string.IsNullOrEmpty(fileNameWithoutExtension)) continue;
+                if ( string.IsNullOrEmpty( fileNameWithoutExtension ) ) continue;
 
-                if (fileNameCounts.TryGetValue(fileNameWithoutExtension, out int count))
+                if ( fileNameCounts.TryGetValue( fileNameWithoutExtension, out int count ) )
                 {
                     fileNameCounts[fileNameWithoutExtension] = count + 1;
                     continue;
@@ -255,104 +255,104 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                 fileNameCounts[fileNameWithoutExtension] = 1;
             }
 
-            foreach (string filePath in files)
+            foreach ( string filePath in files )
             {
-                string fileName = Path.GetFileName(filePath);
-                string fileNameWithoutExtension = Path.GetFileNameWithoutExtension(filePath);
-                string fileExtensionFromFile = Path.GetExtension(filePath);
+                string fileName = Path.GetFileName( filePath );
+                string fileNameWithoutExtension = Path.GetFileNameWithoutExtension( filePath );
+                string fileExtensionFromFile = Path.GetExtension( filePath );
 
-                if (string.IsNullOrEmpty(fileNameWithoutExtension)
-                    || !fileNameCounts.ContainsKey(fileNameWithoutExtension)
+                if ( string.IsNullOrEmpty( fileNameWithoutExtension )
+                    || !fileNameCounts.ContainsKey( fileNameWithoutExtension )
                     || fileNameCounts[fileNameWithoutExtension] <= 1 || !string.Equals(
                         fileExtensionFromFile,
                         fileExtension,
-                        StringComparison.OrdinalIgnoreCase)) { continue; }
+                        StringComparison.OrdinalIgnoreCase ) ) { continue; }
 
                 try
                 {
-                    File.Delete(filePath);
-                    Logger.Log($"Deleted file: {fileName}");
+                    File.Delete( filePath );
+                    Logger.Log( $"Deleted file: {fileName}" );
                 }
-                catch (Exception ex)
+                catch ( Exception ex )
                 {
-                    Logger.LogException(ex);
+                    Logger.LogException( ex );
                     // Decide whether to throw or handle the exception here
                 }
             }
         }
 
-        public bool DeleteFile(Utility.Utility.IConfirmationDialogCallback confirmDialog)
+        public bool DeleteFile( Utility.Utility.IConfirmationDialogCallback confirmDialog )
         {
             try
             {
-                foreach (string thisFilePath in sourcePaths)
+                foreach ( string thisFilePath in sourcePaths )
                 {
-                    FileInfo thisFile = new FileInfo(thisFilePath);
+                    FileInfo thisFile = new FileInfo( thisFilePath );
 
-                    if (!Path.IsPathRooted(thisFilePath) || !thisFile.Exists)
+                    if ( !Path.IsPathRooted( thisFilePath ) || !thisFile.Exists )
                     {
                         var ex = new ArgumentNullException(
-                            $"Invalid wildcards or file does not exist: {thisFilePath}");
-                        Logger.LogException(ex);
+                            $"Invalid wildcards or file does not exist: {thisFilePath}" );
+                        Logger.LogException( ex );
                         return false;
                     }
 
                     // Delete the file synchronously
                     try
                     {
-                        File.Delete(thisFilePath);
-                        Logger.Log($"Deleting {thisFilePath}...");
+                        File.Delete( thisFilePath );
+                        Logger.Log( $"Deleting {thisFilePath}..." );
                     }
-                    catch (Exception ex)
+                    catch ( Exception ex )
                     {
-                        Logger.LogException(ex);
+                        Logger.LogException( ex );
                         return false;
                     }
                 }
 
                 return true;
             }
-            catch (Exception ex)
+            catch ( Exception ex )
             {
-                Logger.LogException(ex);
+                Logger.LogException( ex );
                 return false;
             }
         }
 
-        public bool RenameFile(Utility.Utility.IConfirmationDialogCallback confirmDialog)
+        public bool RenameFile( Utility.Utility.IConfirmationDialogCallback confirmDialog )
         {
             try
             {
                 bool success = true;
-                foreach (string sourcePath in Source.ConvertAll(
-                    Utility.Utility.ReplaceCustomVariables))
+                foreach ( string sourcePath in Source.ConvertAll(
+                    Utility.Utility.ReplaceCustomVariables ) )
                 {
                     // Check if the source file already exists
-                    string fileName = Path.GetFileName(sourcePath);
-                    if (!File.Exists(sourcePath))
+                    string fileName = Path.GetFileName( sourcePath );
+                    if ( !File.Exists( sourcePath ) )
                     {
-                        Logger.Log($"{fileName} does not exist!");
+                        Logger.Log( $"{fileName} does not exist!" );
                         success = false;
                         continue;
                     }
 
                     // Check if the destination file already exists
                     string destinationFilePath = Path.Combine(
-                        Path.GetDirectoryName(sourcePath) ?? string.Empty,
-                        Destination);
-                    if (File.Exists(destinationFilePath))
+                        Path.GetDirectoryName( sourcePath ) ?? string.Empty,
+                        Destination );
+                    if ( File.Exists( destinationFilePath ) )
                     {
-                        if (Overwrite)
+                        if ( Overwrite )
                         {
-                            Logger.Log($"Replacing {destinationFilePath}");
-                            File.Delete(destinationFilePath);
+                            Logger.Log( $"Replacing {destinationFilePath}" );
+                            File.Delete( destinationFilePath );
                         }
                         else
                         {
                             success = false;
                             Logger.LogException(
                                 new InvalidOperationException(
-                                    $"Skipping file {sourcePath} (A file with the name {Path.GetFileName(destinationFilePath)} already exists)"));
+                                    $"Skipping file {sourcePath} (A file with the name {Path.GetFileName( destinationFilePath )} already exists)" ) );
                             continue;
                         }
                     }
@@ -360,113 +360,113 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                     // Move the file
                     try
                     {
-                        Logger.Log($"Rename '{fileName}' to '{destinationFilePath}'");
-                        File.Move(sourcePath, destinationFilePath);
+                        Logger.Log( $"Rename '{fileName}' to '{destinationFilePath}'" );
+                        File.Move( sourcePath, destinationFilePath );
                     }
-                    catch (IOException ex)
+                    catch ( IOException ex )
                     {
                         // Handle file move error, such as destination file already exists
                         success = false;
-                        Logger.LogException(ex);
+                        Logger.LogException( ex );
                     }
                 }
 
                 return success;
             }
-            catch (Exception ex)
+            catch ( Exception ex )
             {
                 // Handle any unexpected exceptions
-                Logger.LogException(ex);
+                Logger.LogException( ex );
                 return false;
             }
         }
 
-        public bool CopyFile(Utility.Utility.IConfirmationDialogCallback confirmDialog)
+        public bool CopyFile( Utility.Utility.IConfirmationDialogCallback confirmDialog )
         {
             try
             {
-                foreach (string sourcePath in sourcePaths)
+                foreach ( string sourcePath in sourcePaths )
                 {
-                    string fileName = Path.GetFileName(sourcePath);
+                    string fileName = Path.GetFileName( sourcePath );
                     string destinationFilePath = Path.Combine(
                         destinationPath.FullName,
-                        fileName);
+                        fileName );
 
                     // Check if the destination file already exists
-                    if (!Overwrite && File.Exists(destinationFilePath))
+                    if ( !Overwrite && File.Exists( destinationFilePath ) )
                     {
                         Logger.Log(
-                            $"Skipping file {Path.GetFileName(destinationFilePath)} (Overwrite is false)"
+                            $"Skipping file {Path.GetFileName( destinationFilePath )} (Overwrite is false)"
                         );
                         continue;
                     }
 
                     // Check if the destination file already exists
-                    if (File.Exists(destinationFilePath))
+                    if ( File.Exists( destinationFilePath ) )
                     {
                         Logger.Log(
-                            $"File already exists, deleting existing file {destinationFilePath}");
+                            $"File already exists, deleting existing file {destinationFilePath}" );
                         // Delete the existing file
-                        File.Delete(destinationFilePath);
+                        File.Delete( destinationFilePath );
                     }
 
                     // Copy the file
                     Logger.Log(
-                        $"Copy '{Path.GetFileName(sourcePath)}' to '{destinationFilePath}'");
+                        $"Copy '{Path.GetFileName( sourcePath )}' to '{destinationFilePath}'" );
 
-                    File.Copy(sourcePath, destinationFilePath);
+                    File.Copy( sourcePath, destinationFilePath );
                 }
 
                 return true;
             }
-            catch (Exception ex)
+            catch ( Exception ex )
             {
-                Logger.LogException(ex);
+                Logger.LogException( ex );
                 return false;
             }
         }
 
-        public bool MoveFile(Utility.Utility.IConfirmationDialogCallback confirmDialog)
+        public bool MoveFile( Utility.Utility.IConfirmationDialogCallback confirmDialog )
         {
             try
             {
-                foreach (string sourcePath in sourcePaths)
+                foreach ( string sourcePath in sourcePaths )
                 {
-                    string fileName = Path.GetFileName(sourcePath);
+                    string fileName = Path.GetFileName( sourcePath );
                     string destinationFilePath = Path.Combine(
                         destinationPath.FullName,
-                        fileName);
+                        fileName );
 
                     // Check if the destination file already exists
-                    if (!Overwrite && File.Exists(destinationFilePath))
+                    if ( !Overwrite && File.Exists( destinationFilePath ) )
                     {
                         Logger.Log(
-                            $"Skipping file {Path.GetFileName(destinationFilePath)} (Overwrite is false)");
+                            $"Skipping file {Path.GetFileName( destinationFilePath )} (Overwrite is false)" );
 
                         continue;
                     }
 
                     // Check if the destination file already exists
-                    if (File.Exists(destinationFilePath))
+                    if ( File.Exists( destinationFilePath ) )
                     {
                         Logger.Log(
-                            $"File already exists, deleting existing file {destinationFilePath}");
+                            $"File already exists, deleting existing file {destinationFilePath}" );
                         // Delete the existing file
-                        File.Delete(destinationFilePath);
+                        File.Delete( destinationFilePath );
                     }
 
                     // Move the file
                     Logger.Log(
-                        $"Move '{Path.GetFileName(sourcePath)}' to '{destinationFilePath}'");
+                        $"Move '{Path.GetFileName( sourcePath )}' to '{destinationFilePath}'" );
 
-                    File.Move(sourcePath, destinationFilePath);
+                    File.Move( sourcePath, destinationFilePath );
                 }
 
                 return true;
             }
-            catch (Exception ex)
+            catch ( Exception ex )
             {
-                Logger.LogException(ex);
+                Logger.LogException( ex );
                 return false;
             }
         }
@@ -477,43 +477,43 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
         {
             try
             {
-                foreach (string t in sourcePaths)
+                foreach ( string t in sourcePaths )
                 {
                     var tslPatcherPath = t;
                     DirectoryInfo tslPatcherDirectory;
 
-                    if (Path.HasExtension(tslPatcherPath))
+                    if ( Path.HasExtension( tslPatcherPath ) )
                     {
                         // If it's a file, get the parent folder
-                        tslPatcherDirectory = new FileInfo(tslPatcherPath).Directory;
+                        tslPatcherDirectory = new FileInfo( tslPatcherPath ).Directory;
 
-                        if (tslPatcherDirectory == null || !tslPatcherDirectory.Exists)
+                        if ( tslPatcherDirectory == null || !tslPatcherDirectory.Exists )
                         {
                             throw new DirectoryNotFoundException(
-                                $"The parent directory of the file {tslPatcherPath} could not be located on the disk.");
+                                $"The parent directory of the file {tslPatcherPath} could not be located on the disk." );
                         }
                     }
                     else
                     {
                         // It's a folder, create a DirectoryInfo instance
-                        tslPatcherDirectory = new DirectoryInfo(tslPatcherPath);
+                        tslPatcherDirectory = new DirectoryInfo( tslPatcherPath );
 
-                        if (!tslPatcherDirectory.Exists)
+                        if ( !tslPatcherDirectory.Exists )
                         {
                             throw new DirectoryNotFoundException(
-                                $"The directory {tslPatcherPath} could not be located on the disk.");
+                                $"The directory {tslPatcherPath} could not be located on the disk." );
                         }
                     }
 
 
-                    FileHelper.ReplaceLookupGameFolder(tslPatcherDirectory);
+                    FileHelper.ReplaceLookupGameFolder( tslPatcherDirectory );
 
                     // arg1 = swkotor directory
                     // arg2 = mod directory (where TSLPatcher_data folder is)
                     // arg3 = (optional) install option integer index from namespaces.ini
                     string args
                         = $"\"{MainConfig.DestinationPath}\" \"{MainConfig.SourcePath}\"";
-                    if (!string.IsNullOrEmpty(this.Arguments))
+                    if ( !string.IsNullOrEmpty( this.Arguments ) )
                         args += " " + this.Arguments;
 
                     var tslPatcherCliPath = new FileInfo(
@@ -523,17 +523,17 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                         )
                     );
 
-                    int retVal = await PlatformAgnosticMethods.ExecuteProcessAsync(tslPatcherCliPath, args);
-                    Logger.LogVerbose($"{tslPatcherCliPath.Name} exited with exit code {retVal}");
-                    if (retVal == 0)
+                    int retVal = await PlatformAgnosticMethods.ExecuteProcessAsync( tslPatcherCliPath, args );
+                    Logger.LogVerbose( $"{tslPatcherCliPath.Name} exited with exit code {retVal}" );
+                    if ( retVal == 0 )
                         return true;
                 }
 
                 return false;
             }
-            catch (Exception ex)
+            catch ( Exception ex )
             {
-                Logger.LogException(ex);
+                Logger.LogException( ex );
                 throw;
             }
         }
@@ -545,42 +545,42 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
             try
             {
                 bool isSuccess = true; // Track the success status
-                foreach (string sourcePath in sourcePaths)
+                foreach ( string sourcePath in sourcePaths )
                 {
-                    if (this.Action == "TSLPatcher")
+                    if ( this.Action == "TSLPatcher" )
                     {
                         FileHelper.ReplaceLookupGameFolder(
                             new DirectoryInfo(
-                                Path.GetDirectoryName(sourcePath) ?? string.Empty));
+                                Path.GetDirectoryName( sourcePath ) ?? string.Empty ) );
                     }
 
-                    var thisProgram = new FileInfo(sourcePath);
-                    if (!thisProgram.Exists)
+                    var thisProgram = new FileInfo( sourcePath );
+                    if ( !thisProgram.Exists )
                     {
                         throw new FileNotFoundException(
-                            $"The file {sourcePath} could not be located on the disk");
+                            $"The file {sourcePath} could not be located on the disk" );
                     }
 
                     try
                     {
-                        if (await PlatformAgnosticMethods.ExecuteProcessAsync(thisProgram, "") == 0)
+                        if ( await PlatformAgnosticMethods.ExecuteProcessAsync( thisProgram, "" ) == 0 )
                             continue;
 
                         isSuccess = false;
                         break;
                     }
-                    catch (Exception ex)
+                    catch ( Exception ex )
                     {
-                        Logger.LogException(ex);
+                        Logger.LogException( ex );
                         return false;
                     }
                 }
 
                 return isSuccess;
             }
-            catch (Exception ex)
+            catch ( Exception ex )
             {
-                Logger.LogException(ex);
+                Logger.LogException( ex );
                 return false;
             }
         }
@@ -589,26 +589,26 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
         {
             bool errors = false;
             bool found = false;
-            foreach (string installLogFile in sourcePaths.Select(
+            foreach ( string installLogFile in sourcePaths.Select(
                 sourcePath => System.IO.Path.Combine(
-                    Path.GetDirectoryName(sourcePath) ?? string.Empty,
-                    "install.rtf")))
+                    Path.GetDirectoryName( sourcePath ) ?? string.Empty,
+                    "install.rtf" ) ) )
             {
-                if (!File.Exists(installLogFile))
+                if ( !File.Exists( installLogFile ) )
                 {
-                    Logger.Log("Install log file not found.");
+                    Logger.Log( "Install log file not found." );
                     continue;
                 }
 
                 found = true;
-                string installLogContent = File.ReadAllText(installLogFile);
-                string[] bulletPoints = installLogContent.Split('\u2022');
+                string installLogContent = File.ReadAllText( installLogFile );
+                string[] bulletPoints = installLogContent.Split( '\u2022' );
 
-                foreach (string bulletPoint in bulletPoints.Where(
-                    bulletPoint => bulletPoint.Contains("Error")))
+                foreach ( string bulletPoint in bulletPoints.Where(
+                    bulletPoint => bulletPoint.Contains( "Error" ) ) )
                 {
                     Logger.Log(
-                        $"Install log contains warning or error message: {bulletPoint.Trim()}");
+                        $"Install log contains warning or error message: {bulletPoint.Trim()}" );
                     errors = true;
                 }
             }

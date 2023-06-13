@@ -38,7 +38,7 @@ namespace KOTORModSync
         {
             InitializeComponent();
             MainConfigInstance = new MainConfig();
-            MainConfigStackPanel = this.FindControl<StackPanel>("MainConfigStackPanel");
+            MainConfigStackPanel = this.FindControl<StackPanel>( "MainConfigStackPanel" );
             MainConfigStackPanel.DataContext = MainConfigInstance;
             DataContext = this;
             //Testwindow();
@@ -47,90 +47,90 @@ namespace KOTORModSync
         public async void Testwindow()
         {
             // Create an instance of OptionsDialogCallback
-            OptionsDialogCallback optionsDialogCallback = new OptionsDialogCallback(this);
+            OptionsDialogCallback optionsDialogCallback = new OptionsDialogCallback( this );
 
             // Create a list of options
             List<string> options = new List<string> { "Option 1", "Option 2", "Option 3" };
 
             // Show the options dialog and get the selected option
-            string selectedOption = await optionsDialogCallback.ShowOptionsDialog(options);
+            string selectedOption = await optionsDialogCallback.ShowOptionsDialog( options );
 
             // Use the selected option
-            if (selectedOption != null)
+            if ( selectedOption != null )
             {
                 // Option selected, do something with it
-                Console.WriteLine("Selected option: " + selectedOption);
+                Console.WriteLine( "Selected option: " + selectedOption );
             }
             else
             {
                 // No option selected or dialog closed
-                Console.WriteLine("No option selected or dialog closed");
+                Console.WriteLine( "No option selected or dialog closed" );
             }
         }
 
         private void InitializeComponent()
         {
-            AvaloniaXamlLoader.Load(this);
-            LeftTreeView = this.FindControl<TreeView>("LeftTreeView");
+            AvaloniaXamlLoader.Load( this );
+            LeftTreeView = this.FindControl<TreeView>( "LeftTreeView" );
 
-            RightTextBox = this.FindControl<TextBox>("RightTextBox");
+            RightTextBox = this.FindControl<TextBox>( "RightTextBox" );
             RightTextBox.LostFocus += RightListBox_LostFocus; // Prevents rightListBox from being cleared when clicking elsewhere.
             RightTextBox.DataContext = _selectedComponentProperties;
 
-            TabControl = this.FindControl<TabControl>("TabControl");
-            RawEditTabItem = this.FindControl<TabItem>("RawEditTabItem");
-            GuiEditTabItem = this.FindControl<TabItem>("GuiEditTabItem");
-            InitialTab = this.FindControl<TabItem>("InitialTab");
-            ApplyEditorButton = this.FindControl<Button>("ApplyEditorButton");
+            TabControl = this.FindControl<TabControl>( "TabControl" );
+            RawEditTabItem = this.FindControl<TabItem>( "RawEditTabItem" );
+            GuiEditTabItem = this.FindControl<TabItem>( "GuiEditTabItem" );
+            InitialTab = this.FindControl<TabItem>( "InitialTab" );
+            ApplyEditorButton = this.FindControl<Button>( "ApplyEditorButton" );
             _selectedComponentProperties = new ObservableCollection<string>();
         }
 
-        public static IControl Build(object data)
+        public static IControl Build( object data )
         {
             try
             {
                 // Create a dictionary to keep track of child TreeViewItems
-                var childItems = new Dictionary<string, TreeViewItem>(10000);
-                if (!(data is Component component))
-                    throw new InvalidCastException("data variable should always be a Component.");
+                var childItems = new Dictionary<string, TreeViewItem>( 10000 );
+                if ( !( data is Component component ) )
+                    throw new InvalidCastException( "data variable should always be a Component." );
 
                 // If no dependencies we can return here.
-                if (component.Dependencies == null || component.Dependencies.Count == 0)
+                if ( component.Dependencies == null || component.Dependencies.Count == 0 )
                     return new TextBlock { Text = component.Name }; // Use a TextBlock for components without dependencies
 
                 // Create a TreeViewItem for the component
                 var treeViewItem = new TreeViewItem { Header = component.Name };
 
                 // Check if the component has any dependencies
-                foreach (string dependency in component.Dependencies)
+                foreach ( string dependency in component.Dependencies )
                 {
-                    if (childItems.ContainsKey(dependency))
+                    if ( childItems.ContainsKey( dependency ) )
                         continue;
 
                     // Create a new child TreeViewItem for each unique dependency
                     var childItem = new TreeViewItem { Header = dependency };
-                    childItems.Add(dependency, childItem);
+                    childItems.Add( dependency, childItem );
                 }
 
                 // Add child TreeViewItems to the parent TreeViewItem
                 var items = treeViewItem.Items as IList;
-                foreach (TreeViewItem childItem in childItems.Values
-                    .Where(childItem => childItem == null
-                               ? throw new ArgumentNullException(nameof(childItem))
+                foreach ( TreeViewItem childItem in childItems.Values
+                    .Where( childItem => childItem == null
+                               ? throw new ArgumentNullException( nameof( childItem ) )
                                : items != null
-                    ))
+                    ) )
                 {
-                    if (items == null)
+                    if ( items == null )
                         continue;
 
-                    _ = items.Add(childItem);
+                    _ = items.Add( childItem );
                 }
 
                 return treeViewItem;
             }
-            catch (Exception e)
+            catch ( Exception e )
             {
-                Console.WriteLine(e);
+                Console.WriteLine( e );
                 throw;
             }
         }
@@ -139,19 +139,19 @@ namespace KOTORModSync
         {
             try
             {
-                var filters = new List<FileDialogFilter>(10)
+                var filters = new List<FileDialogFilter>( 10 )
                 {
                     new FileDialogFilter { Name = "Mod Sync File", Extensions = { "toml", "tml" } },
                     new FileDialogFilter { Name = "All Files", Extensions = { "*" } }
                 };
 
-                string[] result = await ShowFileDialog(false, filters);
-                if (result?.Length > 0)
+                string[] result = await ShowFileDialog( false, filters );
+                if ( result?.Length > 0 )
                     return result[0]; // Retrieve the first selected file path
             }
-            catch (Exception ex)
+            catch ( Exception ex )
             {
-                Logger.LogException(ex);
+                Logger.LogException( ex );
             }
 
             return null;
@@ -161,20 +161,20 @@ namespace KOTORModSync
         {
             try
             {
-                var filters = new List<FileDialogFilter>(10) { new FileDialogFilter { Name = "All Files", Extensions = { "*" } } };
+                var filters = new List<FileDialogFilter>( 10 ) { new FileDialogFilter { Name = "All Files", Extensions = { "*" } } };
 
-                string[] filePaths = await ShowFileDialog(false, filters, true);
-                if (filePaths != null)
+                string[] filePaths = await ShowFileDialog( false, filters, true );
+                if ( filePaths != null )
                 {
-                    Logger.Log($"Selected files: {string.Join(", ", filePaths)}");
+                    Logger.Log( $"Selected files: {string.Join( ", ", filePaths )}" );
                     return filePaths.ToList();
                 }
 
-                Logger.LogVerbose("User did not select any files.");
+                Logger.LogVerbose( "User did not select any files." );
             }
-            catch (Exception ex)
+            catch ( Exception ex )
             {
-                Logger.LogException(ex);
+                Logger.LogException( ex );
             }
 
             return null;
@@ -184,23 +184,23 @@ namespace KOTORModSync
         {
             try
             {
-                string[] thisFolder = await ShowFileDialog(true, null);
+                string[] thisFolder = await ShowFileDialog( true, null );
                 return thisFolder[0];
             }
-            catch (Exception ex)
+            catch ( Exception ex )
             {
-                Logger.LogException(ex);
+                Logger.LogException( ex );
             }
 
             return null;
         }
 
         [ItemCanBeNull]
-        private async Task<string> SaveFile(List<string> defaultExt = null)
+        private async Task<string> SaveFile( List<string> defaultExt = null )
         {
             try
             {
-                if (defaultExt == null)
+                if ( defaultExt == null )
                 {
                     defaultExt = new List<string>() { "toml", "tml" };
                 }
@@ -216,23 +216,23 @@ namespace KOTORModSync
                 };
 
                 // Show the dialog and wait for a result.
-                if (VisualRoot is Window parent)
+                if ( VisualRoot is Window parent )
                 {
-                    string filePath = await dialog.ShowAsync(parent);
-                    if (!string.IsNullOrEmpty(filePath))
+                    string filePath = await dialog.ShowAsync( parent );
+                    if ( !string.IsNullOrEmpty( filePath ) )
                     {
-                        Logger.Log($"Selected file: {filePath}");
+                        Logger.Log( $"Selected file: {filePath}" );
                         return filePath;
                     }
                 }
                 else
                 {
-                    Logger.Log("Could not open dialog - parent window not found");
+                    Logger.Log( "Could not open dialog - parent window not found" );
                 }
             }
-            catch (Exception ex)
+            catch ( Exception ex )
             {
-                Logger.LogException(ex);
+                Logger.LogException( ex );
             }
 
             return null;
@@ -246,36 +246,36 @@ namespace KOTORModSync
         {
             try
             {
-                if (!(VisualRoot is Window parent))
+                if ( !( VisualRoot is Window parent ) )
                 {
-                    Logger.Log($"Could not open {(isFolderDialog ? "folder" : "file")} dialog - parent window not found");
+                    Logger.Log( $"Could not open {( isFolderDialog ? "folder" : "file" )} dialog - parent window not found" );
                     return default;
                 }
 
                 string[] results = isFolderDialog
-                    ? (new[] { await new OpenFolderDialog().ShowAsync(parent) })
-                    : await new OpenFileDialog() { AllowMultiple = allowMultiple, Filters = filters }.ShowAsync(parent);
+                    ? ( new[] { await new OpenFolderDialog().ShowAsync( parent ) } )
+                    : await new OpenFileDialog() { AllowMultiple = allowMultiple, Filters = filters }.ShowAsync( parent );
 
-                if (results == null || results.Length == 0)
+                if ( results == null || results.Length == 0 )
                 {
-                    Logger.LogVerbose("User did not make a selection");
+                    Logger.LogVerbose( "User did not make a selection" );
                     return default;
                 }
 
-                Logger.Log($"Selected {(isFolderDialog ? "folder" : "file")}: {string.Join(", ", results)}");
+                Logger.Log( $"Selected {( isFolderDialog ? "folder" : "file" )}: {string.Join( ", ", results )}" );
                 return results;
             }
-            catch (Exception ex)
+            catch ( Exception ex )
             {
-                Logger.LogException(ex);
+                Logger.LogException( ex );
             }
 
             return null;
         }
 
-        private async Task ProcessComponents(List<Component> components)
+        private async Task ProcessComponents( List<Component> components )
         {
-            if (!(components?.Count > 0))
+            if ( !( components?.Count > 0 ) )
                 return;
 
             // Clear existing items in the tree view
@@ -285,44 +285,44 @@ namespace KOTORModSync
             var rootItem = new TreeViewItem { Header = "Components" };
 
             int i = 0;
-            foreach (Component component in components)
+            foreach ( Component component in components )
             {
-                CreateTreeViewItem(component, rootItem);
+                CreateTreeViewItem( component, rootItem );
 
                 // Check for duplicate GUID
                 Guid componentGuid = component.Guid;
-                Component duplicateComponent = components.Find(c => c.Guid == componentGuid && c != component);
+                Component duplicateComponent = components.Find( c => c.Guid == componentGuid && c != component );
 
-                if (duplicateComponent == null) { continue; }
+                if ( duplicateComponent == null ) { continue; }
 
-                if (!Guid.TryParse(duplicateComponent.Guid.ToString(), out Guid outGuid))
+                if ( !Guid.TryParse( duplicateComponent.Guid.ToString(), out Guid outGuid ) )
                 {
-                    if (MainConfig.AttemptFixes)
+                    if ( MainConfig.AttemptFixes )
                         duplicateComponent.Guid = Guid.NewGuid();
-                    Logger.Log($"[Warning] Invalid GUID for component '{component.Name}' got '{component.Guid}'");
+                    Logger.Log( $"[Warning] Invalid GUID for component '{component.Name}' got '{component.Guid}'" );
                 }
 
                 string message = $"Component '{component.Name}' has duplicate GUID with component '{duplicateComponent.Name}'";
-                Logger.Log(message);
+                Logger.Log( message );
 
                 bool confirm = i >= 2
                     || await ConfirmationDialog.ShowConfirmationDialog(
                         this,
-                        message + $".\r\nAssign random GUID to '{duplicateComponent.Name}'? (default: NO)");
+                        message + $".\r\nAssign random GUID to '{duplicateComponent.Name}'? (default: NO)" );
 
-                if (confirm)
+                if ( confirm )
                 {
                     i++;
                     duplicateComponent.Guid = Guid.NewGuid();
-                    Logger.LogVerbose($"Replaced GUID of component {duplicateComponent.Name}");
+                    Logger.LogVerbose( $"Replaced GUID of component {duplicateComponent.Name}" );
                 }
                 else
                 {
-                    Logger.LogVerbose($"User canceled GUID replacement for component {duplicateComponent.Name}");
+                    Logger.LogVerbose( $"User canceled GUID replacement for component {duplicateComponent.Name}" );
                 }
             }
 
-            await Dispatcher.UIThread.InvokeAsync(() =>
+            await Dispatcher.UIThread.InvokeAsync( () =>
             {
                 // Create a collection to hold the root item
                 var rootItemsCollection = new AvaloniaList<TreeViewItem> { rootItem };
@@ -333,65 +333,65 @@ namespace KOTORModSync
                 // Expand the tree. Too lazy to figure out the proper way.
                 IEnumerator treeEnumerator = LeftTreeView.Items.GetEnumerator();
                 treeEnumerator.MoveNext();
-                LeftTreeView.ExpandSubTree((TreeViewItem)treeEnumerator.Current);
-            });
+                LeftTreeView.ExpandSubTree( (TreeViewItem)treeEnumerator.Current );
+            } );
         }
 
-        private async void LoadInstallFile_Click(object sender, RoutedEventArgs e)
+        private async void LoadInstallFile_Click( object sender, RoutedEventArgs e )
         {
             // Open the file dialog to select a file
             try
             {
                 string filePath = await OpenFile();
-                if (string.IsNullOrEmpty(filePath))
+                if ( string.IsNullOrEmpty( filePath ) )
                     return;
 
                 // Verify the file type
-                string fileExtension = Path.GetExtension(filePath);
-                if (!new List<string> { ".toml", ".tml", ".txt" }.Contains(fileExtension, StringComparer.OrdinalIgnoreCase))
+                string fileExtension = Path.GetExtension( filePath );
+                if ( !new List<string> { ".toml", ".tml", ".txt" }.Contains( fileExtension, StringComparer.OrdinalIgnoreCase ) )
                 {
-                    Logger.Log($"Invalid extension for file {filePath}");
+                    Logger.Log( $"Invalid extension for file {filePath}" );
                     return;
                 }
 
                 // Load components dynamically
-                _components = FileHelper.ReadComponentsFromFile(filePath);
+                _components = FileHelper.ReadComponentsFromFile( filePath );
 
                 // Validate the components.
-                await ProcessComponents(_components);
+                await ProcessComponents( _components );
             }
-            catch (Exception ex)
+            catch ( Exception ex )
             {
-                Logger.LogException(ex);
+                Logger.LogException( ex );
             }
         }
 
-        public async void LoadMarkdown_Click(object sender, RoutedEventArgs e)
+        public async void LoadMarkdown_Click( object sender, RoutedEventArgs e )
         {
             try
             {
                 string filePath = await OpenFile();
-                using (StreamReader reader = new StreamReader(filePath))
+                using ( StreamReader reader = new StreamReader( filePath ) )
                 {
                     string fileContents = await reader.ReadToEndAsync();
-                    if (_components?.Count > 0)
+                    if ( _components?.Count > 0 )
                     {
-                        if (!await ConfirmationDialog.ShowConfirmationDialog(this, "You already have a config loaded. Do you want to load the markdown anyway?"))
+                        if ( !await ConfirmationDialog.ShowConfirmationDialog( this, "You already have a config loaded. Do you want to load the markdown anyway?" ) )
                             return;
                     }
 
-                    this._components = ModParser.ParseMods(string.Join(Environment.NewLine, fileContents));
-                    await ProcessComponents(_components);
+                    this._components = ModParser.ParseMods( string.Join( Environment.NewLine, fileContents ) );
+                    await ProcessComponents( _components );
                 }
             }
-            catch (Exception exception)
+            catch ( Exception exception )
             {
-                Logger.LogException(exception);
+                Logger.LogException( exception );
                 throw;
             }
         }
 
-        private async void BrowseSourceFiles_Click(object sender, RoutedEventArgs e)
+        private async void BrowseSourceFiles_Click( object sender, RoutedEventArgs e )
         {
             try
             {
@@ -399,9 +399,9 @@ namespace KOTORModSync
                 // Get the item's data context based on the clicked button
                 var thisInstruction = (Instruction)button.DataContext;
 
-                if (thisInstruction == null)
+                if ( thisInstruction == null )
                 {
-                    Logger.Log("Could not find instruction instance during BrowseSourceFiles_Click");
+                    Logger.Log( "Could not find instruction instance during BrowseSourceFiles_Click" );
                     return;
                 }
 
@@ -410,52 +410,52 @@ namespace KOTORModSync
 
                 // Open the file dialog to select a file
                 List<string> files = await OpenFiles();
-                if (files == null)
+                if ( files == null )
                 {
-                    Logger.Log("No files chosen in BrowseSourceFiles_Click, returning to previous values");
+                    Logger.Log( "No files chosen in BrowseSourceFiles_Click, returning to previous values" );
                     return;
                 }
 
-                if (files.Any(string.IsNullOrEmpty))
+                if ( files.Any( string.IsNullOrEmpty ) )
                 {
                     Logger.LogException(
                         new ArgumentOutOfRangeException(
-                            nameof(files),
+                            nameof( files ),
                             $"Invalid files found, please report this to the developer: '{files}'"
-                        ));
+                        ) );
                 }
 
                 // Replace path with prefixed variables.
-                for (int i = 0; i < files.Count; i++)
+                for ( int i = 0; i < files.Count; i++ )
                 {
                     string filePath = files[i];
-                    files[i] = MainConfig.SourcePath != null ? Utility.RestoreCustomVariables(filePath) : filePath;
+                    files[i] = MainConfig.SourcePath != null ? Utility.RestoreCustomVariables( filePath ) : filePath;
                 }
 
-                if (MainConfig.SourcePath == null)
-                    Logger.Log("Not using custom variables <<kotorDirectory>> and <<modDirectory>> due to directories not being set prior.");
+                if ( MainConfig.SourcePath == null )
+                    Logger.Log( "Not using custom variables <<kotorDirectory>> and <<modDirectory>> due to directories not being set prior." );
                 thisInstruction.Source = files;
             }
-            catch (ArgumentNullException ex)
-            { Logger.LogVerbose(ex.Message); }
-            catch (Exception ex)
-            { Logger.LogException(ex); }
+            catch ( ArgumentNullException ex )
+            { Logger.LogVerbose( ex.Message ); }
+            catch ( Exception ex )
+            { Logger.LogException( ex ); }
         }
 
-        private async void BrowseDestination_Click(object sender, RoutedEventArgs e)
+        private async void BrowseDestination_Click( object sender, RoutedEventArgs e )
         {
             try
             {
                 Button button = (Button)sender ?? throw new InvalidOperationException();
-                Instruction thisInstruction = (Instruction)button.DataContext ?? throw new InvalidDataException("Could not find instruction instance during BrowseSourceFiles_Click");
+                Instruction thisInstruction = (Instruction)button.DataContext ?? throw new InvalidDataException( "Could not find instruction instance during BrowseSourceFiles_Click" );
 
                 // Get the TextBox associated with the current item
                 //var textBox = (TextBox)button.Tag;
 
                 // Open the file dialog to select a file
-                string filePath = await OpenFolder() ?? throw new ArgumentNullException($"No file chosen in BrowseDestination_Click. Will continue using {thisInstruction.Destination}");
+                string filePath = await OpenFolder() ?? throw new ArgumentNullException( $"No file chosen in BrowseDestination_Click. Will continue using {thisInstruction.Destination}" );
 
-                if (MainConfig.SourcePath == null)
+                if ( MainConfig.SourcePath == null )
                 {
                     Logger.Log(
                         "Directories not set, setting raw folder path without custom variable <<kotorDirectory>>"
@@ -464,181 +464,181 @@ namespace KOTORModSync
                     return;
                 }
 
-                thisInstruction.Destination = Utility.RestoreCustomVariables(filePath);
+                thisInstruction.Destination = Utility.RestoreCustomVariables( filePath );
             }
-            catch (Exception ex)
+            catch ( Exception ex )
             {
-                Logger.LogException(ex);
+                Logger.LogException( ex );
             }
         }
 
-        private void GenerateGuidButton_Click(object sender, RoutedEventArgs e)
+        private void GenerateGuidButton_Click( object sender, RoutedEventArgs e )
         {
             try
             {
                 _currentComponent.Guid = Guid.NewGuid();
-                LoadComponentDetails(_currentComponent);
+                LoadComponentDetails( _currentComponent );
             }
-            catch (Exception ex)
+            catch ( Exception ex )
             {
-                Logger.LogException(ex);
+                Logger.LogException( ex );
             }
         }
 
-        private async void SaveButton_Click(object sender, RoutedEventArgs e)
+        private async void SaveButton_Click( object sender, RoutedEventArgs e )
         {
             try
             {
-                if (_currentComponent is null)
+                if ( _currentComponent is null )
                 {
-                    await InformationDialog.ShowInformationDialog(this, "You must select a component from the list, or create one, before saving.");
+                    await InformationDialog.ShowInformationDialog( this, "You must select a component from the list, or create one, before saving." );
                     return;
                 }
 
-                Logger.LogVerbose($"Selected {_currentComponent.Name}");
+                Logger.LogVerbose( $"Selected {_currentComponent.Name}" );
 
-                if (!CheckForChanges())
+                if ( !CheckForChanges() )
                     return;
 
-                bool confirmationResult = await ConfirmationDialog.ShowConfirmationDialog(this, "Are you sure you want to save?");
-                if (!confirmationResult)
+                bool confirmationResult = await ConfirmationDialog.ShowConfirmationDialog( this, "Are you sure you want to save?" );
+                if ( !confirmationResult )
                     return;
 
                 string message = SaveChanges() ? "Saved successfully. Check the output window for more information." : "There were some problems with your syntax, please check the output window.";
-                await InformationDialog.ShowInformationDialog(this, message);
+                await InformationDialog.ShowInformationDialog( this, message );
                 RefreshTreeView();
             }
-            catch (Exception ex)
+            catch ( Exception ex )
             {
-                Logger.LogException(ex);
+                Logger.LogException( ex );
             }
         }
 
-        private async void ValidateButton_Click(object sender, RoutedEventArgs e)
+        private async void ValidateButton_Click( object sender, RoutedEventArgs e )
         {
             try
             {
-                if (MainConfigInstance == null || MainConfig.DestinationPath == null)
+                if ( MainConfigInstance == null || MainConfig.DestinationPath == null )
                 {
                     await InformationDialog.ShowInformationDialog(
                         this,
-                        "Please set your directories first");
+                        "Please set your directories first" );
                     return;
                 }
 
                 bool success = true;
-                foreach (Component component in _components)
+                foreach ( Component component in _components )
                 {
-                    var validator = new ComponentValidation(component);
+                    var validator = new ComponentValidation( component );
                     success &= validator.Run();
                 }
 
                 // Ensure necessary directories are writable.
-                bool isWritable = Utility.IsDirectoryWritable(MainConfig.DestinationPath)
-                    && Utility.IsDirectoryWritable(MainConfig.SourcePath);
+                bool isWritable = Utility.IsDirectoryWritable( MainConfig.DestinationPath )
+                    && Utility.IsDirectoryWritable( MainConfig.SourcePath );
 
                 string informationMessage
                     = "There were problems with your instructions file, please check the output window for details.";
-                if (!isWritable)
+                if ( !isWritable )
                     informationMessage
                         = "Your Mod directory and/or your KOTOR directory are not writable! Try running as admin?";
-                if (success && isWritable)
+                if ( success && isWritable )
                 {
                     informationMessage
                         = "No issues found. If you run into any issues during an install please notify the developer";
                 }
 
-                await InformationDialog.ShowInformationDialog(this, informationMessage);
+                await InformationDialog.ShowInformationDialog( this, informationMessage );
             }
-            catch (Exception ex)
+            catch ( Exception ex )
             {
-                Logger.LogException(ex);
+                Logger.LogException( ex );
             }
         }
 
-        private void AddComponentButton_Click(object sender, RoutedEventArgs e)
+        private void AddComponentButton_Click( object sender, RoutedEventArgs e )
         {
             // Create a new default component with a new GUID
             try
             {
-                Component newComponent = FileHelper.DeserializeTomlComponent(Component.DefaultComponent + Instruction.DefaultInstructions);
+                Component newComponent = FileHelper.DeserializeTomlComponent( Component.DefaultComponent + Instruction.DefaultInstructions );
                 newComponent.Guid = Guid.NewGuid();
                 newComponent.Name = "new mod_" + Path.GetRandomFileName();
                 // Add the new component to the collection
-                _components.Add(newComponent);
+                _components.Add( newComponent );
                 _currentComponent = newComponent;
 
                 // Load into the editor
-                LoadComponentDetails(newComponent);
+                LoadComponentDetails( newComponent );
                 // Refresh the TreeView to reflect the changes
                 RefreshTreeView();
             }
-            catch (Exception ex)
+            catch ( Exception ex )
             {
-                Logger.LogException(ex);
+                Logger.LogException( ex );
             }
         }
 
-        private void RefreshComponents_Click(object sender, RoutedEventArgs e) => RefreshTreeView();
+        private void RefreshComponents_Click( object sender, RoutedEventArgs e ) => RefreshTreeView();
 
-        private void RemoveComponentButton_Click(object sender, RoutedEventArgs e)
+        private void RemoveComponentButton_Click( object sender, RoutedEventArgs e )
         {
             // Get the selected component from the TreeView
             try
             {
-                if (!(LeftTreeView.SelectedItem is TreeViewItem selectedTreeViewItem) ||
-                    !(selectedTreeViewItem.Tag is Component selectedComponent))
+                if ( !( LeftTreeView.SelectedItem is TreeViewItem selectedTreeViewItem ) ||
+                    !( selectedTreeViewItem.Tag is Component selectedComponent ) )
                 {
                     return;
                 }
 
                 // Remove the selected component from the collection
-                _ = _components.Remove(selectedComponent);
+                _ = _components.Remove( selectedComponent );
                 _currentComponent = null;
 
                 // Refresh the TreeView to reflect the changes
                 RefreshTreeView();
             }
-            catch (Exception ex)
+            catch ( Exception ex )
             {
-                Logger.LogException(ex);
+                Logger.LogException( ex );
             }
         }
 
-        private async void SetDirectories_Click(object sender, RoutedEventArgs e)
+        private async void SetDirectories_Click( object sender, RoutedEventArgs e )
         {
             try
             {
-                await InformationDialog.ShowInformationDialog(this, "Please select your KOTOR(2) directory. (e.g. \"C:\\Program Files (x86)\\Steam\\steamapps\\common\\Knights of the Old Republic II\")");
+                await InformationDialog.ShowInformationDialog( this, "Please select your KOTOR(2) directory. (e.g. \"C:\\Program Files (x86)\\Steam\\steamapps\\common\\Knights of the Old Republic II\")" );
                 string chosenFolder = await OpenFolder();
-                DirectoryInfo kotorInstallDir = new DirectoryInfo(chosenFolder);
+                DirectoryInfo kotorInstallDir = new DirectoryInfo( chosenFolder );
                 MainConfigInstance.destinationPath = kotorInstallDir;
-                await InformationDialog.ShowInformationDialog(this, "Please select your mod directory (where the archives live).");
+                await InformationDialog.ShowInformationDialog( this, "Please select your mod directory (where the archives live)." );
                 chosenFolder = await OpenFolder();
-                DirectoryInfo modDirectory = new DirectoryInfo(chosenFolder);
+                DirectoryInfo modDirectory = new DirectoryInfo( chosenFolder );
                 MainConfigInstance.sourcePath = modDirectory;
             }
-            catch (ArgumentNullException)
+            catch ( ArgumentNullException )
             {
-                Logger.Log("User cancelled selecting folder");
+                Logger.Log( "User cancelled selecting folder" );
                 return;
             }
         }
 
-        private async void InstallModSingle_Click(object sender, RoutedEventArgs e)
+        private async void InstallModSingle_Click( object sender, RoutedEventArgs e )
         {
             try
             {
-                if (MainConfigInstance == null || MainConfig.DestinationPath == null)
+                if ( MainConfigInstance == null || MainConfig.DestinationPath == null )
                 {
                     var informationDialog = new InformationDialog
                     { InfoText = "Please set your directories first" };
-                    _ = await informationDialog.ShowDialog<bool?>(this);
+                    _ = await informationDialog.ShowDialog<bool?>( this );
                     return;
                 }
 
                 Component thisComponent;
-                if (LeftTreeView.SelectedItem is TreeViewItem selectedTreeViewItem && selectedTreeViewItem.Tag is Component selectedComponent)
+                if ( LeftTreeView.SelectedItem is TreeViewItem selectedTreeViewItem && selectedTreeViewItem.Tag is Component selectedComponent )
                 {
                     thisComponent = (Component)selectedTreeViewItem.Tag;
                 }
@@ -646,189 +646,189 @@ namespace KOTORModSync
                 {
                     var informationDialog = new InformationDialog
                     { InfoText = "Please choose a mod to install from the left list first" };
-                    _ = await informationDialog.ShowDialog<bool?>(this);
+                    _ = await informationDialog.ShowDialog<bool?>( this );
                     return;
                 }
 
-                if (thisComponent.Directions != null)
+                if ( thisComponent.Directions != null )
                 {
-                    bool confirm = await ConfirmationDialog.ShowConfirmationDialog(this, thisComponent.Directions + "\r\n\r\n Press Yes to execute these directions now.");
-                    if (!confirm)
+                    bool confirm = await ConfirmationDialog.ShowConfirmationDialog( this, thisComponent.Directions + "\r\n\r\n Press Yes to execute these directions now." );
+                    if ( !confirm )
                     {
-                        Logger.Log($"User cancelled install of {thisComponent.Name}");
+                        Logger.Log( $"User cancelled install of {thisComponent.Name}" );
                         return;
                     }
                 }
 
-                if (_installRunning)
+                if ( _installRunning )
                 {
                     await InformationDialog.ShowInformationDialog(
                         this,
-                        "There's already another installation running, please check the output window.");
+                        "There's already another installation running, please check the output window." );
                     return;
                 }
 
                 _installRunning = true;
-                var confirmationDialogCallback = new ConfirmationDialogCallback(this);
-                var optionsDialogCallback = new OptionsDialogCallback(this);
-                (bool success, Dictionary<FileInfo, SHA1> originalChecksums) = await Task.Run(() => thisComponent.ExecuteInstructions(confirmationDialogCallback, optionsDialogCallback, _components));
-                if (!success)
-                    await InformationDialog.ShowInformationDialog(this, $"There was a problem installing {thisComponent.Name}, please check the output window");
+                var confirmationDialogCallback = new ConfirmationDialogCallback( this );
+                var optionsDialogCallback = new OptionsDialogCallback( this );
+                (bool success, Dictionary<FileInfo, SHA1> originalChecksums) = await Task.Run( () => thisComponent.ExecuteInstructions( confirmationDialogCallback, optionsDialogCallback, _components ) );
+                if ( !success )
+                    await InformationDialog.ShowInformationDialog( this, $"There was a problem installing {thisComponent.Name}, please check the output window" );
                 else
-                    Logger.Log($"Successfully installed {thisComponent.Name}");
+                    Logger.Log( $"Successfully installed {thisComponent.Name}" );
                 _installRunning = false;
             }
-            catch (Exception ex)
+            catch ( Exception ex )
             {
-                Logger.LogException(ex);
+                Logger.LogException( ex );
                 _installRunning = false;
             }
         }
 
-        private async void StartInstall_Click(object sender, RoutedEventArgs e)
+        private async void StartInstall_Click( object sender, RoutedEventArgs e )
         {
             try
             {
-                if (MainConfigInstance == null || MainConfig.DestinationPath == null)
+                if ( MainConfigInstance == null || MainConfig.DestinationPath == null )
                 {
-                    await InformationDialog.ShowInformationDialog(this, "Please set your directories first");
+                    await InformationDialog.ShowInformationDialog( this, "Please set your directories first" );
                     return;
                 }
 
-                if (_components.Count == 0)
+                if ( _components.Count == 0 )
                 {
-                    await InformationDialog.ShowInformationDialog(this, "No instructions loaded! Press 'Load Instructions File' or create some instructions first.");
+                    await InformationDialog.ShowInformationDialog( this, "No instructions loaded! Press 'Load Instructions File' or create some instructions first." );
                     return;
                 }
 
-                if (!await ConfirmationDialog.ShowConfirmationDialog(this, "Really install all mods?"))
+                if ( !await ConfirmationDialog.ShowConfirmationDialog( this, "Really install all mods?" ) )
                 {
                     return;
                 }
 
-                if (_installRunning)
+                if ( _installRunning )
                 {
                     await InformationDialog.ShowInformationDialog(
                         this,
-                        "There's already an installation running, please check the output window.");
+                        "There's already an installation running, please check the output window." );
                     return;
                 }
 
                 _installRunning = true;
-                Logger.Log("Start installing all mods...");
+                Logger.Log( "Start installing all mods..." );
                 var progressWindow = new ProgressWindow();
                 progressWindow.Closed += ProgressWindowClosed;
                 progressWindow.progressBar.Value = 0;
                 progressWindow.Show();
 
-                foreach (Component component in _components)
+                foreach ( Component component in _components )
                 {
-                    await Dispatcher.UIThread.InvokeAsync(async () =>
+                    await Dispatcher.UIThread.InvokeAsync( async () =>
                     {
                         progressWindow.progressTextBlock.Text = $"Installing {component.Name}...\nDirections: {component.Directions}";
                         progressWindow.progressBar.Value = 0;
 
                         // Additional fallback options
-                        await Task.Delay(100); // Introduce a small delay
-                        await Dispatcher.UIThread.InvokeAsync(() => { }); // Invoke an empty action to ensure UI updates are processed
-                        await Task.Delay(50); // Introduce another small delay
-                    });
+                        await Task.Delay( 100 ); // Introduce a small delay
+                        await Dispatcher.UIThread.InvokeAsync( () => { } ); // Invoke an empty action to ensure UI updates are processed
+                        await Task.Delay( 50 ); // Introduce another small delay
+                    } );
 
                     // Ensure the UI updates are processed
                     await Task.Yield();
-                    await Task.Delay(200);
+                    await Task.Delay( 200 );
 
                     // Call the ExecuteInstructions method asynchronously using Task.Run
-                    Logger.Log($"Call ExecuteInstructions for {component.Name}...");
+                    Logger.Log( $"Call ExecuteInstructions for {component.Name}..." );
                     (bool success, Dictionary<FileInfo, SHA1> originalChecksums)
                         = await component.ExecuteInstructions(
-                            new ConfirmationDialogCallback(this),
-                            new OptionsDialogCallback(this),
+                            new ConfirmationDialogCallback( this ),
+                            new OptionsDialogCallback( this ),
                             _components
                         );
 
-                    if (!success)
+                    if ( !success )
                     {
-                        if (!await ConfirmationDialog.ShowConfirmationDialog(
+                        if ( !await ConfirmationDialog.ShowConfirmationDialog(
                             this,
                             $"There was a problem installing {component.Name}, please check the output window.\n\nContinue with the next mod anyway?"
-                        ))
+                        ) )
                         {
                             break;
                         }
                     }
                     else
                     {
-                        Logger.Log($"Successfully installed {component.Name}");
+                        Logger.Log( $"Successfully installed {component.Name}" );
                     }
                 }
 
                 _installRunning = false;
             }
-            catch (Exception ex)
+            catch ( Exception ex )
             {
-                Logger.LogException(ex);
+                Logger.LogException( ex );
                 _installRunning = false;
             }
         }
 
-        private void ProgressWindowClosed(object sender, EventArgs e)
+        private void ProgressWindowClosed( object sender, EventArgs e )
         {
-            if (!(sender is ProgressWindow progressWindow))
+            if ( !( sender is ProgressWindow progressWindow ) )
                 return;
             progressWindow.progressBar.Value = 0;
             progressWindow.Closed -= ProgressWindowClosed;
             progressWindow.Dispose();
         }
 
-        private async void DocsButton_Click(object sender, RoutedEventArgs e)
+        private async void DocsButton_Click( object sender, RoutedEventArgs e )
         {
             try
             {
-                string file = await SaveFile(new List<string>(65535) { "txt" });
-                if (file == null)
+                string file = await SaveFile( new List<string>( 65535 ) { "txt" } );
+                if ( file == null )
                     return;
 
-                string docs = Serializer.GenerateModDocumentation(_components);
-                await SaveDocsToFile(file, docs);
+                string docs = Serializer.GenerateModDocumentation( _components );
+                await SaveDocsToFile( file, docs );
                 string message = $"Saved documentation of {_components.Count} mods to '{file}'";
-                await InformationDialog.ShowInformationDialog(this, message);
-                Logger.Log(message);
+                await InformationDialog.ShowInformationDialog( this, message );
+                Logger.Log( message );
             }
-            catch (Exception ex)
+            catch ( Exception ex )
             {
-                Logger.Log($"Error generating and saving documentation: {ex.Message}");
-                await InformationDialog.ShowInformationDialog(this, "An error occurred while generating and saving documentation.");
+                Logger.Log( $"Error generating and saving documentation: {ex.Message}" );
+                await InformationDialog.ShowInformationDialog( this, "An error occurred while generating and saving documentation." );
             }
         }
 
-        private static async Task SaveDocsToFile(string filePath, string documentation)
+        private static async Task SaveDocsToFile( string filePath, string documentation )
         {
-            try { await new StreamWriter(filePath).WriteAsync(documentation); }
-            catch (Exception e) { Logger.LogException(e); }
+            try { await new StreamWriter( filePath ).WriteAsync( documentation ); }
+            catch ( Exception e ) { Logger.LogException( e ); }
         }
 
-        private void TabControl_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        private void TabControl_SelectionChanged( object sender, SelectionChangedEventArgs e )
         {
-            if (!((sender as TabControl)?.SelectedItem is TabItem selectedItem))
+            if ( !( ( sender as TabControl )?.SelectedItem is TabItem selectedItem ) )
                 return;
-            if (selectedItem?.Header == null)
+            if ( selectedItem?.Header == null )
                 return;
 
             // Don't show content of any tabs (except the hidden one) if there's no content.
-            if (selectedItem != InitialTab && _components.Count == 0)
+            if ( selectedItem != InitialTab && _components.Count == 0 )
             {
                 TabControl.SelectedItem = InitialTab;
                 return;
             }
 
             // Show/hide the appropriate content based on the selected tab
-            if (selectedItem.Header.ToString() == "Raw Edit")
+            if ( selectedItem.Header.ToString() == "Raw Edit" )
             {
                 RightTextBox.IsVisible = true;
                 ApplyEditorButton.IsVisible = true;
             }
-            else if (selectedItem.Header.ToString() == "GUI Edit")
+            else if ( selectedItem.Header.ToString() == "GUI Edit" )
             {
                 RightTextBox.IsVisible = false;
                 ApplyEditorButton.IsVisible = false;
@@ -842,18 +842,18 @@ namespace KOTORModSync
         {
             try
             {
-                if (selectedComponent == null || RightTextBox == null)
+                if ( selectedComponent == null || RightTextBox == null )
                     return;
 
                 // todo: figure out what we're doing with _originalComponent
-                Logger.LogVerbose($"Loading {selectedComponent.Name}...");
+                Logger.LogVerbose( $"Loading {selectedComponent.Name}..." );
                 _originalContent = selectedComponent.SerializeComponent();
-                if (_originalContent.Equals(RightTextBox.Text)
-                    && !string.IsNullOrEmpty(RightTextBox.Text)
-                    && selectedComponent != _currentComponent)
+                if ( _originalContent.Equals( RightTextBox.Text )
+                    && !string.IsNullOrEmpty( RightTextBox.Text )
+                    && selectedComponent != _currentComponent )
                 {
                     // double check with user before overwrite
-                    if (confirmation && !await ConfirmationDialog.ShowConfirmationDialog(
+                    if ( confirmation && !await ConfirmationDialog.ShowConfirmationDialog(
                             this,
                             "You're attempting to load the component, but there may be unsaved changes still in the editor. Really continue?"
                         )
@@ -867,7 +867,7 @@ namespace KOTORModSync
 #pragma warning disable IDE0049 // Simplify Names
 
                 // default to GuiEditTabItem.
-                if (InitialTab.IsSelected || TabControl.SelectedIndex == Int32.MaxValue)
+                if ( InitialTab.IsSelected || TabControl.SelectedIndex == Int32.MaxValue )
                 {
                     TabControl.SelectedItem = GuiEditTabItem;
                 }
@@ -879,29 +879,29 @@ namespace KOTORModSync
                 // this tracks the currently selected component.
                 _currentComponent = selectedComponent;
                 // interestingly the variable 'ComponentsItemsControl' is already defined in this scope, but accessing it directly doesn't function the same.
-                ItemsControl componentsItemsControl = this.FindControl<ItemsControl>("ComponentsItemsControl");
+                ItemsControl componentsItemsControl = this.FindControl<ItemsControl>( "ComponentsItemsControl" );
                 // bind the selected component to the gui editor
                 componentsItemsControl.Items = new ObservableCollection<Component>
                 {
                     selectedComponent
                 };
             }
-            catch (Exception e)
+            catch ( Exception e )
             {
-                Logger.LogException(e);
+                Logger.LogException( e );
             }
         }
 
         // ReSharper disable once MemberCanBeMadeStatic.Local
-        private void RightListBox_LostFocus(object sender, RoutedEventArgs e) => e.Handled = true;
+        private void RightListBox_LostFocus( object sender, RoutedEventArgs e ) => e.Handled = true;
 
         private bool CheckForChanges()
         {
             string currentContent = RightTextBox.Text;
-            return !string.Equals(currentContent, _originalContent);
+            return !string.Equals( currentContent, _originalContent );
         }
 
-        private async void TextBox_LostFocus(object sender, RoutedEventArgs e)
+        private async void TextBox_LostFocus( object sender, RoutedEventArgs e )
         {
             TextBox textBox = (TextBox)sender;
 
@@ -925,10 +925,10 @@ namespace KOTORModSync
             // Delay the collection update by a small amount
             // otherwise it's impossible to focus another textbox
             // another solution would be appreciated.
-            await Task.Delay(100);
-            if (!textBox.IsFocused)
+            await Task.Delay( 100 );
+            if ( !textBox.IsFocused )
             {
-                LoadComponentDetails(_currentComponent);
+                LoadComponentDetails( _currentComponent );
             }
         }
 
@@ -937,26 +937,26 @@ namespace KOTORModSync
             try
             {
                 // Get the selected component from the tree view
-                if (LeftTreeView.SelectedItem is TreeViewItem selectedTreeViewItem && selectedTreeViewItem.Tag is Component selectedComponent)
+                if ( LeftTreeView.SelectedItem is TreeViewItem selectedTreeViewItem && selectedTreeViewItem.Tag is Component selectedComponent )
                 {
-                    Component newComponent = FileHelper.DeserializeTomlComponent(RightTextBox.Text);
+                    Component newComponent = FileHelper.DeserializeTomlComponent( RightTextBox.Text );
 
                     // Find the corresponding component in the collection
-                    int index = _components.IndexOf(selectedComponent);
+                    int index = _components.IndexOf( selectedComponent );
                     // if not selected, find the index of the _currentComponent.
-                    if (index < 0 || index >= _components.Count)
+                    if ( index < 0 || index >= _components.Count )
                     {
-                        index = _components.FindIndex(c => c.Equals(_currentComponent));
+                        index = _components.FindIndex( c => c.Equals( _currentComponent ) );
                     }
 
-                    if (index < 0 && _currentComponent == null)
+                    if ( index < 0 && _currentComponent == null )
                     {
                         var ex = new IndexOutOfRangeException(
                             "Could not find index of component."
                             + " Ensure you single clicked on a component on the left before pressing save."
                             + " Please back up your work and try again."
                         );
-                        Logger.LogException(ex);
+                        Logger.LogException( ex );
                         return false;
                     }
 
@@ -971,100 +971,100 @@ namespace KOTORModSync
                     return true;
                 }
             }
-            catch (IndexOutOfRangeException ex)
+            catch ( IndexOutOfRangeException ex )
             {
-                Logger.LogException(ex);
+                Logger.LogException( ex );
             }
-            catch (Exception ex)
+            catch ( Exception ex )
             {
-                Logger.LogException(ex);
+                Logger.LogException( ex );
             }
 
             return false;
         }
 
-        private void MoveTreeViewItem(ItemsControl parentItemsControl, TreeViewItem selectedTreeViewItem, int newIndex)
+        private void MoveTreeViewItem( ItemsControl parentItemsControl, TreeViewItem selectedTreeViewItem, int newIndex )
         {
             try
             {
                 List<Component> componentsList = _components; // Use the original components list
-                int currentIndex = componentsList.IndexOf((Component)selectedTreeViewItem.Tag);
+                int currentIndex = componentsList.IndexOf( (Component)selectedTreeViewItem.Tag );
 
-                if (currentIndex == -1 || newIndex < 0 || newIndex >= componentsList.Count)
+                if ( currentIndex == -1 || newIndex < 0 || newIndex >= componentsList.Count )
                     return;
 
-                componentsList.RemoveAt(currentIndex);
-                componentsList.Insert(newIndex, (Component)selectedTreeViewItem.Tag);
+                componentsList.RemoveAt( currentIndex );
+                componentsList.Insert( newIndex, (Component)selectedTreeViewItem.Tag );
                 LeftTreeView.SelectedItem = selectedTreeViewItem;
 
                 // Update the visual tree directly to reflect the changes
                 var parentItemsCollection = (AvaloniaList<object>)parentItemsControl.Items;
-                parentItemsCollection.Move(currentIndex, newIndex);
+                parentItemsCollection.Move( currentIndex, newIndex );
             }
-            catch (ArgumentOutOfRangeException ex)
+            catch ( ArgumentOutOfRangeException ex )
             {
-                Logger.LogException(ex);
-                Logger.Log("Will fix above error in a future version - sorry.");
+                Logger.LogException( ex );
+                Logger.Log( "Will fix above error in a future version - sorry." );
             }
         }
 
-        private void MoveUpButton_Click(object sender, RoutedEventArgs e)
+        private void MoveUpButton_Click( object sender, RoutedEventArgs e )
         {
             try
             {
-                if (!(LeftTreeView.SelectedItem is TreeViewItem selectedTreeViewItem) ||
-                    !(selectedTreeViewItem.Parent is ItemsControl parentItemsControl))
+                if ( !( LeftTreeView.SelectedItem is TreeViewItem selectedTreeViewItem ) ||
+                    !( selectedTreeViewItem.Parent is ItemsControl parentItemsControl ) )
                 {
                     return;
                 }
 
-                int currentIndex = parentItemsControl.Items.OfType<TreeViewItem>().ToList().IndexOf(selectedTreeViewItem);
-                MoveTreeViewItem(parentItemsControl, selectedTreeViewItem, currentIndex - 1);
+                int currentIndex = parentItemsControl.Items.OfType<TreeViewItem>().ToList().IndexOf( selectedTreeViewItem );
+                MoveTreeViewItem( parentItemsControl, selectedTreeViewItem, currentIndex - 1 );
             }
-            catch (Exception ex)
+            catch ( Exception ex )
             {
-                Logger.LogException(ex);
+                Logger.LogException( ex );
             }
         }
 
-        private void MoveDownButton_Click(object sender, RoutedEventArgs e)
+        private void MoveDownButton_Click( object sender, RoutedEventArgs e )
         {
             try
             {
-                if (!(LeftTreeView.SelectedItem is TreeViewItem selectedTreeViewItem) ||
-                    !(selectedTreeViewItem.Parent is ItemsControl parentItemsControl))
+                if ( !( LeftTreeView.SelectedItem is TreeViewItem selectedTreeViewItem ) ||
+                    !( selectedTreeViewItem.Parent is ItemsControl parentItemsControl ) )
                 {
                     return;
                 }
 
-                int currentIndex = parentItemsControl.Items.OfType<TreeViewItem>().ToList().IndexOf(selectedTreeViewItem);
-                MoveTreeViewItem(parentItemsControl, selectedTreeViewItem, currentIndex + 1);
+                int currentIndex = parentItemsControl.Items.OfType<TreeViewItem>().ToList().IndexOf( selectedTreeViewItem );
+                MoveTreeViewItem( parentItemsControl, selectedTreeViewItem, currentIndex + 1 );
             }
-            catch (Exception ex)
+            catch ( Exception ex )
             {
-                Logger.LogException(ex);
+                Logger.LogException( ex );
             }
         }
 
-        private async void SaveModFile_Click(object sender, RoutedEventArgs e)
+        private async void SaveModFile_Click( object sender, RoutedEventArgs e )
         {
             try
             {
                 string filePath = await SaveFile();
-                if (filePath == null)
+                if ( filePath == null )
                 {
                     return;
                 }
 
                 TreeViewItem rootItem = LeftTreeView.Items.OfType<TreeViewItem>().FirstOrDefault();
-                if (rootItem != null)
+                if ( rootItem != null )
                 {
-                    WriteTreeViewItemsToFile(new List<TreeViewItem> { rootItem }, filePath);
+                    WriteTreeViewItemsToFile( new List<TreeViewItem> { rootItem }, filePath );
                 }
             }
-            catch (Exception ex)
+            catch ( Exception ex )
             {
-                Logger.LogException(ex);
+                Logger.LogException( ex );
             }
         }
 
@@ -1079,9 +1079,9 @@ namespace KOTORModSync
                 };
 
                 // Iterate over the components and create tree view items
-                foreach (Component component in _components)
+                foreach ( Component component in _components )
                 {
-                    CreateTreeViewItem(component, rootItem);
+                    CreateTreeViewItem( component, rootItem );
                 }
 
                 // Set the root item as the single item of the tree view
@@ -1093,17 +1093,17 @@ namespace KOTORModSync
                 //WriteTreeViewItemsToFile(new List<TreeViewItem> { rootItem }, null);
                 //currentComponent = null;
 
-                if (_components.Count == 0)
+                if ( _components.Count == 0 )
                     TabControl.SelectedItem = InitialTab;
             }
-            catch (ArgumentException ex)
+            catch ( ArgumentException ex )
             {
-                Logger.LogException(ex);
-                Logger.Log("Ensure your config file does not have any duplicate mods defined.");
+                Logger.LogException( ex );
+                Logger.Log( "Ensure your config file does not have any duplicate mods defined." );
             }
         }
 
-        private void CreateTreeViewItem(Component component, TreeViewItem parentItem)
+        private void CreateTreeViewItem( Component component, TreeViewItem parentItem )
         {
             try
             {
@@ -1112,10 +1112,10 @@ namespace KOTORModSync
                 TreeViewItem existingItem = parentItem.Items.OfType<TreeViewItem>()
                     .FirstOrDefault(
                         item => item.Header.ToString()
-                            .Equals(componentName, StringComparison.Ordinal)
+                            .Equals( componentName, StringComparison.Ordinal )
                     );
 
-                if (existingItem != null)
+                if ( existingItem != null )
                 {
                     // Update the existing item's tag with the component
                     existingItem.Tag = component;
@@ -1130,96 +1130,96 @@ namespace KOTORModSync
                 };
 
                 // Assign the ItemClickCommand to the componentItem
-                componentItem.DoubleTapped += (sender, e) =>
+                componentItem.DoubleTapped += ( sender, e ) =>
                 {
-                    if (_selectedComponents.Contains(component))
+                    if ( _selectedComponents.Contains( component ) )
                     {
-                        _ = _selectedComponents.Remove(component);
+                        _ = _selectedComponents.Remove( component );
                     }
 
-                    ItemClickCommand.Execute(component);
+                    ItemClickCommand.Execute( component );
                 };
 
                 // Add the component item to the parent item
-                ((AvaloniaList<object>)parentItem.Items).Add(componentItem);
+                ( (AvaloniaList<object>)parentItem.Items ).Add( componentItem );
 
                 // Check if the component has dependencies
-                if (component?.Dependencies == null || component.Dependencies.Count == 0)
+                if ( component?.Dependencies == null || component.Dependencies.Count == 0 )
                     return;
 
                 // Iterate over the dependencies and create tree view items
-                foreach (string dependencyGuid in component.Dependencies)
+                foreach ( string dependencyGuid in component.Dependencies )
                 {
                     try
                     {
                         // Find the dependency in the components list
-                        Component dependency = _components.Find(c => c.Guid == new Guid(dependencyGuid));
+                        Component dependency = _components.Find( c => c.Guid == new Guid( dependencyGuid ) );
 
-                        if (dependency == null)
+                        if ( dependency == null )
                             continue;
                         // Create the dependency tree view item
-                        CreateTreeViewItem(dependency, componentItem);
+                        CreateTreeViewItem( dependency, componentItem );
                     }
-                    catch (FormatException ex)
+                    catch ( FormatException ex )
                     {
                         // Usually catches invalid guid from the user
-                        Logger.LogException(ex);
+                        Logger.LogException( ex );
                     }
                 }
             }
-            catch (Exception ex)
+            catch ( Exception ex )
             {
-                Logger.LogException(new Exception($"Error creating tree view item: {ex.Message}"));
+                Logger.LogException( new Exception( $"Error creating tree view item: {ex.Message}" ) );
             }
         }
 
-        private static void WriteTreeViewItemsToFile(List<TreeViewItem> items, string filePath)
+        private static void WriteTreeViewItemsToFile( List<TreeViewItem> items, string filePath )
         {
-            string randomFileName = Path.GetFileNameWithoutExtension(Path.GetRandomFileName());
+            string randomFileName = Path.GetFileNameWithoutExtension( Path.GetRandomFileName() );
             filePath = filePath ?? $"modconfig_{randomFileName}.toml";
-            Logger.Log($"Creating backup modconfig at {filePath}");
+            Logger.Log( $"Creating backup modconfig at {filePath}" );
 
-            using (StreamWriter writer = new StreamWriter(filePath))
+            using ( StreamWriter writer = new StreamWriter( filePath ) )
             {
-                foreach (TreeViewItem item in items)
+                foreach ( TreeViewItem item in items )
                 {
-                    WriteTreeViewItemToFile(item, writer, maxDepth: 1);
+                    WriteTreeViewItemToFile( item, writer, maxDepth: 1 );
                 }
             }
         }
 
-        private static void WriteTreeViewItemToFile(TreeViewItem item, TextWriter writer, int depth = 0, int maxDepth = int.MaxValue)
+        private static void WriteTreeViewItemToFile( TreeViewItem item, TextWriter writer, int depth = 0, int maxDepth = int.MaxValue )
         {
-            if (item.Tag is Component component)
+            if ( item.Tag is Component component )
             {
                 string tomlContents = component.SerializeComponent();
-                writer.WriteLine(tomlContents);
+                writer.WriteLine( tomlContents );
             }
 
-            if (depth >= maxDepth || item.Items == null)
+            if ( depth >= maxDepth || item.Items == null )
                 return;
 
-            foreach (TreeViewItem childItem in item.Items.OfType<TreeViewItem>())
+            foreach ( TreeViewItem childItem in item.Items.OfType<TreeViewItem>() )
             {
-                WriteTreeViewItemToFile(childItem, writer, depth + 1, maxDepth);
+                WriteTreeViewItemToFile( childItem, writer, depth + 1, maxDepth );
             }
         }
 
         private RelayCommand _itemClickCommand;
-        public ICommand ItemClickCommand => _itemClickCommand ?? (_itemClickCommand = new RelayCommand(ItemClick));
+        public ICommand ItemClickCommand => _itemClickCommand ?? ( _itemClickCommand = new RelayCommand( ItemClick ) );
 
-        private void ItemClick(object parameter)
+        private void ItemClick( object parameter )
         {
             // used for leftTreeView doubleclick event.
-            if (!(parameter is Component component))
+            if ( !( parameter is Component component ) )
                 return;
 
-            if (!_selectedComponents.Contains(component))
+            if ( !_selectedComponents.Contains( component ) )
             {
-                _selectedComponents.Add(component);
+                _selectedComponents.Add( component );
             }
 
-            LoadComponentDetails(component);
+            LoadComponentDetails( component );
         }
 
         public class RelayCommand : ICommand
@@ -1227,9 +1227,9 @@ namespace KOTORModSync
             private readonly Action<object> _execute;
             private readonly Func<object, bool> _canExecute;
 
-            public RelayCommand(Action<object> execute, [CanBeNull] Func<object, bool> canExecute = null)
+            public RelayCommand( Action<object> execute, [CanBeNull] Func<object, bool> canExecute = null )
             {
-                this._execute = execute ?? throw new ArgumentNullException(nameof(execute));
+                this._execute = execute ?? throw new ArgumentNullException( nameof( execute ) );
                 this._canExecute = canExecute;
             }
 
@@ -1237,62 +1237,62 @@ namespace KOTORModSync
             public event EventHandler CanExecuteChanged;
 #pragma warning restore CS0067
 
-            public bool CanExecute(object parameter) => _canExecute == null || _canExecute(parameter);
-            public void Execute(object parameter) => _execute(parameter);
+            public bool CanExecute( object parameter ) => _canExecute == null || _canExecute( parameter );
+            public void Execute( object parameter ) => _execute( parameter );
         }
     }
 
     public class ComboBoxItemConverter : IValueConverter
     {
-        public object Convert(object value, Type targetType, object parameter, CultureInfo culture) => value is string action ? new ComboBoxItem { Content = action } : (object)null;
-        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) => value is ComboBoxItem comboBoxItem ? (comboBoxItem.Content?.ToString()) : (object)null;
+        public object Convert( object value, Type targetType, object parameter, CultureInfo culture ) => value is string action ? new ComboBoxItem { Content = action } : (object)null;
+        public object ConvertBack( object value, Type targetType, object parameter, CultureInfo culture ) => value is ComboBoxItem comboBoxItem ? ( comboBoxItem.Content?.ToString() ) : (object)null;
     }
 
     public class EmptyCollectionConverter : IValueConverter
     {
-        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        public object Convert( object value, Type targetType, object parameter, CultureInfo culture )
         {
-            if (value is ICollection collection && collection.Count == 0)
+            if ( value is ICollection collection && collection.Count == 0 )
                 return new List<string>() { string.Empty }; // Create a new collection with a default value
 
             return value;
         }
 
-        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) => throw new NotSupportedException();
+        public object ConvertBack( object value, Type targetType, object parameter, CultureInfo culture ) => throw new NotSupportedException();
     }
 
     public class ListToStringConverter : IValueConverter
     {
-        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        public object Convert( object value, Type targetType, object parameter, CultureInfo culture )
         {
-            if (!(value is IEnumerable list)) { return string.Empty; }
+            if ( !( value is IEnumerable list ) ) { return string.Empty; }
 
             var serializedList = new StringBuilder();
-            foreach (object item in list
+            foreach ( object item in list
                 .Cast<object>()
-                .Where(item => item != null))
+                .Where( item => item != null ) )
             {
-                serializedList.AppendLine(item.ToString());
+                serializedList.AppendLine( item.ToString() );
             }
 
             return serializedList.ToString();
         }
 
-        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        public object ConvertBack( object value, Type targetType, object parameter, CultureInfo culture )
         {
-            if (!(value is string text))
+            if ( !( value is string text ) )
                 return new List<string>();
 
-            string[] lines = text.Split(new string[] { "\r\n", "\r", "\n" }, StringSplitOptions.RemoveEmptyEntries);
-            if (targetType != typeof(List<Guid>)) { return lines.ToList(); }
+            string[] lines = text.Split( new string[] { "\r\n", "\r", "\n" }, StringSplitOptions.RemoveEmptyEntries );
+            if ( targetType != typeof( List<Guid> ) ) { return lines.ToList(); }
 
-            return lines.Select(line => Guid.TryParse(line, out Guid guid) ? guid : Guid.Empty).ToList();
+            return lines.Select( line => Guid.TryParse( line, out Guid guid ) ? guid : Guid.Empty ).ToList();
         }
     }
 
     public class BooleanToArrowConverter : IValueConverter
     {
-        public object Convert(object value, Type targetType, object parameter, CultureInfo culture) => value is bool isExpanded && targetType == typeof(string) ? isExpanded ? "▼" : "▶" : (object)string.Empty;
-        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) => throw new NotSupportedException();
+        public object Convert( object value, Type targetType, object parameter, CultureInfo culture ) => value is bool isExpanded && targetType == typeof( string ) ? isExpanded ? "▼" : "▶" : (object)string.Empty;
+        public object ConvertBack( object value, Type targetType, object parameter, CultureInfo culture ) => throw new NotSupportedException();
     }
 }

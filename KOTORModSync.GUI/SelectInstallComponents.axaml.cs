@@ -21,24 +21,24 @@ namespace KOTORModSync
             get => _isSelected;
             set
             {
-                if (_isSelected != value)
+                if ( _isSelected != value )
                 {
                     _isSelected = value;
-                    OnPropertyChanged(nameof(IsSelected));
+                    OnPropertyChanged( nameof( IsSelected ) );
                 }
             }
         }
 
-        public ComponentViewModel(Component component)
+        public ComponentViewModel( Component component )
         {
             _component = component;
         }
 
         public event PropertyChangedEventHandler PropertyChanged;
 
-        protected virtual void OnPropertyChanged(string propertyName)
+        protected virtual void OnPropertyChanged( string propertyName )
         {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+            PropertyChanged?.Invoke( this, new PropertyChangedEventArgs( propertyName ) );
         }
     }
 
@@ -59,24 +59,24 @@ namespace KOTORModSync
                 // Add more components as needed
             };
 
-            Components = components.ConvertAll(component => new ComponentViewModel(component));
+            Components = components.ConvertAll( component => new ComponentViewModel( component ) );
             SelectedComponents = new List<ComponentViewModel>();
 
             DataContext = this;
         }
 
-        private async void InstallButton_Click(object sender, RoutedEventArgs e)
+        private async void InstallButton_Click( object sender, RoutedEventArgs e )
         {
-            IEnumerable<string> selectedComponentNames = SelectedComponents.Select(component => component.Name);
-            string message = $"Selected Components: {string.Join(", ", selectedComponentNames)}";
+            IEnumerable<string> selectedComponentNames = SelectedComponents.Select( component => component.Name );
+            string message = $"Selected Components: {string.Join( ", ", selectedComponentNames )}";
 
-            await InformationDialog.ShowInformationDialog(this, message, "Installation Complete");
+            await InformationDialog.ShowInformationDialog( this, message, "Installation Complete" );
             Close();
         }
 
         private void InitializeComponent()
         {
-            AvaloniaXamlLoader.Load(this);
+            AvaloniaXamlLoader.Load( this );
         }
     }
 }

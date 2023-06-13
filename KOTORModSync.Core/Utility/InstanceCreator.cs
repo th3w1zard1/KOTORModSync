@@ -13,52 +13,52 @@ namespace KOTORModSync.Core.Utility
         private static readonly Dictionary<Type, ConstructorInfo[]> s_cachedConstructors
             = new Dictionary<Type, ConstructorInfo[]>();
 
-        public static T CreateInstance<T>(params object[] constructorParameters)
+        public static T CreateInstance<T>( params object[] constructorParameters )
         {
-            Type type = typeof(T);
+            Type type = typeof( T );
 
-            if (type.IsGenericType && type.GetGenericTypeDefinition().GetConstructor(Type.EmptyTypes) != null)
+            if ( type.IsGenericType && type.GetGenericTypeDefinition().GetConstructor( Type.EmptyTypes ) != null )
             {
                 Type[] genericArguments = type.GetGenericArguments();
                 Type genericTypeDefinition = type.GetGenericTypeDefinition();
-                Type genericType = genericTypeDefinition.MakeGenericType(genericArguments);
+                Type genericType = genericTypeDefinition.MakeGenericType( genericArguments );
 
-                return (T)Activator.CreateInstance(genericType);
+                return (T)Activator.CreateInstance( genericType );
             }
 
-            if (type.GetConstructor(Type.EmptyTypes) != null)
-                return (T)Activator.CreateInstance(type);
+            if ( type.GetConstructor( Type.EmptyTypes ) != null )
+                return (T)Activator.CreateInstance( type );
 
-            if (!s_cachedConstructors.TryGetValue(type, out ConstructorInfo[] constructors))
+            if ( !s_cachedConstructors.TryGetValue( type, out ConstructorInfo[] constructors ) )
             {
                 constructors = type.GetConstructors();
                 s_cachedConstructors[type] = constructors;
             }
 
             int parameterCount = constructorParameters.Length;
-            foreach (ConstructorInfo constructor in from constructor in constructors
-                                                    let parameters = constructor.GetParameters()
-                                                    where parameters.Length == parameterCount
-                                                    let match = AreParametersCompatible(parameters, constructorParameters)
-                                                    where match
-                                                    select constructor)
-                return (T)constructor.Invoke(constructorParameters);
+            foreach ( ConstructorInfo constructor in from constructor in constructors
+                                                     let parameters = constructor.GetParameters()
+                                                     where parameters.Length == parameterCount
+                                                     let match = AreParametersCompatible( parameters, constructorParameters )
+                                                     where match
+                                                     select constructor )
+                return (T)constructor.Invoke( constructorParameters );
 
-            Logger.Log($"No suitable constructor found for type '{type.Name}' with the provided parameters.");
+            Logger.Log( $"No suitable constructor found for type '{type.Name}' with the provided parameters." );
             return default;
         }
 
-        private static bool AreParametersCompatible(ParameterInfo[] parameters, object[] constructorParameters)
+        private static bool AreParametersCompatible( ParameterInfo[] parameters, object[] constructorParameters )
         {
-            for (int i = 0; i < parameters.Length; i++)
+            for ( int i = 0; i < parameters.Length; i++ )
             {
                 ParameterInfo parameter = parameters[i];
                 object constructorParameter = constructorParameters[i];
 
-                if (parameter.ParameterType.IsAssignableFrom(constructorParameter?.GetType()))
+                if ( parameter.ParameterType.IsAssignableFrom( constructorParameter?.GetType() ) )
                     continue;
 
-                if (parameter.HasDefaultValue && constructorParameter == null)
+                if ( parameter.HasDefaultValue && constructorParameter == null )
                     continue;
 
                 return false;

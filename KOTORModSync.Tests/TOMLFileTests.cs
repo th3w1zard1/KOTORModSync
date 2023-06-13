@@ -68,49 +68,49 @@ namespace KOTORModSync.Tests
             _filePath = Path.GetTempFileName();
 
             // Write example TOMLIN content to the file
-            File.WriteAllText(_filePath, _exampleToml);
+            File.WriteAllText( _filePath, _exampleToml );
         }
 
         [TearDown]
         public void TearDown()
         {
             // Delete the temporary file
-            Debug.Assert(_filePath != null, nameof(_filePath) + " != null");
-            File.Delete(_filePath);
+            Debug.Assert( _filePath != null, nameof( _filePath ) + " != null" );
+            File.Delete( _filePath );
         }
 
         [Test]
         public void SaveAndLoadTOMLFile_MatchingComponents()
         {
             // Read the original TOMLIN file contents
-            Debug.Assert(_filePath != null, nameof(_filePath) + " != null");
-            string tomlContents = File.ReadAllText(_filePath);
+            Debug.Assert( _filePath != null, nameof( _filePath ) + " != null" );
+            string tomlContents = File.ReadAllText( _filePath );
 
             // Fix whitespace issues
-            tomlContents = Serializer.FixWhitespaceIssues(tomlContents);
+            tomlContents = Serializer.FixWhitespaceIssues( tomlContents );
 
             // Save the modified TOMLIN file
             string modifiedFilePath = Path.GetTempFileName();
-            File.WriteAllText(modifiedFilePath, tomlContents);
+            File.WriteAllText( modifiedFilePath, tomlContents );
 
             // Arrange
-            List<Component> originalComponents = FileHelper.ReadComponentsFromFile(modifiedFilePath);
+            List<Component> originalComponents = FileHelper.ReadComponentsFromFile( modifiedFilePath );
 
             // Act
-            FileHelper.OutputConfigFile(originalComponents, modifiedFilePath);
+            FileHelper.OutputConfigFile( originalComponents, modifiedFilePath );
 
             // Reload the modified TOMLIN file
-            List<Component> loadedComponents = FileHelper.ReadComponentsFromFile(modifiedFilePath);
+            List<Component> loadedComponents = FileHelper.ReadComponentsFromFile( modifiedFilePath );
 
             // Assert
-            Assert.That(loadedComponents, Has.Count.EqualTo(originalComponents.Count));
+            Assert.That( loadedComponents, Has.Count.EqualTo( originalComponents.Count ) );
 
-            for (int i = 0; i < originalComponents.Count; i++)
+            for ( int i = 0; i < originalComponents.Count; i++ )
             {
                 Component originalComponent = originalComponents[i];
                 Component loadedComponent = loadedComponents[i];
 
-                AssertComponentEquality(originalComponent, loadedComponent);
+                AssertComponentEquality( originalComponent, loadedComponent );
             }
         }
 
@@ -121,7 +121,7 @@ namespace KOTORModSync.Tests
         {
             // Deserialize default component
             Component newComponent
-                = FileHelper.DeserializeTomlComponent(Component.DefaultComponent + Instruction.DefaultInstructions);
+                = FileHelper.DeserializeTomlComponent( Component.DefaultComponent + Instruction.DefaultInstructions );
             newComponent.Guid = Guid.NewGuid();
             newComponent.Name = "new mod_" + Path.GetRandomFileName();
 
@@ -129,41 +129,41 @@ namespace KOTORModSync.Tests
             var tomlString = newComponent.SerializeComponent();
 
             // Deserialize into new instance
-            Component duplicateComponent = FileHelper.DeserializeTomlComponent(tomlString);
+            Component duplicateComponent = FileHelper.DeserializeTomlComponent( tomlString );
 
             // Compare
-            AssertComponentEquality(newComponent, duplicateComponent);
+            AssertComponentEquality( newComponent, duplicateComponent );
         }
 
         [Test]
-        [Ignore("not sure if I want to support")]
+        [Ignore( "not sure if I want to support" )]
         public void SaveAndLoadTOMLFile_CaseInsensitive()
         {
             // Arrange
-            List<Component> originalComponents = FileHelper.ReadComponentsFromFile(_filePath);
+            List<Component> originalComponents = FileHelper.ReadComponentsFromFile( _filePath );
 
             // Modify the TOML file contents
-            Debug.Assert(_filePath != null, nameof(_filePath) + " != null");
-            string tomlContents = File.ReadAllText(_filePath);
+            Debug.Assert( _filePath != null, nameof( _filePath ) + " != null" );
+            string tomlContents = File.ReadAllText( _filePath );
 
             // Convert field names and values to mixed case
-            tomlContents = ConvertFieldNamesAndValuesToMixedCase(tomlContents);
+            tomlContents = ConvertFieldNamesAndValuesToMixedCase( tomlContents );
 
             // Act
             string modifiedFilePath = Path.GetTempFileName();
-            File.WriteAllText(modifiedFilePath, tomlContents);
+            File.WriteAllText( modifiedFilePath, tomlContents );
 
-            List<Component> loadedComponents = FileHelper.ReadComponentsFromFile(modifiedFilePath);
+            List<Component> loadedComponents = FileHelper.ReadComponentsFromFile( modifiedFilePath );
 
             // Assert
-            Assert.That(loadedComponents, Has.Count.EqualTo(originalComponents.Count));
+            Assert.That( loadedComponents, Has.Count.EqualTo( originalComponents.Count ) );
 
-            for (int i = 0; i < originalComponents.Count; i++)
+            for ( int i = 0; i < originalComponents.Count; i++ )
             {
                 Component originalComponent = originalComponents[i];
                 Component loadedComponent = loadedComponents[i];
 
-                AssertComponentEquality(originalComponent,
+                AssertComponentEquality( originalComponent,
                                         loadedComponent,
                                         caseSensitiveKeys: true
                 );
@@ -174,71 +174,71 @@ namespace KOTORModSync.Tests
         public void SaveAndLoadTOMLFile_WhitespaceTests()
         {
             // Arrange
-            List<Component> originalComponents = FileHelper.ReadComponentsFromFile(_filePath);
+            List<Component> originalComponents = FileHelper.ReadComponentsFromFile( _filePath );
 
             // Modify the TOMLIN file contents
-            Debug.Assert(_filePath != null, nameof(_filePath) + " != null");
-            string tomlContents = File.ReadAllText(_filePath);
+            Debug.Assert( _filePath != null, nameof( _filePath ) + " != null" );
+            string tomlContents = File.ReadAllText( _filePath );
 
             // Add mixed line endings and extra whitespaces
             tomlContents += "    \r\n\t   \r\n\r\n\r\n";
 
             // Save the modified TOMLIN file
             string modifiedFilePath = Path.GetTempFileName();
-            File.WriteAllText(modifiedFilePath, tomlContents);
+            File.WriteAllText( modifiedFilePath, tomlContents );
 
             // Act
-            List<Component> loadedComponents = FileHelper.ReadComponentsFromFile(modifiedFilePath);
+            List<Component> loadedComponents = FileHelper.ReadComponentsFromFile( modifiedFilePath );
 
             // Assert
-            Assert.That(loadedComponents, Has.Count.EqualTo(originalComponents.Count));
+            Assert.That( loadedComponents, Has.Count.EqualTo( originalComponents.Count ) );
 
-            for (int i = 0; i < originalComponents.Count; i++)
+            for ( int i = 0; i < originalComponents.Count; i++ )
             {
                 Component originalComponent = originalComponents[i];
                 Component loadedComponent = loadedComponents[i];
 
-                AssertComponentEquality(originalComponent, loadedComponent);
+                AssertComponentEquality( originalComponent, loadedComponent );
             }
         }
 
-        private static string ConvertFieldNamesAndValuesToMixedCase(string tomlContents)
+        private static string ConvertFieldNamesAndValuesToMixedCase( string tomlContents )
         {
-            var convertedContents = new StringBuilder(10000);
+            var convertedContents = new StringBuilder( 10000 );
             var random = new Random();
 
             bool isFieldName = true; // Flag to determine if the current item is a field name or field value
 
-            foreach (char c in tomlContents)
+            foreach ( char c in tomlContents )
             {
                 char convertedChar = c;
 
-                if (isFieldName)
+                if ( isFieldName )
                 {
-                    if (char.IsLetter(c))
+                    if ( char.IsLetter( c ) )
                     {
                         // Convert field name character to mixed case
-                        convertedChar = random.Next(2) == 0 ? char.ToUpper(c) : char.ToLower(c);
+                        convertedChar = random.Next( 2 ) == 0 ? char.ToUpper( c ) : char.ToLower( c );
                     }
-                    else if (c == ']')
+                    else if ( c == ']' )
                     {
                         isFieldName = false; // Switch to field value mode after closing bracket
                     }
                 }
                 else
                 {
-                    if (char.IsLetter(c))
+                    if ( char.IsLetter( c ) )
                     {
                         // Convert field value character to mixed case
-                        convertedChar = random.Next(2) == 0 ? char.ToUpper(c) : char.ToLower(c);
+                        convertedChar = random.Next( 2 ) == 0 ? char.ToUpper( c ) : char.ToLower( c );
                     }
-                    else if (c == '[')
+                    else if ( c == '[' )
                     {
                         isFieldName = true; // Switch to field name mode after opening bracket
                     }
                 }
 
-                _ = convertedContents.Append(convertedChar);
+                _ = convertedContents.Append( convertedChar );
             }
 
             return convertedContents.ToString();
@@ -250,11 +250,11 @@ namespace KOTORModSync.Tests
             // Arrange
             List<Component> originalComponents = new();
             // Act
-            FileHelper.OutputConfigFile(originalComponents, _filePath);
-            List<Component> loadedComponents = FileHelper.ReadComponentsFromFile(_filePath);
+            FileHelper.OutputConfigFile( originalComponents, _filePath );
+            List<Component> loadedComponents = FileHelper.ReadComponentsFromFile( _filePath );
 
             // Assert
-            Assert.That(loadedComponents, Is.Null);
+            Assert.That( loadedComponents, Is.Null );
         }
 
         [Test]
@@ -269,18 +269,18 @@ namespace KOTORModSync.Tests
             };
 
             // Act
-            FileHelper.OutputConfigFile(originalComponents, _filePath);
-            List<Component> loadedComponents = FileHelper.ReadComponentsFromFile(_filePath);
+            FileHelper.OutputConfigFile( originalComponents, _filePath );
+            List<Component> loadedComponents = FileHelper.ReadComponentsFromFile( _filePath );
 
             // Assert
-            Assert.That(loadedComponents, Has.Count.EqualTo(originalComponents.Count));
+            Assert.That( loadedComponents, Has.Count.EqualTo( originalComponents.Count ) );
 
-            for (int i = 0; i < originalComponents.Count; i++)
+            for ( int i = 0; i < originalComponents.Count; i++ )
             {
                 Component originalComponent = originalComponents[i];
                 Component loadedComponent = loadedComponents[i];
 
-                AssertComponentEquality(originalComponent, loadedComponent);
+                AssertComponentEquality( originalComponent, loadedComponent );
             }
         }
 
@@ -288,24 +288,24 @@ namespace KOTORModSync.Tests
         public void SaveAndLoadTOMLFile_ModifyComponents()
         {
             // Arrange
-            List<Component> originalComponents = FileHelper.ReadComponentsFromFile(_filePath);
+            List<Component> originalComponents = FileHelper.ReadComponentsFromFile( _filePath );
 
             // Modify some component properties
             originalComponents[0].Name = "Modified Name";
 
             // Act
-            FileHelper.OutputConfigFile(originalComponents, _filePath);
-            List<Component> loadedComponents = FileHelper.ReadComponentsFromFile(_filePath);
+            FileHelper.OutputConfigFile( originalComponents, _filePath );
+            List<Component> loadedComponents = FileHelper.ReadComponentsFromFile( _filePath );
 
             // Assert
-            Assert.That(loadedComponents, Has.Count.EqualTo(originalComponents.Count));
+            Assert.That( loadedComponents, Has.Count.EqualTo( originalComponents.Count ) );
 
-            for (int i = 0; i < originalComponents.Count; i++)
+            for ( int i = 0; i < originalComponents.Count; i++ )
             {
                 Component originalComponent = originalComponents[i];
                 Component loadedComponent = loadedComponents[i];
 
-                AssertComponentEquality(originalComponent, loadedComponent);
+                AssertComponentEquality( originalComponent, loadedComponent );
             }
         }
 
@@ -335,24 +335,24 @@ namespace KOTORModSync.Tests
                 }
             };
             // Act and Assert
-            foreach (List<Component> components in rounds)
+            foreach ( List<Component> components in rounds )
             {
-                FileHelper.OutputConfigFile(components, _filePath);
-                List<Component> loadedComponents = FileHelper.ReadComponentsFromFile(_filePath);
+                FileHelper.OutputConfigFile( components, _filePath );
+                List<Component> loadedComponents = FileHelper.ReadComponentsFromFile( _filePath );
 
-                Assert.That(loadedComponents, Has.Count.EqualTo(components.Count));
+                Assert.That( loadedComponents, Has.Count.EqualTo( components.Count ) );
 
-                for (int i = 0; i < components.Count; i++)
+                for ( int i = 0; i < components.Count; i++ )
                 {
                     Component originalComponent = components[i];
                     Component loadedComponent = loadedComponents[i];
 
-                    AssertComponentEquality(originalComponent, loadedComponent);
+                    AssertComponentEquality( originalComponent, loadedComponent );
                 }
             }
         }
 
-        private static void AssertComponentEquality(Component expected, Component actual, bool caseSensitiveKeys = true)
+        private static void AssertComponentEquality( Component expected, Component actual, bool caseSensitiveKeys = true )
         {
             Assert.Multiple(
                 () =>
@@ -360,9 +360,9 @@ namespace KOTORModSync.Tests
                     IComparer comparer
                         = caseSensitiveKeys ? StringComparer.Ordinal : StringComparer.OrdinalIgnoreCase;
 
-                    Assert.That(actual.Name, Is.EqualTo(expected.Name).Using(comparer));
-                    Assert.That(actual.Guid, Is.EqualTo(expected.Guid).Using(comparer));
-                });
+                    Assert.That( actual.Name, Is.EqualTo( expected.Name ).Using( comparer ) );
+                    Assert.That( actual.Guid, Is.EqualTo( expected.Guid ).Using( comparer ) );
+                } );
         }
 
     }

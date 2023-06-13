@@ -34,51 +34,51 @@ namespace KOTORModSync
             Logger.Initialize();
         }
 
-        private void InitializeComponent() => AvaloniaXamlLoader.Load(this);
+        private void InitializeComponent() => AvaloniaXamlLoader.Load( this );
 
         private void InitializeControls()
         {
-            _logTextBox = this.FindControl<TextBox>("logTextBox");
-            _logScrollViewer = this.FindControl<ScrollViewer>("logScrollViewer");
+            _logTextBox = this.FindControl<TextBox>( "logTextBox" );
+            _logScrollViewer = this.FindControl<ScrollViewer>( "logScrollViewer" );
 
-            _logBuilder = new StringBuilder(65535);
+            _logBuilder = new StringBuilder( 65535 );
 
             // Subscribe to the Logger.Logged event to capture log messages
-            Logger.Logged += (message) =>
+            Logger.Logged += ( message ) =>
             {
-                _ = _logBuilder.AppendLine(message);
+                _ = _logBuilder.AppendLine( message );
                 UpdateLogText();
             };
 
             // Subscribe to the Logger.ExceptionLogged event to capture exceptions
-            Logger.ExceptionLogged += (ex) =>
+            Logger.ExceptionLogged += ( ex ) =>
             {
                 _ = _logBuilder
-                    .Append("Exception: ").Append(ex.GetType().Name).Append(": ")
-                    .AppendLine(ex.Message)
-                    .Append("Stack trace: ")
-                    .AppendLine(ex.StackTrace);
+                    .Append( "Exception: " ).Append( ex.GetType().Name ).Append( ": " )
+                    .AppendLine( ex.Message )
+                    .Append( "Stack trace: " )
+                    .AppendLine( ex.StackTrace );
                 UpdateLogText();
             };
         }
 
         private void UpdateLogText()
         {
-            lock (_logBuilder)
+            lock ( _logBuilder )
             {
                 // Create a local copy of _logBuilder to avoid accessing it from multiple threads
                 string logText = _logBuilder.ToString();
 
-                _ = Dispatcher.UIThread.InvokeAsync(() =>
+                _ = Dispatcher.UIThread.InvokeAsync( () =>
                 {
                     _logTextBox.Text = logText;
 
                     // Scroll to the end of the content
                     _logScrollViewer?.ScrollToEnd();
-                });
+                } );
             }
         }
 
-        private void logTextBox_TextChanged(object sender, AvaloniaPropertyChangedEventArgs e) => UpdateLogText();
+        private void logTextBox_TextChanged( object sender, AvaloniaPropertyChangedEventArgs e ) => UpdateLogText();
     }
 }

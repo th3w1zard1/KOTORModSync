@@ -13,12 +13,12 @@ namespace KOTORModSync.Installer
     {
         public override void Initialize()
         {
-            AvaloniaXamlLoader.Load(this);
+            AvaloniaXamlLoader.Load( this );
         }
 
         public override void OnFrameworkInitializationCompleted()
         {
-            if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+            if ( ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop )
             {
                 desktop.MainWindow = new MainWindow
                 {

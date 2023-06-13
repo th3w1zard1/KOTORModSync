@@ -12,14 +12,14 @@ namespace KOTORModSync.Installer.ViewModels
         private string _selectedDirectories;
         private Action<string> _navigateToSelectComponents;
 
-        public WelcomeViewModel(Action<string> navigateToSelectComponents)
+        public WelcomeViewModel( Action<string> navigateToSelectComponents )
         {
             _navigateToSelectComponents = navigateToSelectComponents;
 
             WelcomeMessage = "KOTORModSync Installer!";
-            LoadInstructionsCommand = new DelegateCommand(LoadInstructions);
-            SelectDirectoriesCommand = new DelegateCommand(SelectDirectories);
-            NextCommand = new DelegateCommand(NavigateToSelectComponents);
+            LoadInstructionsCommand = new DelegateCommand( LoadInstructions );
+            SelectDirectoriesCommand = new DelegateCommand( SelectDirectories );
+            NextCommand = new DelegateCommand( NavigateToSelectComponents );
         }
 
         public string WelcomeMessage { get; set; }
@@ -41,19 +41,19 @@ namespace KOTORModSync.Installer.ViewModels
             // Add your logic here for any necessary validation or preparation before navigating
             // For example, you can pass the selected directories to the next view model
 
-            _navigateToSelectComponents.Invoke(_selectedDirectories);
+            _navigateToSelectComponents.Invoke( _selectedDirectories );
         }
 
         public bool IsInstructionsLoaded
         {
             get => _isInstructionsLoaded;
-            set => SetProperty(ref _isInstructionsLoaded, value);
+            set => SetProperty( ref _isInstructionsLoaded, value );
         }
 
         public string SelectedDirectories
         {
             get => _selectedDirectories;
-            set => SetProperty(ref _selectedDirectories, value);
+            set => SetProperty( ref _selectedDirectories, value );
         }
 
         public DelegateCommand LoadInstructionsCommand { get; }
@@ -63,9 +63,9 @@ namespace KOTORModSync.Installer.ViewModels
         public WelcomeViewModel()
         {
             WelcomeMessage = "Welcome to the Installer Application!";
-            LoadInstructionsCommand = new DelegateCommand(LoadInstructions);
-            SelectDirectoriesCommand = new DelegateCommand(SelectDirectories);
-            NextCommand = new DelegateCommand(NavigateToSelectComponents);
+            LoadInstructionsCommand = new DelegateCommand( LoadInstructions );
+            SelectDirectoriesCommand = new DelegateCommand( SelectDirectories );
+            NextCommand = new DelegateCommand( NavigateToSelectComponents );
         }
     }
 }

@@ -25,9 +25,9 @@ namespace KOTORModSync.Core.Data
     // ReSharper disable once InconsistentNaming
     public static class NWScriptFileReader
     {
-        public static void ReadHeader([NotNull] Stream stream, out NWScriptHeader header)
+        public static void ReadHeader( [NotNull] Stream stream, out NWScriptHeader header )
         {
-            BinaryReader reader = new BinaryReader(stream);
+            BinaryReader reader = new BinaryReader( stream );
 
             header.FileType = reader.ReadUInt32();
             header.Version = reader.ReadUInt32();

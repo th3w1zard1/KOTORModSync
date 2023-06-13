@@ -15,7 +15,7 @@ namespace KOTORModSync.Installer.Views
 
         private void InitializeComponent()
         {
-            AvaloniaXamlLoader.Load(this);
+            AvaloniaXamlLoader.Load( this );
         }
     }
 }

@@ -15,66 +15,66 @@ namespace KOTORModSync.ConsoleApp
     public static class ModParser
     {
         private const string Separator = "__";
-        private static readonly Regex s_propertyRegex = new Regex(@"\*\*\w+:\*\* (.+)", RegexOptions.Compiled);
+        private static readonly Regex s_propertyRegex = new Regex( @"\*\*\w+:\*\* (.+)", RegexOptions.Compiled );
 
-        public static List<Component> ParseMods(string source)
+        public static List<Component> ParseMods( string source )
         {
-            return source.Split(new[] { Separator }, StringSplitOptions.RemoveEmptyEntries).Select(ParseMod).ToList();
+            return source.Split( new[] { Separator }, StringSplitOptions.RemoveEmptyEntries ).Select( ParseMod ).ToList();
         }
 
-        private static Component ParseMod(string modText)
+        private static Component ParseMod( string modText )
         {
             var mod = new Component();
 
-            var nameAndModLinks = GetNameAndModLink(modText);
-            mod.Name = GetName(nameAndModLinks);
-            mod.ModLink = GetHyperlinkUrl(nameAndModLinks, "Name");
-            mod.Author = GetPropertyValue(modText, "Author");
-            mod.Description = GetPropertyValue(modText, "Description");
-            (mod.Category, mod.Tier) = GetCategoryAndTier(modText, "Category & Tier");
-            mod.NonEnglishFunctionality = GetBoolValue(modText, "Non-English Functionality");
-            mod.InstallationMethod = GetPropertyValue(modText, "Installation Method");
-            mod.Directions = GetPropertyValue(modText, "Installation Instructions");
+            var nameAndModLinks = GetNameAndModLink( modText );
+            mod.Name = GetName( nameAndModLinks );
+            mod.ModLink = GetHyperlinkUrl( nameAndModLinks, "Name" );
+            mod.Author = GetPropertyValue( modText, "Author" );
+            mod.Description = GetPropertyValue( modText, "Description" );
+            (mod.Category, mod.Tier) = GetCategoryAndTier( modText, "Category & Tier" );
+            mod.NonEnglishFunctionality = GetBoolValue( modText, "Non-English Functionality" );
+            mod.InstallationMethod = GetPropertyValue( modText, "Installation Method" );
+            mod.Directions = GetPropertyValue( modText, "Installation Instructions" );
 
             return mod;
         }
 
-        private static (string, string) GetNameAndModLink(string text)
+        private static (string, string) GetNameAndModLink( string text )
         {
             string pattern = @"\*\*(Name):\*\* \[([^]]+)\]\(([^)\s]+)\)(?: and \[\*\*Patch\*\*\]\(([^)\s]+)\))?";
-            Match match = Regex.Match(text, pattern, RegexOptions.Singleline);
+            Match match = Regex.Match( text, pattern, RegexOptions.Singleline );
 
-            if (!match.Success) { return (string.Empty, string.Empty); }
+            if ( !match.Success ) { return (string.Empty, string.Empty); }
 
             string name = match.Groups[2].Value.Trim();
             string modLink = match.Groups[3].Value.Trim();
             return (name, modLink);
         }
 
-        private static string GetPropertyValue(string text, string propertyName)
+        private static string GetPropertyValue( string text, string propertyName )
         {
             string pattern = $@"(?i)\*\*{propertyName}:\*\* ([^_*]+)";
-            Match match = Regex.Match(text, pattern, RegexOptions.Singleline);
+            Match match = Regex.Match( text, pattern, RegexOptions.Singleline );
 
-            if (!match.Success) { return string.Empty; }
+            if ( !match.Success ) { return string.Empty; }
 
             return match.Groups[1].Value.Trim();
         }
 
-        private static string GetName((string, string) nameAndModLink) => nameAndModLink.Item1;
+        private static string GetName( (string, string) nameAndModLink ) => nameAndModLink.Item1;
 
-        private static string GetHyperlinkUrl((string, string) nameAndModLink, string linkType) =>
+        private static string GetHyperlinkUrl( (string, string) nameAndModLink, string linkType ) =>
             linkType.ToLower() == "name" ? nameAndModLink.Item2 : string.Empty;
 
-        private static (string, string) GetCategoryAndTier(string text, string categoryTierName)
+        private static (string, string) GetCategoryAndTier( string text, string categoryTierName )
         {
             string pattern = $@"(?i)\*\*{categoryTierName}:\*\* ([^_*]+)";
-            Match match = Regex.Match(text, pattern, RegexOptions.Singleline);
+            Match match = Regex.Match( text, pattern, RegexOptions.Singleline );
 
-            if (!match.Success) { return (string.Empty, string.Empty); }
+            if ( !match.Success ) { return (string.Empty, string.Empty); }
 
-            string[] values = match.Groups[1].Value.Split('/');
-            if (values.Length == 2)
+            string[] values = match.Groups[1].Value.Split( '/' );
+            if ( values.Length == 2 )
             {
                 return (values[0].Trim(), values[1].Trim());
             }
@@ -84,16 +84,16 @@ namespace KOTORModSync.ConsoleApp
             }
         }
 
-        private static bool GetBoolValue(string text, string propertyName)
+        private static bool GetBoolValue( string text, string propertyName )
         {
             string pattern = $@"\*\*{propertyName}:\*\* (.+)";
-            Match match = s_propertyRegex.Match(text);
-            while (match.Success)
+            Match match = s_propertyRegex.Match( text );
+            while ( match.Success )
             {
                 string value = match.Groups[1].Value.Trim();
-                if (!string.IsNullOrEmpty(value))
+                if ( !string.IsNullOrEmpty( value ) )
                 {
-                    return value.Equals("YES", StringComparison.OrdinalIgnoreCase);
+                    return value.Equals( "YES", StringComparison.OrdinalIgnoreCase );
                 }
 
                 match = match.NextMatch();

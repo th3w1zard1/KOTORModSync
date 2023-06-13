@@ -16,36 +16,36 @@ namespace KOTORModSync
     {
         private readonly Window _topLevelWindow;
 
-        public ConfirmationDialogCallback(Window topLevelWindow) => _topLevelWindow = topLevelWindow;
+        public ConfirmationDialogCallback( Window topLevelWindow ) => _topLevelWindow = topLevelWindow;
 
-        public Task<bool> ShowConfirmationDialog(string message) => ConfirmationDialog.ShowConfirmationDialog(_topLevelWindow, message);
+        public Task<bool> ShowConfirmationDialog( string message ) => ConfirmationDialog.ShowConfirmationDialog( _topLevelWindow, message );
     }
 
     public partial class ConfirmationDialog : Window
     {
         public ConfirmationDialog() => InitializeComponent();
-        private void InitializeComponent() => AvaloniaXamlLoader.Load(this);
+        private void InitializeComponent() => AvaloniaXamlLoader.Load( this );
 
         public static readonly AvaloniaProperty s_confirmTextProperty =
-            AvaloniaProperty.Register<ConfirmationDialog, string>(nameof(ConfirmText));
+            AvaloniaProperty.Register<ConfirmationDialog, string>( nameof( ConfirmText ) );
 
         public string ConfirmText
         {
-            get => GetValue(s_confirmTextProperty) as string;
-            set => SetValue(s_confirmTextProperty, value);
+            get => GetValue( s_confirmTextProperty ) as string;
+            set => SetValue( s_confirmTextProperty, value );
         }
 
-        private void OnOpened(object sender, EventArgs e)
+        private void OnOpened( object sender, EventArgs e )
         {
-            TextBlock confirmTextBlock = this.FindControl<TextBlock>("confirmTextBlock");
+            TextBlock confirmTextBlock = this.FindControl<TextBlock>( "confirmTextBlock" );
             confirmTextBlock.Text = ConfirmText;
         }
 
-        public static async Task<bool> ShowConfirmationDialog(Window parentWindow, string confirmText)
+        public static async Task<bool> ShowConfirmationDialog( Window parentWindow, string confirmText )
         {
             var tcs = new TaskCompletionSource<bool>();
 
-            await Dispatcher.UIThread.InvokeAsync(() =>
+            await Dispatcher.UIThread.InvokeAsync( () =>
             {
                 var confirmationDialog = new ConfirmationDialog
                 {
@@ -57,7 +57,7 @@ namespace KOTORModSync
                 confirmationDialog.Closed += ClosedHandler;
                 confirmationDialog.Opened += confirmationDialog.OnOpened;
 
-                _ = confirmationDialog.ShowDialog(parentWindow);
+                _ = confirmationDialog.ShowDialog( parentWindow );
                 return;
 
                 void CleanupHandlers()
@@ -67,47 +67,47 @@ namespace KOTORModSync
                     confirmationDialog.Closed -= ClosedHandler;
                 }
 
-                void YesClickedHandler(object sender, RoutedEventArgs e)
+                void YesClickedHandler( object sender, RoutedEventArgs e )
                 {
                     CleanupHandlers();
                     confirmationDialog.Close();
-                    tcs.SetResult(true);
+                    tcs.SetResult( true );
                 }
 
-                void NoClickedHandler(object sender, RoutedEventArgs e)
+                void NoClickedHandler( object sender, RoutedEventArgs e )
                 {
                     CleanupHandlers();
                     confirmationDialog.Close();
-                    tcs.SetResult(false);
+                    tcs.SetResult( false );
                 }
 
-                void ClosedHandler(object sender, EventArgs e)
+                void ClosedHandler( object sender, EventArgs e )
                 {
                     CleanupHandlers();
-                    tcs.SetResult(false);
+                    tcs.SetResult( false );
                 }
-            });
+            } );
 
             return await tcs.Task;
         }
 
         private static readonly RoutedEvent<RoutedEventArgs> s_yesButtonClickedEvent =
-            RoutedEvent.Register<ConfirmationDialog, RoutedEventArgs>(nameof(YesButtonClicked), RoutingStrategies.Bubble);
+            RoutedEvent.Register<ConfirmationDialog, RoutedEventArgs>( nameof( YesButtonClicked ), RoutingStrategies.Bubble );
         private static readonly RoutedEvent<RoutedEventArgs> s_noButtonClickedEvent =
-            RoutedEvent.Register<ConfirmationDialog, RoutedEventArgs>(nameof(NoButtonClicked), RoutingStrategies.Bubble);
+            RoutedEvent.Register<ConfirmationDialog, RoutedEventArgs>( nameof( NoButtonClicked ), RoutingStrategies.Bubble );
 
         public event EventHandler<RoutedEventArgs> YesButtonClicked
         {
-            add => AddHandler(s_yesButtonClickedEvent, value);
-            remove => RemoveHandler(s_yesButtonClickedEvent, value);
+            add => AddHandler( s_yesButtonClickedEvent, value );
+            remove => RemoveHandler( s_yesButtonClickedEvent, value );
         }
         public event EventHandler<RoutedEventArgs> NoButtonClicked
         {
-            add => AddHandler(s_noButtonClickedEvent, value);
-            remove => RemoveHandler(s_noButtonClickedEvent, value);
+            add => AddHandler( s_noButtonClickedEvent, value );
+            remove => RemoveHandler( s_noButtonClickedEvent, value );
         }
 
-        private void YesButton_Click(object sender, RoutedEventArgs e) => RaiseEvent(new RoutedEventArgs(s_yesButtonClickedEvent));
-        private void NoButton_Click(object sender, RoutedEventArgs e) => RaiseEvent(new RoutedEventArgs(s_noButtonClickedEvent));
+        private void YesButton_Click( object sender, RoutedEventArgs e ) => RaiseEvent( new RoutedEventArgs( s_yesButtonClickedEvent ) );
+        private void NoButton_Click( object sender, RoutedEventArgs e ) => RaiseEvent( new RoutedEventArgs( s_noButtonClickedEvent ) );
     }
 }

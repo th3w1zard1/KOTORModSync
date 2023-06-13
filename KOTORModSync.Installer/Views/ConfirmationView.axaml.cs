@@ -8,7 +8,7 @@ namespace KOTORModSync.Installer.Views
     {
         public ConfirmationView()
         {
-            AvaloniaXamlLoader.Load(this);
+            AvaloniaXamlLoader.Load( this );
         }
     }
 }

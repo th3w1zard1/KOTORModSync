@@ -14,35 +14,35 @@ namespace KOTORModSync
     public partial class InformationDialog : Window
     {
         public static readonly AvaloniaProperty InfoTextProperty =
-            AvaloniaProperty.Register<InformationDialog, string>("InfoText");
+            AvaloniaProperty.Register<InformationDialog, string>( "InfoText" );
         public InformationDialog() => InitializeComponent();
 
-        private void InitializeComponent() => AvaloniaXamlLoader.Load(this);
+        private void InitializeComponent() => AvaloniaXamlLoader.Load( this );
 
-        public static async Task ShowInformationDialog(Window parentWindow, string message, string title = "Information")
+        public static async Task ShowInformationDialog( Window parentWindow, string message, string title = "Information" )
         {
             var dialog = new InformationDialog { Title = title, InfoText = message };
-            _ = await dialog.ShowDialog<bool?>(parentWindow);
+            _ = await dialog.ShowDialog<bool?>( parentWindow );
         }
 
         public string InfoText
         {
-            get => GetValue(InfoTextProperty) as string;
-            set => SetValue(InfoTextProperty, value);
+            get => GetValue( InfoTextProperty ) as string;
+            set => SetValue( InfoTextProperty, value );
         }
 
-        protected override void OnOpened(EventArgs e)
+        protected override void OnOpened( EventArgs e )
         {
-            base.OnOpened(e);
+            base.OnOpened( e );
             UpdateInfoText();
         }
 
-        private void OKButton_Click(object sender, RoutedEventArgs e) => Close();
+        private void OKButton_Click( object sender, RoutedEventArgs e ) => Close();
 
-        private void UpdateInfoText() => Dispatcher.UIThread.InvokeAsync(() =>
+        private void UpdateInfoText() => Dispatcher.UIThread.InvokeAsync( () =>
                                                   {
-                                                      TextBlock textBlock = this.FindControl<TextBlock>("InfoTextBlock");
+                                                      TextBlock textBlock = this.FindControl<TextBlock>( "InfoTextBlock" );
                                                       textBlock.Text = InfoText;
-                                                  });
+                                                  } );
     }
 }

@@ -14,9 +14,9 @@ namespace KOTORModSync.Core
     // there should only ever be one MainConfig instance created at any one time.
     // instance has GET and SET access.
     // Everyone else has readonly GET access.
-    [SuppressMessage("ReSharper", "InconsistentNaming")]
-    [SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "<Pending>")]
-    [SuppressMessage("CodeQuality", "IDE0079:Remove unnecessary suppression", Justification = "<Pending>")]
+    [SuppressMessage( "ReSharper", "InconsistentNaming" )]
+    [SuppressMessage( "Performance", "CA1822:Mark members as static", Justification = "<Pending>" )]
+    [SuppressMessage( "CodeQuality", "IDE0079:Remove unnecessary suppression", Justification = "<Pending>" )]
     public class MainConfig : INotifyPropertyChanged
     {
         public static DirectoryInfo SourcePath { get; private set; }
@@ -30,9 +30,9 @@ namespace KOTORModSync.Core
 
 
         // used for the ui.
-        protected virtual void OnPropertyChanged([CallerMemberName][CanBeNull] string propertyName = null)
+        protected virtual void OnPropertyChanged( [CallerMemberName][CanBeNull] string propertyName = null )
         {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+            PropertyChanged?.Invoke( this, new PropertyChangedEventArgs( propertyName ) );
         }
 
         public DirectoryInfo sourcePath
@@ -44,8 +44,8 @@ namespace KOTORModSync.Core
             set
             {
                 SourcePath = value;
-                OnPropertyChanged(nameof(sourcePath));
-                OnPropertyChanged(nameof(sourcePathFullName));
+                OnPropertyChanged( nameof( sourcePath ) );
+                OnPropertyChanged( nameof( sourcePathFullName ) );
             }
         }
 
@@ -61,8 +61,8 @@ namespace KOTORModSync.Core
             set
             {
                 DestinationPath = value;
-                OnPropertyChanged(nameof(destinationPath));
-                OnPropertyChanged(nameof(destinationPathFullName));
+                OnPropertyChanged( nameof( destinationPath ) );
+                OnPropertyChanged( nameof( destinationPathFullName ) );
             }
         }
 
@@ -85,7 +85,7 @@ namespace KOTORModSync.Core
             set
             {
                 CurrentCompatibilityLevel = value;
-                OnPropertyChanged(nameof(CurrentCompatibilityLevel));
+                OnPropertyChanged( nameof( CurrentCompatibilityLevel ) );
             }
         }
 

@@ -25,21 +25,21 @@ namespace KOTORModSync
             AttachControls();
         }
 
-        private void InitializeComponent() => AvaloniaXamlLoader.Load(this);
+        private void InitializeComponent() => AvaloniaXamlLoader.Load( this );
 
         private void AttachControls()
         {
-            progressTextBlock = this.FindControl<TextBlock>("progressTextBlock");
-            progressBar = this.FindControl<ProgressBar>("progressBar");
+            progressTextBlock = this.FindControl<TextBlock>( "progressTextBlock" );
+            progressBar = this.FindControl<ProgressBar>( "progressBar" );
         }
 
-        public static async Task ShowProgressWindow(Window parentWindow, string message, decimal progress)
+        public static async Task ShowProgressWindow( Window parentWindow, string message, decimal progress )
         {
             var progressWindow = new ProgressWindow { Owner = parentWindow };
             progressWindow.progressTextBlock.Text = message;
             progressWindow.progressBar.Value = (double)progress;
 
-            _ = await progressWindow.ShowDialog<bool?>(parentWindow);
+            _ = await progressWindow.ShowDialog<bool?>( parentWindow );
         }
         public void Dispose() => Close();
     }

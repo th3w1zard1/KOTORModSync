@@ -12,56 +12,56 @@ namespace KOTORModSync.Core.Utility
 {
     public static class Utility
     {
-        public static string ReplaceCustomVariables(string path) => path.Replace("<<modDirectory>>", MainConfig.SourcePath.FullName)
-            .Replace("<<kotorDirectory>>", MainConfig.DestinationPath.FullName);
+        public static string ReplaceCustomVariables( string path ) => path.Replace( "<<modDirectory>>", MainConfig.SourcePath.FullName )
+            .Replace( "<<kotorDirectory>>", MainConfig.DestinationPath.FullName );
 
-        public static string RestoreCustomVariables(string fullPath) => fullPath.Replace(MainConfig.SourcePath.FullName, "<<modDirectory>>")
-            .Replace(MainConfig.DestinationPath.FullName, "<<kotorDirectory>>");
+        public static string RestoreCustomVariables( string fullPath ) => fullPath.Replace( MainConfig.SourcePath.FullName, "<<modDirectory>>" )
+            .Replace( MainConfig.DestinationPath.FullName, "<<kotorDirectory>>" );
 
-        public static bool IsDirectoryWritable([CanBeNull] DirectoryInfo dirPath)
+        public static bool IsDirectoryWritable( [CanBeNull] DirectoryInfo dirPath )
         {
-            if (dirPath is null) throw new ArgumentNullException(nameof(dirPath));
+            if ( dirPath is null ) throw new ArgumentNullException( nameof( dirPath ) );
 
             try
             {
-                using (FileStream fs = File.Create(
-                    Path.Combine(dirPath.FullName, Path.GetRandomFileName()),
+                using ( FileStream fs = File.Create(
+                    Path.Combine( dirPath.FullName, Path.GetRandomFileName() ),
                     1,
-                    FileOptions.DeleteOnClose)) { }
+                    FileOptions.DeleteOnClose ) ) { }
 
                 return true;
             }
-            catch (UnauthorizedAccessException ex)
+            catch ( UnauthorizedAccessException ex )
             {
-                Logger.Log($"Failed to access files in the destination directory: {ex.Message}");
+                Logger.Log( $"Failed to access files in the destination directory: {ex.Message}" );
             }
-            catch (PathTooLongException ex)
+            catch ( PathTooLongException ex )
             {
-                Logger.LogException(ex);
-                Logger.Log($"The pathname is too long: '{dirPath.FullName}'");
-                Logger.Log("Please utilize the registry patch that increases the Windows legacy path limit of 260 characters or move your KOTOR2 installation to a shorter directory path.");
+                Logger.LogException( ex );
+                Logger.Log( $"The pathname is too long: '{dirPath.FullName}'" );
+                Logger.Log( "Please utilize the registry patch that increases the Windows legacy path limit of 260 characters or move your KOTOR2 installation to a shorter directory path." );
             }
-            catch (IOException ex)
+            catch ( IOException ex )
             {
-                Logger.Log($"Failed to access files in the destination directory: {ex.Message}");
+                Logger.Log( $"Failed to access files in the destination directory: {ex.Message}" );
             }
 
             return false;
         }
 
-        public static async Task WaitForProcessExitAsync([NotNull] Process process, string processName)
+        public static async Task WaitForProcessExitAsync( [NotNull] Process process, string processName )
         {
             // Wait for the process to exit
-            while (!process.HasExited)
-                await Task.Delay(1000); // 1 second is the recommended default
+            while ( !process.HasExited )
+                await Task.Delay( 1000 ); // 1 second is the recommended default
 
             // Make sure the process exited correctly
-            if (process.ExitCode != 0)
-                throw new Exception($"The process {processName} exited with code {process.ExitCode}.");
+            if ( process.ExitCode != 0 )
+                throw new Exception( $"The process {processName} exited with code {process.ExitCode}." );
         }
 
         // todo: merge relevant sections with PlatformAgnosticMethods.ExecuteProcessAsync
-        public static async Task<bool> ExecuteProcessAsync(string fileName, string arguments, Func<Process, Task<bool>> onExited)
+        public static async Task<bool> ExecuteProcessAsync( string fileName, string arguments, Func<Process, Task<bool>> onExited )
         {
             Process process = new Process
             {
@@ -78,20 +78,20 @@ namespace KOTORModSync.Core.Utility
 
             process.EnableRaisingEvents = true;
 
-            process.Exited += async (sender, e) =>
+            process.Exited += async ( sender, e ) =>
             {
                 string output = await process.StandardOutput.ReadToEndAsync();
                 string error = await process.StandardError.ReadToEndAsync();
 
                 // Call the provided 'onExited' method and set the 'isInstallSuccessful' variable accordingly
-                isInstallSuccessful = await onExited(process);
+                isInstallSuccessful = await onExited( process );
 
                 process.Dispose();
             };
 
             _ = process.Start();
 
-            await Task.Run(() => process.WaitForExit());
+            await Task.Run( () => process.WaitForExit() );
 
             return isInstallSuccessful;
         }
@@ -99,24 +99,24 @@ namespace KOTORModSync.Core.Utility
         [CanBeNull]
         public static DirectoryInfo ChooseDirectory()
         {
-            Console.Write("Enter the path: ");
+            Console.Write( "Enter the path: " );
             string thisPath = Console.ReadLine()?.Trim();
 
-            if (Directory.Exists(thisPath))
-                return new DirectoryInfo(thisPath);
+            if ( Directory.Exists( thisPath ) )
+                return new DirectoryInfo( thisPath );
 
-            Console.Write($"Directory '{thisPath}' does not exist.");
+            Console.Write( $"Directory '{thisPath}' does not exist." );
             return default;
         }
 
         public interface IConfirmationDialogCallback
         {
-            Task<bool> ShowConfirmationDialog(string message);
+            Task<bool> ShowConfirmationDialog( string message );
         }
 
         public interface IOptionsDialogCallback
         {
-            Task<string> ShowOptionsDialog(List<string> options);
+            Task<string> ShowOptionsDialog( List<string> options );
         }
     }
 }

@@ -75,205 +75,205 @@ namespace KOTORModSync.Core
             _ = TomlSettings.Create();
             var rootTable = new Dictionary<string, List<object>>()
             {
-                ["thisMod"] = new List<object>(65535) { Serializer.SerializeObject(this) }
+                ["thisMod"] = new List<object>( 65535 ) { Serializer.SerializeObject( this ) }
             };
 
             // Loop through the "thisMod" list
-            for (int i = 0;
+            for ( int i = 0;
                  i < rootTable["thisMod"].Count;
-                 i++)
+                 i++ )
             {
                 // Check if the item is a Dictionary<string, object> representing a TOML table
-                if (!(rootTable["thisMod"][i] is IDictionary<string, object> table
-                    && table.TryGetValue("Instructions", out object value)))
+                if ( !( rootTable["thisMod"][i] is IDictionary<string, object> table
+                    && table.TryGetValue( "Instructions", out object value ) ) )
                 {
                     continue;
                 }
 
                 // Check if the "Instructions" table is empty
                 // Remove the empty "Instructions" table from the root table
-                if (value is IList<object> instructions && instructions.Count != 0)
+                if ( value is IList<object> instructions && instructions.Count != 0 )
                     continue;
-                table.Remove("Instructions");
+                table.Remove( "Instructions" );
 
                 // Check if the "Options" table is empty
                 // Remove the empty "Options" table from the root table
-                if (value is List<object> options && options.Count != 0)
+                if ( value is List<object> options && options.Count != 0 )
                     continue;
-                table.Remove("Options");
+                table.Remove( "Options" );
 
                 // don't serialize stuff chosen during an install.
-                table.Remove("ChosenOptions");
+                table.Remove( "ChosenOptions" );
 
                 break;
             }
 
-            string tomlString = Toml.WriteString(rootTable);
-            return Serializer.FixWhitespaceIssues(tomlString);
+            string tomlString = Toml.WriteString( rootTable );
+            return Serializer.FixWhitespaceIssues( tomlString );
         }
 
         private DirectoryInfo _tempPath;
 
-        public void DeserializeComponent(TomlObject tomlObject)
+        public void DeserializeComponent( TomlObject tomlObject )
         {
-            if (!(tomlObject is TomlTable componentTable))
+            if ( !( tomlObject is TomlTable componentTable ) )
             {
                 throw new ArgumentException(
-                    "[TomlError] Expected a TOML table for component data.");
+                    "[TomlError] Expected a TOML table for component data." );
             }
 
-            _tempPath = new DirectoryInfo(Path.GetTempPath());
+            _tempPath = new DirectoryInfo( Path.GetTempPath() );
 
             Dictionary<string, object> componentDict
-                = Utility.Serializer.ConvertTomlTableToDictionary(componentTable);
-            if (componentDict.TryGetValue("path", out object pathValue) && pathValue is string path)
+                = Utility.Serializer.ConvertTomlTableToDictionary( componentTable );
+            if ( componentDict.TryGetValue( "path", out object pathValue ) && pathValue is string path )
             {
-                new List<string>(255).Add(path);
+                new List<string>( 255 ).Add( path );
             }
 
-            Serializer.DeserializePath(componentDict, "paths");
-            this.Name = GetRequiredValue<string>(componentDict, "name");
-            Logger.Log($"\r\n== Deserialize next component '{this.Name}' ==");
-            this.Guid = GetRequiredValue<Guid>(componentDict, "guid");
-            this.Description = GetValueOrDefault<string>(componentDict, "description");
-            this.Directions = GetValueOrDefault<string>(componentDict, "directions");
-            this.Category = GetValueOrDefault<string>(componentDict, "category");
-            this.Tier = GetValueOrDefault<string>(componentDict, "tier");
-            this.Language = GetValueOrDefault<List<string>>(componentDict, "language");
-            this.Author = GetValueOrDefault<string>(componentDict, "author");
-            this.Dependencies = GetValueOrDefault<List<string>>(componentDict, "dependencies");
-            this.Restrictions = GetValueOrDefault<List<string>>(componentDict, "restrictions");
-            this.ModLink = GetValueOrDefault<string>(componentDict, "modlink");
+            Serializer.DeserializePath( componentDict, "paths" );
+            this.Name = GetRequiredValue<string>( componentDict, "name" );
+            Logger.Log( $"\r\n== Deserialize next component '{this.Name}' ==" );
+            this.Guid = GetRequiredValue<Guid>( componentDict, "guid" );
+            this.Description = GetValueOrDefault<string>( componentDict, "description" );
+            this.Directions = GetValueOrDefault<string>( componentDict, "directions" );
+            this.Category = GetValueOrDefault<string>( componentDict, "category" );
+            this.Tier = GetValueOrDefault<string>( componentDict, "tier" );
+            this.Language = GetValueOrDefault<List<string>>( componentDict, "language" );
+            this.Author = GetValueOrDefault<string>( componentDict, "author" );
+            this.Dependencies = GetValueOrDefault<List<string>>( componentDict, "dependencies" );
+            this.Restrictions = GetValueOrDefault<List<string>>( componentDict, "restrictions" );
+            this.ModLink = GetValueOrDefault<string>( componentDict, "modlink" );
 
             this.Instructions = DeserializeInstructions(
-                GetValueOrDefault<TomlTableArray>(componentDict, "instructions"));
-            this.Instructions.ForEach(instruction => instruction.SetParentComponent(this));
+                GetValueOrDefault<TomlTableArray>( componentDict, "instructions" ) );
+            this.Instructions.ForEach( instruction => instruction.SetParentComponent( this ) );
 
             this.Options = DeserializeOptions(
-                GetValueOrDefault<TomlTableArray>(componentDict, "options")
+                GetValueOrDefault<TomlTableArray>( componentDict, "options" )
             );
 
             // can't validate anything if directories aren't set.
-            if (string.IsNullOrEmpty(MainConfig.SourcePath?.FullName)
-                || string.IsNullOrEmpty(MainConfig.DestinationPath?.FullName)
+            if ( string.IsNullOrEmpty( MainConfig.SourcePath?.FullName )
+                || string.IsNullOrEmpty( MainConfig.DestinationPath?.FullName )
                 )
             {
                 return;
             }
 
             // Validate and log additional errors/warnings.
-            this.Validator = new ComponentValidation(this);
+            this.Validator = new ComponentValidation( this );
             bool prevalidate = this.Validator.Run();
-            if (prevalidate)
+            if ( prevalidate )
             {
-                Logger.Log($"Successfully deserialized component '{this.Name}'\r\n");
+                Logger.Log( $"Successfully deserialized component '{this.Name}'\r\n" );
                 return;
             }
 
-            this.Validator.GetErrors().ForEach(error => Logger.Log("[Error] " + error));
-            this.Validator.GetWarnings().ForEach(warning => Logger.Log("[Warning] " + warning));
+            this.Validator.GetErrors().ForEach( error => Logger.Log( "[Error] " + error ) );
+            this.Validator.GetWarnings().ForEach( warning => Logger.Log( "[Warning] " + warning ) );
         }
 
         [NotNull]
-        private Dictionary<Guid, Option> DeserializeOptions([CanBeNull] TomlTableArray tomlObject)
+        private Dictionary<Guid, Option> DeserializeOptions( [CanBeNull] TomlTableArray tomlObject )
         {
-            if (tomlObject == null)
+            if ( tomlObject == null )
             {
-                Logger.LogVerbose($"No options found for component '{this.Name}'");
+                Logger.LogVerbose( $"No options found for component '{this.Name}'" );
                 return new Dictionary<Guid, Option>();
             }
 
-            var options = new Dictionary<Guid, Option>(65535);
+            var options = new Dictionary<Guid, Option>( 65535 );
 
-            for (int index = 0;
+            for ( int index = 0;
                  index < tomlObject.Count;
-                 index++)
+                 index++ )
             {
                 TomlTable item = tomlObject[index];
-                Dictionary<string, object> optionDict = Utility.Serializer.ConvertTomlTableToDictionary(item);
+                Dictionary<string, object> optionDict = Utility.Serializer.ConvertTomlTableToDictionary( item );
 
                 // ConvertTomlTableToDictionary lowercase all string keys.
-                Serializer.DeserializePath(optionDict, "source");
-                Serializer.DeserializeGuidDictionary(optionDict, "restrictions");
-                Serializer.DeserializeGuidDictionary(optionDict, "dependencies");
+                Serializer.DeserializePath( optionDict, "source" );
+                Serializer.DeserializeGuidDictionary( optionDict, "restrictions" );
+                Serializer.DeserializeGuidDictionary( optionDict, "dependencies" );
 
                 var option = new Option();
-                option.Source = GetRequiredValue<List<string>>(optionDict, "source");
-                option.Guid = GetValueOrDefault<Guid>(optionDict, "guid");
-                option.Destination = GetRequiredValue<string>(optionDict, "destination");
-                option.Restrictions = GetValueOrDefault<List<string>>(optionDict, "restrictions")
-                    ?.Select(Guid.Parse)
+                option.Source = GetRequiredValue<List<string>>( optionDict, "source" );
+                option.Guid = GetValueOrDefault<Guid>( optionDict, "guid" );
+                option.Destination = GetRequiredValue<string>( optionDict, "destination" );
+                option.Restrictions = GetValueOrDefault<List<string>>( optionDict, "restrictions" )
+                    ?.Select( Guid.Parse )
                     .ToList();
 
-                option.Dependencies = GetValueOrDefault<List<string>>(optionDict, "dependencies")
-                    ?.Select(Guid.Parse)
+                option.Dependencies = GetValueOrDefault<List<string>>( optionDict, "dependencies" )
+                    ?.Select( Guid.Parse )
                     .ToList();
 
-                options.Add(Guid.NewGuid(), option); // Generate a new GUID key for each option
+                options.Add( Guid.NewGuid(), option ); // Generate a new GUID key for each option
             }
 
             return options;
         }
 
         [NotNull]
-        private List<Instruction> DeserializeInstructions([CanBeNull] TomlTableArray tomlObject)
+        private List<Instruction> DeserializeInstructions( [CanBeNull] TomlTableArray tomlObject )
         {
-            if (tomlObject == null)
+            if ( tomlObject == null )
             {
-                Logger.Log($"[Warning] No instructions found for component '{this.Name}'");
+                Logger.Log( $"[Warning] No instructions found for component '{this.Name}'" );
                 return new List<Instruction>();
             }
 
-            var instructions = new List<Instruction>(65535);
+            var instructions = new List<Instruction>( 65535 );
 
-            for (int index = 0;
+            for ( int index = 0;
                  index < tomlObject.Count;
-                 index++)
+                 index++ )
             {
                 TomlTable item = tomlObject[index];
                 Dictionary<string, object> instructionDict
-                    = Utility.Serializer.ConvertTomlTableToDictionary(item);
+                    = Utility.Serializer.ConvertTomlTableToDictionary( item );
 
                 // ConvertTomlTableToDictionary lowercase all string keys.
-                Serializer.DeserializePath(instructionDict, "source");
-                Serializer.DeserializeGuidDictionary(instructionDict, "restrictions");
-                Serializer.DeserializeGuidDictionary(instructionDict, "dependencies");
+                Serializer.DeserializePath( instructionDict, "source" );
+                Serializer.DeserializeGuidDictionary( instructionDict, "restrictions" );
+                Serializer.DeserializeGuidDictionary( instructionDict, "dependencies" );
 
                 var instruction = new Instruction();
-                instruction.Action = GetRequiredValue<string>(instructionDict, "action");
-                instruction.Guid = GetValueOrDefault<Guid>(instructionDict, "guid");
+                instruction.Action = GetRequiredValue<string>( instructionDict, "action" );
+                instruction.Guid = GetValueOrDefault<Guid>( instructionDict, "guid" );
                 Logger.Log(
-                    $"\r\n-- Deserialize instruction #{index + 1} action {instruction.Action}");
-                instruction.Arguments = GetValueOrDefault<string>(instructionDict, "arguments");
-                instruction.Overwrite = GetValueOrDefault<bool>(instructionDict, "overwrite");
+                    $"\r\n-- Deserialize instruction #{index + 1} action {instruction.Action}" );
+                instruction.Arguments = GetValueOrDefault<string>( instructionDict, "arguments" );
+                instruction.Overwrite = GetValueOrDefault<bool>( instructionDict, "overwrite" );
 
-                instruction.Restrictions = GetValueOrDefault<List<string>>(instructionDict, "restrictions")
-                    ?.Where(restriction => restriction != null)
+                instruction.Restrictions = GetValueOrDefault<List<string>>( instructionDict, "restrictions" )
+                    ?.Where( restriction => restriction != null )
                     .Select(
                         restriction =>
                         {
-                            if (Guid.TryParse(restriction, out Guid parsedGuid))
+                            if ( Guid.TryParse( restriction, out Guid parsedGuid ) )
                                 return parsedGuid;
 
                             return Guid.Empty; // or any other default value for invalid GUIDs
-                        })
+                        } )
                     .ToList();
 
-                instruction.Dependencies = GetValueOrDefault<List<string>>(instructionDict, "dependencies")
-                    ?.Where(dependency => dependency != null)
+                instruction.Dependencies = GetValueOrDefault<List<string>>( instructionDict, "dependencies" )
+                    ?.Where( dependency => dependency != null )
                     .Select(
                         dependency =>
                         {
-                            if (Guid.TryParse(dependency, out Guid parsedGuid))
+                            if ( Guid.TryParse( dependency, out Guid parsedGuid ) )
                                 return parsedGuid;
 
                             return Guid.Empty; // or any other default value for invalid GUIDs
-                        })
+                        } )
                     .ToList();
 
-                instruction.Source = GetValueOrDefault<List<string>>(instructionDict, "source");
-                instruction.Destination = GetValueOrDefault<string>(instructionDict, "destination");
-                instructions.Add(instruction);
+                instruction.Source = GetValueOrDefault<List<string>>( instructionDict, "source" );
+                instruction.Destination = GetValueOrDefault<string>( instructionDict, "destination" );
+                instructions.Add( instruction );
             }
 
             return instructions;
@@ -281,13 +281,13 @@ namespace KOTORModSync.Core
 
         [CanBeNull]
         private static T GetRequiredValue
-            <T>(IReadOnlyDictionary<string, object> dict, string key) =>
-            GetValue<T>(dict, key, true);
+            <T>( IReadOnlyDictionary<string, object> dict, string key ) =>
+            GetValue<T>( dict, key, true );
 
         [CanBeNull]
         private static T GetValueOrDefault
-            <T>(IReadOnlyDictionary<string, object> dict, string key) =>
-            GetValue<T>(dict, key, false);
+            <T>( IReadOnlyDictionary<string, object> dict, string key ) =>
+            GetValue<T>( dict, key, false );
 
         private static T GetValue<T>(
             IReadOnlyDictionary<string, object> dict,
@@ -295,93 +295,93 @@ namespace KOTORModSync.Core
             bool required
         )
         {
-            if (!dict.TryGetValue(key, out object value))
+            if ( !dict.TryGetValue( key, out object value ) )
             {
                 string caseInsensitiveKey = dict.Keys.FirstOrDefault(
-                    k => k.Equals(key, StringComparison.OrdinalIgnoreCase));
+                    k => k.Equals( key, StringComparison.OrdinalIgnoreCase ) );
 
-                if (caseInsensitiveKey == null)
+                if ( caseInsensitiveKey == null )
                 {
-                    if (!required) { return default; }
+                    if ( !required ) { return default; }
 
-                    throw new ArgumentException($"[Error] Missing or invalid '{key}' field.");
+                    throw new ArgumentException( $"[Error] Missing or invalid '{key}' field." );
                 }
 
                 value = dict[caseInsensitiveKey];
             }
 
-            if (value is T t) { return t; }
+            if ( value is T t ) { return t; }
 
             Type targetType = value.GetType();
 
-            if (value is string valueStr && typeof(T) == typeof(System.Guid)
-                && System.Guid.TryParse(valueStr, out Guid guid))
+            if ( value is string valueStr && typeof( T ) == typeof( System.Guid )
+                && System.Guid.TryParse( valueStr, out Guid guid ) )
             {
                 return (T)(object)guid;
             }
 
-            if (targetType.IsGenericType
-                && targetType.GetGenericTypeDefinition() == typeof(List<>
+            if ( targetType.IsGenericType
+                && targetType.GetGenericTypeDefinition() == typeof( List<>
                 ) && value is IEnumerable enumerable
             )
             {
-                Type elementType = typeof(T).GetGenericArguments()[0];
+                Type elementType = typeof( T ).GetGenericArguments()[0];
                 dynamic dynamicList
-                    = Activator.CreateInstance(typeof(List<>).MakeGenericType(elementType));
+                    = Activator.CreateInstance( typeof( List<> ).MakeGenericType( elementType ) );
 
-                foreach (object item in enumerable)
+                foreach ( object item in enumerable )
                 {
-                    dynamic convertedItem = Convert.ChangeType(item, elementType);
-                    dynamicList.Add(convertedItem);
+                    dynamic convertedItem = Convert.ChangeType( item, elementType );
+                    dynamicList.Add( convertedItem );
                 }
 
                 return dynamicList;
             }
 
-            if (value is string valueStr2 && string.IsNullOrEmpty(valueStr2))
+            if ( value is string valueStr2 && string.IsNullOrEmpty( valueStr2 ) )
             {
-                return required ? throw new ArgumentException($"'{key}' field is null or empty.")
+                return required ? throw new ArgumentException( $"'{key}' field is null or empty." )
                     : (T)default;
             }
 
-            if (typeof(T).IsGenericType && typeof(T).GetGenericTypeDefinition() == typeof(List<>))
+            if ( typeof( T ).IsGenericType && typeof( T ).GetGenericTypeDefinition() == typeof( List<> ) )
             {
-                Type listType = typeof(T);
+                Type listType = typeof( T );
                 Type elementType = listType.GetGenericArguments()[0];
-                dynamic dynamicList = Activator.CreateInstance(listType);
+                dynamic dynamicList = Activator.CreateInstance( listType );
 
-                foreach (object item in (IEnumerable)value)
+                foreach ( object item in (IEnumerable)value )
                 {
-                    dynamic convertedItem = Convert.ChangeType(item, elementType);
-                    dynamicList.Add(convertedItem);
+                    dynamic convertedItem = Convert.ChangeType( item, elementType );
+                    dynamicList.Add( convertedItem );
                 }
 
                 return dynamicList;
             }
 
-            if (targetType == typeof(Tomlyn.Model.TomlArray)
-                && value is Tomlyn.Model.TomlArray valueTomlArray)
+            if ( targetType == typeof( Tomlyn.Model.TomlArray )
+                && value is Tomlyn.Model.TomlArray valueTomlArray )
             {
-                if (valueTomlArray.Count == 0) return default;
+                if ( valueTomlArray.Count == 0 ) return default;
 
                 TomlTableArray tomlTableArray = new TomlTableArray();
 
-                foreach (object tomlValue in valueTomlArray)
+                foreach ( object tomlValue in valueTomlArray )
                 {
-                    if (tomlValue is TomlTable table) { tomlTableArray.Add(table); }
+                    if ( tomlValue is TomlTable table ) { tomlTableArray.Add( table ); }
                 }
 
                 return (T)(object)tomlTableArray;
             }
 
-            try { return (T)Convert.ChangeType(value, typeof(T)); }
-            catch (InvalidCastException)
+            try { return (T)Convert.ChangeType( value, typeof( T ) ); }
+            catch ( InvalidCastException )
             {
-                if (required) { throw new ArgumentException($"Invalid '{key}' field type."); }
+                if ( required ) { throw new ArgumentException( $"Invalid '{key}' field type." ); }
             }
-            catch (FormatException)
+            catch ( FormatException )
             {
-                if (required) { throw new ArgumentException($"Invalid format for '{key}' field."); }
+                if ( required ) { throw new ArgumentException( $"Invalid format for '{key}' field." ); }
             }
 
             return default;
@@ -397,63 +397,63 @@ namespace KOTORModSync.Core
             try
             {
                 // Check if we have permission to write to the Destination directory
-                if (!Utility.Utility.IsDirectoryWritable(MainConfig.DestinationPath))
+                if ( !Utility.Utility.IsDirectoryWritable( MainConfig.DestinationPath ) )
                 {
                     throw new InvalidOperationException(
-                        "[Error] Cannot write to the destination directory.");
+                        "[Error] Cannot write to the destination directory." );
                 }
 
-                (bool, Dictionary<FileInfo, SHA1>) result = await ProcessComponentAsync(this);
-                if (result.Item1) return (true, null);
+                (bool, Dictionary<FileInfo, SHA1>) result = await ProcessComponentAsync( this );
+                if ( result.Item1 ) return (true, null);
 
                 Logger.LogException(
                     new Exception(
-                        $"[Error] Component {Name} failed to install the mod correctly with {result}"));
+                        $"[Error] Component {Name} failed to install the mod correctly with {result}" ) );
                 return (false, null);
 
                 async Task<(bool, Dictionary<FileInfo, SHA1>)> ProcessComponentAsync(
                     Component component
                 )
                 {
-                    for (int i1 = 0;
+                    for ( int i1 = 0;
                          i1 < component.Instructions.Count;
-                         i1++)
+                         i1++ )
                     {
                         Instruction instruction = component.Instructions[i1]
                             ?? throw new ArgumentException(
                                 $"[Error] instruction null at index {i1}",
-                                nameof(componentsList));
+                                nameof( componentsList ) );
 
                         //The instruction will run if any of the following conditions are met:
                         //The instruction has no dependencies or restrictions.
                         //The instruction has dependencies, and all of the required components are being installed.
                         //The instruction has restrictions, but none of the restricted components are being installed.
                         bool shouldRunInstruction = true;
-                        if (instruction.Dependencies?.Count > 0)
+                        if ( instruction.Dependencies?.Count > 0 )
                         {
                             shouldRunInstruction = instruction.Dependencies.All(
                                 requiredGuid => componentsList.Any(
-                                    checkComponent => checkComponent.Guid == requiredGuid));
-                            if (!shouldRunInstruction)
+                                    checkComponent => checkComponent.Guid == requiredGuid ) );
+                            if ( !shouldRunInstruction )
                             {
                                 Logger.Log(
-                                    $"[Information] Skipping instruction '{instruction.Action}' index {i1} due to missing dependency(s): {instruction.Dependencies}");
+                                    $"[Information] Skipping instruction '{instruction.Action}' index {i1} due to missing dependency(s): {instruction.Dependencies}" );
                             }
                         }
 
-                        if (instruction.Restrictions?.Count > 0)
+                        if ( instruction.Restrictions?.Count > 0 )
                         {
                             shouldRunInstruction &= !instruction.Restrictions.Any(
                                 restrictedGuid => componentsList.Any(
-                                    checkComponent => checkComponent.Guid == restrictedGuid));
-                            if (!shouldRunInstruction)
+                                    checkComponent => checkComponent.Guid == restrictedGuid ) );
+                            if ( !shouldRunInstruction )
                             {
                                 Logger.Log(
-                                    $"[Information] Not running instruction {instruction.Action} index {i1} due to restricted components installed: {instruction.Restrictions}");
+                                    $"[Information] Not running instruction {instruction.Action} index {i1} due to restricted components installed: {instruction.Restrictions}" );
                             }
                         }
 
-                        if (!shouldRunInstruction) continue;
+                        if ( !shouldRunInstruction ) continue;
 
                         // Get the original check-sums before making any modifications
                         /*Logger.Log("Calculating game install file hashes");
@@ -476,44 +476,44 @@ namespace KOTORModSync.Core
                         // converts the custom variables and enumerates the files/folders based on wildcards
                         instruction.SetRealPaths();
 
-                        switch (instruction.Action.ToLower())
+                        switch ( instruction.Action.ToLower() )
                         {
                             case "extract":
-                                success = await instruction.ExtractFileAsync(confirmDialog);
+                                success = await instruction.ExtractFileAsync( confirmDialog );
                                 break;
                             case "delete":
-                                success = instruction.DeleteFile(confirmDialog);
+                                success = instruction.DeleteFile( confirmDialog );
                                 break;
                             case "delduplicate":
                                 Instruction.DeleteDuplicateFile(
                                     instruction.Destination,
                                     instruction.Arguments,
-                                    confirmDialog);
+                                    confirmDialog );
                                 break;
                             case "copy":
-                                success = instruction.CopyFile(confirmDialog);
+                                success = instruction.CopyFile( confirmDialog );
                                 break;
                             case "move":
-                                success = instruction.MoveFile(confirmDialog);
+                                success = instruction.MoveFile( confirmDialog );
                                 break;
                             case "rename": //todo
-                                success = instruction.RenameFile(confirmDialog);
+                                success = instruction.RenameFile( confirmDialog );
                                 break;
                             case "patch":
                             case "tslpatcher":
-                                if (MainConfig.TslPatcherCli)
+                                if ( MainConfig.TslPatcherCli )
                                 {
-                                    success = await instruction.ExecuteTSLPatcherAsync(confirmDialog);
+                                    success = await instruction.ExecuteTSLPatcherAsync( confirmDialog );
                                     break;
                                 }
 
-                                success = await instruction.ExecuteProgramAsync(confirmDialog);
+                                success = await instruction.ExecuteProgramAsync( confirmDialog );
 
                                 //success = success && await instruction.VerifyInstallAsync();
                                 break;
                             case "execute":
                             case "run":
-                                success = await instruction.ExecuteProgramAsync(confirmDialog);
+                                success = await instruction.ExecuteProgramAsync( confirmDialog );
                                 break;
                             case "backup": //todo
                             case "confirm":
@@ -526,46 +526,46 @@ namespace KOTORModSync.Core
                         break;*/
                             case "inform":
                             case "choose":
-                                List<Option> options = this.ChooseOptions(instruction);
-                                List<string> optionNames = options.ConvertAll(option => option.Name);
-                                string selectedOptionName = await optionsDialog.ShowOptionsDialog(optionNames);
+                                List<Option> options = this.ChooseOptions( instruction );
+                                List<string> optionNames = options.ConvertAll( option => option.Name );
+                                string selectedOptionName = await optionsDialog.ShowOptionsDialog( optionNames );
 
-                                if (selectedOptionName == null)
+                                if ( selectedOptionName == null )
                                     throw new ArgumentNullException();
 
                                 Option selectedOption = null;
 
-                                foreach (Option option in options)
+                                foreach ( Option option in options )
                                 {
                                     string optionName = option.Name;
-                                    if (optionName != selectedOptionName)
+                                    if ( optionName != selectedOptionName )
                                         continue;
                                     selectedOption = option;
                                     break;
                                 }
 
-                                if (selectedOption != null)
-                                    this.ChosenOptions.Add(selectedOption);
+                                if ( selectedOption != null )
+                                    this.ChosenOptions.Add( selectedOption );
 
                                 break;
                             default:
                                 // Handle unknown instruction type here
-                                Logger.Log($"[Warning] Unknown instruction {instruction.Action}");
+                                Logger.Log( $"[Warning] Unknown instruction {instruction.Action}" );
                                 success = false;
                                 break;
                         }
 
-                        if (success)
+                        if ( success )
                         {
                             Logger.Log(
-                                $"Successfully completed instruction #{i1 + 1} '{instruction.Action}'");
+                                $"Successfully completed instruction #{i1 + 1} '{instruction.Action}'" );
                             continue;
                         }
 
-                        Logger.Log($"Instruction {instruction.Action} failed at index {i1}.");
+                        Logger.Log( $"Instruction {instruction.Action} failed at index {i1}." );
                         bool confirmationResult = await confirmDialog.ShowConfirmationDialog(
-                            $"Error installing mod {Name}, would you like to execute the next instruction anyway?");
-                        if (confirmationResult)
+                            $"Error installing mod {Name}, would you like to execute the next instruction anyway?" );
+                        if ( confirmationResult )
                             continue;
 
                         return (false, null);
@@ -608,30 +608,30 @@ namespace KOTORModSync.Core
                     return (true, new Dictionary<FileInfo, SHA1>());
                 }
             }
-            catch (InvalidOperationException ex) { Logger.LogException(ex); }
-            catch (Exception ex)
+            catch ( InvalidOperationException ex ) { Logger.LogException( ex ); }
+            catch ( Exception ex )
             {
-                Logger.LogException(ex);
+                Logger.LogException( ex );
                 Logger.Log(
-                    "The above exception is not planned and has not been experienced - please report this to the developer.");
+                    "The above exception is not planned and has not been experienced - please report this to the developer." );
             }
 
             return (false, new Dictionary<FileInfo, SHA1>());
         }
 
-        private List<Option> ChooseOptions(Instruction instruction)
+        private List<Option> ChooseOptions( Instruction instruction )
         {
-            List<string> archives = Validator.GetAllArchivesFromInstructions(this);
+            List<string> archives = Validator.GetAllArchivesFromInstructions( this );
 
-            if (archives.Count == 0)
-                throw new InvalidOperationException("No archives found.");
+            if ( archives.Count == 0 )
+                throw new InvalidOperationException( "No archives found." );
 
             List<Option> retList = new List<Option>();
 
-            foreach (Option option in Options.Values)
+            foreach ( Option option in Options.Values )
             {
-                if (option.Source.Any(sourcePath => archives.Contains(sourcePath)))
-                    retList.Add(option);
+                if ( option.Source.Any( sourcePath => archives.Contains( sourcePath ) ) )
+                    retList.Add( option );
             }
 
             return retList;
@@ -655,12 +655,12 @@ namespace KOTORModSync.Core
         {
             Component = validator.Component;
             Instruction = instruction;
-            InstructionIndex = Component.Instructions.IndexOf(instruction);
+            InstructionIndex = Component.Instructions.IndexOf( instruction );
             Message = message;
             IsError = isError;
             Logger.Log(
-                $"{(IsError ? "[Error]" : "[Warning]")} Component: '{Component.Name}', Instruction #{InstructionIndex + 1}, Action '{instruction.Action}'");
-            Logger.Log($"{(IsError ? "[Error]" : "[Warning]")} {Message}");
+                $"{( IsError ? "[Error]" : "[Warning]" )} Component: '{Component.Name}', Instruction #{InstructionIndex + 1}, Action '{instruction.Action}'" );
+            Logger.Log( $"{( IsError ? "[Error]" : "[Warning]" )} {Message}" );
         }
     }
 
@@ -669,113 +669,113 @@ namespace KOTORModSync.Core
         public readonly Component Component;
         private readonly List<ValidationResult> _validationResults;
 
-        public ComponentValidation(Component component)
+        public ComponentValidation( Component component )
         {
             Component = component;
             _validationResults = new List<ValidationResult>();
         }
 
-        private void AddError(string message, Instruction instruction)
+        private void AddError( string message, Instruction instruction )
         {
             _validationResults.Add(
                 new ValidationResult(
                     this,
                     instruction,
                     message,
-                    isError: true));
+                    isError: true ) );
         }
 
-        private void AddWarning(string message, Instruction instruction)
+        private void AddWarning( string message, Instruction instruction )
         {
             _validationResults.Add(
                 new ValidationResult(
                     this,
                     instruction,
                     message,
-                    isError: false));
+                    isError: false ) );
         }
 
         public List<string> GetErrors()
         {
             return _validationResults
-                .Where(r => r.IsError)
-                .Select(r => r.Message)
+                .Where( r => r.IsError )
+                .Select( r => r.Message )
                 .ToList();
         }
 
-        public List<string> GetErrors(int instructionIndex)
+        public List<string> GetErrors( int instructionIndex )
         {
             return _validationResults
-                .Where(r => r.InstructionIndex == instructionIndex && r.IsError)
-                .Select(r => r.Message)
+                .Where( r => r.InstructionIndex == instructionIndex && r.IsError )
+                .Select( r => r.Message )
                 .ToList();
         }
 
-        public List<string> GetErrors(Instruction instruction)
+        public List<string> GetErrors( Instruction instruction )
         {
             return _validationResults
-                .Where(r => r.Instruction == instruction && r.IsError)
-                .Select(r => r.Message)
+                .Where( r => r.Instruction == instruction && r.IsError )
+                .Select( r => r.Message )
                 .ToList();
         }
 
         public List<string> GetWarnings()
         {
             return _validationResults
-                .Where(r => !r.IsError)
-                .Select(r => r.Message)
+                .Where( r => !r.IsError )
+                .Select( r => r.Message )
                 .ToList();
         }
 
-        public List<string> GetWarnings(int instructionIndex)
+        public List<string> GetWarnings( int instructionIndex )
         {
             return _validationResults
-                .Where(r => r.InstructionIndex == instructionIndex && !r.IsError)
-                .Select(r => r.Message)
+                .Where( r => r.InstructionIndex == instructionIndex && !r.IsError )
+                .Select( r => r.Message )
                 .ToList();
         }
 
-        public List<string> GetWarnings(Instruction instruction)
+        public List<string> GetWarnings( Instruction instruction )
         {
             return _validationResults
-                .Where(r => r.Instruction == instruction && !r.IsError)
-                .Select(r => r.Message)
+                .Where( r => r.Instruction == instruction && !r.IsError )
+                .Select( r => r.Message )
                 .ToList();
         }
 
-        public bool VerifyExtractPaths(Component component)
+        public bool VerifyExtractPaths( Component component )
         {
             try
             {
-                List<string> allArchives = GetAllArchivesFromInstructions(component);
-                if (allArchives.Count == 0) return true;
+                List<string> allArchives = GetAllArchivesFromInstructions( component );
+                if ( allArchives.Count == 0 ) return true;
 
                 bool success = true;
-                foreach (Instruction instruction in component.Instructions)
+                foreach ( Instruction instruction in component.Instructions )
                 {
                     // we already checked if the archive exists in GetAllArchivesFromInstructions.
-                    if (instruction.Action.Equals("extract", StringComparison.OrdinalIgnoreCase))
+                    if ( instruction.Action.Equals( "extract", StringComparison.OrdinalIgnoreCase ) )
                         continue;
 
                     bool archiveNameFound = true;
-                    if (instruction.Source == null)
+                    if ( instruction.Source == null )
                     {
                         this.AddWarning(
                             "Instruction does not have a 'Source' key defined",
-                            instruction);
+                            instruction );
                         success = false;
                         continue;
                     }
 
-                    if (instruction.Source == null)
+                    if ( instruction.Source == null )
                     {
-                        this.AddError("Missing 'Source' key", instruction);
+                        this.AddError( "Missing 'Source' key", instruction );
                         continue;
                     }
 
-                    foreach (var sourcePath in instruction.Source)
+                    foreach ( var sourcePath in instruction.Source )
                     {
-                        if (sourcePath.StartsWith("<<kotorDirectory>>"))
+                        if ( sourcePath.StartsWith( "<<kotorDirectory>>" ) )
                             continue;
 
                         // potential change in syntax
@@ -801,76 +801,76 @@ namespace KOTORModSync.Core
                         (bool, bool) result = IsSourcePathInArchives(
                             sourcePath,
                             allArchives,
-                            instruction);
+                            instruction );
                         success &= result.Item1;
                         archiveNameFound &= result.Item2;
                     }
 
-                    if (!archiveNameFound)
+                    if ( !archiveNameFound )
                     {
                         AddWarning(
                             "'Source' path does not include the archive's name as part of the extraction folder, possible FileNotFound exception.",
-                            instruction);
+                            instruction );
                     }
                 }
 
                 return success;
             }
-            catch (Exception ex)
+            catch ( Exception ex )
             {
-                Logger.LogException(ex);
+                Logger.LogException( ex );
                 return false;
             }
         }
 
-        public List<string> GetAllArchivesFromInstructions(Component component)
+        public List<string> GetAllArchivesFromInstructions( Component component )
         {
             List<string> allArchives = new List<string>();
 
-            foreach (Instruction instruction in component.Instructions)
+            foreach ( Instruction instruction in component.Instructions )
             {
-                if (instruction.Source == null || instruction.Action != "extract")
+                if ( instruction.Source == null || instruction.Action != "extract" )
                     continue;
 
-                List<string> realPaths = FileHelper.EnumerateFilesWithWildcards(instruction.Source.ConvertAll(Utility.Utility.ReplaceCustomVariables), true);
-                foreach (string realSourcePath in realPaths)
+                List<string> realPaths = FileHelper.EnumerateFilesWithWildcards( instruction.Source.ConvertAll( Utility.Utility.ReplaceCustomVariables ), true );
+                foreach ( string realSourcePath in realPaths )
                 {
-                    if (!ArchiveHelper.IsArchive(Path.GetExtension(realSourcePath)))
+                    if ( !ArchiveHelper.IsArchive( Path.GetExtension( realSourcePath ) ) )
                     {
                         AddWarning(
-                            $"Archive '{Path.GetFileName(realSourcePath)}' is referenced in a non 'extract' action. Was this intentional?",
-                            instruction);
+                            $"Archive '{Path.GetFileName( realSourcePath )}' is referenced in a non 'extract' action. Was this intentional?",
+                            instruction );
                         continue;
                     }
 
-                    if (!File.Exists(realSourcePath))
+                    if ( !File.Exists( realSourcePath ) )
                     {
                         AddError(
-                            $"Missing required download: '{Path.GetFileNameWithoutExtension(realSourcePath)}'",
-                            instruction);
+                            $"Missing required download: '{Path.GetFileNameWithoutExtension( realSourcePath )}'",
+                            instruction );
                         continue;
                     }
 
-                    allArchives.Add(realSourcePath);
+                    allArchives.Add( realSourcePath );
                 }
             }
 
             return allArchives;
         }
 
-        public bool ParseDestinationWithAction(Component component)
+        public bool ParseDestinationWithAction( Component component )
         {
             bool success = true;
-            foreach (Instruction instruction in component.Instructions)
+            foreach ( Instruction instruction in component.Instructions )
             {
                 DirectoryInfo destinationPath = null;
-                if (instruction.Destination != null)
+                if ( instruction.Destination != null )
                     destinationPath = new DirectoryInfo(
                         Utility.Utility.ReplaceCustomVariables(
                             instruction.Destination
                         )
                     );
-                switch (instruction.Action)
+                switch ( instruction.Action )
                 {
                     case null: continue;
                     // tslpatcher must always use <<kotorDirectory>> and nothing else.
@@ -878,14 +878,14 @@ namespace KOTORModSync.Core
                         instruction.Destination = "<<kotorDirectory>>";
                         break;
 
-                    case "tslpatcher" when (!instruction.Destination.Equals("<<kotorDirectory>>")):
+                    case "tslpatcher" when ( !instruction.Destination.Equals( "<<kotorDirectory>>" ) ):
                         success = false;
                         AddError(
                             $"'Destination' key must be either null or string literal '<<kotorDirectory>>' for action 'TSLPatcher'. Got {instruction.Destination}",
-                            instruction);
-                        if (MainConfig.AttemptFixes)
+                            instruction );
+                        if ( MainConfig.AttemptFixes )
                         {
-                            Logger.Log("Fixing the above issue automatically.");
+                            Logger.Log( "Fixing the above issue automatically." );
                             instruction.Destination = "<<kotorDirectory>>";
                         }
 
@@ -893,47 +893,47 @@ namespace KOTORModSync.Core
                     // extract and delete cannot use the 'Destination' key.
                     case "extract":
                     case "delete":
-                        if (instruction.Destination == null)
+                        if ( instruction.Destination == null )
                             break;
 
                         success = false;
                         AddError(
                             $"'Destination' key cannot be used with this action. Got '{instruction.Destination}'",
-                            instruction);
+                            instruction );
 
-                        if (!MainConfig.AttemptFixes)
+                        if ( !MainConfig.AttemptFixes )
                             break;
 
-                        Logger.Log("Fixing the above issue automatically.");
+                        Logger.Log( "Fixing the above issue automatically." );
                         instruction.Destination = null;
 
                         break;
                     // rename should never use <<kotorDirectory >>\\Override
                     case "rename":
-                        if (instruction.Destination?.Equals(
+                        if ( instruction.Destination?.Equals(
                             "<<kotorDirectory>>\\Override",
-                            StringComparison.Ordinal) != false)
+                            StringComparison.Ordinal ) != false )
                         {
                             success = false;
                             AddError(
                                 $"Incorrect 'Destination' format. Got '{instruction.Destination}', expected a filename.",
-                                instruction);
+                                instruction );
                         }
 
                         break;
                     default:
-                        if (destinationPath?.Exists != true)
+                        if ( destinationPath?.Exists != true )
                         {
                             success = false;
                             AddError(
                                 $"Destination cannot be found! Got '{destinationPath?.FullName}'",
-                                instruction);
+                                instruction );
 
-                            if (!MainConfig.AttemptFixes)
+                            if ( !MainConfig.AttemptFixes )
                                 break;
 
                             Logger.Log(
-                                "Fixing the above issue automatically (setting Destination to '<<kotorDirectory>>\\Override')");
+                                "Fixing the above issue automatically (setting Destination to '<<kotorDirectory>>\\Override')" );
                             instruction.Destination = "<<kotorDirectory>>\\Override";
                         }
 
@@ -944,9 +944,9 @@ namespace KOTORModSync.Core
             return success;
         }
 
-        private static string GetErrorDescription(ArchivePathCode code)
+        private static string GetErrorDescription( ArchivePathCode code )
         {
-            switch (code)
+            switch ( code )
             {
                 case ArchivePathCode.FoundSuccessfully:
                     return "File successfully found in archive.";
@@ -987,117 +987,117 @@ namespace KOTORModSync.Core
             string errorDescription = string.Empty;
 
             sourcePath = sourcePath
-                .Replace('/', '\\')
-                .Replace("<<modDirectory>>\\", "")
-                .Replace("<<kotorDirectory>>\\", "");
+                .Replace( '/', '\\' )
+                .Replace( "<<modDirectory>>\\", "" )
+                .Replace( "<<kotorDirectory>>\\", "" );
 
-            foreach (string archivePath in allArchives)
+            foreach ( string archivePath in allArchives )
             {
                 // Check if the archive name matches the first portion of the sourcePath
-                string archiveName = Path.GetFileNameWithoutExtension(archivePath);
-                string[] pathParts = sourcePath.TrimEnd('\\').Split('\\');
-                archiveNameFound = FileHelper.WildcardMatch(archiveName, pathParts[0]);
+                string archiveName = Path.GetFileNameWithoutExtension( archivePath );
+                string[] pathParts = sourcePath.TrimEnd( '\\' ).Split( '\\' );
+                archiveNameFound = FileHelper.WildcardMatch( archiveName, pathParts[0] );
 
                 // Remove the trailing backslash from sourcePath if it exists
-                sourcePath = sourcePath.TrimEnd('\\');
+                sourcePath = sourcePath.TrimEnd( '\\' );
 
-                ArchivePathCode code = IsPathInArchive(sourcePath, archivePath);
+                ArchivePathCode code = IsPathInArchive( sourcePath, archivePath );
 
-                if (code == ArchivePathCode.FoundSuccessfully)
+                if ( code == ArchivePathCode.FoundSuccessfully )
                 {
                     foundInAnyArchive = true;
                     break;
                 }
 
-                if (code == ArchivePathCode.NotFoundInArchive)
+                if ( code == ArchivePathCode.NotFoundInArchive )
                     continue;
 
                 hasError = true;
-                errorDescription += GetErrorDescription(code) + Environment.NewLine;
+                errorDescription += GetErrorDescription( code ) + Environment.NewLine;
             }
 
-            if (hasError)
+            if ( hasError )
             {
                 AddError(
                     $"Invalid source path '{sourcePath}'. Reason: {errorDescription}",
-                    instruction);
+                    instruction );
                 return (false, archiveNameFound);
             }
 
-            if (!foundInAnyArchive)
+            if ( !foundInAnyArchive )
             {
-                AddError($"Failed to find '{sourcePath}' in any archives!", instruction);
+                AddError( $"Failed to find '{sourcePath}' in any archives!", instruction );
                 return (false, archiveNameFound);
             }
 
             return (true, true);
         }
 
-        private static ArchivePathCode IsPathInArchive(string relativePath, string archivePath)
+        private static ArchivePathCode IsPathInArchive( string relativePath, string archivePath )
         {
-            if (!ArchiveHelper.IsArchive(Path.GetExtension(archivePath)))
+            if ( !ArchiveHelper.IsArchive( Path.GetExtension( archivePath ) ) )
             {
                 return ArchivePathCode.NotAnArchive;
             }
 
-            using (FileStream stream = File.OpenRead(archivePath))
+            using ( FileStream stream = File.OpenRead( archivePath ) )
             {
-                IArchive archive = ArchiveHelper.OpenArchive(stream, archivePath);
+                IArchive archive = ArchiveHelper.OpenArchive( stream, archivePath );
 
-                if (archive == null)
+                if ( archive == null )
                     return ArchivePathCode.CouldNotOpenArchive;
 
                 // everything is extracted to a new directory named after the archive.
-                string archiveNameAppend = Path.GetFileNameWithoutExtension(archivePath) + "\\";
+                string archiveNameAppend = Path.GetFileNameWithoutExtension( archivePath ) + "\\";
 
                 // if the Source key represents the top level extraction directory, check that first.
-                if (FileHelper.WildcardMatch(archiveNameAppend, relativePath))
+                if ( FileHelper.WildcardMatch( archiveNameAppend, relativePath ) )
                     return ArchivePathCode.FoundSuccessfully;
 
                 HashSet<string> folderPaths = new HashSet<string>();
 
-                foreach (IArchiveEntry entry in archive.Entries)
+                foreach ( IArchiveEntry entry in archive.Entries )
                 {
                     // Append extracted directory and ensure every slash is a backslash.
-                    string itemInArchivePath = archiveNameAppend + entry.Key.Replace('/', '\\');
+                    string itemInArchivePath = archiveNameAppend + entry.Key.Replace( '/', '\\' );
 
                     // Some archives loop through folders while others don't.
                     // Check if itemInArchivePath has an extension to determine folderName.
-                    string folderName = FileHelper.GetFolderName(itemInArchivePath);
+                    string folderName = FileHelper.GetFolderName( itemInArchivePath );
 
                     // Add the folder path to the list, after removing trailing slashes.
-                    if (!string.IsNullOrEmpty(folderName))
+                    if ( !string.IsNullOrEmpty( folderName ) )
                     {
-                        folderPaths.Add(folderName.TrimEnd('\\', '/'));
+                        folderPaths.Add( folderName.TrimEnd( '\\', '/' ) );
                     }
 
                     // Check if itemInArchivePath matches relativePath using wildcard matching.
-                    if (FileHelper.WildcardMatch(itemInArchivePath, relativePath))
+                    if ( FileHelper.WildcardMatch( itemInArchivePath, relativePath ) )
                     {
                         return ArchivePathCode.FoundSuccessfully;
                     }
                 }
 
                 // check if instruction.Source matches a folder.
-                foreach (string folderPath in folderPaths)
+                foreach ( string folderPath in folderPaths )
                 {
-                    if (FileHelper.WildcardMatch(folderPath, relativePath))
+                    if ( FileHelper.WildcardMatch( folderPath, relativePath ) )
                         return ArchivePathCode.FoundSuccessfully;
                 }
 
                 // quickly parse the path so the verbose log below is accurate.
                 string result = relativePath;
 
-                bool hasMultipleBackslashes = result.Count(c => c == '\\') > 1;
-                bool endsWithBackslash = result.EndsWith("\\", StringComparison.Ordinal);
+                bool hasMultipleBackslashes = result.Count( c => c == '\\' ) > 1;
+                bool endsWithBackslash = result.EndsWith( "\\", StringComparison.Ordinal );
 
-                if (hasMultipleBackslashes || endsWithBackslash)
+                if ( hasMultipleBackslashes || endsWithBackslash )
                 {
-                    result = result.Substring(result.IndexOf('\\') + 1);
+                    result = result.Substring( result.IndexOf( '\\' ) + 1 );
                 }
 
                 // not necessarily an error as there could be other archives to loop through.
-                Logger.LogVerbose($"'{result}' not found in '{Path.GetFileName(archivePath)}'");
+                Logger.LogVerbose( $"'{result}' not found in '{Path.GetFileName( archivePath )}'" );
             }
 
             return ArchivePathCode.NotFoundInArchive;
@@ -1106,9 +1106,9 @@ namespace KOTORModSync.Core
         public bool Run()
         {
             // Verify all the instructions' paths line up with hierarchy of the archives
-            return this.VerifyExtractPaths(Component)
+            return this.VerifyExtractPaths( Component )
                 // Ensure all the 'Destination' keys are valid for their respective action.
-                && this.ParseDestinationWithAction(Component);
+                && this.ParseDestinationWithAction( Component );
         }
     }
 }

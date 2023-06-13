@@ -18,7 +18,7 @@ using static KOTORModSync.Core.Utility.Utility;
 namespace KOTORModSync.Tests
 {
     [TestFixture]
-    [Ignore("not finished")]
+    [Ignore( "not finished" )]
     public class FileExtractorTests
     {
         private Mock<IConfirmationDialogCallback>? _confirmationDialogMock;
@@ -40,27 +40,27 @@ namespace KOTORModSync.Tests
             var instruction = new Instruction();
 
             // Use reflection to access private members
-            FieldInfo? sourcePathsField = typeof(Instruction).GetField(
+            FieldInfo? sourcePathsField = typeof( Instruction ).GetField(
                 "sourcePaths",
-                BindingFlags.NonPublic | BindingFlags.Instance);
-            sourcePathsField?.SetValue(instruction, new List<string>() { "path/to/invalid/file.txt" });
+                BindingFlags.NonPublic | BindingFlags.Instance );
+            sourcePathsField?.SetValue( instruction, new List<string>() { "path/to/invalid/file.txt" } );
 
-            FieldInfo? destinationPathField = typeof(Instruction).GetField(
+            FieldInfo? destinationPathField = typeof( Instruction ).GetField(
                 "destinationPath",
-                BindingFlags.NonPublic | BindingFlags.Instance);
+                BindingFlags.NonPublic | BindingFlags.Instance );
             string tempPath = Path.GetTempPath();
-            destinationPathField?.SetValue(instruction, new DirectoryInfo(tempPath));
+            destinationPathField?.SetValue( instruction, new DirectoryInfo( tempPath ) );
 
-            Directory.CreateDirectory(tempPath);
+            Directory.CreateDirectory( tempPath );
 
-            _archiveMock.Setup(x => x.ExtractAllEntries()).Returns(_readerMock.Object);
-            _readerMock.Setup(x => x.MoveToNextEntry()).Returns(false);
+            _archiveMock.Setup( x => x.ExtractAllEntries() ).Returns( _readerMock.Object );
+            _readerMock.Setup( x => x.MoveToNextEntry() ).Returns( false );
 
             // Act
-            var result = await instruction.ExtractFileAsync(_confirmationDialogMock.Object);
+            var result = await instruction.ExtractFileAsync( _confirmationDialogMock.Object );
 
             // Assert
-            Assert.IsFalse(result);
+            Assert.IsFalse( result );
         }
 
 

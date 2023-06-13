@@ -13,16 +13,16 @@ namespace KOTORModSync.Installer.ViewModels
         public string ResultsText
         {
             get => _resultsText;
-            set => SetProperty(ref _resultsText, value);
+            set => SetProperty( ref _resultsText, value );
         }
 
         public DelegateCommand FinishCommand { get; }
 
-        public ResultsViewModel(IRegionManager regionManager)
+        public ResultsViewModel( IRegionManager regionManager )
         {
             _regionManager = regionManager;
 
-            FinishCommand = new DelegateCommand(FinishInstallation);
+            FinishCommand = new DelegateCommand( FinishInstallation );
         }
 
         public ResultsViewModel()
@@ -35,19 +35,19 @@ namespace KOTORModSync.Installer.ViewModels
             // TODO: Implement the logic to finish the installation and close the application.
         }
 
-        public void OnNavigatedTo(NavigationContext navigationContext)
+        public void OnNavigatedTo( NavigationContext navigationContext )
         {
             // TODO: Implement any necessary initialization or data loading when navigating to this view.
             // You can set the ResultsText property here to display the results to the user.
         }
 
-        public bool IsNavigationTarget(NavigationContext navigationContext)
+        public bool IsNavigationTarget( NavigationContext navigationContext )
         {
             // TODO: Return true if this view can handle the navigation request, or false if a new instance is required.
             return true;
         }
 
-        public void OnNavigatedFrom(NavigationContext navigationContext)
+        public void OnNavigatedFrom( NavigationContext navigationContext )
         {
             // TODO: Perform any cleanup or data saving when navigating away from this view.
         }

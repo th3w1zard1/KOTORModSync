@@ -3,4 +3,4 @@
 
 using System.Diagnostics.CodeAnalysis;
 
-[assembly: SuppressMessage("Style", "IDE0003:Remove qualification", Justification = "<Pending>", Scope = "member", Target = "~M:KOTORModSync.MainWindow.RelayCommand.#ctor(System.Action{System.Object},System.Func{System.Object,System.Boolean})")]
+[assembly: SuppressMessage( "Style", "IDE0003:Remove qualification", Justification = "<Pending>", Scope = "member", Target = "~M:KOTORModSync.MainWindow.RelayCommand.#ctor(System.Action{System.Object},System.Func{System.Object,System.Boolean})" )]

@@ -501,7 +501,10 @@ namespace KOTORModSync
             {
                 if ( _currentComponent is null )
                 {
-                    await InformationDialog.ShowInformationDialog( this, "You must select a component from the list, or create one, before saving." );
+                    await InformationDialog.ShowInformationDialog(
+                        this,
+                        "You must select a component from the list, or create one, before saving."
+                    );
                     return;
                 }
 
@@ -510,11 +513,17 @@ namespace KOTORModSync
                 if ( !CheckForChanges() )
                     return;
 
-                bool? confirmationResult = await ConfirmationDialog.ShowConfirmationDialog( this, "Are you sure you want to save?" );
+                bool? confirmationResult = await ConfirmationDialog.ShowConfirmationDialog(
+                    this,
+                    "Are you sure you want to save?"
+                );
                 if ( confirmationResult == true )
                     return;
 
-                string message = SaveChanges() ? "Saved successfully. Check the output window for more information." : "There were some problems with your syntax, please check the output window.";
+                string message = SaveChanges()
+                    ? "Saved successfully. Check the output window for more information."
+                    : "There were some problems with your syntax, please check the output window.";
+
                 await InformationDialog.ShowInformationDialog( this, message );
                 RefreshTreeView();
             }
@@ -712,11 +721,14 @@ namespace KOTORModSync
 
                 if ( _components.Count == 0 )
                 {
-                    await InformationDialog.ShowInformationDialog( this, "No instructions loaded! Press 'Load Instructions File' or create some instructions first." );
+                    await InformationDialog.ShowInformationDialog(
+                        this,
+                        "No instructions loaded! Press 'Load Instructions File' or create some instructions first."
+                    );
                     return;
                 }
 
-                if ( await ConfirmationDialog.ShowConfirmationDialog(this, "Really install all mods?") == true )
+                if ( await ConfirmationDialog.ShowConfirmationDialog(this, "Really install all mods?") != true )
                 {
                     return;
                 }
@@ -772,7 +784,7 @@ namespace KOTORModSync
                             + $" please check the output window.\n\n"
                             + $"Continue with the next mod anyway?"
                         );
-                        if ( confirm == true )
+                        if ( confirm != true )
                             break;
                     }
                     else

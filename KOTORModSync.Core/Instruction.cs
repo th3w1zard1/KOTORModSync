@@ -221,21 +221,14 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
             }
         }
 
-        public static void DeleteDuplicateFile
-        (
-            string directoryPath,
-            string fileExtension
-        )
+        public void DeleteDuplicateFile()
         {
-            if ( string.IsNullOrEmpty( directoryPath )
-                || !Directory.Exists( directoryPath )
-                || !Utility.Utility.IsDirectoryWritable( new DirectoryInfo( directoryPath ) )
-               )
+            if ( !this.destinationPath.Exists )
             {
-                throw new ArgumentException( "Invalid or inaccessible directory path.", nameof( directoryPath ) );
+                throw new ArgumentException( "Invalid directory path.", nameof( destinationPath ) );
             }
 
-            string[] files = Directory.GetFiles( directoryPath );
+            string[] files = Directory.GetFiles( this.destinationPath.FullName );
             var fileNameCounts = new Dictionary<string, int>();
 
             foreach ( string filePath in files )
@@ -261,10 +254,16 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
 
                 if ( string.IsNullOrEmpty( fileNameWithoutExtension )
                     || !fileNameCounts.ContainsKey( fileNameWithoutExtension )
-                    || fileNameCounts[fileNameWithoutExtension] <= 1 || !string.Equals(
+                    || fileNameCounts[fileNameWithoutExtension] <= 1
+                    || !string.Equals(
                         fileExtensionFromFile,
-                        fileExtension,
-                        StringComparison.OrdinalIgnoreCase ) ) { continue; }
+                        this.Arguments,
+                        StringComparison.OrdinalIgnoreCase
+                    )
+                   )
+                {
+                    continue;
+                }
 
                 try
                 {

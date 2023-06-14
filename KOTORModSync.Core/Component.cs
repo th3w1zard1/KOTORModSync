@@ -494,34 +494,36 @@ namespace KOTORModSync.Core
 
                         bool success = false;
 
-                        // converts the custom variables and enumerates the files/folders based on wildcards
-                        instruction.SetRealPaths();
-
                         switch ( instruction.Action.ToLower() )
                         {
                             case "extract":
+                                instruction.SetRealPaths();
                                 success = await instruction.ExtractFileAsync();
                                 break;
                             case "delete":
+                                instruction.SetRealPaths();
                                 success = instruction.DeleteFile();
                                 break;
                             case "delduplicate":
-                                Instruction.DeleteDuplicateFile(
-                                    instruction.Destination,
-                                    instruction.Arguments
-                                );
+                                instruction.SetRealPaths(true);
+                                instruction.DeleteDuplicateFile();
+                                success = true;
                                 break;
                             case "copy":
+                                instruction.SetRealPaths();
                                 success = instruction.CopyFile();
                                 break;
                             case "move":
+                                instruction.SetRealPaths();
                                 success = instruction.MoveFile();
                                 break;
                             case "rename":
+                                instruction.SetRealPaths();
                                 success = instruction.RenameFile();
                                 break;
                             case "patch":
                             case "tslpatcher":
+                                instruction.SetRealPaths();
                                 success = MainConfig.TslPatcherCli
                                     ? await instruction.ExecuteTSLPatcherAsync()
                                     : await instruction.ExecuteProgramAsync();
@@ -542,19 +544,12 @@ namespace KOTORModSync.Core
                                 break;
                             case "execute":
                             case "run":
+                                instruction.SetRealPaths();
                                 success = await instruction.ExecuteProgramAsync();
                                 break;
-                            case "backup": //todo
-                            case "confirm":
-                            /*(var sourcePaths, var something) = instruction.ParsePaths();
-                        bool confirmationResult = await confirmDialog.ShowConfirmationDialog(sourcePaths.FirstOrDefault());
-                        if (!confirmationResult)
-                        {
-                            this.Confirmations.Add(true);
-                        }
-                        break;*/
-                            case "inform":
+
                             case "choose":
+                                instruction.SetRealPaths();
                                 List<Option> options = this.ChooseOptions( instruction );
                                 List<string> optionNames = options.ConvertAll( option => option.Name );
 
@@ -576,6 +571,16 @@ namespace KOTORModSync.Core
                                     this.ChosenOptions.Add( selectedOption );
 
                                 break;
+                            case "backup": //todo
+                            case "confirm":
+                            /*(var sourcePaths, var something) = instruction.ParsePaths();
+                        bool confirmationResult = await confirmDialog.ShowConfirmationDialog(sourcePaths.FirstOrDefault());
+                        if (!confirmationResult)
+                        {
+                            this.Confirmations.Add(true);
+                        }
+                        break;*/
+                            case "inform":
                             default:
                                 // Handle unknown instruction type here
                                 await Logger.LogWarningAsync( $"Unknown instruction {instruction.Action}" );
@@ -827,12 +832,35 @@ namespace KOTORModSync.Core
                         continue;
                     }
 
-                    foreach ( string sourcePath in instruction.Source )
+                    for ( int index = 0; index < instruction.Source.Count; index++ )
                     {
+                        string sourcePath = instruction.Source[index];
                         if ( sourcePath.StartsWith( "<<kotorDirectory>>" ) )
                             continue;
 
                         (bool, bool) result = IsSourcePathInArchives( sourcePath, allArchives, instruction );
+
+                        // For some unholy reason, some archives act like there's another top level folder named after the archive to extract.
+                        // doesn't even seem to be related to the archive type. Can't reproduce in 7zip either.
+                        // either way, this will hide the issue until a real solution comes along.
+                        if ( !result.Item1 && MainConfig.AttemptFixes)
+                        {
+                            // Split the directory name using the directory separator character
+                            string[] parts = sourcePath.Split( '\\', '/' );
+
+                            string duplicatedPart = parts[1] + "\\" + parts[1];
+                            string[] remainingParts = parts.Skip( 2 ).ToArray();
+
+                            string path = string.Join( "\\", new[] { parts[0], duplicatedPart }.Concat( remainingParts ) );
+
+                            result = IsSourcePathInArchives( path, allArchives, instruction );
+                            if ( result.Item1 )
+                            {
+                                Logger.Log( $"Fixing the above issue automatically..." );
+                                instruction.Source[index] = path;
+                            }
+                        }
+
                         success &= result.Item1;
                         archiveNameFound &= result.Item2;
                     }
@@ -1025,6 +1053,7 @@ namespace KOTORModSync.Core
             CouldNotOpenArchive,
             NotFoundInArchive,
             FoundSuccessfully,
+            NeedsAppendedArchiveName,
             NoArchivesFound
         }
 

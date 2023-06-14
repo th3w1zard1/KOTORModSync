@@ -51,7 +51,7 @@ namespace KOTORModSync.ViewModel
 
         private void NextButton_Click( object sender, RoutedEventArgs e )
         {
-            switch (DataContext)
+            switch ( DataContext )
             {
                 case SelectComponentsViewModel _:
                     ShowScreen( confirmationScreenViewModel );
@@ -68,7 +68,7 @@ namespace KOTORModSync.ViewModel
 
         private void BackButton_Click( object sender, RoutedEventArgs e )
         {
-            switch (DataContext)
+            switch ( DataContext )
             {
                 case ConfirmationScreenViewModel _:
                     ShowScreen( selectComponentsViewModel );

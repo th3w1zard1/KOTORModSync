@@ -145,43 +145,51 @@ namespace KOTORModSync.Core.Utility
 
         public static double GetMaxDiskSpeed( string drivePath )
         {
-            string command;
-            string arguments;
-
-            if ( RuntimeInformation.IsOSPlatform( OSPlatform.Windows ) )
+            try
             {
-                command = "cmd.exe";
-                arguments = $"/C winsat disk -drive \"{drivePath}\" -seq -read -ramsize 4096";
+                string command;
+                string arguments;
+
+                if ( RuntimeInformation.IsOSPlatform( OSPlatform.Windows ) )
+                {
+                    command = "cmd.exe";
+                    arguments = $"/C winsat disk -drive \"{drivePath}\" -seq -read -ramsize 4096";
+                }
+                else if ( RuntimeInformation.IsOSPlatform( OSPlatform.Linux ) || RuntimeInformation.IsOSPlatform( OSPlatform.OSX ) )
+                {
+                    command = "dd";
+                    arguments = $"if={drivePath} bs=1M count=256 iflag=direct";
+                }
+                else
+                {
+                    throw new PlatformNotSupportedException( "Disk performance checking is not supported on this platform." );
+                }
+
+                var startInfo = new ProcessStartInfo
+                {
+                    FileName = command,
+                    Arguments = arguments,
+                    RedirectStandardOutput = true,
+                    UseShellExecute = false
+                };
+
+                using ( var process = new Process() )
+                {
+                    process.StartInfo = startInfo;
+                    _ = process.Start();
+
+                    string output = process.StandardOutput.ReadToEnd();
+                    process.WaitForExit();
+
+                    // Extract the relevant information from the output and calculate the max disk speed
+                    double maxSpeed = ExtractMaxDiskSpeed( output );
+                    return maxSpeed;
+                }
             }
-            else if ( RuntimeInformation.IsOSPlatform( OSPlatform.Linux ) || RuntimeInformation.IsOSPlatform( OSPlatform.OSX ) )
+            catch ( Exception e )
             {
-                command = "dd";
-                arguments = $"if={drivePath} bs=1M count=256 iflag=direct";
-            }
-            else
-            {
-                throw new PlatformNotSupportedException( "Disk performance checking is not supported on this platform." );
-            }
-
-            var startInfo = new ProcessStartInfo
-            {
-                FileName = command,
-                Arguments = arguments,
-                RedirectStandardOutput = true,
-                UseShellExecute = false
-            };
-
-            using ( var process = new Process() )
-            {
-                process.StartInfo = startInfo;
-                _ = process.Start();
-
-                string output = process.StandardOutput.ReadToEnd();
-                process.WaitForExit();
-
-                // Extract the relevant information from the output and calculate the max disk speed
-                double maxSpeed = ExtractMaxDiskSpeed( output );
-                return maxSpeed;
+                Logger.LogException( e );
+                throw;
             }
         }
 
@@ -214,7 +222,7 @@ namespace KOTORModSync.Core.Utility
             [NotNull] string cmdlineArgs
         ) => new List<ProcessStartInfo>
         {
-            // top-level, preferred startinfo args. Provides the most flexibility with our code.
+            // top-level, preferred ProcessStartInfo args. Provides the most flexibility with our code.
             new ProcessStartInfo
             {
                 FileName = programFile.FullName,
@@ -225,6 +233,7 @@ namespace KOTORModSync.Core.Utility
                 RedirectStandardError = true,
                 RedirectStandardInput = true,
                 ErrorDialog = false,
+                WindowStyle = ProcessWindowStyle.Hidden,
                 EnvironmentVariables = { ["__COMPAT_LAYER"] = "RunAsInvoker" }
             },
             // perhaps the error dialog was the problem.
@@ -270,52 +279,59 @@ namespace KOTORModSync.Core.Utility
         private static async Task HandleProcessExitedAsync( [CanBeNull] Process process,
             [CanBeNull] TaskCompletionSource<(int, string, string)> tcs )
         {
-            if ( tcs == null )
-                throw new ArgumentNullException( nameof( tcs ) );
-
-            if ( process == null )
+            try
             {
-                // Process disposed of early?
-                await Logger.LogExceptionAsync( new NotSupportedException() );
-                tcs.SetResult( (-4, string.Empty, string.Empty) );
-                return;
+                if ( tcs == null )
+                    throw new ArgumentNullException( nameof( tcs ) );
+
+                if ( process == null )
+                {
+                    // Process disposed of early?
+                    await Logger.LogExceptionAsync( new NotSupportedException() );
+                    tcs.SetResult( (-4, string.Empty, string.Empty) );
+                    return;
+                }
+
+                string output = process.StartInfo.RedirectStandardOutput
+                    ? await process.StandardOutput.ReadToEndAsync()
+                    : null;
+                string error = process.StartInfo.RedirectStandardError
+                    ? await process.StandardError.ReadToEndAsync()
+                    : null;
+
+                if ( process.ExitCode == 0 && string.IsNullOrEmpty( error ) )
+                {
+                    tcs.SetResult( (process.ExitCode, output, error) );
+                    return;
+                }
+
+                string logMessage = string.Empty;
+                if ( process.ExitCode != 0 )
+                    logMessage += $"Process failed with exit code {process.ExitCode}. ";
+
+                var logBuilder = new StringBuilder( logMessage );
+
+                if ( output != null )
+                    _ = logBuilder.Append( "Output: " ).AppendLine( output );
+
+                if ( error != null )
+                    _ = logBuilder.Append( "Error: " ).AppendLine( error );
+
+                await Logger.LogAsync( logBuilder.ToString() );
+
+                // Process had an error of some sort even though ExitCode is 0?
+                tcs.SetResult( (-3, output, error) );
             }
-
-            string output = process.StartInfo.RedirectStandardOutput
-                ? await process.StandardOutput.ReadToEndAsync()
-                : null;
-            string error = process.StartInfo.RedirectStandardError
-                ? await process.StandardError.ReadToEndAsync()
-                : null;
-
-            if ( process.ExitCode == 0 && string.IsNullOrEmpty( error ) )
+            catch ( Exception e )
             {
-                tcs.SetResult( (process.ExitCode, output, error) );
-                return;
+                await Logger.LogExceptionAsync( e );
             }
-
-            string logMessage = string.Empty;
-            if ( process.ExitCode != 0 )
-                logMessage += $"Process failed with exit code {process.ExitCode}. ";
-
-            var logBuilder = new StringBuilder( logMessage );
-
-            if ( output != null )
-                _ = logBuilder.Append( "Output: " ).AppendLine( output );
-
-            if ( error != null )
-                _ = logBuilder.Append( "Error: " ).AppendLine( error );
-
-            await Logger.LogAsync( logBuilder.ToString() );
-
-            // Process had an error of some sort even though ExitCode is 0?
-            tcs.SetResult( (-3, output, error) );
         }
 
         public static async Task<(int, string, string)> ExecuteProcessAsync(
             [CanBeNull] FileInfo programFile,
             string cmdlineArgs = "",
-            int timeout = 60000,
+            int timeout = 0,
             bool noAdmin = false
         )
         {
@@ -344,25 +360,47 @@ namespace KOTORModSync.Core.Utility
                         process.Exited += async ( sender, args ) => await HandleProcessExitedAsync( (Process)sender, tcs );
 
                         // Handle cancellation using CancellationToken
-                        Process localProcess = process;
-                        _ = cancellationTokenSource.Token.Register( () =>
+                        if ( timeout > 0 )
                         {
-                            if ( localProcess.HasExited ) return;
+                            Process localProcess = process;
 
-                            if ( !localProcess.CloseMainWindow() )
-                                localProcess.Kill();
-                            _ = tcs.TrySetCanceled();
-                        } );
+                            void Callback()
+                            {
+                                try
+                                {
+                                    if ( localProcess.HasExited )
+                                        return;
 
+                                    if ( !localProcess.CloseMainWindow() )
+                                        localProcess.Kill();
+
+                                    _ = tcs.TrySetCanceled();
+                                }
+                                catch ( Exception cancellationException )
+                                {
+                                    Logger.LogException( cancellationException );
+                                }
+                            }
+
+                            cancellationTokenSource.Token.Register( Callback );
+                        }
+                        
                         process.EnableRaisingEvents = true;
-                        _ = process.Start();
 
-                        startedProcess = true;
+                        // Start the process
+                        startedProcess = process.Start();
+                        if ( !startedProcess )
+                        {
+                            throw new InvalidOperationException( "Failed to start the process." );
+                        }
 
                         _ = await tcs.Task;
 
-                        if ( cancellationTokenSource.Token.IsCancellationRequested )
-                            throw new TimeoutException( "Process timed out" );
+                        if ( timeout > 0 )
+                        {
+                            if ( cancellationTokenSource.Token.IsCancellationRequested )
+                                throw new TimeoutException( "Process timed out" );
+                        }
 
                         return tcs.Task.Result;
                     }
@@ -375,10 +413,10 @@ namespace KOTORModSync.Core.Utility
                     await Logger.LogExceptionAsync( localException );
                     ex = localException;
                 }
-                catch ( Exception ex2 )
+                catch ( Exception startinfoException )
                 {
                     await Logger.LogAsync( $"An unplanned error has occurred trying to run {programFile.Name}." );
-                    await Logger.LogExceptionAsync( ex2 );
+                    await Logger.LogExceptionAsync( startinfoException );
                     return (-6, string.Empty, string.Empty);
                 }
             }

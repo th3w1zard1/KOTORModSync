@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO.Compression;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -19,139 +20,143 @@ using static KOTORModSync.Core.Utility.Utility;
 namespace KOTORModSync.Tests
 {
     [TestFixture]
-    [Ignore( "not finished" )]
-    public class FileExtractorTests
+    [Ignore("not finished yet")]
+    public class FileExtractor
     {
-        private Mock<IConfirmationDialogCallback>? _confirmationDialogMock;
-        private Mock<IArchive>? _archiveMock;
-        private Mock<IReader>? _readerMock;
+        private DirectoryInfo _destinationPath;
+        private List<string> _sourcePaths;
 
         [SetUp]
-        public void SetUp()
+        public void Setup()
         {
-            _confirmationDialogMock = new Mock<IConfirmationDialogCallback>();
-            _archiveMock = new Mock<IArchive>();
-            _readerMock = new Mock<IReader>();
+            // Set up the initial values for destinationPath and sourcePaths
+            _destinationPath = new DirectoryInfo( "DestinationPath" );
+            _sourcePaths = new List<string>
+            {
+                "SourcePath1",
+                "SourcePath2",
+                "SourcePath3"
+            };
+        }
+
+        [TearDown]
+        public void TearDown()
+        {
+            // Clean up any extracted files or directories after each test if necessary
+            if ( _destinationPath.Exists )
+            {
+                _destinationPath.Delete( true );
+            }
         }
 
         [Test]
-        public async Task ExtractFileAsync_InvalidArchiveFile_FailsExtraction()
-        {
-            // Arrange
-            var sourcePaths = new List<string> { "path/to/invalid/file.txt" };
-            var destinationPath = new DirectoryInfo( Path.GetTempPath() );
-
-            var instructionMock = new Mock<Instruction>();
-            instructionMock.SetupGet( x => x.GetType().GetField( "sourcePaths", BindingFlags.NonPublic | BindingFlags.Instance ).GetValue( instructionMock.Object ) ).Returns( sourcePaths );
-            instructionMock.SetupGet( x => x.GetType().GetField( "destinationPath", BindingFlags.NonPublic | BindingFlags.Instance ).GetValue( instructionMock.Object ) ).Returns( destinationPath );
-
-            // Act
-            bool result = await instructionMock.Object.ExtractFileAsync();
-
-            // Assert
-            Assert.That( result, Is.False );
-        }
-
-        /*[Test]
-        public async Task ExtractFileAsync_InvalidArchiveFormat_FailsExtraction()
+        public async Task ExtractFileAsync_ValidArchive_Success()
         {
             // Arrange
             var fileExtractor = new FileExtractor();
-            var validFilePath = "path/to/valid/archive.zip";
-            _confirmationDialogMock.Setup(x => x.Name).Returns("ConfirmationDialog");
-            _archiveMock.Setup(x => x.ExtractAllEntries()).Returns(_readerMock.Object);
-            _readerMock.Setup(x => x.MoveToNextEntry()).Returns(false);
-            ArchiveHelper.Setup(x => x.IsArchive(validFilePath)).Returns(true);
-            ArchiveHelper.Setup(x => x.OpenArchive(It.IsAny<Stream>(), validFilePath)).Returns((IArchive)null);
+            string archivePath = CreateTemporaryArchive( "validArchive.zip" );
+            _sourcePaths = new List<string> { archivePath };
 
             // Act
-            var result = await fileExtractor.ExtractFileAsync(_confirmationDialogMock.Object);
+            bool extractionResult = await new Instruction().ExtractFileAsync( _destinationPath, _sourcePaths );
 
             // Assert
-            Assert.IsFalse(result);
-            Logger.Verify(x => x.LogException(It.IsAny<InvalidOperationException>()), Times.Once);
+            Assert.IsTrue( extractionResult );
+            // Add more specific assertions if necessary
+            Assert.IsTrue( Directory.Exists( _destinationPath.FullName ) );
+            // Add additional assertions to validate the extracted files/directories
         }
 
         [Test]
-        public async Task ExtractFileAsync_DirectoryWithoutWritePermissions_LogsWarning()
+        public async Task ExtractFileAsync_InvalidArchive_Failure()
         {
             // Arrange
             var fileExtractor = new FileExtractor();
-            var validArchivePath = "path/to/valid/archive.zip";
-            var invalidDirectoryPath = "path/to/invalid/directory/";
-            _confirmationDialogMock.Setup(x => x.Name).Returns("ConfirmationDialog");
-            _archiveMock.Setup(x => x.ExtractAllEntries()).Returns(_readerMock.Object);
-            _readerMock.SetupSequence(x => x.MoveToNextEntry())
-                .Returns(true)
-                .Returns(false);
-            _readerMock.Setup(x => x.Entry.IsDirectory).Returns(true);
-            ArchiveHelper.Setup(x => x.IsArchive(validArchivePath)).Returns(true);
-            ArchiveHelper.Setup(x => x.OpenArchive(It.IsAny<Stream>(), validArchivePath)).Returns(_archiveMock.Object);
-            Logger.Setup(x => x.Log($"Skip file.txt, directory cannot be determined."));
+            string archivePath = CreateTemporaryArchive( "invalidArchive.zip" );
+            _sourcePaths = new List<string> { archivePath };
 
             // Act
-            var result = await fileExtractor.ExtractFileAsync(_confirmationDialogMock.Object);
+            bool extractionResult = await new Instruction().ExtractFileAsync( _destinationPath, _sourcePaths );
 
             // Assert
-            Assert.IsTrue(result);
-            Logger.Verify(x => x.Log($"Skip file.txt, directory cannot be determined."), Times.Once);
+            Assert.IsFalse( extractionResult );
+            // Add more specific assertions if necessary
+            Assert.IsFalse( Directory.Exists( _destinationPath.FullName ) );
+            // Add additional assertions to verify that no files/directories were extracted
         }
 
         [Test]
-        public async Task ExtractFileAsync_SuccessfulExtraction_ReturnsTrue()
+        [Ignore("not finished yet")]
+        public async Task ExtractFileAsync_SelfExtractingExe_Success()
         {
             // Arrange
             var fileExtractor = new FileExtractor();
-            var validArchivePath = "path/to/valid/archive.zip";
-            var destinationPath = "path/to/destination/";
-            _confirmationDialogMock.Setup(x => x.Name).Returns("ConfirmationDialog");
-            _archiveMock.Setup(x => x.ExtractAllEntries()).Returns(_readerMock.Object);
-            _readerMock.SetupSequence(x => x.MoveToNextEntry())
-                .Returns(true)
-                .Returns(false);
-            _readerMock.Setup(x => x.Entry.IsDirectory).Returns(false);
-            _readerMock.Setup(x => x.Entry.Key).Returns("file.txt");
-            ArchiveHelper.Setup(x => x.IsArchive(validArchivePath)).Returns(true);
-            ArchiveHelper.Setup(x => x.OpenArchive(It.IsAny<Stream>(), validArchivePath)).Returns(_archiveMock.Object);
-            ArchiveHelper.Setup(x => x.DefaultExtractionOptions).Returns(new ExtractionOptions());
-            File.Setup(x => x.Exists(destinationPath)).Returns(false);
-            Directory.Setup(x => x.Exists(destinationPath)).Returns(false);
-            Directory.Setup(x => x.CreateDirectory(destinationPath));
-            Logger.Setup(x => x.Log($"Extract file.txt to {destinationPath}"));
+            //string archivePath = CreateTemporarySelfExtractingExe( "selfExtracting.exe" );
+            //_sourcePaths = new List<string> { archivePath };
 
             // Act
-            var result = await fileExtractor.ExtractFileAsync(_confirmationDialogMock.Object);
+            bool extractionResult = await new Instruction().ExtractFileAsync( _destinationPath, _sourcePaths );
 
             // Assert
-            Assert.IsTrue(result);
-            Logger.Verify(x => x.Log($"Extract file.txt to {destinationPath}"), Times.Once);
+            Assert.IsTrue( extractionResult );
+            // Add more specific assertions if necessary
+            Assert.IsTrue( Directory.Exists( _destinationPath.FullName ) );
+            // Add additional assertions to validate the extracted files/directories
         }
 
         [Test]
-        public async Task ExtractFileAsync_ExceptionDuringExtraction_FailsExtraction()
+        public async Task ExtractFileAsync_PermissionDenied_SkipsFile()
         {
             // Arrange
             var fileExtractor = new FileExtractor();
-            var validArchivePath = "path/to/valid/archive.zip";
-            _confirmationDialogMock.Setup(x => x.Name).Returns("ConfirmationDialog");
-            _archiveMock.Setup(x => x.ExtractAllEntries()).Returns(_readerMock.Object);
-            _readerMock.SetupSequence(x => x.MoveToNextEntry())
-                .Returns(true)
-                .Returns(false);
-            _readerMock.Setup(x => x.Entry.IsDirectory).Returns(false);
-            _readerMock.Setup(x => x.Entry.Key).Returns("file.txt");
-            ArchiveHelper.Setup(x => x.IsArchive(validArchivePath)).Returns(true);
-            ArchiveHelper.Setup(x => x.OpenArchive(It.IsAny<Stream>(), validArchivePath)).Returns(_archiveMock.Object);
-            ArchiveHelper.Setup(x => x.DefaultExtractionOptions).Returns(new ExtractionOptions());
-            _readerMock.Setup(x => x.WriteEntryToDirectory(It.IsAny<string>(), It.IsAny<ExtractionOptions>())).Throws<Exception>();
-            Logger.Setup(x => x.LogWarning($"Skipping file 'file.txt' due to lack of permissions."));
+            string archivePath = CreateTemporaryArchive( "archiveWithPermissionDenied.zip" );
+            _sourcePaths = new List<string> { archivePath };
 
             // Act
-            var result = await fileExtractor.ExtractFileAsync(_confirmationDialogMock.Object);
+            bool extractionResult = await new Instruction().ExtractFileAsync( _destinationPath, _sourcePaths );
 
             // Assert
-            Assert.IsTrue(result);
-            Logger.Verify(x => x.LogWarning($"Skipping file 'file.txt' due to lack of permissions."), Times.Once);
+            Assert.IsTrue( extractionResult );
+            // Add more specific assertions if necessary
+            Assert.IsTrue( Directory.Exists( _destinationPath.FullName ) );
+            // Add additional assertions to validate the extracted files/directories and skipped files
+        }
+
+        // Helper methods to create temporary archive files
+
+        private string CreateTemporaryArchive( string fileName )
+        {
+            string archivePath = Path.Combine( Path.GetTempPath(), fileName );
+            ZipFile.CreateFromDirectory( "SourceDirectory", archivePath );
+            return archivePath;
+        }
+
+        /*private string CreateTemporarySelfExtractingExe( string fileName )
+        {
+            string exePath = Path.Combine( Path.GetTempPath(), fileName );
+
+            using ( ZipFile zip = new ZipFile() )
+            {
+                // Add files to the archive
+                zip.AddFile( "File1.txt" );
+                zip.AddFile( "File2.txt" );
+
+                // Set the self-extracting options
+                SelfExtractorSaveOptions options = new SelfExtractorSaveOptions
+                {
+                    Flavor = SelfExtractorFlavor.ConsoleApplication,
+                    DefaultExtractDirectory = _destinationPath.FullName,
+                    ExtractExistingFile = ExtractExistingFileAction.OverwriteSilently,
+                    RemoveUnpackedFilesAfterExecute = true,
+                    Quiet = true
+                };
+
+                // Save the archive as a self-extracting executable
+                zip.SaveSelfExtractor( exePath, options );
+            }
+
+            return exePath;
         }*/
+
     }
 }

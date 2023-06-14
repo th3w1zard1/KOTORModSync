@@ -760,6 +760,19 @@ namespace KOTORModSync
                     return;
                 }
 
+                if ( await ConfirmationDialog.ShowConfirmationDialog(
+                        this,
+                        "WARNING! While there is code in place to prevent incorrect instructions from running,"
+                        + $" the program cannot predict every possible mistake a user could make in a config file.{Environment.NewLine}{Environment.NewLine}"
+                        + " Additionally, the modbuild can be 20GB or larger! As a result, we cannot create any backups."
+                        + " Please ensure you've backed up your KOTOR2 directory"
+                        + $" and you've ensured you're running a Vanilla installation.{Environment.NewLine}"
+                        + " Are you sure you're ready to continue?"
+                    ) != true )
+                {
+                    return;
+                }
+
                 _ = Logger.LogAsync( "Start installing all mods..." );
                 _installRunning = true;
                 var progressWindow = new ProgressWindow();
@@ -767,20 +780,26 @@ namespace KOTORModSync
                 progressWindow.progressBar.Value = 0;
                 progressWindow.Show();
 
-                foreach ( Component component in _components )
+                for ( int index = 0; index < _components.Count; index++ )
                 {
-                    await Dispatcher.UIThread.InvokeAsync( async () =>
-                    {
-                        progressWindow.progressTextBlock.Text = $"Installing {component.Name}...\n\n"
-                            + $"Executing the provided directions...\n\n"
-                            + $"{component.Directions}";
-                        progressWindow.progressBar.Value = 0;
+                    Component component = _components[index];
+                    await Dispatcher.UIThread.InvokeAsync(
+                        async () =>
+                        {
+                            progressWindow.progressTextBlock.Text = $"Installing {component.Name}...\n\n"
+                                + $"Executing the provided directions...\n\n"
+                                + $"{component.Directions}";
+                            progressWindow.progressBar.Value = (double)index / _components.Count;
 
-                        // Additional fallback options
-                        await Task.Delay( 100 ); // Introduce a small delay
-                        await Dispatcher.UIThread.InvokeAsync( () => { } ); // Invoke an empty action to ensure UI updates are processed
-                        await Task.Delay( 50 ); // Introduce another small delay
-                    } );
+
+                            // Additional fallback options
+                            await Task.Delay( 100 ); // Introduce a small delay
+                            await Dispatcher.UIThread.InvokeAsync(
+                                () => { }
+                            ); // Invoke an empty action to ensure UI updates are processed
+                            await Task.Delay( 50 ); // Introduce another small delay
+                        }
+                    );
 
                     // Ensure the UI updates are processed
                     await Task.Yield();
@@ -788,7 +807,7 @@ namespace KOTORModSync
 
                     // Call the ExecuteInstructions method asynchronously using Task.Run
                     await Logger.LogAsync( $"Call ExecuteInstructions for {component.Name}..." );
-                    (bool success, Dictionary<FileInfo, SHA1> originalChecksums)
+                    ( bool success, Dictionary<FileInfo, SHA1> originalChecksums )
                         = await component.ExecuteInstructions(
                             new ConfirmationDialogCallback( this ),
                             new OptionsDialogCallback( this ),
@@ -835,6 +854,16 @@ namespace KOTORModSync
         {
             try
             {
+
+                if ( _currentComponent is null )
+                {
+                    await InformationDialog.ShowInformationDialog(
+                        this,
+                        "Please select a component from the list or create a new one first."
+                    );
+                    return;
+                }
+
                 string file = await SaveFile( new List<string>( 65535 ) { "txt" } );
                 if ( file == null )
                     return;

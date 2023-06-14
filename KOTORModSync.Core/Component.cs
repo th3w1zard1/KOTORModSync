@@ -43,7 +43,6 @@ namespace KOTORModSync.Core
         public Dictionary<Guid, Option> Options { get; set; }
         public List<string> Language { get; private set; }
         public string ModLink { get; set; }
-        public bool IsSelected { get; set; }
         public List<Option> ChosenOptions { get; set; }
         private ComponentValidation Validator { get; set; }
 
@@ -80,8 +79,8 @@ namespace KOTORModSync.Core
 
             // Loop through the "thisMod" list
             for ( int i = 0;
-                i < rootTable["thisMod"].Count;
-                i++ )
+                 i < rootTable["thisMod"].Count;
+                 i++ )
             {
                 // Check if the item is a Dictionary<string, object> representing a TOML table
                 if ( !( rootTable["thisMod"][i] is IDictionary<string, object> table
@@ -232,7 +231,6 @@ namespace KOTORModSync.Core
 
                 var instruction = new Instruction();
                 instruction.Action = GetRequiredValue<string>( instructionDict, "action" );
-                instruction.Guid = GetValueOrDefault<Guid>( instructionDict, "guid" );
                 Logger.Log(
                     $"\r\n-- Deserialize instruction #{index + 1} action {instruction.Action}" );
                 instruction.Arguments = GetValueOrDefault<string>( instructionDict, "arguments" );
@@ -527,7 +525,8 @@ namespace KOTORModSync.Core
                                 success = MainConfig.TslPatcherCli
                                     ? await instruction.ExecuteTSLPatcherAsync()
                                     : await instruction.ExecuteProgramAsync();
-
+                                if ( !success )
+                                    break;
                                 try
                                 {
                                     List<string> installErrors = instruction.VerifyInstall();
@@ -835,6 +834,8 @@ namespace KOTORModSync.Core
                     for ( int index = 0; index < instruction.Source.Count; index++ )
                     {
                         string sourcePath = instruction.Source[index];
+
+                        // todo
                         if ( sourcePath.StartsWith( "<<kotorDirectory>>" ) )
                             continue;
 
@@ -899,7 +900,10 @@ namespace KOTORModSync.Core
                 );
                 foreach ( string realSourcePath in realPaths )
                 {
-                    if ( !ArchiveHelper.IsArchive( Path.GetExtension( realSourcePath ) ) )
+                    if ( Path.GetExtension( realSourcePath ).Equals( ".exe", StringComparison.OrdinalIgnoreCase ) )
+                        continue; // no way to verify self-extracting executables.
+
+                    if ( !ArchiveHelper.IsArchive( realSourcePath ) )
                     {
                         AddWarning(
                             $"Archive '{Path.GetFileName( realSourcePath )}'"
@@ -1109,6 +1113,9 @@ namespace KOTORModSync.Core
 
             if ( !foundInAnyArchive )
             {
+                // todo, stop displaying errors for self extracting executables. This is the only mod using one that I've seen out of 200-some.
+                if ( Component.Name.Equals( "Improved AI" ) )
+                    return ( true, true );
                 AddError( $"Failed to find '{sourcePath}' in any archives!", instruction );
                 return (false, archiveNameFound);
             }
@@ -1118,14 +1125,14 @@ namespace KOTORModSync.Core
 
         private static ArchivePathCode IsPathInArchive( string relativePath, string archivePath )
         {
-            if ( !ArchiveHelper.IsArchive( Path.GetExtension( archivePath ) ) )
+            if ( !ArchiveHelper.IsArchive( archivePath ) )
             {
                 return ArchivePathCode.NotAnArchive;
             }
 
             using ( FileStream stream = File.OpenRead( archivePath ) )
             {
-                IArchive archive = ArchiveHelper.OpenArchive( stream, archivePath );
+                IArchive archive = ArchiveHelper.OpenArchive( stream );
 
                 if ( archive == null )
                     return ArchivePathCode.CouldNotOpenArchive;

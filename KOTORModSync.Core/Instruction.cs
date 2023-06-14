@@ -21,7 +21,6 @@ namespace KOTORModSync.Core
     public class Instruction
     {
         public string Action { get; set; }
-        public Guid Guid { get; set; }
         public List<string> Source { get; set; }
         private List<string> sourcePaths { get; set; }
         public string Destination { get; set; }
@@ -110,125 +109,124 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                 throw new Exception(
                     $"Could not find any files! Source: {string.Join( ", ", Source )}" );
             }
-
-            return;
         }
 
-        public async Task<bool> ExtractFileAsync()
+        public async Task<bool> ExtractFileAsync( DirectoryInfo argDestinationPath = null, List<string> argSourcePaths = null )
         {
             try
             {
-                var extractionTasks = new List<Task>( 25 );
+                if ( argSourcePaths == null )
+                    argSourcePaths = sourcePaths;
 
-                // Use SemaphoreSlim to limit concurrent extractions
-                var
-                    semaphore = new SemaphoreSlim( 5 ); // Limiting to 5 concurrent extractions
+                var extractionTasks = new List<Task>( 25 );
+                var semaphore = new SemaphoreSlim( 5 ); // Limiting to 5 concurrent extractions
                 bool success = true;
-                foreach ( string sourcePath in sourcePaths )
+
+                foreach ( string sourcePath in argSourcePaths )
                 {
                     await semaphore.WaitAsync(); // Acquire a semaphore slot
 
-                    extractionTasks.Add(
-                        Task.Run(
-                            async () =>
+                    extractionTasks.Add( Task.Run( async () =>
+                    {
+                        try
+                        {
+                            var thisFile = new FileInfo( sourcePath );
+                            if ( argDestinationPath == null )
+                                argDestinationPath = thisFile.Directory;
+                            if ( argDestinationPath == null )
+                                throw new ArgumentNullException( nameof( argDestinationPath ) );
+
+                            _ = Logger.LogAsync( $"File path: {thisFile.FullName}" );
+
+                            if ( !ArchiveHelper.IsArchive( thisFile ) )
                             {
-                                try
-                                {
-                                    var thisFile = new FileInfo( sourcePath );
-                                    await Logger.LogAsync( $"File path: {thisFile.FullName}" );
+                                _ = Logger.LogAsync( $"[Error] {ParentComponent.Name} failed to extract file '{thisFile.Name}'. Invalid archive?" );
+                                success = false;
+                                return;
+                            }
 
-                                    if ( !ArchiveHelper.IsArchive( thisFile.Extension ) )
+                            if ( thisFile.Extension.Equals( ".exe", StringComparison.OrdinalIgnoreCase ) )
+                            {
+                                var result = await PlatformAgnosticMethods.ExecuteProcessAsync( thisFile, $" -o\"{thisFile.DirectoryName}\" -y" );
+
+                                if ( result.Item1 == 0 )
+                                    return;
+
+                                throw new InvalidOperationException( $"{thisFile.Name} is not a self-extracting executable as expected. Cannot extract." );
+                            }
+
+                            using ( FileStream stream = File.OpenRead( thisFile.FullName ) )
+                            {
+                                IArchive archive = ArchiveHelper.OpenArchive( stream );
+
+                                if ( archive == null )
+                                {
+                                    await Logger.LogExceptionAsync( new InvalidOperationException( $"Unable to parse archive '{sourcePath}'" ) );
+                                    success = false;
+                                    return;
+                                }
+
+                                IReader reader = archive.ExtractAllEntries();
+                                while ( reader.MoveToNextEntry() )
+                                {
+                                    if ( reader.Entry.IsDirectory ) continue;
+                                    if ( argDestinationPath?.FullName == null ) continue;
+
+                                    string extractFolderName = Path.GetFileNameWithoutExtension( thisFile.Name );
+                                    string destinationItemPath = Path.Combine( argDestinationPath.FullName, extractFolderName, reader.Entry.Key );
+                                    string destinationDirectory = Path.GetDirectoryName( destinationItemPath );
+
+                                    if ( destinationDirectory != null && !Directory.Exists( destinationDirectory ) )
                                     {
-                                        _ = Logger.LogAsync( $"[Error] {ParentComponent.Name} failed to extract file '{thisFile.Name}'. Invalid archive?" );
-                                        success = false;
-                                        return;
+                                        _ = Logger.LogAsync( $"Create directory {destinationDirectory}" );
+                                        _ = Directory.CreateDirectory( destinationDirectory );
                                     }
 
-                                    using ( FileStream stream = File.OpenRead( thisFile.FullName ) )
+                                    _ = Logger.LogAsync( $"Extract '{reader.Entry.Key}' to '{argDestinationPath.FullName}'" );
+
+                                    try
                                     {
-                                        IArchive archive = ArchiveHelper.OpenArchive(
-                                            stream,
-                                            thisFile.FullName
-                                        );
-
-                                        if ( archive == null )
-                                        {
-                                            await Logger.LogExceptionAsync(
-                                                new InvalidOperationException(
-                                                    $"Unable to parse archive '{sourcePath}'" )
-                                            );
-                                            success = false;
-                                            return;
-                                        }
-
-                                        IReader reader = archive.ExtractAllEntries();
-                                        while ( reader.MoveToNextEntry() )
-                                        {
-                                            if ( reader.Entry.IsDirectory ) continue;
-                                            if ( thisFile.Directory?.FullName == null ) continue;
-
-                                            string destinationFolder = Path.GetFileNameWithoutExtension( thisFile.Name );
-                                            string destinationItemPath = Path.Combine(
-                                                thisFile.Directory.FullName,
-                                                destinationFolder,
-                                                reader.Entry.Key
-                                            );
-                                            string destinationDirectory = Path.GetDirectoryName( destinationItemPath );
-
-                                            if ( destinationDirectory != null && !Directory.Exists( destinationDirectory ) )
-                                            {
-                                                _ = Logger.LogAsync( $"Create directory {destinationDirectory}" );
-                                                _ = Directory.CreateDirectory( destinationDirectory );
-                                            }
-
-                                            _ = Logger.LogAsync( $"Extract {reader.Entry.Key} to {thisFile.Directory.FullName}" );
-
-                                            try
-                                            {
-                                                await Task.Run(
-                                                    () => reader.WriteEntryToDirectory(
-                                                        destinationDirectory ?? throw new InvalidOperationException(),
-                                                        ArchiveHelper.DefaultExtractionOptions
-                                                    )
-                                                );
-                                            }
-                                            catch ( UnauthorizedAccessException )
-                                            {
-                                                _ = Logger.LogWarningAsync(
-                                                    $"Skipping file '{reader.Entry.Key}' due to lack of permissions."
-                                                );
-                                            }
-                                        }
+                                        await Task.Run( () => reader.WriteEntryToDirectory( destinationDirectory ?? throw new InvalidOperationException(), ArchiveHelper.DefaultExtractionOptions ) );
+                                    }
+                                    catch ( UnauthorizedAccessException )
+                                    {
+                                        _ = Logger.LogWarningAsync( $"Skipping file '{reader.Entry.Key}' due to lack of permissions." );
                                     }
                                 }
-                                finally
-                                {
-                                    _ = semaphore.Release(); // Release the semaphore slot
-                                }
-                            } ) );
+                            }
+                        }
+                        finally
+                        {
+                            _ = semaphore.Release(); // Release the semaphore slot
+                        }
+                    } ) );
                 }
 
-                await Task.WhenAll(
-                    extractionTasks ); // Wait for all extraction tasks to complete
+                await Task.WhenAll( extractionTasks ); // Wait for all extraction tasks to complete
 
                 return success; // Extraction succeeded
             }
             catch ( Exception ex )
             {
-                // Handle any exceptions that occurred during extraction
                 await Logger.LogExceptionAsync( ex );
                 return false; // Extraction failed
             }
         }
 
-        public void DeleteDuplicateFile()
+
+        public void DeleteDuplicateFile(DirectoryInfo directoryPath = null, string fileExtension = "")
         {
-            if ( !this.destinationPath.Exists )
+            if ( directoryPath == null )
+                directoryPath = this.destinationPath;
+            else if ( !directoryPath.Exists )
             {
-                throw new ArgumentException( "Invalid directory path.", nameof( destinationPath ) );
+                throw new ArgumentException( "Invalid directory path.", nameof( directoryPath ) );
             }
 
-            string[] files = Directory.GetFiles( this.destinationPath.FullName );
+            if ( string.IsNullOrEmpty( fileExtension ) )
+                fileExtension = this.Arguments;
+
+            string[] files = Directory.GetFiles( directoryPath.FullName );
             var fileNameCounts = new Dictionary<string, int>();
 
             foreach ( string filePath in files )
@@ -257,7 +255,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                     || fileNameCounts[fileNameWithoutExtension] <= 1
                     || !string.Equals(
                         fileExtensionFromFile,
-                        this.Arguments,
+                        fileExtension,
                         StringComparison.OrdinalIgnoreCase
                     )
                    )
@@ -599,7 +597,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                     = Path.GetDirectoryName( sourcePath )
                     ?? throw new DirectoryNotFoundException( $"Could not retrieve parent directory of {sourcePath}." );
 
-                //PlaintextLog=1
+                //PlaintextLog=0
                 string fullInstallLogFile = Path.Combine(
                     tslPatcherDirPath,
                     "installlog.rtf"
@@ -607,7 +605,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
 
                 if ( !File.Exists( fullInstallLogFile ) )
                 {
-                    //PlaintextLog=0
+                    //PlaintextLog=1
                     fullInstallLogFile = Path.Combine( tslPatcherDirPath, "installlog.txt" );
                     if ( !File.Exists( fullInstallLogFile ) )
                         throw new FileNotFoundException( "Install log file not found.", fullInstallLogFile );
@@ -623,6 +621,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                 }
             }
 
+            Logger.LogVerbose( "No errors found in TSLPatcher installlog file!" );
             return new List<string>();
         }
     }

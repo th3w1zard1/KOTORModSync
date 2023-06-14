@@ -787,39 +787,58 @@ namespace KOTORModSync.Core.Utility
             PreserveFileTime = true
         };
 
-        public static bool IsArchive( string extension ) => extension == ".zip" || extension == ".rar" || extension == ".7z";
+        public static bool IsArchive( string filePath ) => IsArchive( new FileInfo( filePath ) );
 
-        public static IArchive OpenArchive( Stream stream, string archivePath )
+        public static bool IsArchive( FileInfo thisFile )
         {
-            if ( archivePath.EndsWith( ".zip", StringComparison.OrdinalIgnoreCase ) )
-                return SharpCompress.Archives.Zip.ZipArchive.Open( stream );
+            // Handle the case when it's not a self-extracting executable archive
 
-            if ( archivePath.EndsWith( ".rar", StringComparison.OrdinalIgnoreCase ) )
-                return RarArchive.Open( stream );
+            try
+            {
+                using ( var archive = ArchiveFactory.Open( thisFile.FullName ) )
+                {
+                    return true;
+                }
+            }
+            catch ( InvalidOperationException )
+            {
+                if ( thisFile.Extension.Equals( ".exe", StringComparison.OrdinalIgnoreCase ) ) // assume self-extracting executable?
+                    return true;
+            }
 
-            if ( archivePath.EndsWith( ".7z", StringComparison.OrdinalIgnoreCase ) )
-                return SevenZipArchive.Open( stream );
+            return false;
+        }
 
-            return null;
+        public static IArchive OpenArchive( Stream stream )
+        {
+            try
+            {
+                return ArchiveFactory.Open( stream );
+            }
+            catch ( ArchiveException )
+            {
+                return null;
+            }
         }
 
         public static IArchive OpenArchive( string archivePath )
         {
-            FileStream stream = File.OpenRead( archivePath );
-            if ( archivePath.EndsWith( ".zip" ) )
-                return SharpCompress.Archives.Zip.ZipArchive.Open( stream );
-
-            if ( archivePath.EndsWith( ".rar" ) )
-                return RarArchive.Open( stream );
-
-            if ( archivePath.EndsWith( ".7z" ) )
-                return SevenZipArchive.Open( stream );
-
-            // Close the stream if it wasn't returned as an archive
-            stream?.Dispose();
-
-            return null;
+            FileStream stream = null;
+            try
+            {
+                stream = File.OpenRead( archivePath );
+                return ArchiveFactory.Open( stream );
+            }
+            catch ( ArchiveException )
+            {
+                return null;
+            }
+            finally
+            {
+                stream?.Dispose();
+            }
         }
+
 
         public static void OutputModTree( DirectoryInfo directory, string outputPath )
         {

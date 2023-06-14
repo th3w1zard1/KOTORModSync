@@ -384,7 +384,7 @@ namespace KOTORModSync.Core.Utility
 
                             cancellationTokenSource.Token.Register( Callback );
                         }
-                        
+
                         process.EnableRaisingEvents = true;
 
                         // Start the process

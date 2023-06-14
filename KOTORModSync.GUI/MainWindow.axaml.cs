@@ -807,7 +807,7 @@ namespace KOTORModSync
 
                     // Call the ExecuteInstructions method asynchronously using Task.Run
                     await Logger.LogAsync( $"Call ExecuteInstructions for {component.Name}..." );
-                    ( bool success, Dictionary<FileInfo, SHA1> originalChecksums )
+                    (bool success, Dictionary<FileInfo, SHA1> originalChecksums)
                         = await component.ExecuteInstructions(
                             new ConfirmationDialogCallback( this ),
                             new OptionsDialogCallback( this ),

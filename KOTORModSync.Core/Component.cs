@@ -1115,7 +1115,7 @@ namespace KOTORModSync.Core
             {
                 // todo, stop displaying errors for self extracting executables. This is the only mod using one that I've seen out of 200-some.
                 if ( Component.Name.Equals( "Improved AI" ) )
-                    return ( true, true );
+                    return (true, true);
                 AddError( $"Failed to find '{sourcePath}' in any archives!", instruction );
                 return (false, archiveNameFound);
             }

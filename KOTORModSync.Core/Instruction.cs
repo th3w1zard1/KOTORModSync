@@ -214,7 +214,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
         }
 
 
-        public void DeleteDuplicateFile(DirectoryInfo directoryPath = null, string fileExtension = "")
+        public void DeleteDuplicateFile( DirectoryInfo directoryPath = null, string fileExtension = "" )
         {
             if ( directoryPath == null )
                 directoryPath = this.destinationPath;

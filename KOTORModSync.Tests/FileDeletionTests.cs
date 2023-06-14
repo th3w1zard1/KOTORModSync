@@ -72,7 +72,7 @@ namespace KOTORModSync.Tests
             string fileExtension = ".txt";
 
             // Act
-            new Instruction().DeleteDuplicateFile(new DirectoryInfo(directory), fileExtension);
+            new Instruction().DeleteDuplicateFile( new DirectoryInfo( directory ), fileExtension );
 
             // Assert
             Assert.Multiple(
@@ -99,7 +99,7 @@ namespace KOTORModSync.Tests
             string fileExtension = ".txt";
 
             // Act
-            new Instruction().DeleteDuplicateFile(new DirectoryInfo(directory), fileExtension);
+            new Instruction().DeleteDuplicateFile( new DirectoryInfo( directory ), fileExtension );
 
             // Assert
             Assert.Multiple(
@@ -124,7 +124,7 @@ namespace KOTORModSync.Tests
             string fileExtension = ".txt";
 
             // Act
-            new Instruction().DeleteDuplicateFile(new DirectoryInfo(directory), fileExtension);
+            new Instruction().DeleteDuplicateFile( new DirectoryInfo( directory ), fileExtension );
 
             // Assert
             Assert.Multiple( () =>
@@ -143,7 +143,7 @@ namespace KOTORModSync.Tests
             string fileExtension = ".txt";
 
             // Act
-            new Instruction().DeleteDuplicateFile(new DirectoryInfo(directory), fileExtension);
+            new Instruction().DeleteDuplicateFile( new DirectoryInfo( directory ), fileExtension );
 
             // Assert
             Assert.Multiple( () =>
@@ -168,7 +168,7 @@ namespace KOTORModSync.Tests
             string fileExtension = ".txt";
 
             // Act
-            new Instruction().DeleteDuplicateFile(new DirectoryInfo(directory), fileExtension);
+            new Instruction().DeleteDuplicateFile( new DirectoryInfo( directory ), fileExtension );
 
             // Assert
             Assert.Multiple( () =>
@@ -194,7 +194,7 @@ namespace KOTORModSync.Tests
             string fileExtension = ".txt";
 
             // Act
-            new Instruction().DeleteDuplicateFile(new DirectoryInfo(directory), fileExtension);
+            new Instruction().DeleteDuplicateFile( new DirectoryInfo( directory ), fileExtension );
 
             // Assert
             Assert.Multiple( () =>

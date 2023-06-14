@@ -20,11 +20,11 @@ using static KOTORModSync.Core.Utility.Utility;
 namespace KOTORModSync.Tests
 {
     [TestFixture]
-    [Ignore("not finished yet")]
+    [Ignore( "not finished yet" )]
     public class FileExtractor
     {
-        private DirectoryInfo _destinationPath;
-        private List<string> _sourcePaths;
+        private DirectoryInfo? _destinationPath;
+        private List<string>? _sourcePaths;
 
         [SetUp]
         public void Setup()
@@ -86,7 +86,7 @@ namespace KOTORModSync.Tests
         }
 
         [Test]
-        [Ignore("not finished yet")]
+        [Ignore( "not finished yet" )]
         public async Task ExtractFileAsync_SelfExtractingExe_Success()
         {
             // Arrange

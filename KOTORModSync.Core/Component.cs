@@ -157,14 +157,7 @@ namespace KOTORModSync.Core
 
             // Validate and log additional errors/warnings.
             this.Validator = new ComponentValidation( this );
-            if ( this.Validator.Run() )
-            {
-                Logger.Log( $"Successfully deserialized component '{this.Name}'\r\n" );
-                return;
-            }
-
-            this.Validator.GetErrors().ForEach( Logger.LogError );
-            this.Validator.GetWarnings().ForEach( Logger.LogWarning );
+            Logger.Log( $"Successfully deserialized component '{this.Name}'\r\n" );
         }
 
         [NotNull]
@@ -935,14 +928,6 @@ namespace KOTORModSync.Core
             bool success = true;
             foreach ( Instruction instruction in component.Instructions )
             {
-                DirectoryInfo destinationPath = null;
-                if ( !string.IsNullOrWhiteSpace( instruction.Destination ) )
-                {
-                    destinationPath = new DirectoryInfo(
-                        Utility.Utility.ReplaceCustomVariables( instruction.Destination )
-                    );
-                }
-
                 switch ( instruction.Action )
                 {
                     case null:
@@ -1004,12 +989,16 @@ namespace KOTORModSync.Core
 
                         break;
                     default:
-                        if ( destinationPath?.Exists != true )
+
+                        string destinationPath = Utility.Utility.ReplaceCustomVariables( instruction.Destination );
+                        if ( string.IsNullOrWhiteSpace( destinationPath )
+                            || destinationPath.Any( c => Path.GetInvalidPathChars().Contains( c ) )
+                            || !Directory.Exists( destinationPath ))
                         {
                             success = false;
                             AddError(
                                 $"Destination cannot be found!"
-                                + $" Got '{destinationPath?.FullName}'",
+                                + $" Got '{destinationPath}'",
                                 instruction
                             );
 

@@ -526,11 +526,19 @@ namespace KOTORModSync.Core
                                     ? await instruction.ExecuteTSLPatcherAsync()
                                     : await instruction.ExecuteProgramAsync();
 
-                                List<string> installErrors = instruction.VerifyInstall();
-                                if ( installErrors.Count > 0 )
-                                    await Logger.LogAsync( string.Join( "\n", installErrors ) );
+                                try
+                                {
+                                    List<string> installErrors = instruction.VerifyInstall();
+                                    if ( installErrors.Count > 0 )
+                                        await Logger.LogAsync( string.Join( "\n", installErrors ) );
 
-                                success &= installErrors.Count == 0;
+                                    success &= installErrors.Count == 0;
+                                }
+                                catch ( FileNotFoundException )
+                                {
+                                    success = false;
+                                }
+
                                 break;
                             case "execute":
                             case "run":
@@ -579,10 +587,14 @@ namespace KOTORModSync.Core
                         {
                             await Logger.LogAsync( $"Instruction {instruction.Action} failed at index {i1}." );
                             bool? confirmationResult = await confirmDialog.ShowConfirmationDialog(
-                                $"Error installing mod {Name},"
-                                + $" would you like to repeat this instruction"
-                                + $" or continue to the next instruction?"
+                                $"An error occurred during the installation of mod '{this.Name}'."
+                                + " Do you want to retry this instruction?" + Environment.NewLine + Environment.NewLine
+                                + " Select 'Yes' to retry,"
+                                + " 'No' to proceed to the next instruction,"
+                                + $" or close this window to abort the installation of '{this.Name}'."
                             );
+
+
 
                             switch ( confirmationResult )
                             {
@@ -892,7 +904,7 @@ namespace KOTORModSync.Core
             foreach ( Instruction instruction in component.Instructions )
             {
                 DirectoryInfo destinationPath = null;
-                if ( instruction.Destination != null )
+                if ( !string.IsNullOrWhiteSpace(instruction.Destination) )
                 {
                     destinationPath = new DirectoryInfo(
                         Utility.Utility.ReplaceCustomVariables( instruction.Destination )

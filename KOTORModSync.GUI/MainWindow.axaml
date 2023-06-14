@@ -5,6 +5,7 @@
 		xmlns:core="clr-namespace:KOTORModSync.Core;assembly=KOTORModSync.Core"
 		xmlns:kotorModSync="clr-namespace:KOTORModSync"
 		x:Class="KOTORModSync.MainWindow"
+        SizeToContent="Width"
 		Title="KOTORModSync"
 		Width="1200" Height="700" MinWidth="600" MinHeight="400"
 		Background="#05110D">
@@ -17,7 +18,7 @@
 		<local:BooleanToArrowConverter x:Key="BooleanToArrowConverter" />
 		<local:ListToStringConverter x:Key="ListToStringConverter" />
 	</Window.Resources>
-	<Grid MinWidth="200" RowDefinitions="Auto,*">
+	<Grid x:Name="MainGrid" MinWidth="200" RowDefinitions="Auto,*">
 		<Grid.ColumnDefinitions>
 			<ColumnDefinition Width="Auto" />
 			<ColumnDefinition Width="*"/>
@@ -42,9 +43,8 @@
 											  HorizontalAlignment="Left"/>
 								<TextBlock HorizontalAlignment="Left" Text="{Binding Name}"
 										   kotorModSync:AttachedProperties.ItemClickCommand="{Binding DataContext.ItemClickCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Window}}"
-										   kotorModSync:AttachedProperties.ItemClickCommandParameter="{Binding}">
-								</TextBlock>
-							</StackPanel>
+										   kotorModSync:AttachedProperties.ItemClickCommandParameter="{Binding}" />
+                            </StackPanel>
 						</DataTemplate>
 					</TreeView.ItemTemplate>
 				</TreeView>
@@ -74,132 +74,139 @@
 			</TabItem>
 			<TabItem x:Name="GuiEditTabItem" Header="GUI Edit">
 				<TabItem.Content>
-					<ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Visible" >
+					<ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" >
 						<ItemsControl x:Name="ComponentsItemsControl" Items="{Binding Components}">
 							<ItemsControl.ItemTemplate>
 								<DataTemplate DataType="core:Component">
-									<WrapPanel Orientation="Vertical">
-										<TextBlock Grid.Column="0" Grid.Row="0" Text="Name:" />
-										<TextBox Grid.Column="0" Text="{Binding Name}"
-												 Focusable="True"
-												 TextWrapping="Wrap" Width="300"/>
+									<Grid x:Name="GuiEditGrid" ColumnDefinitions="*,Auto" RowDefinitions="10*,10*,10*,10*,10*,10*,10*,10*,10*,10*,10*,10*,10*,10*,10*,10*,10*,10*">
+                                        <TextBlock Text="Name:" />
+										<TextBox Grid.Row="1" Grid.Column="0" Text="{Binding Name}"
+                                                 Focusable="True"
+                                                 TextWrapping="Wrap"/>
 
-										<TextBlock Grid.Column="0" Text="Guid:" />
-										<DockPanel HorizontalAlignment="Left">
-											<TextBox Grid.Column="1" Text="{Binding Guid}"
-													 Focusable="True" MaxWidth="600" />
-											<Button Grid.Column="1" Content="Generate GUID" Click="GenerateGuidButton_Click"/>
-										</DockPanel>
+                                        <TextBlock Grid.Row="2" Grid.Column="0" Text="Guid:" />
+                                        <TextBox Grid.Row="3" Grid.Column="0" Text="{Binding Guid}"
+                                                 Focusable="True" />
+										<Button Grid.Row="3" Grid.Column="1" Content="Generate GUID" Click="GenerateGuidButton_Click"/>
 
-										<TextBlock Grid.Column="0" Text="Description:" />
-										<TextBox Grid.Column="0" Text="{Binding Description}"
-												 Focusable="True"
-												 TextWrapping="Wrap" AcceptsTab="True" AcceptsReturn="True" MaxWidth="600"/>
+                                        <TextBlock Grid.Row="4" Grid.Column="0" Text="Description:" />
+										<TextBox Grid.Row="5" Grid.Column="0" Text="{Binding Description}"
+                                                 Focusable="True"
+                                                 TextWrapping="Wrap" AcceptsTab="True" AcceptsReturn="True"
+                                                 MaxWidth="600" HorizontalContentAlignment="Stretch" HorizontalAlignment="Stretch"/>
 
-										<TextBlock Grid.Column="0" Text="Directions:" />
-										<TextBox Grid.Column="0" Text="{Binding Directions}"
-												 Focusable="True"
-												 TextWrapping="Wrap" AcceptsTab="True" AcceptsReturn="True" MaxWidth="600"/>
+										<TextBlock Grid.Row="6" Grid.Column="0" Text="Directions:" />
+										<TextBox Grid.Row="7" Grid.Column="0" Text="{Binding Directions}"
+                                                 Focusable="True"
+                                                 TextWrapping="Wrap" AcceptsTab="True" AcceptsReturn="True" MaxWidth="600"/>
 
-										<TextBlock Grid.Column="0" Text="Author:" />
-										<TextBox Grid.Column="0" Text="{Binding Author}"
-												 Focusable="True"
-												 TextWrapping="Wrap" AcceptsTab="True" AcceptsReturn="True" MaxWidth="600"/>
+										<TextBlock Grid.Row="8" Grid.Column="0" Text="Author:"/>
+										<TextBox Grid.Row="9" Grid.Column="0" Text="{Binding Author}"
+                                                 Focusable="True"
+                                                 TextWrapping="Wrap" AcceptsTab="True" AcceptsReturn="True"
+                                                 MaxWidth="600"/>
 
-										<TextBlock Grid.Column="0" Text="Category:" />
-										<TextBox Grid.Column="0" Text="{Binding Category}"
-												 Focusable="True"
-												 TextWrapping="Wrap" AcceptsTab="True" AcceptsReturn="True" MaxWidth="600"/>
+										<TextBlock Grid.Row="10" Grid.Column="0" Text="Category:" />
+										<TextBox Grid.Row="11" Grid.Column="0" Text="{Binding Category}"
+                                                 Focusable="True"
+                                                 TextWrapping="Wrap" AcceptsTab="True" AcceptsReturn="True"/>
 
-										<TextBlock Grid.Column="0" Text="Tier:" />
-										<TextBox Grid.Column="0" Text="{Binding Tier}"
-												 Focusable="True"
-												 TextWrapping="Wrap" AcceptsTab="True" AcceptsReturn="True" MaxWidth="600"/>
+										<TextBlock Grid.Row="12" Grid.Column="0" Text="Tier:" />
+										<TextBox Grid.Row="13" Grid.Column="0" Text="{Binding Tier}"
+                                                 Focusable="True"
+                                                 TextWrapping="Wrap" AcceptsTab="True" AcceptsReturn="True"
+                                                 MaxWidth="600"/>
 
-										<TextBlock Grid.Column="0" Text="Mod Website:" />
-										<TextBox Grid.Column="0" Text="{Binding ModLink}"
-												 Focusable="True"
-												 TextWrapping="Wrap" AcceptsTab="True" AcceptsReturn="True" MaxWidth="600"/>
-										<StackPanel>
-											<ItemsRepeater Items="{Binding Instructions}">
-												<ItemsRepeater.ItemTemplate>
-													<DataTemplate DataType="core:Instruction">
-														<Border BorderThickness="1" BorderBrush="LightGray" Margin="0,0,0,10" >
-															<Grid
-																RowDefinitions="*,*,*,*,*,*,*,*,*,*,*,*,*,*,*"
-																ColumnDefinitions="*,Auto">
-																<TextBlock Grid.Row="0" Grid.Column="0" Text="Action:" />
-																<TextBox Grid.Row="1"
-																	Grid.Column="0"
-																	Text="{Binding Action}"
-																	Focusable="True" MaxWidth="600"/>
+										<TextBlock Grid.Row="14" Grid.Column="0" Text="Mod Website:" />
+										<TextBox Grid.Column="0" Grid.Row="15" Text="{Binding ModLink}"
+                                                 Focusable="True"
+                                                 TextWrapping="Wrap" AcceptsTab="True" AcceptsReturn="True"
+                                                 MaxWidth="600"/>
+                                        <TextBlock Grid.Row="16" Grid.Column="0" Text="Instructions:" Margin="5,0" FontSize="18"/>
+										<ItemsRepeater Grid.Row="17" Grid.Column="0" Grid.ColumnSpan="2" Items="{Binding Instructions}">
+											<ItemsRepeater.ItemTemplate>
+												<DataTemplate DataType="core:Instruction">
+													<Border BorderThickness="2" BorderBrush="LightGray" Margin="0,0,0,10" >
+														<Grid
+															RowDefinitions="*,*,*,*,*,*,*,*,*,*,*,*,*,*,*"
+															ColumnDefinitions="*,Auto">
+															<TextBlock Grid.Row="0" Grid.Column="0" Text="Action:" />
+															<TextBox Grid.Row="1"
+																Grid.Column="0"
+																Text="{Binding Action}"
+																Focusable="True"/>
 
-																<TextBlock Grid.Row="3" Grid.Column="0" Text="Source:" />
-																<TextBox Grid.Row="4"
-																	Grid.Column="0"
-																	x:Name="sourceTextBox"
-																	AcceptsReturn="True"
-																	TextWrapping="Wrap"
-																	Text="{Binding Source, Converter={StaticResource ListToStringConverter}}"
-																	Focusable="True" MaxWidth="600"/>
+															<TextBlock Grid.Row="3" Grid.Column="0" Text="Source:" />
+															<TextBox Grid.Row="4"
+																Grid.Column="0"
+																x:Name="sourceTextBox"
+																AcceptsReturn="True"
+																TextWrapping="Wrap"
+																Text="{Binding Source, Converter={StaticResource ListToStringConverter}}"
+																Focusable="True"
+                                                                MaxWidth="600"/>
 
-																<Button Grid.Row="4"
-																	Grid.Column="1"
-																	Content="Browse Files"
-																	Click="BrowseSourceFiles_Click"
-																	HorizontalAlignment="Stretch"
-																	Tag="{Binding ElementName=sourceTextBox}" />
+															<Button Grid.Row="4"
+																Grid.Column="1"
+																Content="Browse Files"
+																Click="BrowseSourceFiles_Click"
+																HorizontalAlignment="Stretch"
+																Tag="{Binding ElementName=sourceTextBox}" />
 
-																<TextBlock Grid.Row="5" Grid.Column="0" Text="Destination:" />
-																<TextBox Grid.Row="6"
-																	Grid.Column="0"
-																	x:Name="destinationTextBox"
-																	TextWrapping="Wrap"
-																	Text="{Binding Destination}"
-																	Focusable="True" MaxWidth="600"/>
-																<Button Grid.Row="6"
-																	Grid.Column="1"
-																	Content="Browse Destination"
-																	Click="BrowseDestination_Click"
-																	HorizontalAlignment="Stretch"
-																	Tag="{Binding ElementName=destinationTextBox}" />
+															<TextBlock Grid.Row="5" Grid.Column="0" Text="Destination:" />
+															<TextBox Grid.Row="6"
+																Grid.Column="0"
+																x:Name="destinationTextBox"
+																TextWrapping="Wrap"
+																Text="{Binding Destination}"
+																Focusable="True"/>
+															<Button Grid.Row="6"
+																Grid.Column="1"
+																Content="Browse Destination"
+																Click="BrowseDestination_Click"
+																HorizontalAlignment="Stretch"
+																Tag="{Binding ElementName=destinationTextBox}"
+                                                                MaxWidth="600"/>
 
-																<TextBlock Grid.Row="7" Grid.Column="0" Text="Dependencies:" />
-																<TextBox Grid.Row="8"
-																		 Grid.Column="0"
-																		 x:Name="dependenciesTextBox"
-																		 AcceptsReturn="True"
-																		 TextWrapping="Wrap"
-																		 Text="{Binding Dependencies, Converter={StaticResource ListToStringConverter}}"
-																		 Focusable="True" MaxWidth="600"/>
+															<TextBlock Grid.Row="7" Grid.Column="0" Text="Dependencies:" />
+															<TextBox Grid.Row="8"
+																	 Grid.Column="0"
+																	 x:Name="dependenciesTextBox"
+																	 AcceptsReturn="True"
+																	 TextWrapping="Wrap"
+																	 Text="{Binding Dependencies, Converter={StaticResource ListToStringConverter}}"
+																	 Focusable="True"
+                                                                     MaxWidth="600"/>
 
-																<TextBlock Grid.Row="9" Grid.Column="0" Text="Restrictions:" />
-																<TextBox Grid.Row="10"
-																		 Grid.Column="0"
-																		 x:Name="restrictionsTextBox"
-																		 AcceptsReturn="True"
-																		 TextWrapping="Wrap"
-																		 Text="{Binding Restrictions, Converter={StaticResource ListToStringConverter}}"
-																		 Focusable="True" MaxWidth="600"/>
+															<TextBlock Grid.Row="9" Grid.Column="0" Text="Restrictions:" />
+															<TextBox Grid.Row="10"
+																	 Grid.Column="0"
+																	 x:Name="restrictionsTextBox"
+																	 AcceptsReturn="True"
+																	 TextWrapping="Wrap"
+																	 Text="{Binding Restrictions, Converter={StaticResource ListToStringConverter}}"
+																	 Focusable="True"
+                                                                     MaxWidth="600"/>
 
-																<TextBlock Grid.Row="11" Grid.Column="0" Text="Overwrite:" />
-																<TextBox Grid.Row="12"
-																	Grid.Column="0"
-																	Text="{Binding Overwrite}"
-																	Focusable="True" MaxWidth="600"/>
+															<TextBlock Grid.Row="11" Grid.Column="0" Text="Overwrite:" />
+															<TextBox Grid.Row="12"
+																Grid.Column="0"
+																Text="{Binding Overwrite}"
+																Focusable="True"
+                                                                MaxWidth="600"/>
 
-																<TextBlock Grid.Row="13" Grid.Column="0" Text="Arguments:" />
-																<TextBox Grid.Row="14"
-																	Grid.Column="0"
-																	Text="{Binding Arguments}"
-																	Focusable="True" MaxWidth="600"/>
-															</Grid>
-														</Border>
-													</DataTemplate>
-												</ItemsRepeater.ItemTemplate>
-											</ItemsRepeater>
-										</StackPanel>
-									</WrapPanel>
+															<TextBlock Grid.Row="13" Grid.Column="0" Text="Arguments:" />
+															<TextBox Grid.Row="14"
+																Grid.Column="0"
+																Text="{Binding Arguments}"
+																Focusable="True"
+                                                                MaxWidth="600"/>
+														</Grid>
+													</Border>
+												</DataTemplate>
+											</ItemsRepeater.ItemTemplate>
+										</ItemsRepeater>
+									</Grid>
 								</DataTemplate>
 							</ItemsControl.ItemTemplate>
 						</ItemsControl>

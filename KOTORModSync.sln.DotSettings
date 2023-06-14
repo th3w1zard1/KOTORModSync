@@ -42,6 +42,7 @@ if ($EXPR$ == null)&#xD;
 	<s:Boolean x:Key="/Default/UserDictionary/Words/=RUNASHIGHEST/@EntryIndexedValue">True</s:Boolean>
 	<s:Boolean x:Key="/Default/UserDictionary/Words/=RUNASINVOKER/@EntryIndexedValue">True</s:Boolean>
 	<s:Boolean x:Key="/Default/UserDictionary/Words/=swkotor/@EntryIndexedValue">True</s:Boolean>
+	
 	<s:Boolean x:Key="/Default/UserDictionary/Words/=Toml/@EntryIndexedValue">True</s:Boolean>
 	<s:Boolean x:Key="/Default/UserDictionary/Words/=Tomlyn/@EntryIndexedValue">True</s:Boolean>
 	

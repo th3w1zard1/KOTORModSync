@@ -271,7 +271,6 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                 catch ( Exception ex )
                 {
                     Logger.LogException( ex );
-                    // Decide whether to throw or handle the exception here
                 }
             }
         }

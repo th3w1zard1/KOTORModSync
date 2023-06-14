@@ -43,7 +43,10 @@ namespace KOTORModSync.Tests
         public void TearDown()
         {
             // Clean up any extracted files or directories after each test if necessary
-            if ( _destinationPath.Exists )
+            if ( _destinationPath is
+                {
+                    Exists: true
+                } )
             {
                 _destinationPath.Delete( true );
             }
@@ -61,9 +64,9 @@ namespace KOTORModSync.Tests
             bool extractionResult = await new Instruction().ExtractFileAsync( _destinationPath, _sourcePaths );
 
             // Assert
-            Assert.IsTrue( extractionResult );
+            Assert.That( extractionResult, Is.True );
             // Add more specific assertions if necessary
-            Assert.IsTrue( Directory.Exists( _destinationPath.FullName ) );
+            Assert.That( Directory.Exists( _destinationPath?.FullName ), Is.True );
             // Add additional assertions to validate the extracted files/directories
         }
 
@@ -79,9 +82,9 @@ namespace KOTORModSync.Tests
             bool extractionResult = await new Instruction().ExtractFileAsync( _destinationPath, _sourcePaths );
 
             // Assert
-            Assert.IsFalse( extractionResult );
+            Assert.That( extractionResult, Is.False );
             // Add more specific assertions if necessary
-            Assert.IsFalse( Directory.Exists( _destinationPath.FullName ) );
+            Assert.That( Directory.Exists( _destinationPath?.FullName ), Is.False );
             // Add additional assertions to verify that no files/directories were extracted
         }
 
@@ -98,9 +101,9 @@ namespace KOTORModSync.Tests
             bool extractionResult = await new Instruction().ExtractFileAsync( _destinationPath, _sourcePaths );
 
             // Assert
-            Assert.IsTrue( extractionResult );
+            Assert.That( extractionResult, Is.True );
             // Add more specific assertions if necessary
-            Assert.IsTrue( Directory.Exists( _destinationPath.FullName ) );
+            Assert.That( Directory.Exists( _destinationPath?.FullName ), Is.True );
             // Add additional assertions to validate the extracted files/directories
         }
 
@@ -116,9 +119,9 @@ namespace KOTORModSync.Tests
             bool extractionResult = await new Instruction().ExtractFileAsync( _destinationPath, _sourcePaths );
 
             // Assert
-            Assert.IsTrue( extractionResult );
+            Assert.That( extractionResult, Is.True );
             // Add more specific assertions if necessary
-            Assert.IsTrue( Directory.Exists( _destinationPath.FullName ) );
+            Assert.That( Directory.Exists( _destinationPath?.FullName ), Is.True );
             // Add additional assertions to validate the extracted files/directories and skipped files
         }
 
@@ -145,7 +148,7 @@ namespace KOTORModSync.Tests
                 SelfExtractorSaveOptions options = new SelfExtractorSaveOptions
                 {
                     Flavor = SelfExtractorFlavor.ConsoleApplication,
-                    DefaultExtractDirectory = _destinationPath.FullName,
+                    DefaultExtractDirectory = _destinationPath?.FullName,
                     ExtractExistingFile = ExtractExistingFileAction.OverwriteSilently,
                     RemoveUnpackedFilesAfterExecute = true,
                     Quiet = true

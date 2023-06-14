@@ -75,15 +75,19 @@ namespace KOTORModSync
         private void InitializeComponent()
         {
             AvaloniaXamlLoader.Load( this );
+
+            MainGrid = this.FindControl<Grid>( "MainGrid" );
+
             LeftTreeView = this.FindControl<TreeView>( "LeftTreeView" );
+
+            TabControl = this.FindControl<TabControl>( "TabControl" );
+            RawEditTabItem = this.FindControl<TabItem>( "RawEditTabItem" );
+            GuiEditTabItem = this.FindControl<TabItem>( "GuiEditTabItem" );
 
             RightTextBox = this.FindControl<TextBox>( "RightTextBox" );
             RightTextBox.LostFocus += RightListBox_LostFocus; // Prevents rightListBox from being cleared when clicking elsewhere.
             RightTextBox.DataContext = _selectedComponentProperties;
 
-            TabControl = this.FindControl<TabControl>( "TabControl" );
-            RawEditTabItem = this.FindControl<TabItem>( "RawEditTabItem" );
-            GuiEditTabItem = this.FindControl<TabItem>( "GuiEditTabItem" );
             InitialTab = this.FindControl<TabItem>( "InitialTab" );
             ApplyEditorButton = this.FindControl<Button>( "ApplyEditorButton" );
             _selectedComponentProperties = new ObservableCollection<string>();

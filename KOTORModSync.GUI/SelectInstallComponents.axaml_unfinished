@@ -3,14 +3,14 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:core="clr-namespace:KOTORModSync.Core;assembly=KOTORModSync.Core"
-        xmlns:viewModels="clr-namespace:KOTORModSync.Installer.ViewModels;assembly=KOTORModSync.Installer"
+        xmlns:viewModel="clr-namespace:KOTORModSync.ViewModel"
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
         x:Class="KOTORModSync.SelectInstallComponents"
         Title="SelectInstallComponents">
     <StackPanel>
         <ContentControl Content="{Binding CurrentScreen}">
             <ContentControl.Resources>
-                <DataTemplate DataType="{x:Type viewModels:SelectComponentsViewModel}">
+                <DataTemplate DataType="{x:Type viewModel:SelectComponentsViewModel}">
                     <StackPanel>
                         <!-- Component selection screen -->
                         <TextBlock Text="Select the components you want to install:" Margin="10"/>
@@ -33,17 +33,17 @@
                     </StackPanel>
                 </DataTemplate>
 
-                <DataTemplate DataType="{x:Type viewModels:ConfirmationScreenViewModel}">
+                <DataTemplate DataType="{x:Type viewModel:ConfirmationScreenViewModel}">
                     <StackPanel>
                         <!-- Confirmation screen -->
                         <TextBlock Text="Confirm the selected components:" Margin="10"/>
-                        <ItemsControl ItemsSource="{Binding SelectedComponents}">
-                            <ItemsControl.ItemTemplate>
+                        <ListBox Items="{Binding SelectedComponents}">
+                            <ListBox.ItemTemplate>
                                 <DataTemplate>
                                     <TextBlock Text="{Binding Name}" Margin="10"/>
                                 </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
 
                         <!-- Back and Next buttons -->
                         <StackPanel Orientation="Horizontal" Margin="10">
@@ -53,7 +53,7 @@
                     </StackPanel>
                 </DataTemplate>
 
-                <DataTemplate DataType="{x:Type viewModels:InstallationProgressScreenViewModel}">
+                <DataTemplate DataType="{x:Type viewModel:InstallationProgressScreenViewModel}">
                     <StackPanel>
                         <!-- Installation progress screen -->
                         <TextBlock Text="Installation in progress..." Margin="10"/>
@@ -65,7 +65,7 @@
                     </StackPanel>
                 </DataTemplate>
 
-                <DataTemplate DataType="{x:Type viewModels:ResultsScreenViewModel}">
+                <DataTemplate DataType="{x:Type viewModel:ResultsScreenViewModel}">
                     <StackPanel>
                         <!-- Results screen -->
                         <TextBlock Text="Installation completed!" Margin="10"/>

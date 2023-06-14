@@ -72,10 +72,10 @@
     <TreatWarningsAsErrors>False</TreatWarningsAsErrors>
   </PropertyGroup>
   <ItemGroup>
-    <None Remove="SelectInstallComponents.axaml2" />
+    <None Remove="SelectInstallComponents.axaml_unfinished" />
   </ItemGroup>
   <ItemGroup>
-    <AvaloniaXaml Include="SelectInstallComponents.axaml2" />
+    <AvaloniaXaml Include="SelectInstallComponents.axaml_unfinished" />
   </ItemGroup>
 
   <ItemGroup>
@@ -127,7 +127,7 @@
       <DependentUpon>OptionsDialog.axaml</DependentUpon>
     </Compile>
     <Compile Update="SelectInstallComponents.axaml.cs">
-      <DependentUpon>SelectInstallComponents.axaml2</DependentUpon>
+      <DependentUpon>SelectInstallComponents.axaml_unfinished</DependentUpon>
     </Compile>
   </ItemGroup>
 

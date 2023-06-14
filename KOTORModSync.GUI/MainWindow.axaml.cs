@@ -653,7 +653,7 @@ namespace KOTORModSync
             {
                 if ( MainConfigInstance == null || MainConfig.DestinationPath == null )
                 {
-                    var informationDialog = new InformationDialog{ InfoText = "Please set your directories first" };
+                    var informationDialog = new InformationDialog { InfoText = "Please set your directories first" };
                     _ = await informationDialog.ShowDialog<bool?>( this );
                     return;
                 }
@@ -665,7 +665,7 @@ namespace KOTORModSync
                 }
                 else
                 {
-                    var informationDialog = new InformationDialog{ InfoText = "Please choose a mod to install from the left list first" };
+                    var informationDialog = new InformationDialog { InfoText = "Please choose a mod to install from the left list first" };
                     _ = await informationDialog.ShowDialog<bool?>( this );
                     return;
                 }
@@ -728,7 +728,7 @@ namespace KOTORModSync
                     return;
                 }
 
-                if ( await ConfirmationDialog.ShowConfirmationDialog(this, "Really install all mods?") != true )
+                if ( await ConfirmationDialog.ShowConfirmationDialog( this, "Really install all mods?" ) != true )
                 {
                     return;
                 }

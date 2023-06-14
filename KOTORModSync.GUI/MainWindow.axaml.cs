@@ -15,9 +15,11 @@ using System.Windows.Input;
 using Avalonia.Collections;
 using Avalonia.Controls;
 using Avalonia.Data.Converters;
+using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
 using Avalonia.Threading;
+using Avalonia.VisualTree;
 using JetBrains.Annotations;
 using KOTORModSync.Core;
 using KOTORModSync.Core.Utility;
@@ -624,14 +626,14 @@ namespace KOTORModSync
             // Get the selected component from the TreeView
             try
             {
-                if ( !( LeftTreeView.SelectedItem is TreeViewItem selectedTreeViewItem ) ||
-                    !( selectedTreeViewItem.Tag is Component selectedComponent ) )
+                if ( _currentComponent == null )
                 {
+                    Logger.LogVerbose("No component loaded into editor - nothing to remove."  );
                     return;
                 }
 
                 // Remove the selected component from the collection
-                _ = _components.Remove( selectedComponent );
+                _ = _components.Remove( _currentComponent );
                 _currentComponent = null;
 
                 // Refresh the TreeView to reflect the changes
@@ -674,27 +676,22 @@ namespace KOTORModSync
                     return;
                 }
 
-                Component thisComponent;
-                if ( LeftTreeView.SelectedItem is TreeViewItem selectedTreeViewItem && selectedTreeViewItem.Tag is Component selectedComponent )
-                {
-                    thisComponent = (Component)selectedTreeViewItem.Tag;
-                }
-                else
+                if ( _currentComponent == null )
                 {
                     var informationDialog = new InformationDialog { InfoText = "Please choose a mod to install from the left list first" };
                     _ = await informationDialog.ShowDialog<bool?>( this );
                     return;
                 }
 
-                if ( thisComponent.Directions != null )
+                if ( _currentComponent.Directions != null )
                 {
                     bool? confirm = await ConfirmationDialog.ShowConfirmationDialog(
                         this,
-                        thisComponent.Directions + "\r\n\r\n Press Yes to execute these directions now."
+                        _currentComponent.Directions + "\r\n\r\n Press Yes to execute these directions now."
                     );
                     if ( confirm != true )
                     {
-                        await Logger.LogAsync( $"User cancelled install of {thisComponent.Name}" );
+                        await Logger.LogAsync( $"User cancelled install of {_currentComponent.Name}" );
                         return;
                     }
                 }
@@ -711,14 +708,14 @@ namespace KOTORModSync
                 _installRunning = true;
                 var confirmationDialogCallback = new ConfirmationDialogCallback( this );
                 var optionsDialogCallback = new OptionsDialogCallback( this );
-                (bool success, Dictionary<FileInfo, SHA1> originalChecksums) = await Task.Run( () => thisComponent.ExecuteInstructions( confirmationDialogCallback, optionsDialogCallback, _components ) );
+                (bool success, Dictionary<FileInfo, SHA1> originalChecksums) = await Task.Run( () => _currentComponent.ExecuteInstructions( confirmationDialogCallback, optionsDialogCallback, _components ) );
                 if ( !success )
                     await InformationDialog.ShowInformationDialog(
                         this,
-                        $"There was a problem installing {thisComponent.Name}, please check the output window"
+                        $"There was a problem installing {_currentComponent.Name}, please check the output window"
                     );
                 else
-                    await Logger.LogAsync( $"Successfully installed {thisComponent.Name}" );
+                    await Logger.LogAsync( $"Successfully installed {_currentComponent.Name}" );
                 _installRunning = false;
             }
             catch ( Exception ex )
@@ -898,7 +895,7 @@ namespace KOTORModSync
                 return;
 
             // Don't show content of any tabs (except the hidden one) if there's no content.
-            if ( selectedItem != InitialTab && _components.Count == 0 )
+            if ( _components.Count == 0 || LeftTreeView.SelectedItem == null)
             {
                 TabControl.SelectedItem = InitialTab;
                 return;
@@ -985,44 +982,12 @@ namespace KOTORModSync
             return !string.Equals( currentContent, _originalContent );
         }
 
-        private async void TextBox_LostFocus( object sender, RoutedEventArgs e )
-        {
-            var textBox = (TextBox)sender;
-
-            // code might be needed in future changes to TextBox/AvaloniaUI
-            // Retrieve the DataContext object
-            /*var dataContext = textBox.DataContext;
-
-            // Retrieve the bound property name
-            var propertyInfo = dataContext.GetType().GetProperties()
-                .FirstOrDefault(p => p.GetMethod != null && p.GetMethod.IsPublic && p.GetMethod.IsVirtual && p.PropertyType == typeof(string) && p.GetMethod.GetBaseDefinition().DeclaringType == p.GetMethod.DeclaringType);
-
-            if (propertyInfo != null)
-            {
-                // Retrieve the updated value from the TextBox
-                var updatedValue = textBox.Text;
-
-                // Set the updated value to the bound property
-                propertyInfo.SetValue(dataContext, updatedValue);
-            }*/
-
-            // Delay the collection update by a small amount
-            // otherwise it's impossible to focus another textbox
-            // another solution would be appreciated.
-            await Task.Delay( 100 );
-            if ( !textBox.IsFocused )
-            {
-                LoadComponentDetails( _currentComponent );
-            }
-        }
-
         private (bool, string Message) SaveChanges()
         {
             try
             {
                 // Get the selected component from the tree view
-                if ( !( LeftTreeView.SelectedItem is TreeViewItem selectedTreeViewItem )
-                    || !( selectedTreeViewItem.Tag is Component selectedComponent ) )
+                if ( _currentComponent == null)
                 {
                     return (false, "TreeViewItem does not correspond to a valid Component"
                         + Environment.NewLine
@@ -1032,7 +997,7 @@ namespace KOTORModSync
                 Component newComponent = FileHelper.DeserializeTomlComponent( RightTextBox.Text );
 
                 // Find the corresponding component in the collection
-                int index = _components.IndexOf( selectedComponent );
+                int index = _components.IndexOf( _currentComponent );
                 // if not selected, find the index of the _currentComponent.
                 if ( index < 0 || index >= _components.Count )
                 {
@@ -1058,7 +1023,6 @@ namespace KOTORModSync
                         "Could not deserialize raw text into a Component instance in memory."
                     );
                 RefreshTreeView(); // Refresh the tree view to reflect the changes
-                LeftTreeView.SelectedItem = newComponent; // Select the updated component in the tree view
                 return (true,
                     $"Saved {newComponent.Name} successfully. Refer to the output window for more information.");
             }
@@ -1215,7 +1179,7 @@ namespace KOTORModSync
                         continue;
 
                     string headerString = treeViewItem.Header.ToString();
-                    if ( headerString != null && !headerString.Equals( componentName, StringComparison.Ordinal ) )
+                    if ( !headerString.Equals( componentName, StringComparison.Ordinal ) )
                         continue;
 
                     existingItem = treeViewItem;
@@ -1238,7 +1202,7 @@ namespace KOTORModSync
                 };
 
                 // Assign the ItemClickCommand to the componentItem
-                componentItem.DoubleTapped += ( sender, e ) =>
+                componentItem.Tapped += ( sender, e ) =>
                 {
                     if ( _selectedComponents.Contains( component ) )
                     {

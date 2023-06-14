@@ -436,7 +436,7 @@ namespace KOTORModSync.Core
                         Instruction instruction = component.Instructions[i1]
                             ?? throw new ArgumentException(
                                 $"[Error] instruction null at index {i1}",
-                                nameof(componentsList)
+                                nameof( componentsList )
                             );
 
                         //The instruction will run if any of the following conditions are met:
@@ -551,7 +551,7 @@ namespace KOTORModSync.Core
                                 List<string> optionNames = options.ConvertAll( option => option.Name );
 
                                 string selectedOptionName = await optionsDialog.ShowOptionsDialog( optionNames )
-                                    ?? throw new NullReferenceException(nameof(optionNames));
+                                    ?? throw new NullReferenceException( nameof( optionNames ) );
                                 Option selectedOption = null;
 
                                 foreach ( Option option in options )
@@ -597,7 +597,7 @@ namespace KOTORModSync.Core
 
                                 // case null: cancel installing this mod (user closed confirmation dialog)
                                 default:
-                                    return ( false, null );
+                                    return (false, null);
                             }
                         }
 

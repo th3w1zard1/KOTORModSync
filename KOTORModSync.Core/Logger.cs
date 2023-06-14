@@ -55,7 +55,7 @@ namespace KOTORModSync.Core
             Logged.Invoke( logMessage ); // Raise the Logged event
         }
 
-        public static void Log( string message)
+        public static void Log( string message )
         {
             string logMessage = $"[{DateTime.Now}] {message}";
             Console.WriteLine( logMessage );
@@ -88,7 +88,7 @@ namespace KOTORModSync.Core
 
         public static async Task LogWarningAsync( string message ) => await LogAsync( "[Warning] " + message );
         public static async Task LogExceptionAsync( Exception ex ) => await Task.Run( () => LogException( ex ) );
-        
+
         public static void LogException( Exception exception, string customMessage )
         {
             LogError( customMessage );

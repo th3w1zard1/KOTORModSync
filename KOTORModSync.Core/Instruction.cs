@@ -139,7 +139,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
 
                                     if ( !ArchiveHelper.IsArchive( thisFile.Extension ) )
                                     {
-                                        _ = Logger.LogAsync($"[Error] {ParentComponent.Name} failed to extract file '{thisFile.Name}'. Invalid archive?" );
+                                        _ = Logger.LogAsync( $"[Error] {ParentComponent.Name} failed to extract file '{thisFile.Name}'. Invalid archive?" );
                                         success = false;
                                         return;
                                     }
@@ -400,7 +400,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                     // Check if the destination file already exists
                     if ( !Overwrite && File.Exists( destinationFilePath ) )
                     {
-                        Logger.Log($"Skipping file {Path.GetFileName( destinationFilePath )} ( Overwrite set to False )" );
+                        Logger.Log( $"Skipping file {Path.GetFileName( destinationFilePath )} ( Overwrite set to False )" );
                         continue;
                     }
 

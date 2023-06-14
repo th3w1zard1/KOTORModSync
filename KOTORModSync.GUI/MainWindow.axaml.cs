@@ -628,7 +628,7 @@ namespace KOTORModSync
             {
                 if ( _currentComponent == null )
                 {
-                    Logger.LogVerbose("No component loaded into editor - nothing to remove."  );
+                    Logger.LogVerbose( "No component loaded into editor - nothing to remove." );
                     return;
                 }
 
@@ -895,7 +895,7 @@ namespace KOTORModSync
                 return;
 
             // Don't show content of any tabs (except the hidden one) if there's no content.
-            if ( _components.Count == 0 || LeftTreeView.SelectedItem == null)
+            if ( _components.Count == 0 || LeftTreeView.SelectedItem == null )
             {
                 TabControl.SelectedItem = InitialTab;
                 return;
@@ -987,7 +987,7 @@ namespace KOTORModSync
             try
             {
                 // Get the selected component from the tree view
-                if ( _currentComponent == null)
+                if ( _currentComponent == null )
                 {
                     return (false, "TreeViewItem does not correspond to a valid Component"
                         + Environment.NewLine

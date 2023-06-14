@@ -82,7 +82,7 @@ namespace KOTORModSync.Core.Utility
             return 4L * 1024 * 1024 * 1024; // 4GB
         }
 
-        public static (int ExitCode, string Output, string Error) TryExecuteCommand( string command, int timeoutSeconds = 10 )
+        public static (int ExitCode, string Output, string Error) TryExecuteCommand( string command )
         {
             string shellPath = GetShellExecutable();
             if ( string.IsNullOrEmpty( shellPath ) )
@@ -276,7 +276,7 @@ namespace KOTORModSync.Core.Utility
             if ( process == null )
             {
                 // Process disposed of early?
-                Logger.LogException( new NotSupportedException() );
+                await Logger.LogExceptionAsync( new NotSupportedException() );
                 tcs.SetResult( (-4, string.Empty, string.Empty) );
                 return;
             }
@@ -306,7 +306,7 @@ namespace KOTORModSync.Core.Utility
             if ( error != null )
                 _ = logBuilder.Append( "Error: " ).AppendLine( error );
 
-            Logger.Log( logBuilder.ToString() );
+            await Logger.LogAsync( logBuilder.ToString() );
 
             // Process had an error of some sort even though ExitCode is 0?
             tcs.SetResult( (-3, output, error) );
@@ -371,14 +371,14 @@ namespace KOTORModSync.Core.Utility
                 {
                     if ( !MainConfig.DebugLogging )
                         continue;
-                    Logger.Log( $"Exception occurred for startInfo: {startInfo}" );
-                    Logger.LogException( localException );
+                    await Logger.LogAsync( $"Exception occurred for startInfo: {startInfo}" );
+                    await Logger.LogExceptionAsync( localException );
                     ex = localException;
                 }
                 catch ( Exception ex2 )
                 {
-                    Logger.Log( $"An unplanned error has occurred trying to run {programFile.Name}." );
-                    Logger.LogException( ex2 );
+                    await Logger.LogAsync( $"An unplanned error has occurred trying to run {programFile.Name}." );
+                    await Logger.LogExceptionAsync( ex2 );
                     return (-6, string.Empty, string.Empty);
                 }
             }
@@ -386,8 +386,8 @@ namespace KOTORModSync.Core.Utility
             if ( startedProcess )
                 return (-2, string.Empty, string.Empty); // todo: figure out what scenario this return code will happen in.
 
-            Logger.Log( "Process failed to start with all possible combinations of arguments." );
-            Logger.LogException( ex );
+            await Logger.LogAsync( "Process failed to start with all possible combinations of arguments." );
+            await Logger.LogExceptionAsync( ex );
             return (-1, string.Empty, string.Empty);
         }
     }

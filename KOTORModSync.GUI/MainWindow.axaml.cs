@@ -115,10 +115,10 @@ namespace KOTORModSync
                 // Add child TreeViewItems to the parent TreeViewItem
                 var items = treeViewItem.Items as IList;
                 foreach ( TreeViewItem childItem in childItems.Values
-                    .Where( childItem => childItem == null
-                        ? throw new ArgumentNullException( nameof( childItem ) )
-                        : items != null
-                    ) )
+                             .Where( childItem => childItem == null
+                                 ? throw new ArgumentNullException( nameof( childItem ) )
+                                 : items != null
+                             ) )
                 {
                     if ( items == null )
                         continue;
@@ -151,7 +151,7 @@ namespace KOTORModSync
             }
             catch ( Exception ex )
             {
-                Logger.LogException( ex );
+                await Logger.LogExceptionAsync( ex );
             }
 
             return null;
@@ -164,17 +164,19 @@ namespace KOTORModSync
                 var filters = new List<FileDialogFilter>( 10 ) { new FileDialogFilter { Name = "All Files", Extensions = { "*" } } };
 
                 string[] filePaths = await ShowFileDialog( false, filters, true );
-                if ( filePaths != null )
+                if ( filePaths == null )
                 {
-                    Logger.Log( $"Selected files: {string.Join( ", ", filePaths )}" );
+                    await Logger.LogVerboseAsync( "User did not select any files." );
+                }
+                else
+                {
+                    await Logger.LogAsync( $"Selected files: {string.Join( ", ", filePaths )}" );
                     return filePaths.ToList();
                 }
-
-                Logger.LogVerbose( "User did not select any files." );
             }
             catch ( Exception ex )
             {
-                Logger.LogException( ex );
+                await Logger.LogExceptionAsync( ex );
             }
 
             return null;
@@ -189,7 +191,7 @@ namespace KOTORModSync
             }
             catch ( Exception ex )
             {
-                Logger.LogException( ex );
+                await Logger.LogExceptionAsync( ex );
             }
 
             return null;
@@ -221,18 +223,18 @@ namespace KOTORModSync
                     string filePath = await dialog.ShowAsync( parent );
                     if ( !string.IsNullOrEmpty( filePath ) )
                     {
-                        Logger.Log( $"Selected file: {filePath}" );
+                        await Logger.LogAsync( $"Selected file: {filePath}" );
                         return filePath;
                     }
                 }
                 else
                 {
-                    Logger.Log( "Could not open dialog - parent window not found" );
+                    await Logger.LogAsync( "Could not open dialog - parent window not found" );
                 }
             }
             catch ( Exception ex )
             {
-                Logger.LogException( ex );
+                await Logger.LogExceptionAsync( ex );
             }
 
             return null;
@@ -248,7 +250,7 @@ namespace KOTORModSync
             {
                 if ( !( VisualRoot is Window parent ) )
                 {
-                    Logger.Log( $"Could not open {( isFolderDialog ? "folder" : "file" )} dialog - parent window not found" );
+                    await Logger.LogAsync( $"Could not open {( isFolderDialog ? "folder" : "file" )} dialog - parent window not found" );
                     return default;
                 }
 
@@ -258,16 +260,16 @@ namespace KOTORModSync
 
                 if ( results == null || results.Length == 0 )
                 {
-                    Logger.LogVerbose( "User did not make a selection" );
+                    await Logger.LogVerboseAsync( "User did not make a selection" );
                     return default;
                 }
 
-                Logger.Log( $"Selected {( isFolderDialog ? "folder" : "file" )}: {string.Join( ", ", results )}" );
+                await Logger.LogAsync( $"Selected {( isFolderDialog ? "folder" : "file" )}: {string.Join( ", ", results )}" );
                 return results;
             }
             catch ( Exception ex )
             {
-                Logger.LogException( ex );
+                await Logger.LogExceptionAsync( ex );
             }
 
             return null;
@@ -300,26 +302,28 @@ namespace KOTORModSync
                 {
                     if ( MainConfig.AttemptFixes )
                         duplicateComponent.Guid = Guid.NewGuid();
-                    Logger.Log( $"[Warning] Invalid GUID for component '{component.Name}' got '{component.Guid}'" );
+                    await Logger.LogWarningAsync( $"Invalid GUID for component '{component.Name}' got '{component.Guid}'" );
                 }
 
                 string message = $"Component '{component.Name}' has duplicate GUID with component '{duplicateComponent.Name}'";
-                Logger.Log( message );
+                await Logger.LogAsync( message );
 
-                bool confirm = i >= 2
-                    || await ConfirmationDialog.ShowConfirmationDialog(
+                bool? confirm = i >= 2
+                    || ( await ConfirmationDialog.ShowConfirmationDialog(
                         this,
-                        message + $".\r\nAssign random GUID to '{duplicateComponent.Name}'? (default: NO)" );
+                        message + $".\r\n"
+                        + $"Assign random GUID to '{duplicateComponent.Name}'? (default: NO)"
+                    ) ) == true;
 
-                if ( confirm )
+                if ( confirm == true )
                 {
                     i++;
                     duplicateComponent.Guid = Guid.NewGuid();
-                    Logger.LogVerbose( $"Replaced GUID of component {duplicateComponent.Name}" );
+                    await Logger.LogVerboseAsync( $"Replaced GUID of component {duplicateComponent.Name}" );
                 }
                 else
                 {
-                    Logger.LogVerbose( $"User canceled GUID replacement for component {duplicateComponent.Name}" );
+                    await Logger.LogVerboseAsync( $"User canceled GUID replacement for component {duplicateComponent.Name}" );
                 }
             }
 
@@ -351,7 +355,7 @@ namespace KOTORModSync
                 string fileExtension = Path.GetExtension( filePath );
                 if ( !new List<string> { ".toml", ".tml", ".txt" }.Contains( fileExtension, StringComparer.OrdinalIgnoreCase ) )
                 {
-                    Logger.Log( $"Invalid extension for file {filePath}" );
+                    await Logger.LogAsync( $"Invalid extension for file {filePath}" );
                     return;
                 }
 
@@ -363,7 +367,7 @@ namespace KOTORModSync
             }
             catch ( Exception ex )
             {
-                Logger.LogException( ex );
+                await Logger.LogExceptionAsync( ex );
             }
         }
 
@@ -377,8 +381,13 @@ namespace KOTORModSync
                     string fileContents = await reader.ReadToEndAsync();
                     if ( _components?.Count > 0 )
                     {
-                        if ( !await ConfirmationDialog.ShowConfirmationDialog( this, "You already have a config loaded. Do you want to load the markdown anyway?" ) )
+                        if ( await ConfirmationDialog.ShowConfirmationDialog(
+                                this,
+                                "You already have a config loaded. Do you want to load the markdown anyway?"
+                            ) == true )
+                        {
                             return;
+                        }
                     }
 
                     this._components = ModParser.ParseMods( string.Join( Environment.NewLine, fileContents ) );
@@ -387,7 +396,7 @@ namespace KOTORModSync
             }
             catch ( Exception exception )
             {
-                Logger.LogException( exception );
+                await Logger.LogExceptionAsync( exception );
                 throw;
             }
         }
@@ -402,7 +411,7 @@ namespace KOTORModSync
 
                 if ( thisInstruction == null )
                 {
-                    Logger.Log( "Could not find instruction instance during BrowseSourceFiles_Click" );
+                    await Logger.LogAsync( "Could not find instruction instance during BrowseSourceFiles_Click" );
                     return;
                 }
 
@@ -413,13 +422,13 @@ namespace KOTORModSync
                 List<string> files = await OpenFiles();
                 if ( files == null )
                 {
-                    Logger.Log( "No files chosen in BrowseSourceFiles_Click, returning to previous values" );
+                    await Logger.LogAsync( "No files chosen in BrowseSourceFiles_Click, returning to previous values" );
                     return;
                 }
 
                 if ( files.Any( string.IsNullOrEmpty ) )
                 {
-                    Logger.LogException(
+                    await Logger.LogExceptionAsync(
                         new ArgumentOutOfRangeException(
                             nameof( files ),
                             $"Invalid files found, please report this to the developer: '{files}'"
@@ -434,13 +443,13 @@ namespace KOTORModSync
                 }
 
                 if ( MainConfig.SourcePath == null )
-                    Logger.Log( "Not using custom variables <<kotorDirectory>> and <<modDirectory>> due to directories not being set prior." );
+                    await Logger.LogAsync( "Not using custom variables <<kotorDirectory>> and <<modDirectory>> due to directories not being set prior." );
                 thisInstruction.Source = files;
             }
             catch ( ArgumentNullException ex )
-            { Logger.LogVerbose( ex.Message ); }
+            { await Logger.LogVerboseAsync( ex.Message ); }
             catch ( Exception ex )
-            { Logger.LogException( ex ); }
+            { await Logger.LogExceptionAsync( ex ); }
         }
 
         private async void BrowseDestination_Click( object sender, RoutedEventArgs e )
@@ -458,7 +467,7 @@ namespace KOTORModSync
 
                 if ( MainConfig.SourcePath == null )
                 {
-                    Logger.Log(
+                    await Logger.LogAsync(
                         "Directories not set, setting raw folder path without custom variable <<kotorDirectory>>"
                     );
                     thisInstruction.Destination = filePath;
@@ -469,7 +478,7 @@ namespace KOTORModSync
             }
             catch ( Exception ex )
             {
-                Logger.LogException( ex );
+                await Logger.LogExceptionAsync( ex );
             }
         }
 
@@ -496,13 +505,13 @@ namespace KOTORModSync
                     return;
                 }
 
-                Logger.LogVerbose( $"Selected {_currentComponent.Name}" );
+                await Logger.LogVerboseAsync( $"Selected {_currentComponent.Name}" );
 
                 if ( !CheckForChanges() )
                     return;
 
-                bool confirmationResult = await ConfirmationDialog.ShowConfirmationDialog( this, "Are you sure you want to save?" );
-                if ( !confirmationResult )
+                bool? confirmationResult = await ConfirmationDialog.ShowConfirmationDialog( this, "Are you sure you want to save?" );
+                if ( confirmationResult == true )
                     return;
 
                 string message = SaveChanges() ? "Saved successfully. Check the output window for more information." : "There were some problems with your syntax, please check the output window.";
@@ -511,7 +520,7 @@ namespace KOTORModSync
             }
             catch ( Exception ex )
             {
-                Logger.LogException( ex );
+                await Logger.LogExceptionAsync( ex );
             }
         }
 
@@ -556,7 +565,7 @@ namespace KOTORModSync
             }
             catch ( Exception ex )
             {
-                Logger.LogException( ex );
+                await Logger.LogExceptionAsync( ex );
             }
         }
 
@@ -624,7 +633,7 @@ namespace KOTORModSync
             }
             catch ( ArgumentNullException )
             {
-                Logger.Log( "User cancelled selecting folder" );
+                await Logger.LogAsync( "User cancelled selecting folder" );
                 return;
             }
         }
@@ -635,8 +644,7 @@ namespace KOTORModSync
             {
                 if ( MainConfigInstance == null || MainConfig.DestinationPath == null )
                 {
-                    var informationDialog = new InformationDialog
-                    { InfoText = "Please set your directories first" };
+                    var informationDialog = new InformationDialog{ InfoText = "Please set your directories first" };
                     _ = await informationDialog.ShowDialog<bool?>( this );
                     return;
                 }
@@ -648,18 +656,20 @@ namespace KOTORModSync
                 }
                 else
                 {
-                    var informationDialog = new InformationDialog
-                    { InfoText = "Please choose a mod to install from the left list first" };
+                    var informationDialog = new InformationDialog{ InfoText = "Please choose a mod to install from the left list first" };
                     _ = await informationDialog.ShowDialog<bool?>( this );
                     return;
                 }
 
                 if ( thisComponent.Directions != null )
                 {
-                    bool confirm = await ConfirmationDialog.ShowConfirmationDialog( this, thisComponent.Directions + "\r\n\r\n Press Yes to execute these directions now." );
-                    if ( !confirm )
+                    bool? confirm = await ConfirmationDialog.ShowConfirmationDialog(
+                        this,
+                        thisComponent.Directions + "\r\n\r\n Press Yes to execute these directions now."
+                    );
+                    if ( confirm == true )
                     {
-                        Logger.Log( $"User cancelled install of {thisComponent.Name}" );
+                        await Logger.LogAsync( $"User cancelled install of {thisComponent.Name}" );
                         return;
                     }
                 }
@@ -668,7 +678,8 @@ namespace KOTORModSync
                 {
                     await InformationDialog.ShowInformationDialog(
                         this,
-                        "There's already another installation running, please check the output window." );
+                        "There's already another installation running, please check the output window."
+                    );
                     return;
                 }
 
@@ -679,12 +690,12 @@ namespace KOTORModSync
                 if ( !success )
                     await InformationDialog.ShowInformationDialog( this, $"There was a problem installing {thisComponent.Name}, please check the output window" );
                 else
-                    Logger.Log( $"Successfully installed {thisComponent.Name}" );
+                    await Logger.LogAsync( $"Successfully installed {thisComponent.Name}" );
                 _installRunning = false;
             }
             catch ( Exception ex )
             {
-                Logger.LogException( ex );
+                await Logger.LogExceptionAsync( ex );
                 _installRunning = false;
             }
         }
@@ -705,7 +716,7 @@ namespace KOTORModSync
                     return;
                 }
 
-                if ( !await ConfirmationDialog.ShowConfirmationDialog( this, "Really install all mods?" ) )
+                if ( await ConfirmationDialog.ShowConfirmationDialog(this, "Really install all mods?") == true )
                 {
                     return;
                 }
@@ -719,7 +730,7 @@ namespace KOTORModSync
                 }
 
                 _installRunning = true;
-                Logger.Log( "Start installing all mods..." );
+                await Logger.LogAsync( "Start installing all mods..." );
                 var progressWindow = new ProgressWindow();
                 progressWindow.Closed += ProgressWindowClosed;
                 progressWindow.progressBar.Value = 0;
@@ -729,7 +740,9 @@ namespace KOTORModSync
                 {
                     await Dispatcher.UIThread.InvokeAsync( async () =>
                     {
-                        progressWindow.progressTextBlock.Text = $"Installing {component.Name}...\nDirections: {component.Directions}";
+                        progressWindow.progressTextBlock.Text = $"Installing {component.Name}...\n\n"
+                            + $"Executing the following directions:\n\n"
+                            + $"{component.Directions}";
                         progressWindow.progressBar.Value = 0;
 
                         // Additional fallback options
@@ -743,7 +756,7 @@ namespace KOTORModSync
                     await Task.Delay( 200 );
 
                     // Call the ExecuteInstructions method asynchronously using Task.Run
-                    Logger.Log( $"Call ExecuteInstructions for {component.Name}..." );
+                    await Logger.LogAsync( $"Call ExecuteInstructions for {component.Name}..." );
                     (bool success, Dictionary<FileInfo, SHA1> originalChecksums)
                         = await component.ExecuteInstructions(
                             new ConfirmationDialogCallback( this ),
@@ -753,25 +766,27 @@ namespace KOTORModSync
 
                     if ( !success )
                     {
-                        if ( !await ConfirmationDialog.ShowConfirmationDialog(
-                                this,
-                                $"There was a problem installing {component.Name}, please check the output window.\n\nContinue with the next mod anyway?"
-                        ) )
-                        {
+                        bool? confirm = await ConfirmationDialog.ShowConfirmationDialog(
+                            this,
+                            $"There was a problem installing {component.Name},"
+                            + $" please check the output window.\n\n"
+                            + $"Continue with the next mod anyway?"
+                        );
+                        if ( confirm == true )
                             break;
-                        }
                     }
                     else
                     {
-                        Logger.Log( $"Successfully installed {component.Name}" );
+                        await Logger.LogAsync( $"Successfully installed {component.Name}" );
                     }
                 }
 
+                progressWindow.Close();
                 _installRunning = false;
             }
             catch ( Exception ex )
             {
-                Logger.LogException( ex );
+                await Logger.LogExceptionAsync( ex );
                 _installRunning = false;
             }
         }
@@ -797,11 +812,11 @@ namespace KOTORModSync
                 await SaveDocsToFile( file, docs );
                 string message = $"Saved documentation of {_components.Count} mods to '{file}'";
                 await InformationDialog.ShowInformationDialog( this, message );
-                Logger.Log( message );
+                await Logger.LogAsync( message );
             }
             catch ( Exception ex )
             {
-                Logger.Log( $"Error generating and saving documentation: {ex.Message}" );
+                await Logger.LogAsync( $"Error generating and saving documentation: {ex.Message}" );
                 await InformationDialog.ShowInformationDialog( this, "An error occurred while generating and saving documentation." );
             }
         }
@@ -809,7 +824,7 @@ namespace KOTORModSync
         private static async Task SaveDocsToFile( string filePath, string documentation )
         {
             try { await new StreamWriter( filePath ).WriteAsync( documentation ); }
-            catch ( Exception e ) { Logger.LogException( e ); }
+            catch ( Exception e ) { await Logger.LogExceptionAsync( e ); }
         }
 
         private void TabControl_SelectionChanged( object sender, SelectionChangedEventArgs e )
@@ -850,18 +865,19 @@ namespace KOTORModSync
                     return;
 
                 // todo: figure out what we're doing with _originalComponent
-                Logger.LogVerbose( $"Loading {selectedComponent.Name}..." );
+                await Logger.LogVerboseAsync( $"Loading {selectedComponent.Name}..." );
                 _originalContent = selectedComponent.SerializeComponent();
                 if ( _originalContent.Equals( RightTextBox.Text )
                     && !string.IsNullOrEmpty( RightTextBox.Text )
                     && selectedComponent != _currentComponent )
                 {
+                    bool? confirmResult = await ConfirmationDialog.ShowConfirmationDialog(
+                        this,
+                        "You're attempting to load the component, but there may be unsaved changes still in the editor. Really continue?"
+                    );
+
                     // double check with user before overwrite
-                    if ( confirmation && !await ConfirmationDialog.ShowConfirmationDialog(
-                            this,
-                            "You're attempting to load the component, but there may be unsaved changes still in the editor. Really continue?"
-                        )
-                        )
+                    if ( confirmation && confirmResult != true )
                     {
                         return;
                     }
@@ -892,7 +908,7 @@ namespace KOTORModSync
             }
             catch ( Exception e )
             {
-                Logger.LogException( e );
+                await Logger.LogExceptionAsync( e );
             }
         }
 
@@ -1068,7 +1084,7 @@ namespace KOTORModSync
             }
             catch ( Exception ex )
             {
-                Logger.LogException( ex );
+                await Logger.LogExceptionAsync( ex );
             }
         }
 

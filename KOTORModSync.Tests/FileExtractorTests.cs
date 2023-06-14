@@ -46,10 +46,10 @@ namespace KOTORModSync.Tests
             instructionMock.SetupGet( x => x.GetType().GetField( "destinationPath", BindingFlags.NonPublic | BindingFlags.Instance ).GetValue( instructionMock.Object ) ).Returns( destinationPath );
 
             // Act
-            bool result = await instructionMock.Object.ExtractFileAsync( null );
+            bool result = await instructionMock.Object.ExtractFileAsync();
 
             // Assert
-            Assert.IsFalse( result );
+            Assert.That( result, Is.False );
         }
 
         /*[Test]
@@ -144,14 +144,14 @@ namespace KOTORModSync.Tests
             ArchiveHelper.Setup(x => x.OpenArchive(It.IsAny<Stream>(), validArchivePath)).Returns(_archiveMock.Object);
             ArchiveHelper.Setup(x => x.DefaultExtractionOptions).Returns(new ExtractionOptions());
             _readerMock.Setup(x => x.WriteEntryToDirectory(It.IsAny<string>(), It.IsAny<ExtractionOptions>())).Throws<Exception>();
-            Logger.Setup(x => x.Log($"[Warning] Skipping file 'file.txt' due to lack of permissions."));
+            Logger.Setup(x => x.LogWarning($"Skipping file 'file.txt' due to lack of permissions."));
 
             // Act
             var result = await fileExtractor.ExtractFileAsync(_confirmationDialogMock.Object);
 
             // Assert
             Assert.IsTrue(result);
-            Logger.Verify(x => x.Log($"[Warning] Skipping file 'file.txt' due to lack of permissions."), Times.Once);
+            Logger.Verify(x => x.LogWarning($"Skipping file 'file.txt' due to lack of permissions."), Times.Once);
         }*/
     }
 }

@@ -114,9 +114,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
             return;
         }
 
-        public async Task<bool> ExtractFileAsync(
-            Utility.Utility.IConfirmationDialogCallback confirmDialog
-        )
+        public async Task<bool> ExtractFileAsync()
         {
             try
             {
@@ -137,11 +135,11 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                                 try
                                 {
                                     var thisFile = new FileInfo( sourcePath );
-                                    Logger.Log( $"File path: {thisFile.FullName}" );
+                                    await Logger.LogAsync( $"File path: {thisFile.FullName}" );
 
                                     if ( !ArchiveHelper.IsArchive( thisFile.Extension ) )
                                     {
-                                        Logger.Log( $"[Error] {ParentComponent.Name} failed to extract file '{thisFile.Name}'. Invalid archive?" );
+                                        _ = Logger.LogAsync($"[Error] {ParentComponent.Name} failed to extract file '{thisFile.Name}'. Invalid archive?" );
                                         success = false;
                                         return;
                                     }
@@ -155,7 +153,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
 
                                         if ( archive == null )
                                         {
-                                            Logger.LogException(
+                                            await Logger.LogExceptionAsync(
                                                 new InvalidOperationException(
                                                     $"Unable to parse archive '{sourcePath}'" )
                                             );
@@ -179,11 +177,11 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
 
                                             if ( destinationDirectory != null && !Directory.Exists( destinationDirectory ) )
                                             {
-                                                Logger.Log( $"Create directory {destinationDirectory}" );
+                                                _ = Logger.LogAsync( $"Create directory {destinationDirectory}" );
                                                 _ = Directory.CreateDirectory( destinationDirectory );
                                             }
 
-                                            Logger.Log( $"Extract {reader.Entry.Key} to {thisFile.Directory.FullName}" );
+                                            _ = Logger.LogAsync( $"Extract {reader.Entry.Key} to {thisFile.Directory.FullName}" );
 
                                             try
                                             {
@@ -194,10 +192,10 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                                                     )
                                                 );
                                             }
-                                            catch ( Exception )
+                                            catch ( UnauthorizedAccessException )
                                             {
-                                                await Task.Run(
-                                                    () => Logger.Log( $"[Warning] Skipping file '{reader.Entry.Key}' due to lack of permissions." )
+                                                _ = Logger.LogWarningAsync(
+                                                    $"Skipping file '{reader.Entry.Key}' due to lack of permissions."
                                                 );
                                             }
                                         }
@@ -218,23 +216,23 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
             catch ( Exception ex )
             {
                 // Handle any exceptions that occurred during extraction
-                Logger.LogException( ex );
+                await Logger.LogExceptionAsync( ex );
                 return false; // Extraction failed
             }
         }
 
-        public static void DeleteDuplicateFile(
+        public static void DeleteDuplicateFile
+        (
             string directoryPath,
-            string fileExtension,
-            Utility.Utility.IConfirmationDialogCallback confirmDialog
+            string fileExtension
         )
         {
             if ( string.IsNullOrEmpty( directoryPath )
                 || !Directory.Exists( directoryPath )
                 || !Utility.Utility.IsDirectoryWritable( new DirectoryInfo( directoryPath ) )
-                )
+               )
             {
-                throw new ArgumentException( "Invalid or inaccessible directory path." );
+                throw new ArgumentException( "Invalid or inaccessible directory path.", nameof( directoryPath ) );
             }
 
             string[] files = Directory.GetFiles( directoryPath );
@@ -281,7 +279,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
             }
         }
 
-        public bool DeleteFile( Utility.Utility.IConfirmationDialogCallback confirmDialog )
+        public bool DeleteFile()
         {
             try
             {
@@ -292,7 +290,8 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                     if ( !Path.IsPathRooted( thisFilePath ) || !thisFile.Exists )
                     {
                         var ex = new ArgumentNullException(
-                            $"Invalid wildcards or file does not exist: {thisFilePath}" );
+                            $"Invalid wildcards or file does not exist: {thisFilePath}"
+                        );
                         Logger.LogException( ex );
                         return false;
                     }
@@ -319,13 +318,14 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
             }
         }
 
-        public bool RenameFile( Utility.Utility.IConfirmationDialogCallback confirmDialog )
+        public bool RenameFile()
         {
             try
             {
                 bool success = true;
-                foreach ( string sourcePath in Source.ConvertAll(
-                    Utility.Utility.ReplaceCustomVariables ) )
+                foreach ( string sourcePath
+                         in Source.ConvertAll( Utility.Utility.ReplaceCustomVariables )
+                        )
                 {
                     // Check if the source file already exists
                     string fileName = Path.GetFileName( sourcePath );
@@ -352,7 +352,11 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                             success = false;
                             Logger.LogException(
                                 new InvalidOperationException(
-                                    $"Skipping file {sourcePath} (A file with the name {Path.GetFileName( destinationFilePath )} already exists)" ) );
+                                    $"Skipping file {sourcePath}"
+                                    + $" ( A file with the name {Path.GetFileName( destinationFilePath )}"
+                                    + $" already exists )"
+                                )
+                            );
                             continue;
                         }
                     }
@@ -381,7 +385,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
             }
         }
 
-        public bool CopyFile( Utility.Utility.IConfirmationDialogCallback confirmDialog )
+        public bool CopyFile()
         {
             try
             {
@@ -390,22 +394,20 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                     string fileName = Path.GetFileName( sourcePath );
                     string destinationFilePath = Path.Combine(
                         destinationPath.FullName,
-                        fileName );
+                        fileName
+                    );
 
                     // Check if the destination file already exists
                     if ( !Overwrite && File.Exists( destinationFilePath ) )
                     {
-                        Logger.Log(
-                            $"Skipping file {Path.GetFileName( destinationFilePath )} (Overwrite is false)"
-                        );
+                        Logger.Log($"Skipping file {Path.GetFileName( destinationFilePath )} ( Overwrite set to False )" );
                         continue;
                     }
 
                     // Check if the destination file already exists
                     if ( File.Exists( destinationFilePath ) )
                     {
-                        Logger.Log(
-                            $"File already exists, deleting existing file {destinationFilePath}" );
+                        Logger.Log( $"File already exists, deleting existing file {destinationFilePath}" );
                         // Delete the existing file
                         File.Delete( destinationFilePath );
                     }
@@ -426,7 +428,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
             }
         }
 
-        public bool MoveFile( Utility.Utility.IConfirmationDialogCallback confirmDialog )
+        public bool MoveFile()
         {
             try
             {
@@ -435,13 +437,14 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                     string fileName = Path.GetFileName( sourcePath );
                     string destinationFilePath = Path.Combine(
                         destinationPath.FullName,
-                        fileName );
+                        fileName
+                    );
 
                     // Check if the destination file already exists
                     if ( !Overwrite && File.Exists( destinationFilePath ) )
                     {
                         Logger.Log(
-                            $"Skipping file {Path.GetFileName( destinationFilePath )} (Overwrite is false)" );
+                            $"Skipping file {Path.GetFileName( destinationFilePath )} ( Overwrite set to False )" );
 
                         continue;
                     }
@@ -471,9 +474,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
             }
         }
 
-        public async Task<bool> ExecuteTSLPatcherAsync(
-            Utility.Utility.IConfirmationDialogCallback confirmDialog
-        )
+        public async Task<bool> ExecuteTSLPatcherAsync()
         {
             try
             {
@@ -505,13 +506,13 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                         }
                     }
 
-                    Logger.Log( "Installing TSLPatcher LookUpGameFolder hook..." );
+                    await Logger.LogAsync( "Installing TSLPatcher LookUpGameFolder hook..." );
                     FileHelper.ReplaceLookupGameFolder( tslPatcherDirectory );
 
                     string args = $@"""{MainConfig.DestinationPath}""" // arg1 = swkotor directory
-                                  + $@" ""{MainConfig.SourcePath}"""   // arg2 = mod directory (where tslpatcherdata folder is)
-                                  + ( string.IsNullOrEmpty( this.Arguments )
-                                      ? "" : $" {this.Arguments}" );   // arg3 = (optional) install option integer index from namespaces.ini
+                        + $@" ""{MainConfig.SourcePath}"""   // arg2 = mod directory (where tslpatcherdata folder is)
+                        + ( string.IsNullOrEmpty( this.Arguments )
+                            ? "" : $" {this.Arguments}" );   // arg3 = (optional) install option integer index from namespaces.ini
 
                     var tslPatcherCliPath = new FileInfo(
                         Path.Combine(
@@ -520,13 +521,13 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                         )
                     );
 
-                    Logger.Log( "Run TSLPatcher..." );
+                    await Logger.LogAsync( "Run TSLPatcher..." );
                     (int exitCode, string output, string error)
                         = await PlatformAgnosticMethods.ExecuteProcessAsync( tslPatcherCliPath, args );
-                    Logger.LogVerbose( $"{tslPatcherCliPath.Name} exited with exit code {exitCode}" );
+                    await Logger.LogVerboseAsync( $"{tslPatcherCliPath.Name} exited with exit code {exitCode}" );
 
-                    Logger.Log( !string.IsNullOrEmpty( output ) ? output : null );
-                    Logger.Log( !string.IsNullOrEmpty( error ) ? error : null );
+                    await Logger.LogAsync( !string.IsNullOrEmpty( output ) ? output : null );
+                    await Logger.LogAsync( !string.IsNullOrEmpty( error ) ? error : null );
 
                     return exitCode == 0;
                 }
@@ -535,14 +536,12 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
             }
             catch ( Exception ex )
             {
-                Logger.LogException( ex );
+                await Logger.LogExceptionAsync( ex );
                 throw;
             }
         }
 
-        public async Task<bool> ExecuteProgramAsync(
-            Utility.Utility.IConfirmationDialogCallback confirmDialog
-        )
+        public async Task<bool> ExecuteProgramAsync()
         {
             try
             {
@@ -575,7 +574,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                     }
                     catch ( Exception ex )
                     {
-                        Logger.LogException( ex );
+                        await Logger.LogExceptionAsync( ex );
                         return false;
                     }
                 }
@@ -584,12 +583,12 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
             }
             catch ( Exception ex )
             {
-                Logger.LogException( ex );
+                await Logger.LogExceptionAsync( ex );
                 return false;
             }
         }
 
-        // parse TSLPatcher's installlog.rtf for errors, since there's no CLI.
+        // parse TSLPatcher's installlog.rtf (or installlog.txt) for errors when not using the CLI.
         public List<string> VerifyInstall()
         {
             foreach ( string sourcePath in sourcePaths )
@@ -599,15 +598,21 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
 
                 string tslPatcherDirPath
                     = Path.GetDirectoryName( sourcePath )
-                      ?? throw new DirectoryNotFoundException( $"Could not retrieve parent directory of {sourcePath}." );
+                    ?? throw new DirectoryNotFoundException( $"Could not retrieve parent directory of {sourcePath}." );
 
+                //PlaintextLog=1
                 string fullInstallLogFile = Path.Combine(
                     tslPatcherDirPath,
                     "installlog.rtf"
                 );
 
                 if ( !File.Exists( fullInstallLogFile ) )
-                    throw new FileNotFoundException( "Install log file not found.", fullInstallLogFile );
+                {
+                    //PlaintextLog=0
+                    fullInstallLogFile = Path.Combine( tslPatcherDirPath, "installlog.txt" );
+                    if ( !File.Exists( fullInstallLogFile ) )
+                        throw new FileNotFoundException( "Install log file not found.", fullInstallLogFile );
+                }
 
                 string installLogContent = File.ReadAllText( fullInstallLogFile );
                 foreach ( string thisLine in installLogContent.Split( '\n' ) )

@@ -18,7 +18,7 @@ namespace KOTORModSync
 
         public ConfirmationDialogCallback( Window topLevelWindow ) => _topLevelWindow = topLevelWindow;
 
-        public Task<bool> ShowConfirmationDialog( string message ) => ConfirmationDialog.ShowConfirmationDialog( _topLevelWindow, message );
+        public Task<bool?> ShowConfirmationDialog( string message ) => ConfirmationDialog.ShowConfirmationDialog( _topLevelWindow, message );
     }
 
     public partial class ConfirmationDialog : Window
@@ -41,9 +41,9 @@ namespace KOTORModSync
             confirmTextBlock.Text = ConfirmText;
         }
 
-        public static async Task<bool> ShowConfirmationDialog( Window parentWindow, string confirmText )
+        public static async Task<bool?> ShowConfirmationDialog( Window parentWindow, string confirmText )
         {
-            var tcs = new TaskCompletionSource<bool>();
+            var tcs = new TaskCompletionSource<bool?>();
 
             await Dispatcher.UIThread.InvokeAsync( () =>
             {
@@ -84,7 +84,7 @@ namespace KOTORModSync
                 void ClosedHandler( object sender, EventArgs e )
                 {
                     CleanupHandlers();
-                    tcs.SetResult( false );
+                    tcs.SetResult( null );
                 }
             } );
 
@@ -93,6 +93,7 @@ namespace KOTORModSync
 
         private static readonly RoutedEvent<RoutedEventArgs> s_yesButtonClickedEvent =
             RoutedEvent.Register<ConfirmationDialog, RoutedEventArgs>( nameof( YesButtonClicked ), RoutingStrategies.Bubble );
+
         private static readonly RoutedEvent<RoutedEventArgs> s_noButtonClickedEvent =
             RoutedEvent.Register<ConfirmationDialog, RoutedEventArgs>( nameof( NoButtonClicked ), RoutingStrategies.Bubble );
 
@@ -101,6 +102,7 @@ namespace KOTORModSync
             add => AddHandler( s_yesButtonClickedEvent, value );
             remove => RemoveHandler( s_yesButtonClickedEvent, value );
         }
+
         public event EventHandler<RoutedEventArgs> NoButtonClicked
         {
             add => AddHandler( s_noButtonClickedEvent, value );

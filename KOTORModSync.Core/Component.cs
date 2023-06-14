@@ -151,7 +151,7 @@ namespace KOTORModSync.Core
 
             // can't validate anything if directories aren't set.
             if ( string.IsNullOrWhiteSpace( MainConfig.SourcePath?.FullName )
-                 || string.IsNullOrWhiteSpace( MainConfig.DestinationPath?.FullName ) )
+                || string.IsNullOrWhiteSpace( MainConfig.DestinationPath?.FullName ) )
             {
                 return;
             }
@@ -164,8 +164,8 @@ namespace KOTORModSync.Core
                 return;
             }
 
-            this.Validator.GetErrors().ForEach( error => Logger.Log( "[Error] " + error ) );
-            this.Validator.GetWarnings().ForEach( warning => Logger.Log( "[Warning] " + warning ) );
+            this.Validator.GetErrors().ForEach( Logger.LogError );
+            this.Validator.GetWarnings().ForEach( Logger.LogWarning );
         }
 
         [NotNull]
@@ -211,7 +211,7 @@ namespace KOTORModSync.Core
         {
             if ( tomlObject == null )
             {
-                Logger.Log( $"[Warning] No instructions found for component '{this.Name}'" );
+                Logger.LogWarning( $"No instructions found for component '{this.Name}'" );
                 return new List<Instruction>();
             }
 
@@ -419,7 +419,7 @@ namespace KOTORModSync.Core
                 if ( result.Item1 )
                     return (true, null);
 
-                Logger.LogException(
+                await Logger.LogExceptionAsync(
                     new Exception(
                         $"[Error] Component {Name} failed to install the mod correctly with {result}" )
                 );
@@ -434,8 +434,10 @@ namespace KOTORModSync.Core
                          i1++ )
                     {
                         Instruction instruction = component.Instructions[i1]
-                                                  ?? throw new ArgumentException(
-                                                      $"[Error] instruction null at index {i1}", nameof( componentsList ) );
+                            ?? throw new ArgumentException(
+                                $"[Error] instruction null at index {i1}",
+                                nameof(componentsList)
+                            );
 
                         //The instruction will run if any of the following conditions are met:
                         //The instruction has no dependencies or restrictions.
@@ -446,11 +448,14 @@ namespace KOTORModSync.Core
                         {
                             shouldRunInstruction = instruction.Dependencies.All(
                                 requiredGuid => componentsList.Any(
-                                    checkComponent => checkComponent.Guid == requiredGuid ) );
+                                    checkComponent => checkComponent.Guid == requiredGuid
+                                )
+                            );
                             if ( !shouldRunInstruction )
                             {
-                                Logger.Log(
-                                    $"[Information] Skipping instruction '{instruction.Action}' index {i1} due to missing dependency(s): {instruction.Dependencies}" );
+                                await Logger.LogAsync(
+                                    $"[Information] Skipping instruction '{instruction.Action}' index {i1} due to missing dependency(s): {instruction.Dependencies}"
+                                );
                             }
                         }
 
@@ -458,11 +463,14 @@ namespace KOTORModSync.Core
                         {
                             shouldRunInstruction &= !instruction.Restrictions.Any(
                                 restrictedGuid => componentsList.Any(
-                                    checkComponent => checkComponent.Guid == restrictedGuid ) );
+                                    checkComponent => checkComponent.Guid == restrictedGuid
+                                )
+                            );
                             if ( !shouldRunInstruction )
                             {
-                                Logger.Log(
-                                    $"[Information] Not running instruction {instruction.Action} index {i1} due to restricted components installed: {instruction.Restrictions}" );
+                                await Logger.LogAsync(
+                                    $"[Information] Not running instruction {instruction.Action} index {i1} due to restricted components installed: {instruction.Restrictions}"
+                                );
                             }
                         }
 
@@ -492,41 +500,41 @@ namespace KOTORModSync.Core
                         switch ( instruction.Action.ToLower() )
                         {
                             case "extract":
-                                success = await instruction.ExtractFileAsync( confirmDialog );
+                                success = await instruction.ExtractFileAsync();
                                 break;
                             case "delete":
-                                success = instruction.DeleteFile( confirmDialog );
+                                success = instruction.DeleteFile();
                                 break;
                             case "delduplicate":
                                 Instruction.DeleteDuplicateFile(
                                     instruction.Destination,
-                                    instruction.Arguments,
-                                    confirmDialog );
+                                    instruction.Arguments
+                                );
                                 break;
                             case "copy":
-                                success = instruction.CopyFile( confirmDialog );
+                                success = instruction.CopyFile();
                                 break;
                             case "move":
-                                success = instruction.MoveFile( confirmDialog );
+                                success = instruction.MoveFile();
                                 break;
                             case "rename":
-                                success = instruction.RenameFile( confirmDialog );
+                                success = instruction.RenameFile();
                                 break;
                             case "patch":
                             case "tslpatcher":
                                 success = MainConfig.TslPatcherCli
-                                    ? await instruction.ExecuteTSLPatcherAsync( confirmDialog )
-                                    : await instruction.ExecuteProgramAsync( confirmDialog );
+                                    ? await instruction.ExecuteTSLPatcherAsync()
+                                    : await instruction.ExecuteProgramAsync();
 
                                 List<string> installErrors = instruction.VerifyInstall();
                                 if ( installErrors.Count > 0 )
-                                    Logger.Log( string.Join( "\n", installErrors ) );
+                                    await Logger.LogAsync( string.Join( "\n", installErrors ) );
 
-                                success &= installErrors.Count > 0;
+                                success &= installErrors.Count == 0;
                                 break;
                             case "execute":
                             case "run":
-                                success = await instruction.ExecuteProgramAsync( confirmDialog );
+                                success = await instruction.ExecuteProgramAsync();
                                 break;
                             case "backup": //todo
                             case "confirm":
@@ -543,7 +551,7 @@ namespace KOTORModSync.Core
                                 List<string> optionNames = options.ConvertAll( option => option.Name );
 
                                 string selectedOptionName = await optionsDialog.ShowOptionsDialog( optionNames )
-                                                            ?? throw new ArgumentNullException();
+                                    ?? throw new NullReferenceException(nameof(optionNames));
                                 Option selectedOption = null;
 
                                 foreach ( Option option in options )
@@ -562,71 +570,82 @@ namespace KOTORModSync.Core
                                 break;
                             default:
                                 // Handle unknown instruction type here
-                                Logger.Log( $"[Warning] Unknown instruction {instruction.Action}" );
+                                await Logger.LogWarningAsync( $"Unknown instruction {instruction.Action}" );
                                 success = false;
                                 break;
                         }
 
-                        if ( success )
+                        if ( !success )
                         {
-                            Logger.Log(
-                                $"Successfully completed instruction #{i1 + 1} '{instruction.Action}'" );
-                            continue;
+                            await Logger.LogAsync( $"Instruction {instruction.Action} failed at index {i1}." );
+                            bool? confirmationResult = await confirmDialog.ShowConfirmationDialog(
+                                $"Error installing mod {Name},"
+                                + $" would you like to repeat this instruction"
+                                + $" or continue to the next instruction?"
+                            );
+
+                            switch ( confirmationResult )
+                            {
+                                // repeat instruction
+                                case true:
+                                    i1--;
+                                    continue;
+
+                                // execute next instruction
+                                case false:
+                                    continue;
+
+                                // case null: cancel installing this mod (user closed confirmation dialog)
+                                default:
+                                    return ( false, null );
+                            }
                         }
 
-                        Logger.Log( $"Instruction {instruction.Action} failed at index {i1}." );
-                        bool confirmationResult = await confirmDialog.ShowConfirmationDialog(
-                            $"Error installing mod {Name},"
-                            + $" would you like to execute the next instruction anyway?"
-                        );
-                        if ( confirmationResult )
-                            continue;
-
-                        return (false, null);
-
                         /*if (instruction.ExpectedChecksums != null)
-                    {
-                        // Get the new checksums after the modifications
-                        var validator = new FileChecksumValidator(
-                            destinationPath: MainConfig.DestinationPath.FullName,
-                            expectedChecksums: instruction.ExpectedChecksums,
-                            originalChecksums: originalPathsToChecksum
-                        );
-                        bool checksumsMatch = await validator.ValidateChecksumsAsync();
-                        if (checksumsMatch)
                         {
-                            Logger.Log($"Component {component.Name}'s instruction '{instruction.Action}' succeeded and modified files have expected checksums.");
+                            // Get the new checksums after the modifications
+                            var validator = new FileChecksumValidator(
+                                destinationPath: MainConfig.DestinationPath.FullName,
+                                expectedChecksums: instruction.ExpectedChecksums,
+                                originalChecksums: originalPathsToChecksum
+                            );
+                            bool checksumsMatch = await validator.ValidateChecksumsAsync();
+                            if (checksumsMatch)
+                            {
+                                Logger.Log($"Component {component.Name}'s instruction '{instruction.Action}' succeeded and modified files have expected checksums.");
+                            }
+                            else
+                            {
+                                Logger.Log($"Component {component.Name}'s instruction '{instruction.Action}' succeeded but modified files have unexpected checksums.");
+                                bool confirmationResult = await confirmDialog.ShowConfirmationDialog("Warning! Checksums after running install step are not the same as expected. Continue anyway?");
+                                if (!confirmationResult)
+                                {
+                                    return (false, originalPathsToChecksum);
+                                }
+                            }
                         }
                         else
                         {
-                            Logger.Log($"Component {component.Name}'s instruction '{instruction.Action}' succeeded but modified files have unexpected checksums.");
-                            bool confirmationResult = await confirmDialog.ShowConfirmationDialog("Warning! Checksums after running install step are not the same as expected. Continue anyway?");
-                            if (!confirmationResult)
+                            Logger.Log($"Component {component.Name}'s instruction '{instruction.Action}' ran, saving the new checksums as expected.");
+                            var newChecksums = new Dictionary<FileInfo, System.Security.Cryptography.SHA1>();
+                            foreach (FileInfo file in MainConfig.DestinationPath.GetFiles("*.*", SearchOption.AllDirectories))
                             {
-                                return (false, originalPathsToChecksum);
+                                System.Security.Cryptography.SHA1 sha1 = await FileChecksumValidator.CalculateSHA1Async(file);
+                                newChecksums[file] = sha1;
                             }
-                        }
-                    }
-                    else
-                    {
-                        Logger.Log($"Component {component.Name}'s instruction '{instruction.Action}' ran, saving the new checksums as expected.");
-                        var newChecksums = new Dictionary<FileInfo, System.Security.Cryptography.SHA1>();
-                        foreach (FileInfo file in MainConfig.DestinationPath.GetFiles("*.*", SearchOption.AllDirectories))
-                        {
-                            System.Security.Cryptography.SHA1 sha1 = await FileChecksumValidator.CalculateSHA1Async(file);
-                            newChecksums[file] = sha1;
-                        }
-                    }*/
+                        }*/
+
+                        await Logger.LogAsync( $"Successfully completed instruction #{i1 + 1} '{instruction.Action}'" );
                     }
 
                     return (true, new Dictionary<FileInfo, SHA1>());
                 }
             }
-            catch ( InvalidOperationException ex ) { Logger.LogException( ex ); }
+            catch ( InvalidOperationException ex ) { await Logger.LogExceptionAsync( ex ); }
             catch ( Exception ex )
             {
-                Logger.LogException( ex );
-                Logger.Log(
+                await Logger.LogExceptionAsync( ex );
+                await Logger.LogAsync(
                     "The above exception is not planned and has not been experienced."
                     + " Please report this to the developer."
                 );

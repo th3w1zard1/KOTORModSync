@@ -47,7 +47,7 @@ namespace KOTORModSync.Tests
             string fileExtension = ".txt";
 
             // Act
-            Instruction.DeleteDuplicateFile( directory, fileExtension, null );
+            Instruction.DeleteDuplicateFile( directory, fileExtension );
 
             // Assert
             Assert.Multiple( () =>
@@ -72,7 +72,7 @@ namespace KOTORModSync.Tests
             string fileExtension = ".txt";
 
             // Act
-            Instruction.DeleteDuplicateFile( directory, fileExtension, null );
+            Instruction.DeleteDuplicateFile( directory, fileExtension );
 
             // Assert
             Assert.Multiple(
@@ -99,7 +99,7 @@ namespace KOTORModSync.Tests
             string fileExtension = ".txt";
 
             // Act
-            Instruction.DeleteDuplicateFile( directory, fileExtension, null );
+            Instruction.DeleteDuplicateFile( directory, fileExtension );
 
             // Assert
             Assert.Multiple(
@@ -124,7 +124,7 @@ namespace KOTORModSync.Tests
             string fileExtension = ".txt";
 
             // Act
-            Instruction.DeleteDuplicateFile( directory, fileExtension, null );
+            Instruction.DeleteDuplicateFile( directory, fileExtension );
 
             // Assert
             Assert.Multiple( () =>
@@ -143,13 +143,13 @@ namespace KOTORModSync.Tests
             string fileExtension = ".txt";
 
             // Act
-            Instruction.DeleteDuplicateFile( directory, fileExtension, null );
+            Instruction.DeleteDuplicateFile( directory, fileExtension );
 
             // Assert
             Assert.Multiple( () =>
             {
                 Assert.That( Directory.Exists( directory ) );
-                Assert.That( Directory.GetFiles( directory ).Length == 0 );
+                Assert.That( Directory.GetFiles( directory ).Length, Is.EqualTo( 0 ) );
             } );
         }
 
@@ -168,7 +168,7 @@ namespace KOTORModSync.Tests
             string fileExtension = ".txt";
 
             // Act
-            Instruction.DeleteDuplicateFile( directory, fileExtension, null );
+            Instruction.DeleteDuplicateFile( directory, fileExtension );
 
             // Assert
             Assert.Multiple( () =>
@@ -194,7 +194,7 @@ namespace KOTORModSync.Tests
             string fileExtension = ".txt";
 
             // Act
-            Instruction.DeleteDuplicateFile( directory, fileExtension, null );
+            Instruction.DeleteDuplicateFile( directory, fileExtension );
 
             // Assert
             Assert.Multiple( () =>

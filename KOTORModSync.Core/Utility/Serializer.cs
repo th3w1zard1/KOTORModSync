@@ -733,10 +733,10 @@ namespace KOTORModSync.Core.Utility
 
                 var components = new List<Component>( 65535 );
                 foreach ( (TomlObject tomlComponent, Component component) in
-                    // Deserialize each TomlTable into a Component object
-                    from TomlObject tomlComponent in componentTables
-                    let component = new Component()
-                    select (tomlComponent, component) )
+                         // Deserialize each TomlTable into a Component object
+                         from TomlObject tomlComponent in componentTables
+                         let component = new Component()
+                         select (tomlComponent, component) )
                 {
                     component.DeserializeComponent( tomlComponent );
                     components.Add( component );
@@ -747,7 +747,9 @@ namespace KOTORModSync.Core.Utility
                     }
 
                     foreach ( Instruction instruction in component.Instructions )
+                    {
                         instruction.SetParentComponent( component );
+                    }
                 }
 
                 return components;
@@ -830,8 +832,7 @@ namespace KOTORModSync.Core.Utility
             }
             catch ( Exception ex )
             {
-                Logger.LogException( ex );
-                Logger.Log( $"Error writing output file {outputPath}: {ex.Message}" );
+                Logger.LogException( ex, "Error writing output file {outputPath}: {ex.Message}" );
             }
         }
 

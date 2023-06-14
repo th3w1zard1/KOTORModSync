@@ -15,9 +15,10 @@ namespace KOTORModSync.Core
         public static event Action<string> Logged = delegate { };
         public static event Action<Exception> ExceptionLogged = delegate { };
 
-        private const string LogFileName = "log.txt";
         private static bool s_isInitialized = false;
         private static readonly object s_initializationLock = new object();
+
+        private const string LogFileName = "kotormodsync_";
 
         public static void Initialize()
         {
@@ -31,8 +32,6 @@ namespace KOTORModSync.Core
 
                 s_isInitialized = true;
 
-                string logFilePath = Path.Combine( AppDomain.CurrentDomain.BaseDirectory, LogFileName );
-
                 Log( $"Logging initialized at {DateTime.Now}" );
 
                 // Set up unhandled exception handling
@@ -41,12 +40,29 @@ namespace KOTORModSync.Core
             }
         }
 
-        public static void Log( string message )
+        public static async Task LogAsync( string message )
+        {
+            string logMessage = $"[{DateTime.Now}] {message}";
+            await Console.Out.WriteLineAsync( logMessage );
+            Debug.WriteLine( logMessage );
+
+            string formattedDate = DateTime.Now.ToString( "yyyy-MM-dd" );
+            using ( StreamWriter writer = new StreamWriter( LogFileName + formattedDate + ".txt", true ) )
+            {
+                await writer.WriteLineAsync( logMessage + Environment.NewLine );
+            }
+
+            Logged.Invoke( logMessage ); // Raise the Logged event
+        }
+
+        public static void Log( string message)
         {
             string logMessage = $"[{DateTime.Now}] {message}";
             Console.WriteLine( logMessage );
             Debug.WriteLine( logMessage );
-            File.AppendAllText( LogFileName, logMessage + Environment.NewLine );
+
+            string formattedDate = DateTime.Now.ToString( "yyyy-MM-dd" );
+            File.AppendAllText( LogFileName + formattedDate + ".txt", logMessage + Environment.NewLine );
 
             Logged.Invoke( logMessage ); // Raise the Logged event
         }
@@ -57,6 +73,26 @@ namespace KOTORModSync.Core
                 return;
 
             Log( "[Verbose] " + message );
+        }
+
+        public static async Task LogVerboseAsync( string message )
+        {
+            if ( !MainConfig.DebugLogging )
+                return;
+
+            await LogAsync( "[Verbose] " + message );
+        }
+
+        public static void LogWarning( string message ) => Log( "[Warning] " + message );
+        public static void LogError( string message ) => Log( "[Error] " + message );
+
+        public static async Task LogWarningAsync( string message ) => await LogAsync( "[Warning] " + message );
+        public static async Task LogExceptionAsync( Exception ex ) => await Task.Run( () => LogException( ex ) );
+        
+        public static void LogException( Exception exception, string customMessage )
+        {
+            LogError( customMessage );
+            LogException( exception );
         }
 
         public static void LogException( Exception ex )

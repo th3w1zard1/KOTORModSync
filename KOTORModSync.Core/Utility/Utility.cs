@@ -111,7 +111,7 @@ namespace KOTORModSync.Core.Utility
 
         public interface IConfirmationDialogCallback
         {
-            Task<bool> ShowConfirmationDialog( string message );
+            Task<bool?> ShowConfirmationDialog( string message );
         }
 
         public interface IOptionsDialogCallback

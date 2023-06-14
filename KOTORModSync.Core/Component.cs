@@ -904,7 +904,7 @@ namespace KOTORModSync.Core
             foreach ( Instruction instruction in component.Instructions )
             {
                 DirectoryInfo destinationPath = null;
-                if ( !string.IsNullOrWhiteSpace(instruction.Destination) )
+                if ( !string.IsNullOrWhiteSpace( instruction.Destination ) )
                 {
                     destinationPath = new DirectoryInfo(
                         Utility.Utility.ReplaceCustomVariables( instruction.Destination )

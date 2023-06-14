@@ -319,11 +319,11 @@ namespace KOTORModSync
                 {
                     i++;
                     duplicateComponent.Guid = Guid.NewGuid();
-                    _ = Logger.LogAsync($"Replaced GUID of component {duplicateComponent.Name}");
+                    _ = Logger.LogAsync( $"Replaced GUID of component {duplicateComponent.Name}" );
                 }
                 else
                 {
-                    _ = Logger.LogVerboseAsync($"User canceled GUID replacement for component {duplicateComponent.Name}");
+                    _ = Logger.LogVerboseAsync( $"User canceled GUID replacement for component {duplicateComponent.Name}" );
                 }
             }
 
@@ -355,7 +355,7 @@ namespace KOTORModSync
                 string fileExtension = Path.GetExtension( filePath );
                 if ( !new List<string> { ".toml", ".tml", ".txt" }.Contains( fileExtension, StringComparer.OrdinalIgnoreCase ) )
                 {
-                    _ = Logger.LogAsync($"Invalid extension for file {filePath}");
+                    _ = Logger.LogAsync( $"Invalid extension for file {filePath}" );
                     return;
                 }
 
@@ -450,7 +450,7 @@ namespace KOTORModSync
                 }
 
                 if ( MainConfig.SourcePath == null )
-                    _ = Logger.LogAsync("Not using custom variables <<kotorDirectory>> and <<modDirectory>> due to directories not being set prior.");
+                    _ = Logger.LogAsync( "Not using custom variables <<kotorDirectory>> and <<modDirectory>> due to directories not being set prior." );
                 thisInstruction.Source = files;
             }
             catch ( Exception ex )
@@ -472,8 +472,8 @@ namespace KOTORModSync
                 string filePath = await OpenFolder();
                 if ( filePath == null )
                 {
-                    _ = Logger.LogVerboseAsync($"No file chosen in BrowseDestination_Click."
-                        + $" Will continue using {thisInstruction.Destination}");
+                    _ = Logger.LogVerboseAsync( $"No file chosen in BrowseDestination_Click."
+                        + $" Will continue using {thisInstruction.Destination}" );
                     return;
                 }
 
@@ -533,7 +533,7 @@ namespace KOTORModSync
                     return;
 
                 (bool success, string output) = SaveChanges();
-                if (!success)
+                if ( !success )
                     await InformationDialog.ShowInformationDialog( this, output );
                 RefreshTreeView();
             }
@@ -847,7 +847,7 @@ namespace KOTORModSync
             }
             catch ( Exception ex )
             {
-                await Logger.LogExceptionAsync(ex, $"Error generating and saving documentation" );
+                await Logger.LogExceptionAsync( ex, $"Error generating and saving documentation" );
                 await InformationDialog.ShowInformationDialog(
                     this,
                     "An unexpected error occurred while generating and saving documentation."
@@ -995,9 +995,9 @@ namespace KOTORModSync
                 if ( !( LeftTreeView.SelectedItem is TreeViewItem selectedTreeViewItem )
                     || !( selectedTreeViewItem.Tag is Component selectedComponent ) )
                 {
-                    return ( false, "TreeViewItem does not correspond to a valid Component"
+                    return (false, "TreeViewItem does not correspond to a valid Component"
                         + Environment.NewLine
-                        + "Please report this issue to a developer, this should never happen." );
+                        + "Please report this issue to a developer, this should never happen.");
                 }
 
                 Component newComponent = FileHelper.DeserializeTomlComponent( RightTextBox.Text );
@@ -1019,7 +1019,7 @@ namespace KOTORModSync
                         + " Ensure you single-clicked on a component on the left before pressing save."
                         + " Please back up your work and try again.";
 
-                    return ( false, errorMessage );
+                    return (false, errorMessage);
                 }
 
                 // Update the properties of the component
@@ -1030,8 +1030,8 @@ namespace KOTORModSync
                     );
                 RefreshTreeView(); // Refresh the tree view to reflect the changes
                 LeftTreeView.SelectedItem = newComponent; // Select the updated component in the tree view
-                return ( true,
-                    $"Saved {newComponent.Name} successfully. Refer to the output window for more information." );
+                return (true,
+                    $"Saved {newComponent.Name} successfully. Refer to the output window for more information.");
             }
             catch ( InvalidDataException ex )
             {
@@ -1248,7 +1248,7 @@ namespace KOTORModSync
             }
             catch ( Exception ex )
             {
-                Logger.LogException(ex,  $"Unexpected exception while creating tree view item" );
+                Logger.LogException( ex, $"Unexpected exception while creating tree view item" );
             }
         }
 

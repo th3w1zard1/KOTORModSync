@@ -505,7 +505,7 @@ namespace KOTORModSync.Core
                                 success = instruction.DeleteFile();
                                 break;
                             case "delduplicate":
-                                instruction.SetRealPaths(true);
+                                instruction.SetRealPaths( true );
                                 instruction.DeleteDuplicateFile();
                                 success = true;
                                 break;
@@ -843,7 +843,7 @@ namespace KOTORModSync.Core
                         // For some unholy reason, some archives act like there's another top level folder named after the archive to extract.
                         // doesn't even seem to be related to the archive type. Can't reproduce in 7zip either.
                         // either way, this will hide the issue until a real solution comes along.
-                        if ( !result.Item1 && MainConfig.AttemptFixes)
+                        if ( !result.Item1 && MainConfig.AttemptFixes )
                         {
                             // Split the directory name using the directory separator character
                             string[] parts = sourcePath.Split( '\\', '/' );

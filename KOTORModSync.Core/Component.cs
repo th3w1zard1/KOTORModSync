@@ -993,7 +993,7 @@ namespace KOTORModSync.Core
                         string destinationPath = Utility.Utility.ReplaceCustomVariables( instruction.Destination );
                         if ( string.IsNullOrWhiteSpace( destinationPath )
                             || destinationPath.Any( c => Path.GetInvalidPathChars().Contains( c ) )
-                            || !Directory.Exists( destinationPath ))
+                            || !Directory.Exists( destinationPath ) )
                         {
                             success = false;
                             AddError(

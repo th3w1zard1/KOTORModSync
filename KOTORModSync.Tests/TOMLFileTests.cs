@@ -26,7 +26,7 @@ namespace KOTORModSync.Tests
         public void TearDown()
         {
             // Delete the temporary file
-            Debug.Assert( _filePath != null, nameof(_filePath) + " != null" );
+            Debug.Assert( _filePath != null, nameof( _filePath ) + " != null" );
             File.Delete( _filePath );
         }
 
@@ -83,7 +83,7 @@ namespace KOTORModSync.Tests
         public void SaveAndLoadTOMLFile_MatchingComponents()
         {
             // Read the original TOMLIN file contents
-            Debug.Assert( _filePath != null, nameof(_filePath) + " != null" );
+            Debug.Assert( _filePath != null, nameof( _filePath ) + " != null" );
             string tomlContents = File.ReadAllText( _filePath );
 
             // Fix whitespace issues
@@ -141,7 +141,7 @@ namespace KOTORModSync.Tests
             List<Component> originalComponents = FileHelper.ReadComponentsFromFile( _filePath );
 
             // Modify the TOML file contents
-            Debug.Assert( _filePath != null, nameof(_filePath) + " != null" );
+            Debug.Assert( _filePath != null, nameof( _filePath ) + " != null" );
             string tomlContents = File.ReadAllText( _filePath );
 
             // Convert field names and values to mixed case
@@ -176,7 +176,7 @@ namespace KOTORModSync.Tests
             List<Component> originalComponents = FileHelper.ReadComponentsFromFile( _filePath );
 
             // Modify the TOMLIN file contents
-            Debug.Assert( _filePath != null, nameof(_filePath) + " != null" );
+            Debug.Assert( _filePath != null, nameof( _filePath ) + " != null" );
             string tomlContents = File.ReadAllText( _filePath );
 
             // Add mixed line endings and extra whitespaces

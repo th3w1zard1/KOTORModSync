@@ -19,7 +19,7 @@ namespace KOTORModSync.ConsoleApp
             {
                 if ( args is null )
                 {
-                    throw new ArgumentNullException( nameof(args) );
+                    throw new ArgumentNullException( nameof( args ) );
                 }
 
                 bool exit = false;

@@ -98,7 +98,7 @@ namespace KOTORModSync.Core.Utility
             string shellPath = GetShellExecutable();
             if ( string.IsNullOrEmpty( shellPath ) )
             {
-                return ( -1, string.Empty, "Unable to retrieve shell executable path." );
+                return (-1, string.Empty, "Unable to retrieve shell executable path.");
             }
 
             try
@@ -116,7 +116,7 @@ namespace KOTORModSync.Core.Utility
             }
             catch ( Exception ex )
             {
-                return ( -2, string.Empty, $"Command execution failed: {ex.Message}" );
+                return (-2, string.Empty, $"Command execution failed: {ex.Message}");
             }
         }
 
@@ -307,14 +307,14 @@ namespace KOTORModSync.Core.Utility
             {
                 if ( tcs == null )
                 {
-                    throw new ArgumentNullException( nameof(tcs) );
+                    throw new ArgumentNullException( nameof( tcs ) );
                 }
 
                 if ( process == null )
                 {
                     // Process disposed of early?
                     await Logger.LogExceptionAsync( new NotSupportedException() );
-                    tcs.SetResult( ( -4, string.Empty, string.Empty ) );
+                    tcs.SetResult( (-4, string.Empty, string.Empty) );
                     return;
                 }
 
@@ -327,7 +327,7 @@ namespace KOTORModSync.Core.Utility
 
                 if ( process.ExitCode == 0 && string.IsNullOrEmpty( error ) )
                 {
-                    tcs.SetResult( ( process.ExitCode, output, error ) );
+                    tcs.SetResult( (process.ExitCode, output, error) );
                     return;
                 }
 
@@ -352,7 +352,7 @@ namespace KOTORModSync.Core.Utility
                 await Logger.LogAsync( logBuilder.ToString() );
 
                 // Process had an error of some sort even though ExitCode is 0?
-                tcs.SetResult( ( -3, output, error ) );
+                tcs.SetResult( (-3, output, error) );
             }
             catch ( Exception e )
             {
@@ -370,7 +370,7 @@ namespace KOTORModSync.Core.Utility
         {
             if ( programFile == null )
             {
-                throw new ArgumentNullException( nameof(programFile) );
+                throw new ArgumentNullException( nameof( programFile ) );
             }
 
             List<ProcessStartInfo> processStartInfosWithFallbacks = GetProcessStartInfos(
@@ -461,19 +461,19 @@ namespace KOTORModSync.Core.Utility
                 {
                     await Logger.LogAsync( $"An unplanned error has occurred trying to run {programFile.Name}." );
                     await Logger.LogExceptionAsync( startinfoException );
-                    return ( -6, string.Empty, string.Empty );
+                    return (-6, string.Empty, string.Empty);
                 }
 
             if ( startedProcess )
             {
                 return
-                    ( -2, string.Empty,
-                        string.Empty ); // todo: figure out what scenario this return code will happen in.
+                    (-2, string.Empty,
+                        string.Empty); // todo: figure out what scenario this return code will happen in.
             }
 
             await Logger.LogAsync( "Process failed to start with all possible combinations of arguments." );
             await Logger.LogExceptionAsync( ex );
-            return ( -1, string.Empty, string.Empty );
+            return (-1, string.Empty, string.Empty);
         }
     }
 }

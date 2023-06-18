@@ -487,7 +487,7 @@ namespace KOTORModSync.Core.Utility
             get
             {
                 string outputDirectory = Path.GetDirectoryName( Assembly.GetExecutingAssembly().Location );
-                return outputDirectory ?? throw new ArgumentNullException( nameof( outputDirectory ) );
+                return outputDirectory ?? throw new ArgumentNullException( nameof(outputDirectory) );
             }
         }
 
@@ -785,11 +785,11 @@ namespace KOTORModSync.Core.Utility
                 var componentTables = tomlTable["thisMod"] as TomlTableArray;
 
                 var components = new List<Component>( 65535 );
-                foreach ( (TomlObject tomlComponent, Component component) in
+                foreach ( ( TomlObject tomlComponent, Component component ) in
                          // Deserialize each TomlTable into a Component object
                          from TomlObject tomlComponent in componentTables
                          let component = new Component()
-                         select (tomlComponent, component) )
+                         select ( tomlComponent, component ) )
                 {
                     component.DeserializeComponent( tomlComponent );
                     components.Add( component );
@@ -833,9 +833,7 @@ namespace KOTORModSync.Core.Utility
     {
         public static ExtractionOptions DefaultExtractionOptions = new ExtractionOptions
         {
-            ExtractFullPath = false,
-            Overwrite = true,
-            PreserveFileTime = true
+            ExtractFullPath = false, Overwrite = true, PreserveFileTime = true
         };
 
         public static bool IsArchive( string filePath ) => IsArchive( new FileInfo( filePath ) );

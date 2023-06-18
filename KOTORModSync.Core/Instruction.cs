@@ -109,7 +109,9 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
             try
             {
                 if ( argSourcePaths == null )
+                {
                     argSourcePaths = RealSourcePaths;
+                }
 
                 var extractionTasks = new List<Task>( 25 );
                 var semaphore = new SemaphoreSlim( 5 ); // Limiting to 5 concurrent extractions
@@ -119,11 +121,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                 {
                     await semaphore.WaitAsync(); // Acquire a semaphore slot
 
-                    extractionTasks.Add(
-                        Task.Run(
-                            function: InnerExtractFileAsync
-                        )
-                    );
+                    extractionTasks.Add( Task.Run( InnerExtractFileAsync ) );
 
                     async Task InnerExtractFileAsync()
                     {
@@ -137,14 +135,16 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
 
                             if ( argDestinationPath == null )
                             {
-                                throw new ArgumentNullException( nameof( argDestinationPath ) );
+                                throw new ArgumentNullException( nameof(argDestinationPath) );
                             }
 
                             _ = Logger.LogAsync( $"File path: {thisFile.FullName}" );
 
                             if ( !ArchiveHelper.IsArchive( thisFile ) )
                             {
-                                _ = Logger.LogAsync( $"[Error] {ParentComponent.Name} failed to extract file '{thisFile.Name}'. Invalid archive?" );
+                                _ = Logger.LogAsync(
+                                    $"[Error] {ParentComponent.Name} failed to extract file '{thisFile.Name}'. Invalid archive?"
+                                );
                                 success = false;
                                 return;
                             }
@@ -162,7 +162,9 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                                 }
 
                                 success = false;
-                                throw new InvalidOperationException( $"{thisFile.Name} is not a self-extracting executable as previously assumed. Cannot extract." );
+                                throw new InvalidOperationException(
+                                    $"{thisFile.Name} is not a self-extracting executable as previously assumed. Cannot extract."
+                                );
                             }
 
                             using ( FileStream stream = File.OpenRead( thisFile.FullName ) )
@@ -179,9 +181,14 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                                 while ( reader.MoveToNextEntry() )
                                 {
                                     if ( reader.Entry.IsDirectory )
+                                    {
                                         continue;
+                                    }
+
                                     if ( argDestinationPath?.FullName == null )
+                                    {
                                         continue;
+                                    }
 
                                     string extractFolderName = Path.GetFileNameWithoutExtension( thisFile.Name );
                                     string destinationItemPath = Path.Combine(
@@ -198,7 +205,9 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                                         _ = Directory.CreateDirectory( destinationDirectory );
                                     }
 
-                                    _ = Logger.LogAsync( $"Extract '{reader.Entry.Key}' to '{argDestinationPath.FullName}'" );
+                                    _ = Logger.LogAsync(
+                                        $"Extract '{reader.Entry.Key}' to '{argDestinationPath.FullName}'"
+                                    );
 
                                     try
                                     {
@@ -211,7 +220,9 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                                     }
                                     catch ( UnauthorizedAccessException )
                                     {
-                                        _ = Logger.LogWarningAsync( $"Skipping file '{reader.Entry.Key}' due to lack of permissions." );
+                                        _ = Logger.LogWarningAsync(
+                                            $"Skipping file '{reader.Entry.Key}' due to lack of permissions."
+                                        );
                                     }
                                 }
                             }
@@ -243,7 +254,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
             }
             else if ( !directoryPath.Exists )
             {
-                throw new ArgumentException( "Invalid directory path.", nameof( directoryPath ) );
+                throw new ArgumentException( "Invalid directory path.", nameof(directoryPath) );
             }
 
             if ( string.IsNullOrEmpty( fileExtension ) )
@@ -547,7 +558,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                     );
 
                     await Logger.LogAsync( "Run TSLPatcher..." );
-                    (int exitCode, string output, string error)
+                    ( int exitCode, string output, string error )
                         = await PlatformAgnosticMethods.ExecuteProcessAsync( tslPatcherCliPath, args );
                     await Logger.LogVerboseAsync( $"{tslPatcherCliPath.Name} exited with exit code {exitCode}" );
 
@@ -589,7 +600,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                             );
                         }
 
-                        (int exitCode, string output, string error)
+                        ( int exitCode, string output, string error )
                             = await PlatformAgnosticMethods.ExecuteProcessAsync( thisProgram );
                         if ( exitCode == 0 )
                         {

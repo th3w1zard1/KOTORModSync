@@ -420,13 +420,13 @@ namespace KOTORModSync.Core
                 (bool, Dictionary<FileInfo, SHA1>) result = await ProcessComponentAsync( this );
                 if ( result.Item1 )
                 {
-                    return (true, null);
+                    return ( true, null );
                 }
 
                 await Logger.LogExceptionAsync(
                     new Exception( $"[Error] Component {Name} failed to install the mod correctly with {result}" )
                 );
-                return (false, null);
+                return ( false, null );
 
                 async Task<(bool, Dictionary<FileInfo, SHA1>)> ProcessComponentAsync( Component component )
                 {
@@ -437,7 +437,7 @@ namespace KOTORModSync.Core
                         Instruction instruction = component.Instructions[i1]
                             ?? throw new ArgumentException(
                                 $"[Error] instruction null at index {i1}",
-                                nameof( componentsList )
+                                nameof(componentsList)
                             );
 
                         //The instruction will run if any of the following conditions are met:
@@ -561,7 +561,7 @@ namespace KOTORModSync.Core
                                 List<string> optionNames = options.ConvertAll( option => option.Name );
 
                                 string selectedOptionName = await optionsDialog.ShowOptionsDialog( optionNames )
-                                    ?? throw new NullReferenceException( nameof( optionNames ) );
+                                    ?? throw new NullReferenceException( nameof(optionNames) );
                                 Option selectedOption = null;
 
                                 foreach ( Option option in options )
@@ -626,7 +626,7 @@ namespace KOTORModSync.Core
 
                                 // case null: cancel installing this mod (user closed confirmation dialog)
                                 default:
-                                    return (false, null);
+                                    return ( false, null );
                             }
                         }
 
@@ -667,7 +667,7 @@ namespace KOTORModSync.Core
                         await Logger.LogAsync( $"Successfully completed instruction #{i1 + 1} '{instruction.Action}'" );
                     }
 
-                    return (true, new Dictionary<FileInfo, SHA1>());
+                    return ( true, new Dictionary<FileInfo, SHA1>() );
                 }
             }
             catch ( InvalidOperationException ex )
@@ -683,14 +683,14 @@ namespace KOTORModSync.Core
                 );
             }
 
-            return (false, new Dictionary<FileInfo, SHA1>());
+            return ( false, new Dictionary<FileInfo, SHA1>() );
         }
 
         private List<Option> ChooseOptions( Instruction instruction )
         {
             if ( instruction is null )
             {
-                throw new ArgumentNullException( nameof( instruction ) );
+                throw new ArgumentNullException( nameof(instruction) );
             }
 
             List<string> archives = Validator.GetAllArchivesFromInstructions( this );
@@ -1134,7 +1134,7 @@ namespace KOTORModSync.Core
                     $"Invalid source path '{sourcePath}'. Reason: {errorDescription}",
                     instruction
                 );
-                return (false, archiveNameFound);
+                return ( false, archiveNameFound );
             }
 
             if ( !foundInAnyArchive )
@@ -1142,14 +1142,14 @@ namespace KOTORModSync.Core
                 // todo, stop displaying errors for self extracting executables. This is the only mod using one that I've seen out of 200-some.
                 if ( Component.Name.Equals( "Improved AI" ) )
                 {
-                    return (true, true);
+                    return ( true, true );
                 }
 
                 AddError( $"Failed to find '{sourcePath}' in any archives!", instruction );
-                return (false, archiveNameFound);
+                return ( false, archiveNameFound );
             }
 
-            return (true, true);
+            return ( true, true );
         }
 
         private static ArchivePathCode IsPathInArchive( string relativePath, string archivePath )

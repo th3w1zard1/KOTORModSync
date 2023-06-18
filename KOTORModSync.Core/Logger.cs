@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -123,6 +124,7 @@ namespace KOTORModSync.Core
         {
             Log( $"Exception: {ex.GetType().Name} - {ex.Message}" );
             Log( $"Stack trace: {ex.StackTrace}" );
+            ExceptionLogged.Invoke( ex ); // Raise the ExceptionLogged event
 
             if ( !MainConfig.DebugLogging )
             {
@@ -135,19 +137,20 @@ namespace KOTORModSync.Core
             Type declaringType = method.DeclaringType;
 
             // Get the locals for the current stack frame
-            LocalVariableInfo[] localVariables = method.GetMethodBody()?.LocalVariables?.ToArray();
+            var list = new List<LocalVariableInfo>();
+            IList<LocalVariableInfo> localVariableInfos = method.GetMethodBody()?.LocalVariables;
+            if ( localVariableInfos == null )
+                return;
+
+            foreach ( LocalVariableInfo variable in localVariableInfos )
+                list.Add( variable );
+            LocalVariableInfo[] localVariables = list?.ToArray();
 
             // Log local variables information
-            if ( localVariables == null )
-            {
-                return;
-            }
-
             Log( "Local Variables:" );
-
             foreach ( LocalVariableInfo local in localVariables )
             {
-                string localName = method.GetMethodBody()?.LocalVariables[local.LocalIndex].ToString();
+                string localName = localVariableInfos?[local.LocalIndex].ToString();
 
                 if ( localName == null )
                 {
@@ -191,8 +194,6 @@ namespace KOTORModSync.Core
 
                 Log( $"- {localName}: {value}" );
             }
-
-            ExceptionLogged.Invoke( ex ); // Raise the ExceptionLogged event
         }
 
         private static void CurrentDomain_UnhandledException( object sender, UnhandledExceptionEventArgs e )

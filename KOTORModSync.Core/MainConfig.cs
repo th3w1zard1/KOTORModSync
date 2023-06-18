@@ -41,8 +41,8 @@ namespace KOTORModSync.Core
             set
             {
                 SourcePath = value;
-                OnPropertyChanged( nameof(sourcePath) );
-                OnPropertyChanged( nameof(sourcePathFullName) );
+                OnPropertyChanged( nameof( sourcePath ) );
+                OnPropertyChanged( nameof( sourcePathFullName ) );
             }
         }
 
@@ -54,8 +54,8 @@ namespace KOTORModSync.Core
             set
             {
                 DestinationPath = value;
-                OnPropertyChanged( nameof(destinationPath) );
-                OnPropertyChanged( nameof(destinationPathFullName) );
+                OnPropertyChanged( nameof( destinationPath ) );
+                OnPropertyChanged( nameof( destinationPathFullName ) );
             }
         }
 
@@ -67,7 +67,7 @@ namespace KOTORModSync.Core
             set
             {
                 CurrentCompatibilityLevel = value;
-                OnPropertyChanged( nameof(CurrentCompatibilityLevel) );
+                OnPropertyChanged( nameof( CurrentCompatibilityLevel ) );
             }
         }
 
@@ -105,7 +105,7 @@ namespace KOTORModSync.Core
 
         // used for the ui.
         protected virtual void OnPropertyChanged
-            ( [CallerMemberName] [CanBeNull] string propertyName = null ) => PropertyChanged?.Invoke(
+            ( [CallerMemberName][CanBeNull] string propertyName = null ) => PropertyChanged?.Invoke(
             this,
             new PropertyChangedEventArgs( propertyName )
         );

@@ -137,7 +137,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
 
                             if ( argDestinationPath == null )
                             {
-                                throw new ArgumentNullException( nameof(argDestinationPath) );
+                                throw new ArgumentNullException( nameof( argDestinationPath ) );
                             }
 
                             _ = Logger.LogAsync( $"File path: {thisFile.FullName}" );
@@ -243,7 +243,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
             }
             else if ( !directoryPath.Exists )
             {
-                throw new ArgumentException( "Invalid directory path.", nameof(directoryPath) );
+                throw new ArgumentException( "Invalid directory path.", nameof( directoryPath ) );
             }
 
             if ( string.IsNullOrEmpty( fileExtension ) )
@@ -547,7 +547,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                     );
 
                     await Logger.LogAsync( "Run TSLPatcher..." );
-                    ( int exitCode, string output, string error )
+                    (int exitCode, string output, string error)
                         = await PlatformAgnosticMethods.ExecuteProcessAsync( tslPatcherCliPath, args );
                     await Logger.LogVerboseAsync( $"{tslPatcherCliPath.Name} exited with exit code {exitCode}" );
 
@@ -589,7 +589,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                             );
                         }
 
-                        ( int exitCode, string output, string error )
+                        (int exitCode, string output, string error)
                             = await PlatformAgnosticMethods.ExecuteProcessAsync( thisProgram );
                         if ( exitCode == 0 )
                         {

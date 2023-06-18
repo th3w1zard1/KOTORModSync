@@ -137,7 +137,7 @@ namespace KOTORModSync
                 foreach ( TreeViewItem childItem in childItems.Values
                              .Where(
                                  childItem => childItem == null
-                                     ? throw new ArgumentNullException( nameof(childItem) )
+                                     ? throw new ArgumentNullException( nameof( childItem ) )
                                      : items != null
                              ) )
                 {
@@ -495,7 +495,7 @@ namespace KOTORModSync
                 {
                     await Logger.LogExceptionAsync(
                         new ArgumentOutOfRangeException(
-                            nameof(files),
+                            nameof( files ),
                             $"Invalid files found. Please report this issue to the developer: '{files}'"
                         )
                     );
@@ -604,7 +604,7 @@ namespace KOTORModSync
                     return;
                 }
 
-                ( bool success, string output ) = SaveChanges();
+                (bool success, string output) = SaveChanges();
                 if ( !success )
                 {
                     await InformationDialog.ShowInformationDialog( this, output );
@@ -794,7 +794,7 @@ namespace KOTORModSync
                 _installRunning = true;
                 var confirmationDialogCallback = new ConfirmationDialogCallback( this );
                 var optionsDialogCallback = new OptionsDialogCallback( this );
-                ( bool success, Dictionary<FileInfo, SHA1> originalChecksums ) = await Task.Run(
+                (bool success, Dictionary<FileInfo, SHA1> originalChecksums) = await Task.Run(
                     () => _currentComponent.ExecuteInstructions(
                         confirmationDialogCallback,
                         optionsDialogCallback,
@@ -903,7 +903,7 @@ namespace KOTORModSync
 
                     // Call the ExecuteInstructions method asynchronously using Task.Run
                     await Logger.LogAsync( $"Call ExecuteInstructions for {component.Name}..." );
-                    ( bool success, Dictionary<FileInfo, SHA1> originalChecksums )
+                    (bool success, Dictionary<FileInfo, SHA1> originalChecksums)
                         = await component.ExecuteInstructions(
                             new ConfirmationDialogCallback( this ),
                             new OptionsDialogCallback( this ),
@@ -1105,9 +1105,9 @@ namespace KOTORModSync
                 // Get the selected component from the tree view
                 if ( _currentComponent == null )
                 {
-                    return ( false, "TreeViewItem does not correspond to a valid Component"
+                    return (false, "TreeViewItem does not correspond to a valid Component"
                         + Environment.NewLine
-                        + "Please report this issue to a developer, this should never happen." );
+                        + "Please report this issue to a developer, this should never happen.");
                 }
 
                 Component newComponent = FileHelper.DeserializeTomlComponent( RightTextBox.Text );
@@ -1129,7 +1129,7 @@ namespace KOTORModSync
                         + " Ensure you single-clicked on a component on the left before pressing save."
                         + " Please back up your work and try again.";
 
-                    return ( false, errorMessage );
+                    return (false, errorMessage);
                 }
 
                 // Update the properties of the component
@@ -1139,8 +1139,8 @@ namespace KOTORModSync
                         "Could not deserialize raw text into a Component instance in memory."
                     );
                 RefreshTreeView(); // Refresh the tree view to reflect the changes
-                return ( true,
-                    $"Saved {newComponent.Name} successfully. Refer to the output window for more information." );
+                return (true,
+                    $"Saved {newComponent.Name} successfully. Refer to the output window for more information.");
             }
             catch ( InvalidDataException ex )
             {
@@ -1323,7 +1323,8 @@ namespace KOTORModSync
                 // Create a new tree view item for the component
                 var componentItem = new TreeViewItem
                 {
-                    Header = component.Name, Tag = component // this allows us to access the item later
+                    Header = component.Name,
+                    Tag = component // this allows us to access the item later
                 };
 
                 // Assign the ItemClickCommand to the componentItem
@@ -1427,7 +1428,7 @@ namespace KOTORModSync
 
             public RelayCommand( Action<object> execute, [CanBeNull] Func<object, bool> canExecute = null )
             {
-                _execute = execute ?? throw new ArgumentNullException( nameof(execute) );
+                _execute = execute ?? throw new ArgumentNullException( nameof( execute ) );
                 _canExecute = canExecute;
             }
 

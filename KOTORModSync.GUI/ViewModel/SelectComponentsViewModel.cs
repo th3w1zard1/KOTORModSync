@@ -172,7 +172,7 @@ namespace KOTORModSync.ViewModel
                 }
 
                 _isSelected = value;
-                OnPropertyChanged( nameof(IsSelected) );
+                OnPropertyChanged( nameof( IsSelected ) );
             }
         }
 
@@ -196,7 +196,7 @@ namespace KOTORModSync.ViewModel
 
         public RelayCommand( Action execute, Func<bool> canExecute )
         {
-            _execute = execute ?? throw new ArgumentNullException( nameof(execute) );
+            _execute = execute ?? throw new ArgumentNullException( nameof( execute ) );
             _canExecute = canExecute;
             _canExecuteChangedHandlers = new List<WeakReference<EventHandler>>();
         }

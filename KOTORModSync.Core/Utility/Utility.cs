@@ -69,44 +69,6 @@ namespace KOTORModSync.Core.Utility
             }
         }
 
-        // todo: merge relevant sections with PlatformAgnosticMethods.ExecuteProcessAsync
-        public static async Task<bool> ExecuteProcessAsync
-            ( string fileName, string arguments, Func<Process, Task<bool>> onExited )
-        {
-            var process = new Process
-            {
-                StartInfo =
-                {
-                    FileName = fileName,
-                    Arguments = arguments,
-                    UseShellExecute = false,
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = true
-                }
-            };
-
-            bool isInstallSuccessful = false;
-
-            process.EnableRaisingEvents = true;
-
-            process.Exited += async ( sender, e ) =>
-            {
-                string output = await process.StandardOutput.ReadToEndAsync();
-                string error = await process.StandardError.ReadToEndAsync();
-
-                // Call the provided 'onExited' method and set the 'isInstallSuccessful' variable accordingly
-                isInstallSuccessful = await onExited( process );
-
-                process.Dispose();
-            };
-
-            _ = process.Start();
-
-            await Task.Run( () => process.WaitForExit() );
-
-            return isInstallSuccessful;
-        }
-
         [CanBeNull]
         public static DirectoryInfo ChooseDirectory()
         {
@@ -120,16 +82,6 @@ namespace KOTORModSync.Core.Utility
 
             Console.Write( $"Directory '{thisPath}' does not exist." );
             return default;
-        }
-
-        public interface IConfirmationDialogCallback
-        {
-            Task<bool?> ShowConfirmationDialog( string message );
-        }
-
-        public interface IOptionsDialogCallback
-        {
-            Task<string> ShowOptionsDialog( List<string> options );
         }
     }
 }

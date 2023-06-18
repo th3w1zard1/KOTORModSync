@@ -404,8 +404,8 @@ namespace KOTORModSync.Core
         public async Task<(bool success, Dictionary<FileInfo, SHA1> originalChecksums)>
             ExecuteInstructions
             (
-                Utility.Utility.IConfirmationDialogCallback confirmDialog,
-                Utility.Utility.IOptionsDialogCallback optionsDialog,
+                Utility.CallbackObjects.IConfirmationDialogCallback confirmDialog,
+                Utility.CallbackObjects.IOptionsDialogCallback optionsDialog,
                 List<Component> componentsList
             )
         {

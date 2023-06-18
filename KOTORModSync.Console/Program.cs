@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using KOTORModSync.Core;
 using KOTORModSync.Core.Utility;
 
@@ -47,7 +48,7 @@ namespace KOTORModSync.ConsoleApp
                             Console.WriteLine(
                                 "In order for this installer to work, you must download all of the mods you'd like to use into one folder."
                             );
-                            Console.WriteLine( "VERY IMPORTANT: Do not extract rename any mod archives." );
+                            Console.WriteLine( "VERY IMPORTANT: Do not extract or rename any mod archives." );
                             Console.WriteLine(
                                 "Please specify the directory your mods are downloaded in (e.g. \"%UserProfile%\\Documents\\tslmods\")"
                             );
@@ -62,17 +63,21 @@ namespace KOTORModSync.ConsoleApp
                             }
 
                             string[] modFiles = Directory.GetFiles(
-                                modDownloads.FullName,
-                                "*.zip",
-                                SearchOption.TopDirectoryOnly
-                            );
+                                    modDownloads.FullName,
+                                    "*.*",
+                                    SearchOption.TopDirectoryOnly
+                                )
+                                .Where( static file => ArchiveHelper.IsArchive(file) )
+                                .ToArray();
+
                             if ( modFiles.Length == 0 )
                             {
                                 Console.WriteLine(
-                                    $"Directory '{modDownloads.FullName}' does not contain any mod files (*.zip,*.rar,*.7z)."
+                                    $"Directory '{modDownloads.FullName}' does not contain any mod archives (*.zip, *.rar, *.7z)."
                                 );
                                 return;
                             }
+
 
                             Console.WriteLine(
                                 $"Found {modFiles.Length} mod files in directory '{modDownloads.FullName}':"

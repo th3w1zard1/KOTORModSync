@@ -11,7 +11,6 @@ namespace KOTORModSync.Core
     public static class ModParser
     {
         private const string Separator = "__";
-        private static readonly Regex s_propertyRegex = new Regex( @"\*\*\w+:\*\* (.+)", RegexOptions.Compiled );
 
         public static List<Component> ParseMods
             ( string source ) => source.Split( new[] { Separator }, StringSplitOptions.RemoveEmptyEntries )

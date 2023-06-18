@@ -55,43 +55,55 @@ namespace KOTORModSync.Core.Utility
         {
             // Check if the required command/method exists on the current platform
             (int ExitCode, string Output, string Error) result = TryExecuteCommand( "sysctl -n hw.memsize" );
+            string command = "sysctl";
+
             if ( result.ExitCode != 0 )
             {
                 result = TryExecuteCommand( "free -b" );
+                command = "free";
+
                 if ( result.ExitCode != 0 )
                 {
                     result = TryExecuteCommand( "wmic OS get FreePhysicalMemory" );
+                    command = "wmic";
                 }
             }
 
             if ( result.ExitCode != 0 )
             {
-                return 4L * 1024 * 1024 * 1024; // 4GB
+                return 0; // no memory command found.
             }
 
-            string output = result.Output;
-
-            // Update the regular expressions for matching memory values
-            string[] patterns =
-            {
-                @"\d{1,3}(,\d{3})*", // wmic command
-                @"\d+\s+\d+\s+\d+\s+(\d+)", // free command
-                @"\d+(\.\d+)?" // sysctl command
-            };
-
-            foreach ( string matchedValue in
-                     from pattern in patterns
-                     select Regex.Match( output, pattern ) into match
-                     where match.Success
-                     select match.Groups[1].Value.Replace( ",", "" ) )
-                if ( long.TryParse( matchedValue, out long availableMemory ) )
-                {
-                    return availableMemory;
-                }
-
-            // Platform-agnostic fallback logic for getting available memory
-            return 4L * 1024 * 1024 * 1024; // 4GB
+            long availableMemory = ParseAvailableMemory( result.Output, command );
+            return availableMemory;
         }
+
+        private static long ParseAvailableMemory( string output, string command )
+        {
+            string pattern = string.Empty;
+
+            switch (command)
+            {
+                case "sysctl":
+                    pattern = @"\d+(\.\d+)?"; // sysctl command
+                    break;
+                case "free":
+                    pattern = @"Mem:\s+\d+\s+\d+\s+(\d+)"; // free command
+                    break;
+                case "wmic":
+                    pattern = @"\d+"; // wmic command
+                    break;
+            }
+
+            Match match = Regex.Match( output, pattern );
+            if ( match.Success && long.TryParse( match.Value, out long memory ) )
+            {
+                return memory;
+            }
+
+            return 0;
+        }
+
 
         public static (int ExitCode, string Output, string Error) TryExecuteCommand( string command )
         {
@@ -421,7 +433,7 @@ namespace KOTORModSync.Core.Utility
                                 }
                             }
 
-                            cancellationTokenSource.Token.Register( Callback );
+                            _ = cancellationTokenSource.Token.Register( Callback );
                         }
 
                         process.EnableRaisingEvents = true;

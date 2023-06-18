@@ -154,7 +154,7 @@ namespace KOTORModSync.Tests
                 () =>
                 {
                     Assert.That( Directory.Exists( directory ) );
-                    Assert.That( Directory.GetFiles( directory ).Length, Is.EqualTo( 0 ) );
+                    Assert.That( Directory.GetFiles( directory ), Is.Empty );
                 }
             );
         }

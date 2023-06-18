@@ -213,7 +213,7 @@
 				</TabItem.Content>
 			</TabItem>
 			<TabItem x:Name="RawEditTabItem" Header="Raw Edit" ToolTip.Tip="Click 'Apply Editor Config' to save raw changes!">
-				<TextBox x:Name="RightTextBox" Margin="10" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="400" />
+				<TextBox x:Name="RawEditTextBox" Margin="10" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="400" />
 			</TabItem>
 		</TabControl>
 		<StackPanel Grid.Row="1" Grid.Column="2">

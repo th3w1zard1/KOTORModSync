@@ -12,7 +12,7 @@ using KOTORModSync.Core.Utility;
 
 namespace KOTORModSync
 {
-    internal sealed class ConfirmationDialogCallback : Utility.IConfirmationDialogCallback
+    internal sealed class ConfirmationDialogCallback : CallbackObjects.IConfirmationDialogCallback
     {
         private readonly Window _topLevelWindow;
 

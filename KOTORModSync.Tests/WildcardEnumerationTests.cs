@@ -77,9 +77,7 @@ namespace KOTORModSync.Tests
                 "Content 4"
             );
 
-#pragma warning disable U2U1201
             var pathsToTest = new List<string>
-#pragma warning restore U2U1201
             {
                 Path.Combine(
                     _basePath,

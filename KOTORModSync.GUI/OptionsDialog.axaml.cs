@@ -13,7 +13,7 @@ using KOTORModSync.Core.Utility;
 
 namespace KOTORModSync
 {
-    internal sealed class OptionsDialogCallback : Utility.IOptionsDialogCallback
+    internal sealed class OptionsDialogCallback : CallbackObjects.IOptionsDialogCallback
     {
         private readonly Window _topLevelWindow;
 

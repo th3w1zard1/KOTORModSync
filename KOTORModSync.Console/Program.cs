@@ -67,7 +67,7 @@ namespace KOTORModSync.ConsoleApp
                                     "*.*",
                                     SearchOption.TopDirectoryOnly
                                 )
-                                .Where( static file => ArchiveHelper.IsArchive(file) )
+                                .Where( static file => ArchiveHelper.IsArchive( file ) )
                                 .ToArray();
 
                             if ( modFiles.Length == 0 )

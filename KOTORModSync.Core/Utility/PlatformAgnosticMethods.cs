@@ -82,7 +82,7 @@ namespace KOTORModSync.Core.Utility
         {
             string pattern = string.Empty;
 
-            switch (command)
+            switch ( command )
             {
                 case "sysctl":
                     pattern = @"\d+(\.\d+)?"; // sysctl command

@@ -667,7 +667,7 @@ namespace KOTORModSync
                 Component newComponent
                     = FileHelper.DeserializeTomlComponent(
                         Component.DefaultComponent + Instruction.DefaultInstructions
-                    ) ?? throw new NullReferenceException("Could not deserialize default template");
+                    ) ?? throw new NullReferenceException( "Could not deserialize default template" );
 
                 newComponent.Guid = Guid.NewGuid();
                 newComponent.Name = "new mod_" + Path.GetRandomFileName();
@@ -1005,7 +1005,7 @@ namespace KOTORModSync
                 return;
             }
 
-            switch (selectedItem.Header.ToString())
+            switch ( selectedItem.Header.ToString() )
             {
                 // Show/hide the appropriate content based on the selected tab
                 case "Raw Edit":

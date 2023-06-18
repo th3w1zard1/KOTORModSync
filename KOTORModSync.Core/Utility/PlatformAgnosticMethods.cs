@@ -13,7 +13,6 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
-using Exception = System.Exception;
 
 namespace KOTORModSync.Core.Utility
 {
@@ -26,14 +25,21 @@ namespace KOTORModSync.Core.Utility
             long availableMemory = GetAvailableMemory();
             const long memoryThreshold = 2L * 1024 * 1024 * 1024; // 2GB threshold
             if ( availableMemory < memoryThreshold )
+            {
                 Parallel.Invoke( () => maxParallelism = Math.Max( 1, maxParallelism / 2 ) );
+            }
 
-            var maxDiskSpeedTask = Task.Run( () => GetMaxDiskSpeed( Path.GetPathRoot( thisDir.FullName ) ) );
+            Task<double> maxDiskSpeedTask = Task.Run( () => GetMaxDiskSpeed( Path.GetPathRoot( thisDir.FullName ) ) );
             double maxDiskSpeed = await maxDiskSpeedTask;
 
             const double diskSpeedThreshold = 100.0; // MB/sec threshold
             if ( maxDiskSpeed < diskSpeedThreshold )
-                maxParallelism = Math.Max( 1, maxParallelism / 2 ); // Reduce parallelism by half if disk speed is below the threshold
+            {
+                maxParallelism = Math.Max(
+                    1,
+                    maxParallelism / 2
+                ); // Reduce parallelism by half if disk speed is below the threshold
+            }
 
             // Platform-agnostic fallback logic
             if ( maxParallelism <= 1 )
@@ -53,30 +59,35 @@ namespace KOTORModSync.Core.Utility
             {
                 result = TryExecuteCommand( "free -b" );
                 if ( result.ExitCode != 0 )
+                {
                     result = TryExecuteCommand( "wmic OS get FreePhysicalMemory" );
+                }
             }
 
             if ( result.ExitCode != 0 )
+            {
                 return 4L * 1024 * 1024 * 1024; // 4GB
+            }
 
             string output = result.Output;
 
             // Update the regular expressions for matching memory values
             string[] patterns =
             {
-                @"\d{1,3}(,\d{3})*",        // wmic command
+                @"\d{1,3}(,\d{3})*", // wmic command
                 @"\d+\s+\d+\s+\d+\s+(\d+)", // free command
-                @"\d+(\.\d+)?"              // sysctl command
+                @"\d+(\.\d+)?" // sysctl command
             };
 
-            foreach ( string matchedValue in from pattern in patterns
-                                             select Regex.Match( output, pattern ) into match
-                                             where match.Success
-                                             select match.Groups[1].Value.Replace( ",", "" ) )
-            {
+            foreach ( string matchedValue in
+                     from pattern in patterns
+                     select Regex.Match( output, pattern ) into match
+                     where match.Success
+                     select match.Groups[1].Value.Replace( ",", "" ) )
                 if ( long.TryParse( matchedValue, out long availableMemory ) )
+                {
                     return availableMemory;
-            }
+                }
 
             // Platform-agnostic fallback logic for getting available memory
             return 4L * 1024 * 1024 * 1024; // 4GB
@@ -86,14 +97,16 @@ namespace KOTORModSync.Core.Utility
         {
             string shellPath = GetShellExecutable();
             if ( string.IsNullOrEmpty( shellPath ) )
-                return (-1, string.Empty, "Unable to retrieve shell executable path.");
+            {
+                return ( -1, string.Empty, "Unable to retrieve shell executable path." );
+            }
 
             try
             {
                 using ( var process = new Process() )
                 {
                     string args = RuntimeInformation.IsOSPlatform( OSPlatform.Windows )
-                        ? $"/c \"{command}\""  // Use "/c" for Windows command prompt
+                        ? $"/c \"{command}\"" // Use "/c" for Windows command prompt
                         : $"-c \"{command}\""; // Use "-c" for Unix-like shells
                     var shellFileInfo = new FileInfo( shellPath );
                     Task<(int, string, string)> executeProcessTask = ExecuteProcessAsync( shellFileInfo, args );
@@ -103,7 +116,7 @@ namespace KOTORModSync.Core.Utility
             }
             catch ( Exception ex )
             {
-                return (-2, string.Empty, $"Command execution failed: {ex.Message}");
+                return ( -2, string.Empty, $"Command execution failed: {ex.Message}" );
             }
         }
 
@@ -121,8 +134,8 @@ namespace KOTORModSync.Core.Utility
         {
             string[] shellExecutables =
             {
-                "cmd.exe", "powershell.exe", "sh", "/bin/sh", "/usr/bin/sh", "/usr/local/bin/sh",
-                "bash", "/bin/bash", "/usr/bin/bash", "/usr/local/bin/bash"
+                "cmd.exe", "powershell.exe", "sh", "/bin/sh", "/usr/bin/sh", "/usr/local/bin/sh", "bash",
+                "/bin/bash", "/usr/bin/bash", "/usr/local/bin/bash"
             };
 
             foreach ( string executable in shellExecutables )
@@ -155,14 +168,17 @@ namespace KOTORModSync.Core.Utility
                     command = "cmd.exe";
                     arguments = $"/C winsat disk -drive \"{drivePath}\" -seq -read -ramsize 4096";
                 }
-                else if ( RuntimeInformation.IsOSPlatform( OSPlatform.Linux ) || RuntimeInformation.IsOSPlatform( OSPlatform.OSX ) )
+                else if ( RuntimeInformation.IsOSPlatform( OSPlatform.Linux )
+                         || RuntimeInformation.IsOSPlatform( OSPlatform.OSX ) )
                 {
                     command = "dd";
                     arguments = $"if={drivePath} bs=1M count=256 iflag=direct";
                 }
                 else
                 {
-                    throw new PlatformNotSupportedException( "Disk performance checking is not supported on this platform." );
+                    throw new PlatformNotSupportedException(
+                        "Disk performance checking is not supported on this platform."
+                    );
                 }
 
                 var startInfo = new ProcessStartInfo
@@ -200,13 +216,17 @@ namespace KOTORModSync.Core.Utility
             var regex = new Regex( @"([0-9,.]+)\s*(bytes/sec|MB/sec)" );
             Match match = regex.Match( output );
             if ( !match.Success || match.Groups.Count < 3 )
+            {
                 return maxSpeed;
+            }
 
             string speedString = match.Groups[1].Value;
             string unit = match.Groups[2].Value.ToLower();
 
             if ( !double.TryParse( speedString.Replace( ",", "" ), out double speed ) )
+            {
                 return maxSpeed;
+            }
 
             switch ( unit )
             {
@@ -217,7 +237,8 @@ namespace KOTORModSync.Core.Utility
             }
         }
 
-        private static List<ProcessStartInfo> GetProcessStartInfos(
+        private static List<ProcessStartInfo> GetProcessStartInfos
+        (
             [NotNull] FileInfo programFile,
             [NotNull] string cmdlineArgs
         ) => new List<ProcessStartInfo>
@@ -276,19 +297,24 @@ namespace KOTORModSync.Core.Utility
             }
         };
 
-        private static async Task HandleProcessExitedAsync( [CanBeNull] Process process,
-            [CanBeNull] TaskCompletionSource<(int, string, string)> tcs )
+        private static async Task HandleProcessExitedAsync
+        (
+            [CanBeNull] Process process,
+            [CanBeNull] TaskCompletionSource<(int, string, string)> tcs
+        )
         {
             try
             {
                 if ( tcs == null )
-                    throw new ArgumentNullException( nameof( tcs ) );
+                {
+                    throw new ArgumentNullException( nameof(tcs) );
+                }
 
                 if ( process == null )
                 {
                     // Process disposed of early?
                     await Logger.LogExceptionAsync( new NotSupportedException() );
-                    tcs.SetResult( (-4, string.Empty, string.Empty) );
+                    tcs.SetResult( ( -4, string.Empty, string.Empty ) );
                     return;
                 }
 
@@ -301,26 +327,32 @@ namespace KOTORModSync.Core.Utility
 
                 if ( process.ExitCode == 0 && string.IsNullOrEmpty( error ) )
                 {
-                    tcs.SetResult( (process.ExitCode, output, error) );
+                    tcs.SetResult( ( process.ExitCode, output, error ) );
                     return;
                 }
 
                 string logMessage = string.Empty;
                 if ( process.ExitCode != 0 )
+                {
                     logMessage += $"Process failed with exit code {process.ExitCode}. ";
+                }
 
                 var logBuilder = new StringBuilder( logMessage );
 
                 if ( output != null )
+                {
                     _ = logBuilder.Append( "Output: " ).AppendLine( output );
+                }
 
                 if ( error != null )
+                {
                     _ = logBuilder.Append( "Error: " ).AppendLine( error );
+                }
 
                 await Logger.LogAsync( logBuilder.ToString() );
 
                 // Process had an error of some sort even though ExitCode is 0?
-                tcs.SetResult( (-3, output, error) );
+                tcs.SetResult( ( -3, output, error ) );
             }
             catch ( Exception e )
             {
@@ -328,7 +360,8 @@ namespace KOTORModSync.Core.Utility
             }
         }
 
-        public static async Task<(int, string, string)> ExecuteProcessAsync(
+        public static async Task<(int, string, string)> ExecuteProcessAsync
+        (
             [CanBeNull] FileInfo programFile,
             string cmdlineArgs = "",
             int timeout = 0,
@@ -336,7 +369,9 @@ namespace KOTORModSync.Core.Utility
         )
         {
             if ( programFile == null )
-                throw new ArgumentNullException( nameof( programFile ) );
+            {
+                throw new ArgumentNullException( nameof(programFile) );
+            }
 
             List<ProcessStartInfo> processStartInfosWithFallbacks = GetProcessStartInfos(
                 programFile,
@@ -346,7 +381,6 @@ namespace KOTORModSync.Core.Utility
             var ex = new Exception();
             bool startedProcess = false;
             foreach ( ProcessStartInfo startInfo in processStartInfosWithFallbacks )
-            {
                 try
                 {
                     // K1CP can take ages to install, set the timeout time to an hour.
@@ -357,7 +391,8 @@ namespace KOTORModSync.Core.Utility
 
                         var tcs = new TaskCompletionSource<(int, string, string)>();
 
-                        process.Exited += async ( sender, args ) => await HandleProcessExitedAsync( (Process)sender, tcs );
+                        process.Exited += async
+                            ( sender, args ) => await HandleProcessExitedAsync( (Process)sender, tcs );
 
                         // Handle cancellation using CancellationToken
                         if ( timeout > 0 )
@@ -369,10 +404,14 @@ namespace KOTORModSync.Core.Utility
                                 try
                                 {
                                     if ( localProcess.HasExited )
+                                    {
                                         return;
+                                    }
 
                                     if ( !localProcess.CloseMainWindow() )
+                                    {
                                         localProcess.Kill();
+                                    }
 
                                     _ = tcs.TrySetCanceled();
                                 }
@@ -399,7 +438,9 @@ namespace KOTORModSync.Core.Utility
                         if ( timeout > 0 )
                         {
                             if ( cancellationTokenSource.Token.IsCancellationRequested )
+                            {
                                 throw new TimeoutException( "Process timed out" );
+                            }
                         }
 
                         return tcs.Task.Result;
@@ -408,7 +449,10 @@ namespace KOTORModSync.Core.Utility
                 catch ( Win32Exception localException )
                 {
                     if ( !MainConfig.DebugLogging )
+                    {
                         continue;
+                    }
+
                     await Logger.LogAsync( $"Exception occurred for startInfo: {startInfo}" );
                     await Logger.LogExceptionAsync( localException );
                     ex = localException;
@@ -417,16 +461,19 @@ namespace KOTORModSync.Core.Utility
                 {
                     await Logger.LogAsync( $"An unplanned error has occurred trying to run {programFile.Name}." );
                     await Logger.LogExceptionAsync( startinfoException );
-                    return (-6, string.Empty, string.Empty);
+                    return ( -6, string.Empty, string.Empty );
                 }
-            }
 
             if ( startedProcess )
-                return (-2, string.Empty, string.Empty); // todo: figure out what scenario this return code will happen in.
+            {
+                return
+                    ( -2, string.Empty,
+                        string.Empty ); // todo: figure out what scenario this return code will happen in.
+            }
 
             await Logger.LogAsync( "Process failed to start with all possible combinations of arguments." );
             await Logger.LogExceptionAsync( ex );
-            return (-1, string.Empty, string.Empty);
+            return ( -1, string.Empty, string.Empty );
         }
     }
 }

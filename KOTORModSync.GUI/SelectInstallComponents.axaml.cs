@@ -13,6 +13,8 @@ namespace KOTORModSync
         private readonly Component _component;
         private bool _isSelected;
 
+        public ComponentViewModel( Component component ) => _component = component;
+
         public string Name => _component.Name;
 
         public bool IsSelected
@@ -21,31 +23,23 @@ namespace KOTORModSync
             set
             {
                 if ( _isSelected == value )
+                {
                     return;
+                }
 
                 _isSelected = value;
-                OnPropertyChanged( nameof( IsSelected ) );
+                OnPropertyChanged( nameof(IsSelected) );
             }
-        }
-
-        public ComponentViewModel( Component component )
-        {
-            _component = component;
         }
 
         public event PropertyChangedEventHandler PropertyChanged;
 
-        protected virtual void OnPropertyChanged( string propertyName )
-        {
-            PropertyChanged?.Invoke( this, new PropertyChangedEventArgs( propertyName ) );
-        }
+        protected virtual void OnPropertyChanged
+            ( string propertyName ) => PropertyChanged?.Invoke( this, new PropertyChangedEventArgs( propertyName ) );
     }
 
     public partial class SelectInstallComponents : Window
     {
-        public List<ComponentViewModel> Components { get; set; }
-        public List<ComponentViewModel> SelectedComponents { get; set; }
-
         public SelectInstallComponents()
         {
             InitializeComponent();
@@ -54,7 +48,7 @@ namespace KOTORModSync
             {
                 new Component { Name = "Component 1" },
                 new Component { Name = "Component 2" },
-                new Component { Name = "Component 3" },
+                new Component { Name = "Component 3" }
                 // Add more components as needed
             };
 
@@ -63,6 +57,9 @@ namespace KOTORModSync
 
             DataContext = this;
         }
+
+        public List<ComponentViewModel> Components { get; set; }
+        public List<ComponentViewModel> SelectedComponents { get; set; }
 
         private async void InstallButton_Click( object sender, RoutedEventArgs e )
         {
@@ -73,9 +70,6 @@ namespace KOTORModSync
             Close();
         }
 
-        private void InitializeComponent()
-        {
-            AvaloniaXamlLoader.Load( this );
-        }
+        private void InitializeComponent() => AvaloniaXamlLoader.Load( this );
     }
 }

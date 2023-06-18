@@ -10,26 +10,29 @@ namespace KOTORModSync.Tests
     [TestFixture]
     public class CommandExecutorTests
     {
-        private static void ExecuteCommand( string command, EventWaitHandle completed, IDictionary<string, object> sharedData )
+        private static void ExecuteCommand
+            ( string command, EventWaitHandle completed, IDictionary<string, object> sharedData )
         {
             try
             {
                 Logger.Log( "Testing TryExecuteCommand..." );
-                (int exitCode, string output, string error) = PlatformAgnosticMethods.TryExecuteCommand( command );
+                ( int exitCode, string output, string error ) = PlatformAgnosticMethods.TryExecuteCommand( command );
                 sharedData["success"] = exitCode == 0;
                 sharedData["output"] = output;
                 sharedData["error"] = error;
             }
             catch ( Exception ex ) when ( ex is TimeoutException )
             {
-                Logger.Log( "The test timed out. Make sure the command execution is completing within the expected time." );
+                Logger.Log(
+                    "The test timed out. Make sure the command execution is completing within the expected time."
+                );
                 Logger.Log( "Here are the currently running processes on the machine:" );
                 Process[] processes = Process.GetProcesses();
                 foreach ( Process process in processes )
                     Logger.Log( $"{process.ProcessName} (ID: {process.Id})" );
 
                 Logger.Log( "Standard output from the timed-out process:" );
-                (int exitCode, string output, string error) = PlatformAgnosticMethods.TryExecuteCommand( "echo" );
+                ( int exitCode, string output, string error ) = PlatformAgnosticMethods.TryExecuteCommand( "echo" );
                 Logger.Log( output );
             }
             finally
@@ -82,7 +85,8 @@ namespace KOTORModSync.Tests
                 {
                     Assert.That( success );
                     Assert.That( output.Trim(), Is.EqualTo( expectedOutput ) );
-                } );
+                }
+            );
         }
 
         [Test]

@@ -1,7 +1,6 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
-using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
@@ -19,6 +18,14 @@ namespace KOTORModSync.Core
     [SuppressMessage( "CodeQuality", "IDE0079:Remove unnecessary suppression", Justification = "<Pending>" )]
     public class MainConfig : INotifyPropertyChanged
     {
+        public enum CompatibilityLevel
+        {
+            Compatible = 0,
+            MostlyCompatible = 1,
+            Untested = 2,
+            Incompatible = 3
+        }
+
         public static DirectoryInfo SourcePath { get; private set; }
         public static DirectoryInfo DestinationPath { get; private set; }
         public static bool DebugLogging { get; private set; }
@@ -28,55 +35,31 @@ namespace KOTORModSync.Core
         public static bool TslPatcherCli { get; private set; }
         public static CompatibilityLevel CurrentCompatibilityLevel { get; private set; }
 
-        // used for the ui.
-        protected virtual void OnPropertyChanged( [CallerMemberName][CanBeNull] string propertyName = null )
-        {
-            PropertyChanged?.Invoke( this, new PropertyChangedEventArgs( propertyName ) );
-        }
-
         public DirectoryInfo sourcePath
         {
-            get
-            {
-                return SourcePath;
-            }
+            get => SourcePath;
             set
             {
                 SourcePath = value;
-                OnPropertyChanged( nameof( sourcePath ) );
-                OnPropertyChanged( nameof( sourcePathFullName ) );
+                OnPropertyChanged( nameof(sourcePath) );
+                OnPropertyChanged( nameof(sourcePathFullName) );
             }
         }
 
-        [CanBeNull]
-        public string sourcePathFullName => SourcePath?.FullName;
+        [CanBeNull] public string sourcePathFullName => SourcePath?.FullName;
 
         public DirectoryInfo destinationPath
         {
-            get
-            {
-                return DestinationPath;
-            }
+            get => DestinationPath;
             set
             {
                 DestinationPath = value;
-                OnPropertyChanged( nameof( destinationPath ) );
-                OnPropertyChanged( nameof( destinationPathFullName ) );
+                OnPropertyChanged( nameof(destinationPath) );
+                OnPropertyChanged( nameof(destinationPathFullName) );
             }
         }
 
-        [CanBeNull]
-        public string destinationPathFullName => DestinationPath?.FullName;
-
-        public enum CompatibilityLevel
-        {
-            Compatible = 0,
-            MostlyCompatible = 1,
-            Untested = 2,
-            Incompatible = 3
-        }
-
-        public event PropertyChangedEventHandler PropertyChanged;
+        [CanBeNull] public string destinationPathFullName => DestinationPath?.FullName;
 
         public CompatibilityLevel currentCompatibilityLevel
         {
@@ -84,34 +67,48 @@ namespace KOTORModSync.Core
             set
             {
                 CurrentCompatibilityLevel = value;
-                OnPropertyChanged( nameof( CurrentCompatibilityLevel ) );
+                OnPropertyChanged( nameof(CurrentCompatibilityLevel) );
             }
         }
 
         public bool debugLogging
         {
-            get => DebugLogging; set => DebugLogging = value;
+            get => DebugLogging;
+            set => DebugLogging = value;
         }
 
         public DirectoryInfo lastOutputDirectory
         {
-            get => LastOutputDirectory; set => LastOutputDirectory = value;
+            get => LastOutputDirectory;
+            set => LastOutputDirectory = value;
         }
 
         public bool defaultInstall
         {
-            get => DefaultInstall; set => DefaultInstall = value;
+            get => DefaultInstall;
+            set => DefaultInstall = value;
         }
 
         public bool attemptFixes
         {
-            get => AttemptFixes; set => AttemptFixes = value;
+            get => AttemptFixes;
+            set => AttemptFixes = value;
         }
 
         public bool tslPatcherCli
         {
-            get => TslPatcherCli; set => TslPatcherCli = value;
+            get => TslPatcherCli;
+            set => TslPatcherCli = value;
         }
+
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        // used for the ui.
+        protected virtual void OnPropertyChanged
+            ( [CallerMemberName] [CanBeNull] string propertyName = null ) => PropertyChanged?.Invoke(
+            this,
+            new PropertyChangedEventArgs( propertyName )
+        );
     }
 
     public static class ModDirectory

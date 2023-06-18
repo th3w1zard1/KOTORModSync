@@ -12,6 +12,24 @@ namespace KOTORModSync.Tests
     [TestFixture]
     public class TomlFileTests
     {
+        [SetUp]
+        public void SetUp()
+        {
+            // Create a temporary file for testing
+            _filePath = Path.GetTempFileName();
+
+            // Write example TOMLIN content to the file
+            File.WriteAllText( _filePath, _exampleToml );
+        }
+
+        [TearDown]
+        public void TearDown()
+        {
+            // Delete the temporary file
+            Debug.Assert( _filePath != null, nameof(_filePath) + " != null" );
+            File.Delete( _filePath );
+        }
+
         private string? _filePath;
 
         // ReSharper disable once ConvertToConstant.Local
@@ -61,29 +79,11 @@ namespace KOTORModSync.Tests
             path = ""%temp%\\mod_files\\TSLPatcher.exe""
             arguments = """"";
 
-        [SetUp]
-        public void SetUp()
-        {
-            // Create a temporary file for testing
-            _filePath = Path.GetTempFileName();
-
-            // Write example TOMLIN content to the file
-            File.WriteAllText( _filePath, _exampleToml );
-        }
-
-        [TearDown]
-        public void TearDown()
-        {
-            // Delete the temporary file
-            Debug.Assert( _filePath != null, nameof( _filePath ) + " != null" );
-            File.Delete( _filePath );
-        }
-
         [Test]
         public void SaveAndLoadTOMLFile_MatchingComponents()
         {
             // Read the original TOMLIN file contents
-            Debug.Assert( _filePath != null, nameof( _filePath ) + " != null" );
+            Debug.Assert( _filePath != null, nameof(_filePath) + " != null" );
             string tomlContents = File.ReadAllText( _filePath );
 
             // Fix whitespace issues
@@ -141,7 +141,7 @@ namespace KOTORModSync.Tests
             List<Component> originalComponents = FileHelper.ReadComponentsFromFile( _filePath );
 
             // Modify the TOML file contents
-            Debug.Assert( _filePath != null, nameof( _filePath ) + " != null" );
+            Debug.Assert( _filePath != null, nameof(_filePath) + " != null" );
             string tomlContents = File.ReadAllText( _filePath );
 
             // Convert field names and values to mixed case
@@ -161,9 +161,10 @@ namespace KOTORModSync.Tests
                 Component originalComponent = originalComponents[i];
                 Component loadedComponent = loadedComponents[i];
 
-                AssertComponentEquality( originalComponent,
+                AssertComponentEquality(
+                    originalComponent,
                     loadedComponent,
-                    caseSensitiveKeys: true
+                    true
                 );
             }
         }
@@ -175,7 +176,7 @@ namespace KOTORModSync.Tests
             List<Component> originalComponents = FileHelper.ReadComponentsFromFile( _filePath );
 
             // Modify the TOMLIN file contents
-            Debug.Assert( _filePath != null, nameof( _filePath ) + " != null" );
+            Debug.Assert( _filePath != null, nameof(_filePath) + " != null" );
             string tomlContents = File.ReadAllText( _filePath );
 
             // Add mixed line endings and extra whitespaces
@@ -261,9 +262,18 @@ namespace KOTORModSync.Tests
             // Arrange
             List<Component> originalComponents = new()
             {
-                new Component { Name = "Component 1", Guid = Guid.Parse("{B3525945-BDBD-45D8-A324-AAF328A5E13E}") },
-                new Component { Name = "Component 2", Guid = Guid.Parse("{C5418549-6B7E-4A8C-8B8E-4AA1BC63C732}") },
-                new Component { Name = "Component 3", Guid = Guid.Parse("{B3525945-BDBD-45D8-A324-AAF328A5E13E}") },
+                new Component
+                {
+                    Name = "Component 1", Guid = Guid.Parse( "{B3525945-BDBD-45D8-A324-AAF328A5E13E}" )
+                },
+                new Component
+                {
+                    Name = "Component 2", Guid = Guid.Parse( "{C5418549-6B7E-4A8C-8B8E-4AA1BC63C732}" )
+                },
+                new Component
+                {
+                    Name = "Component 3", Guid = Guid.Parse( "{B3525945-BDBD-45D8-A324-AAF328A5E13E}" )
+                }
             };
 
             // Act
@@ -315,21 +325,48 @@ namespace KOTORModSync.Tests
             {
                 new List<Component>
                 {
-                    new Component { Name = "Component 1", Guid = Guid.Parse("{B3525945-BDBD-45D8-A324-AAF328A5E13E}") },
-                    new Component { Name = "Component 2", Guid = Guid.Parse("{C5418549-6B7E-4A8C-8B8E-4AA1BC63C732}") },
+                    new()
+                    {
+                        Name = "Component 1", Guid = Guid.Parse( "{B3525945-BDBD-45D8-A324-AAF328A5E13E}" )
+                    },
+                    new()
+                    {
+                        Name = "Component 2", Guid = Guid.Parse( "{C5418549-6B7E-4A8C-8B8E-4AA1BC63C732}" )
+                    }
                 },
                 new List<Component>
                 {
-                    new Component { Name = "Component 3", Guid = Guid.Parse("{D0F371DA-5C69-4A26-8A37-76E3A6A2A50D}") },
-                    new Component { Name = "Component 4", Guid = Guid.Parse("{E7B27A19-9A81-4A20-B062-7D00F2603D5C}") },
-                    new Component { Name = "Component 5", Guid = Guid.Parse("{F1B05F5D-3C06-4B64-8E39-8BEC8D22BB0A}") },
+                    new()
+                    {
+                        Name = "Component 3", Guid = Guid.Parse( "{D0F371DA-5C69-4A26-8A37-76E3A6A2A50D}" )
+                    },
+                    new()
+                    {
+                        Name = "Component 4", Guid = Guid.Parse( "{E7B27A19-9A81-4A20-B062-7D00F2603D5C}" )
+                    },
+                    new()
+                    {
+                        Name = "Component 5", Guid = Guid.Parse( "{F1B05F5D-3C06-4B64-8E39-8BEC8D22BB0A}" )
+                    }
                 },
                 new List<Component>
                 {
-                    new Component { Name = "Component 6", Guid = Guid.Parse("{EF04A28E-5031-4A95-A85A-9A1B29A31710}") },
-                    new Component { Name = "Component 7", Guid = Guid.Parse("{B0373F49-ED5A-43A1-91E0-5CEB85659282}") },
-                    new Component { Name = "Component 8", Guid = Guid.Parse("{BBDB9C8D-DA44-4859-A641-0364D6F34D12}") },
-                    new Component { Name = "Component 9", Guid = Guid.Parse("{D6B5C60F-26A7-4595-A0E2-2DE567A376DE}") },
+                    new()
+                    {
+                        Name = "Component 6", Guid = Guid.Parse( "{EF04A28E-5031-4A95-A85A-9A1B29A31710}" )
+                    },
+                    new()
+                    {
+                        Name = "Component 7", Guid = Guid.Parse( "{B0373F49-ED5A-43A1-91E0-5CEB85659282}" )
+                    },
+                    new()
+                    {
+                        Name = "Component 8", Guid = Guid.Parse( "{BBDB9C8D-DA44-4859-A641-0364D6F34D12}" )
+                    },
+                    new()
+                    {
+                        Name = "Component 9", Guid = Guid.Parse( "{D6B5C60F-26A7-4595-A0E2-2DE567A376DE}" )
+                    }
                 }
             };
             // Act and Assert
@@ -350,8 +387,8 @@ namespace KOTORModSync.Tests
             }
         }
 
-        private static void AssertComponentEquality( Component expected, Component actual, bool caseSensitiveKeys = true )
-        {
+        private static void AssertComponentEquality
+            ( Component expected, Component actual, bool caseSensitiveKeys = true ) =>
             Assert.Multiple(
                 () =>
                 {
@@ -360,7 +397,7 @@ namespace KOTORModSync.Tests
 
                     Assert.That( actual.Name, Is.EqualTo( expected.Name ).Using( comparer ) );
                     Assert.That( actual.Guid, Is.EqualTo( expected.Guid ).Using( comparer ) );
-                } );
-        }
+                }
+            );
     }
 }

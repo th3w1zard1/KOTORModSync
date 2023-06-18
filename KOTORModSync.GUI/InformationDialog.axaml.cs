@@ -15,20 +15,22 @@ namespace KOTORModSync
     {
         public static readonly AvaloniaProperty InfoTextProperty =
             AvaloniaProperty.Register<InformationDialog, string>( "InfoText" );
+
         public InformationDialog() => InitializeComponent();
-
-        private void InitializeComponent() => AvaloniaXamlLoader.Load( this );
-
-        public static async Task ShowInformationDialog( Window parentWindow, string message, string title = "Information" )
-        {
-            var dialog = new InformationDialog { Title = title, InfoText = message };
-            _ = await dialog.ShowDialog<bool?>( parentWindow );
-        }
 
         public string InfoText
         {
             get => GetValue( InfoTextProperty ) as string;
             set => SetValue( InfoTextProperty, value );
+        }
+
+        private void InitializeComponent() => AvaloniaXamlLoader.Load( this );
+
+        public static async Task ShowInformationDialog
+            ( Window parentWindow, string message, string title = "Information" )
+        {
+            var dialog = new InformationDialog { Title = title, InfoText = message };
+            _ = await dialog.ShowDialog<bool?>( parentWindow );
         }
 
         protected override void OnOpened( EventArgs e )
@@ -39,10 +41,12 @@ namespace KOTORModSync
 
         private void OKButton_Click( object sender, RoutedEventArgs e ) => Close();
 
-        private void UpdateInfoText() => Dispatcher.UIThread.InvokeAsync( () =>
-                                                  {
-                                                      TextBlock textBlock = this.FindControl<TextBlock>( "InfoTextBlock" );
-                                                      textBlock.Text = InfoText;
-                                                  } );
+        private void UpdateInfoText() => Dispatcher.UIThread.InvokeAsync(
+            () =>
+            {
+                var textBlock = this.FindControl<TextBlock>( "InfoTextBlock" );
+                textBlock.Text = InfoText;
+            }
+        );
     }
 }

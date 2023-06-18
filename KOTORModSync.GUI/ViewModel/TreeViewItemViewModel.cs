@@ -4,6 +4,7 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
+
 /* Unmerged change from project 'KOTORModSync (net6.0)'
 Before:
 using System.Threading.Tasks;
@@ -19,10 +20,10 @@ namespace KOTORModSync.ViewModel
 {
     public class TreeViewItemViewModel : INotifyPropertyChanged
     {
-        private string _name;
-        private bool _isSelected;
-        private bool _isExpanded;
         private ObservableCollection<TreeViewItemViewModel> _childItems;
+        private bool _isExpanded;
+        private bool _isSelected;
+        private string _name;
 
         public string Name
         {
@@ -66,6 +67,10 @@ namespace KOTORModSync.ViewModel
 
         public event PropertyChangedEventHandler PropertyChanged;
 
-        protected virtual void OnPropertyChanged( [CallerMemberName] string propertyName = null ) => PropertyChanged?.Invoke( this, new PropertyChangedEventArgs( propertyName ) );
+        protected virtual void OnPropertyChanged
+            ( [CallerMemberName] string propertyName = null ) => PropertyChanged?.Invoke(
+            this,
+            new PropertyChangedEventArgs( propertyName )
+        );
     }
 }

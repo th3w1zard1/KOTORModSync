@@ -15,8 +15,6 @@ using JetBrains.Annotations;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using SharpCompress.Archives;
-using SharpCompress.Archives.Rar;
-using SharpCompress.Archives.SevenZip;
 using SharpCompress.Common;
 using Tomlyn;
 using Tomlyn.Model;
@@ -89,7 +87,10 @@ namespace KOTORModSync.Core.Utility
 
             // Attempt to fix common issues with GUID strings
             if ( !guidString.StartsWith( "{", StringComparison.Ordinal ) )
+            {
                 guidString = "{" + guidString;
+            }
+
             if ( !guidString.EndsWith( "}", StringComparison.Ordinal ) ) guidString += "}";
 
             if ( guidString.IndexOf( '-' ) < 0 )
@@ -134,7 +135,8 @@ namespace KOTORModSync.Core.Utility
 
         public static string PrefixPath( string path ) =>
             !path.StartsWith( "<<modDirectory>>" ) && !path.StartsWith( "<<kotorDirectory>>" )
-                ? "<<modDirectory>>" + path : path;
+                ? "<<modDirectory>>" + path
+                : path;
 
         public static string FixPathFormatting( string path )
         {
@@ -160,9 +162,13 @@ namespace KOTORModSync.Core.Utility
                 object value = kvp.Value;
 
                 if ( value is TomlTable nestedTable )
+                {
                     dict.Add( key, ConvertTomlTableToDictionary( nestedTable ) );
+                }
                 else
+                {
                     dict.Add( key, value );
+                }
             }
 
             return dict;
@@ -200,18 +206,20 @@ namespace KOTORModSync.Core.Utility
                         component.Language.FirstOrDefault(),
                         "All",
                         StringComparison.OrdinalIgnoreCase
-                    ) ? sb.AppendLine( "**Supported Languages**: ALL" ) : sb
-                        .Append( "**Supported Languages**: [" )
-                        .Append( Environment.NewLine )
-                        .Append(
-                            string.Join(
-                                $",{Environment.NewLine}",
-                                component.Language.Select( item => $"{indentation}{item}" )
+                    )
+                        ? sb.AppendLine( "**Supported Languages**: ALL" )
+                        : sb
+                            .Append( "**Supported Languages**: [" )
+                            .Append( Environment.NewLine )
+                            .Append(
+                                string.Join(
+                                    $",{Environment.NewLine}",
+                                    component.Language.Select( item => $"{indentation}{item}" )
+                                )
                             )
-                        )
-                        .Append( Environment.NewLine )
-                        .Append( ']' )
-                        .AppendLine();
+                            .Append( Environment.NewLine )
+                            .Append( ']' )
+                            .AppendLine();
                 }
 
                 _ = sb.Append( "**Directions**: " ).AppendLine( component.Directions );
@@ -222,8 +230,8 @@ namespace KOTORModSync.Core.Utility
                 _ = sb.AppendLine();
                 _ = sb.AppendLine( "**Installation Instructions:" );
                 foreach ( Instruction instruction in component.Instructions.Where(
-                    instruction => instruction.Action != "extract"
-                ) )
+                             instruction => instruction.Action != "extract"
+                         ) )
                 {
                     _ = sb.Append( "**Action**: " ).AppendLine( instruction.Action );
                     if ( instruction.Action == "move" )
@@ -238,13 +246,17 @@ namespace KOTORModSync.Core.Utility
                             = $"Source: [{Environment.NewLine}{string.Join( $",{Environment.NewLine}", instruction.Source.Select( item => $"{indentation}{item}" ) )}{Environment.NewLine}]";
 
                         if ( instruction.Action != "move" )
+                        {
                             thisLine = thisLine?.Replace( "Source: ", "" );
+                        }
 
                         _ = sb.AppendLine( thisLine );
                     }
 
                     if ( instruction.Destination != null && instruction.Action == "move" )
+                    {
                         _ = sb.Append( "Destination: " ).AppendLine( instruction.Destination );
+                    }
                 }
             }
 
@@ -264,7 +276,9 @@ namespace KOTORModSync.Core.Utility
             while ( enumerator.MoveNext() )
             {
                 if ( enumerator.Current == null )
+                {
                     continue;
+                }
 
                 var entry = (DictionaryEntry)enumerator.Current;
                 yield return new KeyValuePair<object, object>( entry.Key, entry.Value );
@@ -277,11 +291,15 @@ namespace KOTORModSync.Core.Utility
 
             // do nothing if it's already a simple type.
             if ( obj is IConvertible || obj is IFormattable || obj is IComparable )
+            {
                 return obj.ToString();
+            }
 
             // handle generic list types
             if ( obj is IList objList )
+            {
                 return SerializeList( objList );
+            }
 
             var serializedProperties = new Dictionary<string, object>();
 
@@ -379,7 +397,9 @@ namespace KOTORModSync.Core.Utility
             }
 
             if ( serializedProperties.Count > 0 )
+            {
                 return serializedProperties;
+            }
 
             return obj.ToString();
         }
@@ -392,7 +412,9 @@ namespace KOTORModSync.Core.Utility
             foreach ( object item in list )
             {
                 if ( item == null )
+                {
                     continue;
+                }
 
                 if ( item.GetType().IsPrimitive || item is string )
                 {
@@ -401,9 +423,13 @@ namespace KOTORModSync.Core.Utility
                 }
 
                 if ( item is IList nestedList )
+                {
                     serializedList.Add( SerializeList( nestedList ) );
+                }
                 else
+                {
                     serializedList.Add( SerializeObject( item ) );
+                }
             }
 
             return serializedList;
@@ -419,8 +445,9 @@ namespace KOTORModSync.Core.Utility
                 && ( !type.IsClass || type.IsSealed || type.IsAbstract );
 
             // Check if the object is a custom type (excluding dynamic types and proxy objects)
-            bool isCustomType = type.FullName != null && ( type.Assembly.FullName.StartsWith( "Dynamic" )
-                || type.FullName.Contains( "__TransparentProxy" ) );
+            bool isCustomType = type.FullName != null
+                && ( type.Assembly.FullName.StartsWith( "Dynamic" )
+                    || type.FullName.Contains( "__TransparentProxy" ) );
             isNonClassEnumerable &= !isCustomType;
 
             return isNonClassEnumerable;
@@ -460,7 +487,7 @@ namespace KOTORModSync.Core.Utility
             get
             {
                 string outputDirectory = Path.GetDirectoryName( Assembly.GetExecutingAssembly().Location );
-                return outputDirectory ?? throw new ArgumentNullException( nameof( outputDirectory ) );
+                return outputDirectory ?? throw new ArgumentNullException( nameof(outputDirectory) );
             }
         }
 
@@ -475,7 +502,9 @@ namespace KOTORModSync.Core.Utility
         {
             FileInfo[] iniFiles = directory.GetFiles( "*.ini", SearchOption.AllDirectories );
             if ( iniFiles.Length == 0 )
+            {
                 throw new InvalidOperationException( "No .ini files found!" );
+            }
 
             foreach ( FileInfo file in iniFiles )
             {
@@ -487,7 +516,9 @@ namespace KOTORModSync.Core.Utility
 
                 // Use Regex.IsMatch to check if the pattern exists in the file contents
                 if ( !Regex.IsMatch( fileContents, pattern ) )
+                {
                     continue;
+                }
 
                 // Use Regex.Replace to replace the pattern with "LookupGameFolder=0" (ignoring whitespace)
                 fileContents = Regex.Replace( fileContents, pattern, "LookupGameFolder=0" );
@@ -511,14 +542,22 @@ namespace KOTORModSync.Core.Utility
         public static async Task MoveFileAsync( string sourcePath, string destinationPath )
         {
             using ( var sourceStream = new FileStream(
-                sourcePath,
-                FileMode.Open,
-                FileAccess.Read,
-                FileShare.Read,
-                4096,
-                true ) )
+                       sourcePath,
+                       FileMode.Open,
+                       FileAccess.Read,
+                       FileShare.Read,
+                       4096,
+                       true
+                   ) )
             {
-                using ( var destinationStream = new FileStream( destinationPath, FileMode.CreateNew, FileAccess.Write, FileShare.None, 4096, true ) )
+                using ( var destinationStream = new FileStream(
+                           destinationPath,
+                           FileMode.CreateNew,
+                           FileAccess.Write,
+                           FileShare.None,
+                           4096,
+                           true
+                       ) )
                 {
                     await sourceStream.CopyToAsync( destinationStream );
                 }
@@ -557,7 +596,9 @@ namespace KOTORModSync.Core.Utility
 
             // Deserialize each TomlTable into a Component object
             if ( !( tomlTable["thisMod"] is TomlTableArray componentTables ) )
+            {
                 return component;
+            }
 
             foreach ( TomlTable tomlComponent in componentTables )
                 component.DeserializeComponent( tomlComponent );
@@ -565,14 +606,14 @@ namespace KOTORModSync.Core.Utility
             return component;
         }
 
-        public static List<string> EnumerateFilesWithWildcards( IEnumerable<string> filesAndFolders, bool topLevelOnly = false )
+        public static List<string> EnumerateFilesWithWildcards
+            ( IEnumerable<string> filesAndFolders, bool topLevelOnly = false )
         {
             var result = new List<string>();
 
             var uniquePaths = new HashSet<string>( filesAndFolders );
 
             foreach ( string path in uniquePaths.Where( path => !string.IsNullOrEmpty( path ) ) )
-            {
                 try
                 {
                     string backslashPath = path
@@ -589,7 +630,9 @@ namespace KOTORModSync.Core.Utility
                         }
 
                         if ( !Directory.Exists( backslashPath ) )
+                        {
                             continue;
+                        }
 
                         IEnumerable<string> matchingFiles = Directory.EnumerateFiles(
                             backslashPath,
@@ -613,7 +656,8 @@ namespace KOTORModSync.Core.Utility
                         IEnumerable<string> matchingFiles = Directory.EnumerateFiles(
                             directory,
                             Path.GetFileName( backslashPath ),
-                            topLevelOnly ? SearchOption.TopDirectoryOnly
+                            topLevelOnly
+                                ? SearchOption.TopDirectoryOnly
                                 : SearchOption.AllDirectories
                         );
 
@@ -628,13 +672,17 @@ namespace KOTORModSync.Core.Utility
                     {
                         string parentDirectory = Path.GetDirectoryName( currentDirectory );
                         if ( string.IsNullOrEmpty( parentDirectory ) || parentDirectory == currentDirectory )
+                        {
                             break; // Exit the loop if no parent directory is found or if the parent directory is the same as the current directory
+                        }
 
                         currentDirectory = parentDirectory;
                     }
 
                     if ( string.IsNullOrEmpty( currentDirectory ) || !Directory.Exists( currentDirectory ) )
+                    {
                         continue;
+                    }
 
                     IEnumerable<string> checkFiles = Directory.EnumerateFiles(
                         currentDirectory,
@@ -651,7 +699,6 @@ namespace KOTORModSync.Core.Utility
                     // Handle or log the exception as required
                     Console.WriteLine( $"An error occurred while processing path '{path}': {ex.Message}" );
                 }
-            }
 
             return result;
         }
@@ -670,7 +717,9 @@ namespace KOTORModSync.Core.Utility
 
             // Ensure the number of levels match
             if ( inputLevels.Length != patternLevels.Length )
+            {
                 return false;
+            }
 
             // Iterate over each level and perform wildcard matching
             for ( int i = 0; i < inputLevels.Length; i++ )
@@ -680,11 +729,15 @@ namespace KOTORModSync.Core.Utility
 
                 // Check if the current level is a wildcard
                 if ( patternLevel == "*" || patternLevel == "?" )
+                {
                     continue;
+                }
 
                 // Check if the current level matches the pattern
                 if ( !WildcardMatchLevel( inputLevel, patternLevel ) )
+                {
                     return false;
+                }
             }
 
             return true;
@@ -732,11 +785,11 @@ namespace KOTORModSync.Core.Utility
                 var componentTables = tomlTable["thisMod"] as TomlTableArray;
 
                 var components = new List<Component>( 65535 );
-                foreach ( (TomlObject tomlComponent, Component component) in
+                foreach ( ( TomlObject tomlComponent, Component component ) in
                          // Deserialize each TomlTable into a Component object
                          from TomlObject tomlComponent in componentTables
                          let component = new Component()
-                         select (tomlComponent, component) )
+                         select ( tomlComponent, component ) )
                 {
                     component.DeserializeComponent( tomlComponent );
                     components.Add( component );
@@ -747,9 +800,7 @@ namespace KOTORModSync.Core.Utility
                     }
 
                     foreach ( Instruction instruction in component.Instructions )
-                    {
                         instruction.SetParentComponent( component );
-                    }
                 }
 
                 return components;
@@ -762,7 +813,8 @@ namespace KOTORModSync.Core.Utility
             return null;
         }
 
-        public static bool IsPath( string value ) => Path.IsPathRooted( value ) || Regex.IsMatch( value, @"^[a-zA-Z]:\\" );
+        public static bool IsPath
+            ( string value ) => Path.IsPathRooted( value ) || Regex.IsMatch( value, @"^[a-zA-Z]:\\" );
 
         public static bool IsDirectoryWithName( object directory, string name )
             => directory is Dictionary<string, object> dict
@@ -770,11 +822,10 @@ namespace KOTORModSync.Core.Utility
                 && dict["Name"] is string directoryName
                 && directoryName.Equals( name, StringComparison.OrdinalIgnoreCase );
 
-        private static Dictionary<string, object> CreateNewDirectory( string name, bool isDirectory ) => new Dictionary<string, object>
+        private static Dictionary<string, object> CreateNewDirectory
+            ( string name, bool isDirectory ) => new Dictionary<string, object>
         {
-            { "Name", name },
-            { "Type", isDirectory ? "directory" : "file" },
-            { "Contents", new List<object>() }
+            { "Name", name }, { "Type", isDirectory ? "directory" : "file" }, { "Contents", new List<object>() }
         };
     }
 
@@ -782,9 +833,7 @@ namespace KOTORModSync.Core.Utility
     {
         public static ExtractionOptions DefaultExtractionOptions = new ExtractionOptions
         {
-            ExtractFullPath = false,
-            Overwrite = true,
-            PreserveFileTime = true
+            ExtractFullPath = false, Overwrite = true, PreserveFileTime = true
         };
 
         public static bool IsArchive( string filePath ) => IsArchive( new FileInfo( filePath ) );
@@ -795,15 +844,20 @@ namespace KOTORModSync.Core.Utility
 
             try
             {
-                using ( var archive = ArchiveFactory.Open( thisFile.FullName ) )
+                using ( IArchive archive = ArchiveFactory.Open( thisFile.FullName ) )
                 {
                     return true;
                 }
             }
             catch ( InvalidOperationException )
             {
-                if ( thisFile.Extension.Equals( ".exe", StringComparison.OrdinalIgnoreCase ) ) // assume self-extracting executable?
+                if ( thisFile.Extension.Equals(
+                        ".exe",
+                        StringComparison.OrdinalIgnoreCase
+                    ) ) // assume self-extracting executable?
+                {
                     return true;
+                }
             }
 
             return false;
@@ -845,7 +899,11 @@ namespace KOTORModSync.Core.Utility
             Dictionary<string, object> root = GenerateArchiveTreeJson( directory );
             try
             {
-                string json = JsonConvert.SerializeObject( root, Formatting.Indented, new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() } );
+                string json = JsonConvert.SerializeObject(
+                    root,
+                    Formatting.Indented,
+                    new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() }
+                );
 
                 File.WriteAllText( outputPath, json );
             }
@@ -857,18 +915,27 @@ namespace KOTORModSync.Core.Utility
 
         public static Dictionary<string, object> GenerateArchiveTreeJson( DirectoryInfo directory )
         {
-            var root = new Dictionary<string, object>( 65535 ) { { "Name", directory.Name }, { "Type", "directory" }, { "Contents", new List<object>() } };
+            var root = new Dictionary<string, object>( 65535 )
+            {
+                { "Name", directory.Name }, { "Type", "directory" }, { "Contents", new List<object>() }
+            };
 
             try
             {
                 foreach ( FileInfo file in directory.EnumerateFiles( "*.*", SearchOption.TopDirectoryOnly ) )
                 {
                     if ( !IsArchive( file.Extension ) )
+                    {
                         continue;
+                    }
 
-                    var fileInfo = new Dictionary<string, object>( 65535 ) { { "Name", file.Name }, { "Type", "file" } };
+                    var fileInfo
+                        = new Dictionary<string, object>( 65535 ) { { "Name", file.Name }, { "Type", "file" } };
                     List<ModDirectory.ArchiveEntry> archiveEntries = TraverseArchiveEntries( file.FullName );
-                    var archiveRoot = new Dictionary<string, object>( 65535 ) { { "Name", file.Name }, { "Type", "directory" }, { "Contents", archiveEntries } };
+                    var archiveRoot = new Dictionary<string, object>( 65535 )
+                    {
+                        { "Name", file.Name }, { "Type", "directory" }, { "Contents", archiveEntries }
+                    };
 
                     fileInfo["Contents"] = archiveRoot["Contents"];
 
@@ -914,7 +981,7 @@ namespace KOTORModSync.Core.Utility
                     let pathParts = entry.Key.Split(
                         archivePath.EndsWith( ".rar" )
                             ? '\\' // Use backslash as separator for RAR files
-                            : '/'  // Use forward slash for other archive types
+                            : '/' // Use forward slash for other archive types
                     )
                     select new ModDirectory.ArchiveEntry { Name = pathParts[pathParts.Length - 1], Path = entry.Key }
                 );
@@ -935,21 +1002,32 @@ namespace KOTORModSync.Core.Utility
             foreach ( string name in pathParts )
             {
                 List<object> existingDirectory = currentDirectory["Contents"] as List<object>
-                    ?? throw new InvalidDataException( $"Unexpected data type for directory contents: {currentDirectory["Contents"]?.GetType()}" );
+                    ?? throw new InvalidDataException(
+                        $"Unexpected data type for directory contents: {currentDirectory["Contents"]?.GetType()}"
+                    );
 
                 string name1 = name;
-                object existingChild = existingDirectory.Find( c => c is Dictionary<string, object> && FileHelper.IsDirectoryWithName( c, name1 ) );
+                object existingChild = existingDirectory.Find(
+                    c => c is Dictionary<string, object> && FileHelper.IsDirectoryWithName( c, name1 )
+                );
 
                 if ( existingChild != null )
                 {
                     if ( isFile )
+                    {
                         ( (Dictionary<string, object>)existingChild )["Type"] = "file";
+                    }
 
                     currentDirectory = (Dictionary<string, object>)existingChild;
                 }
                 else
                 {
-                    var child = new Dictionary<string, object>( 65535 ) { { "Name", name }, { "Type", isFile ? "file" : "directory" }, { "Contents", new List<object>() } };
+                    var child = new Dictionary<string, object>( 65535 )
+                    {
+                        { "Name", name },
+                        { "Type", isFile ? "file" : "directory" },
+                        { "Contents", new List<object>() }
+                    };
                     existingDirectory.Add( child );
                     currentDirectory = child;
                 }

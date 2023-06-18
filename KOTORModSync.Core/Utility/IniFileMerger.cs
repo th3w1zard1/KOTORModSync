@@ -24,7 +24,9 @@ namespace KOTORModSync.Core.Utility
             {
                 // If the section already exists in iniData1, append a number to the section name
                 string mergedSectionName = section.SectionName;
-                for ( int sectionNumber = 1; mergedIniData.Sections.ContainsSection( mergedSectionName ); sectionNumber++ )
+                for ( int sectionNumber = 1;
+                     mergedIniData.Sections.ContainsSection( mergedSectionName );
+                     sectionNumber++ )
                     mergedSectionName = section.SectionName + sectionNumber;
 
                 _ = mergedIniData.Sections.AddSection( mergedSectionName );

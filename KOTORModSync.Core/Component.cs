@@ -7,19 +7,12 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Security.Cryptography;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
-using KOTORModSync.Core;
 using KOTORModSync.Core.Utility;
 using Nett;
 using SharpCompress.Archives;
-using SharpCompress.Archives.Rar;
-using SharpCompress.Archives.SevenZip;
-using Tomlyn.Model;
-using static KOTORModSync.Core.Component;
-using Component = KOTORModSync.Core.Component;
 using TomlObject = Tomlyn.Model.TomlObject;
 using TomlTable = Tomlyn.Model.TomlTable;
 using TomlTableArray = Tomlyn.Model.TomlTableArray;
@@ -28,23 +21,16 @@ namespace KOTORModSync.Core
 {
     public class Component
     {
-        public string Name { get; set; }
-        public Guid Guid { get; set; }
-        public string Author { get; set; }
-        public string Category { get; set; }
-        public string Tier { get; set; }
-        public string Description { get; set; }
-        public string Directions { get; set; }
-        public List<string> Dependencies { get; private set; }
-        public List<string> Restrictions { get; set; }
-        public bool NonEnglishFunctionality { get; set; }
-        public string InstallationMethod { get; set; }
-        public List<Instruction> Instructions { get; set; }
-        public Dictionary<Guid, Option> Options { get; set; }
-        public List<string> Language { get; private set; }
-        public string ModLink { get; set; }
-        public List<Option> ChosenOptions { get; set; }
-        private ComponentValidation Validator { get; set; }
+        public enum ExecutionResult
+        {
+            [Description( "Success" )] Success,
+
+            [Description( "Directory permission denied." )]
+            DirectoryPermissionDenied,
+
+            [Description( "Component installation failed." )]
+            ComponentInstallationFailed
+        }
 
         /*
         public DateTime SourceLastModified { get; internal set; }
@@ -69,6 +55,25 @@ namespace KOTORModSync.Core
     ]
     installOrder = 3";
 
+        private DirectoryInfo _tempPath;
+        public string Name { get; set; }
+        public Guid Guid { get; set; }
+        public string Author { get; set; }
+        public string Category { get; set; }
+        public string Tier { get; set; }
+        public string Description { get; set; }
+        public string Directions { get; set; }
+        public List<string> Dependencies { get; private set; }
+        public List<string> Restrictions { get; set; }
+        public bool NonEnglishFunctionality { get; set; }
+        public string InstallationMethod { get; set; }
+        public List<Instruction> Instructions { get; set; }
+        public Dictionary<Guid, Option> Options { get; set; }
+        public List<string> Language { get; private set; }
+        public string ModLink { get; set; }
+        public List<Option> ChosenOptions { get; set; }
+        private ComponentValidation Validator { get; set; }
+
         public string SerializeComponent()
         {
             _ = TomlSettings.Create();
@@ -92,13 +97,19 @@ namespace KOTORModSync.Core
                 // Check if the "Instructions" table is empty
                 // Remove the empty "Instructions" table from the root table
                 if ( value is IList<object> instructions && instructions.Count != 0 )
+                {
                     continue;
+                }
+
                 _ = table.Remove( "Instructions" );
 
                 // Check if the "Options" table is empty
                 // Remove the empty "Options" table from the root table
                 if ( value is List<object> options && options.Count != 0 )
+                {
                     continue;
+                }
+
                 _ = table.Remove( "Options" );
 
                 // don't serialize stuff chosen during an install.
@@ -111,14 +122,11 @@ namespace KOTORModSync.Core
             return Serializer.FixWhitespaceIssues( tomlString );
         }
 
-        private DirectoryInfo _tempPath;
-
         public void DeserializeComponent( TomlObject tomlObject )
         {
             if ( !( tomlObject is TomlTable componentTable ) )
             {
-                throw new ArgumentException(
-                    "[TomlError] Expected a TOML table for component data." );
+                throw new ArgumentException( "[TomlError] Expected a TOML table for component data." );
             }
 
             _tempPath = new DirectoryInfo( Path.GetTempPath() );
@@ -127,26 +135,25 @@ namespace KOTORModSync.Core
                 = Serializer.ConvertTomlTableToDictionary( componentTable );
 
             Serializer.DeserializePath( componentDict, "paths" );
-            this.Name = GetRequiredValue<string>( componentDict, "name" );
-            Logger.Log( $"\r\n== Deserialize next component '{this.Name}' ==" );
-            this.Guid = GetRequiredValue<Guid>( componentDict, "guid" );
-            this.Description = GetValueOrDefault<string>( componentDict, "description" );
-            this.Directions = GetValueOrDefault<string>( componentDict, "directions" );
-            this.Category = GetValueOrDefault<string>( componentDict, "category" );
-            this.Tier = GetValueOrDefault<string>( componentDict, "tier" );
-            this.Language = GetValueOrDefault<List<string>>( componentDict, "language" );
-            this.Author = GetValueOrDefault<string>( componentDict, "author" );
-            this.Dependencies = GetValueOrDefault<List<string>>( componentDict, "dependencies" );
-            this.Restrictions = GetValueOrDefault<List<string>>( componentDict, "restrictions" );
-            this.ModLink = GetValueOrDefault<string>( componentDict, "modlink" );
+            Name = GetRequiredValue<string>( componentDict, "name" );
+            Logger.Log( $"\r\n== Deserialize next component '{Name}' ==" );
+            Guid = GetRequiredValue<Guid>( componentDict, "guid" );
+            Description = GetValueOrDefault<string>( componentDict, "description" );
+            Directions = GetValueOrDefault<string>( componentDict, "directions" );
+            Category = GetValueOrDefault<string>( componentDict, "category" );
+            Tier = GetValueOrDefault<string>( componentDict, "tier" );
+            Language = GetValueOrDefault<List<string>>( componentDict, "language" );
+            Author = GetValueOrDefault<string>( componentDict, "author" );
+            Dependencies = GetValueOrDefault<List<string>>( componentDict, "dependencies" );
+            Restrictions = GetValueOrDefault<List<string>>( componentDict, "restrictions" );
+            ModLink = GetValueOrDefault<string>( componentDict, "modlink" );
 
-            this.Instructions = DeserializeInstructions(
-                GetValueOrDefault<TomlTableArray>( componentDict, "instructions" ) );
-            this.Instructions.ForEach( instruction => instruction.SetParentComponent( this ) );
-
-            this.Options = DeserializeOptions(
-                GetValueOrDefault<TomlTableArray>( componentDict, "options" )
+            Instructions = DeserializeInstructions(
+                GetValueOrDefault<TomlTableArray>( componentDict, "instructions" )
             );
+            Instructions.ForEach( instruction => instruction.SetParentComponent( this ) );
+
+            Options = DeserializeOptions( GetValueOrDefault<TomlTableArray>( componentDict, "options" ) );
 
             // can't validate anything if directories aren't set.
             if ( string.IsNullOrWhiteSpace( MainConfig.SourcePath?.FullName )
@@ -156,8 +163,8 @@ namespace KOTORModSync.Core
             }
 
             // Validate and log additional errors/warnings.
-            this.Validator = new ComponentValidation( this );
-            Logger.Log( $"Successfully deserialized component '{this.Name}'\r\n" );
+            Validator = new ComponentValidation( this );
+            Logger.Log( $"Successfully deserialized component '{Name}'\r\n" );
         }
 
         [NotNull]
@@ -165,7 +172,7 @@ namespace KOTORModSync.Core
         {
             if ( tomlObject == null )
             {
-                Logger.LogVerbose( $"No options found for component '{this.Name}'" );
+                Logger.LogVerbose( $"No options found for component '{Name}'" );
                 return new Dictionary<Guid, Option>();
             }
 
@@ -203,7 +210,7 @@ namespace KOTORModSync.Core
         {
             if ( tomlObject == null )
             {
-                Logger.LogWarning( $"No instructions found for component '{this.Name}'" );
+                Logger.LogWarning( $"No instructions found for component '{Name}'" );
                 return new List<Instruction>();
             }
 
@@ -224,8 +231,7 @@ namespace KOTORModSync.Core
 
                 var instruction = new Instruction();
                 instruction.Action = GetRequiredValue<string>( instructionDict, "action" );
-                Logger.Log(
-                    $"\r\n-- Deserialize instruction #{index + 1} action {instruction.Action}" );
+                Logger.Log( $"\r\n-- Deserialize instruction #{index + 1} action {instruction.Action}" );
                 instruction.Arguments = GetValueOrDefault<string>( instructionDict, "arguments" );
                 instruction.Overwrite = GetValueOrDefault<bool>( instructionDict, "overwrite" );
 
@@ -235,10 +241,13 @@ namespace KOTORModSync.Core
                         restriction =>
                         {
                             if ( Guid.TryParse( restriction, out Guid parsedGuid ) )
+                            {
                                 return parsedGuid;
+                            }
 
                             return Guid.Empty; // or any other default value for invalid GUIDs
-                        } )
+                        }
+                    )
                     .ToList();
 
                 instruction.Dependencies = GetValueOrDefault<List<string>>( instructionDict, "dependencies" )
@@ -247,10 +256,13 @@ namespace KOTORModSync.Core
                         dependency =>
                         {
                             if ( Guid.TryParse( dependency, out Guid parsedGuid ) )
+                            {
                                 return parsedGuid;
+                            }
 
                             return Guid.Empty; // or any other default value for invalid GUIDs
-                        } )
+                        }
+                    )
                     .ToList();
 
                 instruction.Source = GetValueOrDefault<List<string>>( instructionDict, "source" );
@@ -271,7 +283,8 @@ namespace KOTORModSync.Core
             <T>( IReadOnlyDictionary<string, object> dict, string key ) =>
             GetValue<T>( dict, key, false );
 
-        private static T GetValue<T>(
+        private static T GetValue<T>
+        (
             IReadOnlyDictionary<string, object> dict,
             string key,
             bool required
@@ -280,12 +293,15 @@ namespace KOTORModSync.Core
             if ( !dict.TryGetValue( key, out object value ) )
             {
                 string caseInsensitiveKey = dict.Keys.FirstOrDefault(
-                    k => k.Equals( key, StringComparison.OrdinalIgnoreCase ) );
+                    k => k.Equals( key, StringComparison.OrdinalIgnoreCase )
+                );
 
                 if ( caseInsensitiveKey == null )
                 {
                     if ( !required )
+                    {
                         return default;
+                    }
 
                     throw new ArgumentException( $"[Error] Missing or invalid '{key}' field." );
                 }
@@ -294,21 +310,23 @@ namespace KOTORModSync.Core
             }
 
             if ( value is T t )
+            {
                 return t;
+            }
 
             Type targetType = value.GetType();
 
             if ( value is string valueStr
-                 && typeof( T ) == typeof( Guid )
-                 && Guid.TryParse( valueStr, out Guid guid )
+                && typeof( T ) == typeof( Guid )
+                && Guid.TryParse( valueStr, out Guid guid )
                )
             {
                 return (T)(object)guid;
             }
 
             if ( targetType.IsGenericType
-                 && targetType.GetGenericTypeDefinition() == typeof( List<> )
-                 && value is IEnumerable enumerable
+                && targetType.GetGenericTypeDefinition() == typeof( List<> )
+                && value is IEnumerable enumerable
                )
             {
                 Type elementType = typeof( T ).GetGenericArguments()[0];
@@ -326,7 +344,8 @@ namespace KOTORModSync.Core
 
             if ( value is string valueStr2 && string.IsNullOrEmpty( valueStr2 ) )
             {
-                return required ? throw new ArgumentException( $"'{key}' field is null or empty." )
+                return required
+                    ? throw new ArgumentException( $"'{key}' field is null or empty." )
                     : (T)default;
             }
 
@@ -346,16 +365,16 @@ namespace KOTORModSync.Core
             }
 
             if ( targetType == typeof( Tomlyn.Model.TomlArray )
-                 && value is Tomlyn.Model.TomlArray valueTomlArray )
+                && value is Tomlyn.Model.TomlArray valueTomlArray )
             {
                 if ( valueTomlArray.Count == 0 ) return default;
 
                 var tomlTableArray = new TomlTableArray();
                 foreach ( object tomlValue in valueTomlArray )
-                {
                     if ( tomlValue is TomlTable table )
+                    {
                         tomlTableArray.Add( table );
-                }
+                    }
 
                 return (T)(object)tomlTableArray;
             }
@@ -367,31 +386,24 @@ namespace KOTORModSync.Core
             catch ( InvalidCastException )
             {
                 if ( required )
+                {
                     throw new ArgumentException( $"Invalid '{key}' field type." );
+                }
             }
             catch ( FormatException )
             {
                 if ( required )
+                {
                     throw new ArgumentException( $"Invalid format for '{key}' field." );
+                }
             }
 
             return default;
         }
 
-        public enum ExecutionResult
-        {
-            [Description( "Success" )]
-            Success,
-
-            [Description( "Directory permission denied." )]
-            DirectoryPermissionDenied,
-
-            [Description( "Component installation failed." )]
-            ComponentInstallationFailed
-        }
-
         public async Task<(bool success, Dictionary<FileInfo, SHA1> originalChecksums)>
-            ExecuteInstructions(
+            ExecuteInstructions
+            (
                 Utility.Utility.IConfirmationDialogCallback confirmDialog,
                 Utility.Utility.IOptionsDialogCallback optionsDialog,
                 List<Component> componentsList
@@ -402,23 +414,21 @@ namespace KOTORModSync.Core
                 // Check if we have permission to write to the Destination directory
                 if ( !Utility.Utility.IsDirectoryWritable( MainConfig.DestinationPath ) )
                 {
-                    throw new InvalidOperationException(
-                        "[Error] Cannot write to the destination directory." );
+                    throw new InvalidOperationException( "[Error] Cannot write to the destination directory." );
                 }
 
                 (bool, Dictionary<FileInfo, SHA1>) result = await ProcessComponentAsync( this );
                 if ( result.Item1 )
-                    return (true, null);
+                {
+                    return ( true, null );
+                }
 
                 await Logger.LogExceptionAsync(
-                    new Exception(
-                        $"[Error] Component {Name} failed to install the mod correctly with {result}" )
+                    new Exception( $"[Error] Component {Name} failed to install the mod correctly with {result}" )
                 );
-                return (false, null);
+                return ( false, null );
 
-                async Task<(bool, Dictionary<FileInfo, SHA1>)> ProcessComponentAsync(
-                    Component component
-                )
+                async Task<(bool, Dictionary<FileInfo, SHA1>)> ProcessComponentAsync( Component component )
                 {
                     for ( int i1 = 0;
                          i1 < component.Instructions.Count;
@@ -427,7 +437,7 @@ namespace KOTORModSync.Core
                         Instruction instruction = component.Instructions[i1]
                             ?? throw new ArgumentException(
                                 $"[Error] instruction null at index {i1}",
-                                nameof( componentsList )
+                                nameof(componentsList)
                             );
 
                         //The instruction will run if any of the following conditions are met:
@@ -519,12 +529,17 @@ namespace KOTORModSync.Core
                                     ? await instruction.ExecuteTSLPatcherAsync()
                                     : await instruction.ExecuteProgramAsync();
                                 if ( !success )
+                                {
                                     break;
+                                }
+
                                 try
                                 {
                                     List<string> installErrors = instruction.VerifyInstall();
                                     if ( installErrors.Count > 0 )
+                                    {
                                         await Logger.LogAsync( string.Join( "\n", installErrors ) );
+                                    }
 
                                     success &= installErrors.Count == 0;
                                 }
@@ -542,25 +557,29 @@ namespace KOTORModSync.Core
 
                             case "choose":
                                 instruction.SetRealPaths();
-                                List<Option> options = this.ChooseOptions( instruction );
+                                List<Option> options = ChooseOptions( instruction );
                                 List<string> optionNames = options.ConvertAll( option => option.Name );
 
                                 string selectedOptionName = await optionsDialog.ShowOptionsDialog( optionNames )
-                                    ?? throw new NullReferenceException( nameof( optionNames ) );
+                                    ?? throw new NullReferenceException( nameof(optionNames) );
                                 Option selectedOption = null;
 
                                 foreach ( Option option in options )
                                 {
                                     string optionName = option.Name;
                                     if ( optionName != selectedOptionName )
+                                    {
                                         continue;
+                                    }
 
                                     selectedOption = option;
                                     break;
                                 }
 
                                 if ( selectedOption != null )
-                                    this.ChosenOptions.Add( selectedOption );
+                                {
+                                    ChosenOptions.Add( selectedOption );
+                                }
 
                                 break;
                             case "backup": //todo
@@ -584,13 +603,14 @@ namespace KOTORModSync.Core
                         {
                             await Logger.LogAsync( $"Instruction {instruction.Action} failed at index {i1}." );
                             bool? confirmationResult = await confirmDialog.ShowConfirmationDialog(
-                                $"An error occurred during the installation of mod '{this.Name}'."
-                                + " Do you want to retry this instruction?" + Environment.NewLine + Environment.NewLine
+                                $"An error occurred during the installation of mod '{Name}'."
+                                + " Do you want to retry this instruction?"
+                                + Environment.NewLine
+                                + Environment.NewLine
                                 + " Select 'Yes' to retry,"
                                 + " 'No' to proceed to the next instruction,"
-                                + $" or close this window to abort the installation of '{this.Name}'."
+                                + $" or close this window to abort the installation of '{Name}'."
                             );
-
 
 
                             switch ( confirmationResult )
@@ -606,7 +626,7 @@ namespace KOTORModSync.Core
 
                                 // case null: cancel installing this mod (user closed confirmation dialog)
                                 default:
-                                    return (false, null);
+                                    return ( false, null );
                             }
                         }
 
@@ -647,10 +667,13 @@ namespace KOTORModSync.Core
                         await Logger.LogAsync( $"Successfully completed instruction #{i1 + 1} '{instruction.Action}'" );
                     }
 
-                    return (true, new Dictionary<FileInfo, SHA1>());
+                    return ( true, new Dictionary<FileInfo, SHA1>() );
                 }
             }
-            catch ( InvalidOperationException ex ) { await Logger.LogExceptionAsync( ex ); }
+            catch ( InvalidOperationException ex )
+            {
+                await Logger.LogExceptionAsync( ex );
+            }
             catch ( Exception ex )
             {
                 await Logger.LogExceptionAsync( ex );
@@ -660,18 +683,22 @@ namespace KOTORModSync.Core
                 );
             }
 
-            return (false, new Dictionary<FileInfo, SHA1>());
+            return ( false, new Dictionary<FileInfo, SHA1>() );
         }
 
         private List<Option> ChooseOptions( Instruction instruction )
         {
             if ( instruction is null )
-                throw new ArgumentNullException( nameof( instruction ) );
+            {
+                throw new ArgumentNullException( nameof(instruction) );
+            }
 
-            List<string> archives = Validator.GetAllArchivesFromInstructions( component: this );
+            List<string> archives = Validator.GetAllArchivesFromInstructions( this );
 
             if ( archives.Count == 0 )
+            {
                 throw new InvalidOperationException( "No archives found." );
+            }
 
             return Options.Values.Where(
                 option =>
@@ -685,13 +712,8 @@ namespace KOTORModSync.Core
 
     public class ValidationResult
     {
-        public int InstructionIndex { get; }
-        public Instruction Instruction { get; }
-        public Component Component { get; }
-        public string Message { get; }
-        public bool IsError { get; }
-
-        public ValidationResult(
+        public ValidationResult
+        (
             ComponentValidation validator,
             Instruction instruction,
             string message,
@@ -712,12 +734,29 @@ namespace KOTORModSync.Core
             );
             Logger.Log( $"{( IsError ? "[Error]" : "[Warning]" )} {Message}" );
         }
+
+        public int InstructionIndex { get; }
+        public Instruction Instruction { get; }
+        public Component Component { get; }
+        public string Message { get; }
+        public bool IsError { get; }
     }
 
     public class ComponentValidation
     {
-        public readonly Component Component;
+        public enum ArchivePathCode
+        {
+            NotAnArchive,
+            PathMissingArchiveName,
+            CouldNotOpenArchive,
+            NotFoundInArchive,
+            FoundSuccessfully,
+            NeedsAppendedArchiveName,
+            NoArchivesFound
+        }
+
         private readonly List<ValidationResult> _validationResults;
+        public readonly Component Component;
 
         public ComponentValidation( Component component )
         {
@@ -725,73 +764,61 @@ namespace KOTORModSync.Core
             _validationResults = new List<ValidationResult>();
         }
 
-        private void AddError( string message, Instruction instruction )
-        {
+        private void AddError( string message, Instruction instruction ) =>
             _validationResults.Add(
                 new ValidationResult(
                     this,
                     instruction,
                     message,
-                    isError: true ) );
-        }
+                    true
+                )
+            );
 
-        private void AddWarning( string message, Instruction instruction )
-        {
+        private void AddWarning( string message, Instruction instruction ) =>
             _validationResults.Add(
                 new ValidationResult(
                     this,
                     instruction,
                     message,
-                    isError: false ) );
-        }
+                    false
+                )
+            );
 
-        public List<string> GetErrors()
-        {
-            return _validationResults
+        public List<string> GetErrors() =>
+            _validationResults
                 .Where( r => r.IsError )
                 .Select( r => r.Message )
                 .ToList();
-        }
 
-        public List<string> GetErrors( int instructionIndex )
-        {
-            return _validationResults
+        public List<string> GetErrors( int instructionIndex ) =>
+            _validationResults
                 .Where( r => r.InstructionIndex == instructionIndex && r.IsError )
                 .Select( r => r.Message )
                 .ToList();
-        }
 
-        public List<string> GetErrors( Instruction instruction )
-        {
-            return _validationResults
+        public List<string> GetErrors( Instruction instruction ) =>
+            _validationResults
                 .Where( r => r.Instruction == instruction && r.IsError )
                 .Select( r => r.Message )
                 .ToList();
-        }
 
-        public List<string> GetWarnings()
-        {
-            return _validationResults
+        public List<string> GetWarnings() =>
+            _validationResults
                 .Where( r => !r.IsError )
                 .Select( r => r.Message )
                 .ToList();
-        }
 
-        public List<string> GetWarnings( int instructionIndex )
-        {
-            return _validationResults
+        public List<string> GetWarnings( int instructionIndex ) =>
+            _validationResults
                 .Where( r => r.InstructionIndex == instructionIndex && !r.IsError )
                 .Select( r => r.Message )
                 .ToList();
-        }
 
-        public List<string> GetWarnings( Instruction instruction )
-        {
-            return _validationResults
+        public List<string> GetWarnings( Instruction instruction ) =>
+            _validationResults
                 .Where( r => r.Instruction == instruction && !r.IsError )
                 .Select( r => r.Message )
                 .ToList();
-        }
 
         public bool VerifyExtractPaths( Component component )
         {
@@ -805,12 +832,14 @@ namespace KOTORModSync.Core
                 {
                     // we already checked if the archive exists in GetAllArchivesFromInstructions.
                     if ( instruction.Action.Equals( "extract", StringComparison.OrdinalIgnoreCase ) )
+                    {
                         continue;
+                    }
 
                     bool archiveNameFound = true;
                     if ( instruction.Source == null )
                     {
-                        this.AddWarning(
+                        AddWarning(
                             "Instruction does not have a 'Source' key defined",
                             instruction
                         );
@@ -820,7 +849,7 @@ namespace KOTORModSync.Core
 
                     if ( instruction.Source == null )
                     {
-                        this.AddError( "Missing 'Source' key", instruction );
+                        AddError( "Missing 'Source' key", instruction );
                         continue;
                     }
 
@@ -830,7 +859,9 @@ namespace KOTORModSync.Core
 
                         // todo
                         if ( sourcePath.StartsWith( "<<kotorDirectory>>" ) )
+                        {
                             continue;
+                        }
 
                         (bool, bool) result = IsSourcePathInArchives( sourcePath, allArchives, instruction );
 
@@ -845,7 +876,10 @@ namespace KOTORModSync.Core
                             string duplicatedPart = parts[1] + "\\" + parts[1];
                             string[] remainingParts = parts.Skip( 2 ).ToArray();
 
-                            string path = string.Join( "\\", new[] { parts[0], duplicatedPart }.Concat( remainingParts ) );
+                            string path = string.Join(
+                                "\\",
+                                new[] { parts[0], duplicatedPart }.Concat( remainingParts )
+                            );
 
                             result = IsSourcePathInArchives( path, allArchives, instruction );
                             if ( result.Item1 )
@@ -885,7 +919,9 @@ namespace KOTORModSync.Core
             foreach ( Instruction instruction in component.Instructions )
             {
                 if ( instruction.Source == null || instruction.Action != "extract" )
+                {
                     continue;
+                }
 
                 List<string> realPaths = FileHelper.EnumerateFilesWithWildcards(
                     instruction.Source.ConvertAll( Utility.Utility.ReplaceCustomVariables ),
@@ -894,7 +930,9 @@ namespace KOTORModSync.Core
                 foreach ( string realSourcePath in realPaths )
                 {
                     if ( Path.GetExtension( realSourcePath ).Equals( ".exe", StringComparison.OrdinalIgnoreCase ) )
+                    {
                         continue; // no way to verify self-extracting executables.
+                    }
 
                     if ( !ArchiveHelper.IsArchive( realSourcePath ) )
                     {
@@ -927,7 +965,6 @@ namespace KOTORModSync.Core
         {
             bool success = true;
             foreach ( Instruction instruction in component.Instructions )
-            {
                 switch ( instruction.Action )
                 {
                     case null:
@@ -937,7 +974,7 @@ namespace KOTORModSync.Core
                         instruction.Destination = "<<kotorDirectory>>";
                         break;
 
-                    case "tslpatcher" when ( !instruction.Destination.Equals( "<<kotorDirectory>>" ) ):
+                    case "tslpatcher" when !instruction.Destination.Equals( "<<kotorDirectory>>" ):
                         success = false;
                         AddError(
                             $"'Destination' key must be either null or string literal '<<kotorDirectory>>'"
@@ -955,7 +992,9 @@ namespace KOTORModSync.Core
                     case "extract":
                     case "delete":
                         if ( instruction.Destination == null )
+                        {
                             break;
+                        }
 
                         success = false;
                         AddError(
@@ -965,7 +1004,9 @@ namespace KOTORModSync.Core
                         );
 
                         if ( !MainConfig.AttemptFixes )
+                        {
                             break;
+                        }
 
                         Logger.Log( "Fixing the above issue automatically." );
                         instruction.Destination = null;
@@ -975,7 +1016,9 @@ namespace KOTORModSync.Core
                     case "rename":
                         if ( instruction.Destination?.Equals(
                                 "<<kotorDirectory>>\\Override",
-                                StringComparison.Ordinal ) != false
+                                StringComparison.Ordinal
+                            )
+                            != false
                            )
                         {
                             success = false;
@@ -1003,17 +1046,19 @@ namespace KOTORModSync.Core
                             );
 
                             if ( !MainConfig.AttemptFixes )
+                            {
                                 break;
+                            }
 
                             Logger.Log(
                                 "Fixing the above issue automatically"
-                                + " (setting Destination to '<<kotorDirectory>>\\Override')" );
+                                + " (setting Destination to '<<kotorDirectory>>\\Override')"
+                            );
                             instruction.Destination = "<<kotorDirectory>>\\Override";
                         }
 
                         break;
                 }
-            }
 
             return success;
         }
@@ -1039,18 +1084,8 @@ namespace KOTORModSync.Core
             }
         }
 
-        public enum ArchivePathCode
-        {
-            NotAnArchive,
-            PathMissingArchiveName,
-            CouldNotOpenArchive,
-            NotFoundInArchive,
-            FoundSuccessfully,
-            NeedsAppendedArchiveName,
-            NoArchivesFound
-        }
-
-        public (bool, bool) IsSourcePathInArchives(
+        public (bool, bool) IsSourcePathInArchives
+        (
             string sourcePath,
             List<string> allArchives,
             Instruction instruction
@@ -1085,7 +1120,9 @@ namespace KOTORModSync.Core
                 }
 
                 if ( code == ArchivePathCode.NotFoundInArchive )
+                {
                     continue;
+                }
 
                 hasError = true;
                 errorDescription += GetErrorDescription( code ) + Environment.NewLine;
@@ -1097,19 +1134,22 @@ namespace KOTORModSync.Core
                     $"Invalid source path '{sourcePath}'. Reason: {errorDescription}",
                     instruction
                 );
-                return (false, archiveNameFound);
+                return ( false, archiveNameFound );
             }
 
             if ( !foundInAnyArchive )
             {
                 // todo, stop displaying errors for self extracting executables. This is the only mod using one that I've seen out of 200-some.
                 if ( Component.Name.Equals( "Improved AI" ) )
-                    return (true, true);
+                {
+                    return ( true, true );
+                }
+
                 AddError( $"Failed to find '{sourcePath}' in any archives!", instruction );
-                return (false, archiveNameFound);
+                return ( false, archiveNameFound );
             }
 
-            return (true, true);
+            return ( true, true );
         }
 
         private static ArchivePathCode IsPathInArchive( string relativePath, string archivePath )
@@ -1124,14 +1164,18 @@ namespace KOTORModSync.Core
                 IArchive archive = ArchiveHelper.OpenArchive( stream );
 
                 if ( archive == null )
+                {
                     return ArchivePathCode.CouldNotOpenArchive;
+                }
 
                 // everything is extracted to a new directory named after the archive.
                 string archiveNameAppend = Path.GetFileNameWithoutExtension( archivePath ) + "\\";
 
                 // if the Source key represents the top level extraction directory, check that first.
                 if ( FileHelper.WildcardMatch( archiveNameAppend, relativePath ) )
+                {
                     return ArchivePathCode.FoundSuccessfully;
+                }
 
                 var folderPaths = new HashSet<string>();
 
@@ -1159,10 +1203,10 @@ namespace KOTORModSync.Core
 
                 // check if instruction.Source matches a folder.
                 foreach ( string folderPath in folderPaths )
-                {
                     if ( FileHelper.WildcardMatch( folderPath, relativePath ) )
+                    {
                         return ArchivePathCode.FoundSuccessfully;
-                }
+                    }
 
                 // quickly parse the path so the verbose log below is accurate.
                 string result = relativePath;
@@ -1184,8 +1228,8 @@ namespace KOTORModSync.Core
 
         public bool Run() =>
             // Verify all the instructions' paths line up with hierarchy of the archives
-            this.VerifyExtractPaths( Component )
-                   // Ensure all the 'Destination' keys are valid for their respective action.
-                   && this.ParseDestinationWithAction( Component );
+            VerifyExtractPaths( Component )
+            // Ensure all the 'Destination' keys are valid for their respective action.
+            && ParseDestinationWithAction( Component );
     }
 }

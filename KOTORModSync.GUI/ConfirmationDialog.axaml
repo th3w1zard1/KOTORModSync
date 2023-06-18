@@ -1,10 +1,10 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:local="clr-namespace:KOTORModSync"
-        Title="Confirmation" Width="400" Height="250"
+        Title="Confirmation" Width="400" Height="150"
+        SizeToContent="Height"
         x:Class="KOTORModSync.ConfirmationDialog">
     <Grid>
-        <TextBlock x:Name="confirmTextBlock" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="16" TextWrapping="Wrap" TextTrimming="CharacterEllipsis" Margin="10" />
+        <TextBlock x:Name="ConfirmTextBlock" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="16" TextWrapping="Wrap" TextTrimming="CharacterEllipsis" Margin="10" />
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="10">
             <Button Content="Yes" Tag="Yes" Click="YesButton_Click" MinWidth="80" Margin="5" />
             <Button Content="No" Tag="No" Click="NoButton_Click" MinWidth="80" Margin="5" />

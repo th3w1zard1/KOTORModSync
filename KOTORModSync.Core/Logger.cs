@@ -13,24 +13,27 @@ namespace KOTORModSync.Core
 {
     public static class Logger
     {
-        public static event Action<string> Logged = delegate { };
-        public static event Action<Exception> ExceptionLogged = delegate { };
+        private const string LogFileName = "kotormodsync_";
 
         private static bool s_isInitialized = false;
         private static readonly object s_initializationLock = new object();
         private static readonly SemaphoreSlim s_semaphore = new SemaphoreSlim( 1 );
-
-        private const string LogFileName = "kotormodsync_";
+        public static event Action<string> Logged = delegate { };
+        public static event Action<Exception> ExceptionLogged = delegate { };
 
         public static void Initialize()
         {
             if ( s_isInitialized )
+            {
                 return;
+            }
 
             lock ( s_initializationLock )
             {
                 if ( s_isInitialized )
+                {
                     return;
+                }
 
                 s_isInitialized = true;
 
@@ -42,10 +45,9 @@ namespace KOTORModSync.Core
             }
         }
 
-        public static Task LogAsync( string message )
-        {
-            return LogInternalAsync( message ); // Start the logging operation asynchronously without awaiting it
-        }
+        public static Task LogAsync
+            ( string message ) =>
+            LogInternalAsync( message ); // Start the logging operation asynchronously without awaiting it
 
         private static async Task LogInternalAsync( string internalMessage )
         {
@@ -57,7 +59,7 @@ namespace KOTORModSync.Core
                 Debug.WriteLine( logMessage );
 
                 string formattedDate = DateTime.Now.ToString( "yyyy-MM-dd" );
-                using ( StreamWriter writer = new StreamWriter( LogFileName + formattedDate + ".txt", true ) )
+                using ( var writer = new StreamWriter( LogFileName + formattedDate + ".txt", true ) )
                 {
                     await writer.WriteLineAsync( logMessage + Environment.NewLine );
                 }
@@ -85,7 +87,9 @@ namespace KOTORModSync.Core
         public static void LogVerbose( string message )
         {
             if ( !MainConfig.DebugLogging )
+            {
                 return;
+            }
 
             Log( "[Verbose] " + message );
         }
@@ -93,7 +97,9 @@ namespace KOTORModSync.Core
         public static async Task LogVerboseAsync( string message )
         {
             if ( !MainConfig.DebugLogging )
+            {
                 return;
+            }
 
             await LogAsync( "[Verbose] " + message );
         }
@@ -103,7 +109,9 @@ namespace KOTORModSync.Core
 
         public static Task LogWarningAsync( string message ) => LogAsync( "[Warning] " + message );
         public static async Task LogExceptionAsync( Exception ex ) => await Task.Run( () => LogException( ex ) );
-        public static async Task LogExceptionAsync( Exception ex, string customMessage ) => await Task.Run( () => LogException( ex, customMessage ) );
+
+        public static async Task LogExceptionAsync
+            ( Exception ex, string customMessage ) => await Task.Run( () => LogException( ex, customMessage ) );
 
         public static void LogException( Exception exception, string customMessage )
         {
@@ -117,7 +125,9 @@ namespace KOTORModSync.Core
             Log( $"Stack trace: {ex.StackTrace}" );
 
             if ( !MainConfig.DebugLogging )
+            {
                 return;
+            }
 
             // Get the current stack frame
             var frame = new StackFrame( 1, true );
@@ -129,7 +139,9 @@ namespace KOTORModSync.Core
 
             // Log local variables information
             if ( localVariables == null )
+            {
                 return;
+            }
 
             Log( "Local Variables:" );
 
@@ -138,18 +150,29 @@ namespace KOTORModSync.Core
                 string localName = method.GetMethodBody()?.LocalVariables[local.LocalIndex].ToString();
 
                 if ( localName == null )
+                {
                     continue;
+                }
 
                 if ( declaringType == null )
+                {
                     continue;
+                }
 
                 MemberInfo[] members = declaringType.GetMember(
                     localName,
-                    BindingFlags.GetField | BindingFlags.GetProperty | BindingFlags.Public
-                    | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static );
+                    BindingFlags.GetField
+                    | BindingFlags.GetProperty
+                    | BindingFlags.Public
+                    | BindingFlags.NonPublic
+                    | BindingFlags.Instance
+                    | BindingFlags.Static
+                );
 
                 if ( members.Length == 0 )
+                {
                     continue;
+                }
 
                 object value = null;
                 MemberInfo member = members[0];
@@ -158,8 +181,8 @@ namespace KOTORModSync.Core
                     case FieldInfo field when field.IsPublic || field.IsAssembly || field.IsFamilyOrAssembly:
                         value = field.GetValue( member.ReflectedType );
                         break;
-                    case PropertyInfo property when ( property.CanRead
-                        && ( property.GetGetMethod( true )?.IsPublic ?? false ) ):
+                    case PropertyInfo property when property.CanRead
+                        && ( property.GetGetMethod( true )?.IsPublic ?? false ):
                         {
                             value = property.GetValue( null );
                             break;
@@ -175,7 +198,9 @@ namespace KOTORModSync.Core
         private static void CurrentDomain_UnhandledException( object sender, UnhandledExceptionEventArgs e )
         {
             if ( !( e.ExceptionObject is Exception ex ) )
+            {
                 return;
+            }
 
             LogException( ex );
         }
@@ -183,7 +208,9 @@ namespace KOTORModSync.Core
         private static void TaskScheduler_UnobservedTaskException( object sender, UnobservedTaskExceptionEventArgs e )
         {
             if ( e.Exception == null )
+            {
                 return;
+            }
 
             foreach ( Exception ex in e.Exception.InnerExceptions )
                 LogException( ex );

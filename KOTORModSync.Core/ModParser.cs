@@ -13,10 +13,9 @@ namespace KOTORModSync.Core
         private const string Separator = "__";
         private static readonly Regex s_propertyRegex = new Regex( @"\*\*\w+:\*\* (.+)", RegexOptions.Compiled );
 
-        public static List<Component> ParseMods( string source )
-        {
-            return source.Split( new[] { Separator }, StringSplitOptions.RemoveEmptyEntries ).Select( ParseMod ).ToList();
-        }
+        public static List<Component> ParseMods
+            ( string source ) => source.Split( new[] { Separator }, StringSplitOptions.RemoveEmptyEntries )
+            .Select( ParseMod ).ToList();
 
         private static Component ParseMod( string modText )
         {
@@ -27,7 +26,7 @@ namespace KOTORModSync.Core
             mod.ModLink = GetHyperlinkUrl( nameAndModLinks, "Name" );
             mod.Author = GetPropertyValue( modText, "Author" );
             mod.Description = GetPropertyValue( modText, "Description" );
-            (mod.Category, mod.Tier) = GetCategoryAndTier( modText, "Category & Tier" );
+            ( mod.Category, mod.Tier ) = GetCategoryAndTier( modText, "Category & Tier" );
             mod.NonEnglishFunctionality = GetBoolValue( modText, "Non-English Functionality" );
             mod.InstallationMethod = GetPropertyValue( modText, "Installation Method" );
             mod.Directions = GetPropertyValue( modText, "Installation Instructions" );
@@ -41,11 +40,13 @@ namespace KOTORModSync.Core
             Match match = Regex.Match( text, pattern, RegexOptions.Singleline );
 
             if ( !match.Success )
-                return (string.Empty, string.Empty);
+            {
+                return ( string.Empty, string.Empty );
+            }
 
             string name = match.Groups[2].Value.Trim();
             string modLink = match.Groups[3].Value.Trim();
-            return (name, modLink);
+            return ( name, modLink );
         }
 
         private static string GetPropertyValue( string text, string propertyName )
@@ -54,7 +55,9 @@ namespace KOTORModSync.Core
             Match match = Regex.Match( text, pattern, RegexOptions.Singleline );
 
             if ( !match.Success )
+            {
                 return string.Empty;
+            }
 
             return match.Groups[1].Value.Trim();
         }
@@ -72,12 +75,14 @@ namespace KOTORModSync.Core
             Match match = Regex.Match( text, pattern, RegexOptions.Singleline );
 
             if ( !match.Success )
-                return (string.Empty, string.Empty);
+            {
+                return ( string.Empty, string.Empty );
+            }
 
             string[] values = match.Groups[1].Value.Split( '/' );
             return values.Length == 2
-                ? (values[0].Trim(), values[1].Trim())
-                : (string.Empty, string.Empty);
+                ? ( values[0].Trim(), values[1].Trim() )
+                : ( string.Empty, string.Empty );
         }
 
         private static bool GetBoolValue( string text, string propertyName )

@@ -11,6 +11,7 @@ using System.Text;
 using System.Threading.Tasks;
 using KOTORModSync.Core;
 using NUnit.Framework;
+
 // ReSharper disable ConvertToConstant.Local
 #pragma warning disable U2U1000, CS8618, RCS1118 // Mark local variable as const.
 
@@ -19,8 +20,6 @@ namespace KOTORModSync.Tests
     [TestFixture]
     public class FileDeletionTests
     {
-        private string _testDirectory;
-
         [OneTimeSetUp]
         public void CreateTestDirectory()
         {
@@ -29,10 +28,9 @@ namespace KOTORModSync.Tests
         }
 
         [OneTimeTearDown]
-        public void DeleteTestDirectory()
-        {
-            Directory.Delete( _testDirectory, true );
-        }
+        public void DeleteTestDirectory() => Directory.Delete( _testDirectory, true );
+
+        private string _testDirectory;
 
         [Test]
         public void DeleteDuplicateFile_NoDuplicateFiles_NoFilesDeleted()
@@ -50,11 +48,13 @@ namespace KOTORModSync.Tests
             new Instruction().DeleteDuplicateFile( new DirectoryInfo( directory ), fileExtension );
 
             // Assert
-            Assert.Multiple( () =>
-            {
-                Assert.That( File.Exists( file1 ) );
-                Assert.That( File.Exists( file2 ) );
-            } );
+            Assert.Multiple(
+                () =>
+                {
+                    Assert.That( File.Exists( file1 ) );
+                    Assert.That( File.Exists( file2 ) );
+                }
+            );
         }
 
         [Test]
@@ -81,7 +81,8 @@ namespace KOTORModSync.Tests
                     Assert.That( !File.Exists( file1 ) );
                     Assert.That( File.Exists( file2 ) );
                     Assert.That( File.Exists( file3 ) );
-                } );
+                }
+            );
         }
 
         [Test]
@@ -108,7 +109,8 @@ namespace KOTORModSync.Tests
                     Assert.That( !File.Exists( file1 ) );
                     Assert.That( File.Exists( file2 ) );
                     Assert.That( File.Exists( file3 ) );
-                } );
+                }
+            );
         }
 
         [Test]
@@ -127,11 +129,13 @@ namespace KOTORModSync.Tests
             new Instruction().DeleteDuplicateFile( new DirectoryInfo( directory ), fileExtension );
 
             // Assert
-            Assert.Multiple( () =>
-            {
-                Assert.That( File.Exists( file1 ) );
-                Assert.That( File.Exists( file2 ) );
-            } );
+            Assert.Multiple(
+                () =>
+                {
+                    Assert.That( File.Exists( file1 ) );
+                    Assert.That( File.Exists( file2 ) );
+                }
+            );
         }
 
         [Test]
@@ -146,11 +150,13 @@ namespace KOTORModSync.Tests
             new Instruction().DeleteDuplicateFile( new DirectoryInfo( directory ), fileExtension );
 
             // Assert
-            Assert.Multiple( () =>
-            {
-                Assert.That( Directory.Exists( directory ) );
-                Assert.That( Directory.GetFiles( directory ).Length, Is.EqualTo( 0 ) );
-            } );
+            Assert.Multiple(
+                () =>
+                {
+                    Assert.That( Directory.Exists( directory ) );
+                    Assert.That( Directory.GetFiles( directory ).Length, Is.EqualTo( 0 ) );
+                }
+            );
         }
 
         [Test]
@@ -171,11 +177,13 @@ namespace KOTORModSync.Tests
             new Instruction().DeleteDuplicateFile( new DirectoryInfo( directory ), fileExtension );
 
             // Assert
-            Assert.Multiple( () =>
-            {
-                Assert.That( File.Exists( file1 ) );
-                Assert.That( File.Exists( file2 ) );
-            } );
+            Assert.Multiple(
+                () =>
+                {
+                    Assert.That( File.Exists( file1 ) );
+                    Assert.That( File.Exists( file2 ) );
+                }
+            );
         }
 
         // won't run correctly on windows, this is for github actions only.
@@ -197,12 +205,14 @@ namespace KOTORModSync.Tests
             new Instruction().DeleteDuplicateFile( new DirectoryInfo( directory ), fileExtension );
 
             // Assert
-            Assert.Multiple( () =>
-            {
-                Assert.That( !File.Exists( file1 ) );
-                Assert.That( !File.Exists( file2 ) );
-                Assert.That( File.Exists( file3 ) );
-            } );
+            Assert.Multiple(
+                () =>
+                {
+                    Assert.That( !File.Exists( file1 ) );
+                    Assert.That( !File.Exists( file2 ) );
+                    Assert.That( File.Exists( file3 ) );
+                }
+            );
         }
     }
 }

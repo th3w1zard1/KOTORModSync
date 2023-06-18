@@ -3,36 +3,18 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
 using KOTORModSync.Core.Utility;
 using SharpCompress.Archives;
-using SharpCompress.Archives.Rar;
-using SharpCompress.Archives.SevenZip;
-using SharpCompress.Common;
 using SharpCompress.Readers;
 
 namespace KOTORModSync.Core
 {
     public class Instruction
     {
-        public string Action { get; set; }
-        public List<string> Source { get; set; }
-        private List<string> sourcePaths { get; set; }
-        public string Destination { get; set; }
-        private DirectoryInfo destinationPath { get; set; }
-        public List<Guid> Dependencies { get; set; }
-        public List<Guid> Restrictions { get; set; }
-        public bool Overwrite { get; set; }
-        public string Arguments { get; set; }
-        private Component ParentComponent { get; set; }
-        public Dictionary<FileInfo, SHA1> ExpectedChecksums { get; set; }
-        public Dictionary<FileInfo, SHA1> OriginalChecksums { get; internal set; }
-
         public static readonly string DefaultInstructions = @"
 [[thisMod.instructions]]
 action = ""extract""
@@ -70,12 +52,23 @@ source = ""<<modDirectory>>\\path\\to\\mod\\TSLPatcher directory""
 arguments = ""any command line arguments to pass (in TSLPatcher, this is the index of the desired option in namespaces.ini))""
 ";
 
+        public string Action { get; set; }
+        public List<string> Source { get; set; }
+        private List<string> RealSourcePaths { get; set; }
+        public string Destination { get; set; }
+        private DirectoryInfo RealDestinationPath { get; set; }
+        public List<Guid> Dependencies { get; set; }
+        public List<Guid> Restrictions { get; set; }
+        public bool Overwrite { get; set; }
+        public string Arguments { get; set; }
+        private Component ParentComponent { get; set; }
+        public Dictionary<FileInfo, SHA1> ExpectedChecksums { get; set; }
+        public Dictionary<FileInfo, SHA1> OriginalChecksums { get; internal set; }
+
         public void SetParentComponent( Component parentComponent ) =>
             ParentComponent = parentComponent;
 
-        public static async Task<bool> ExecuteInstructionAsync(
-            Func<Task<bool>> instructionMethod
-        ) =>
+        public static async Task<bool> ExecuteInstructionAsync( Func<Task<bool>> instructionMethod ) =>
             await instructionMethod().ConfigureAwait( false );
 
         // This method will replace custom variables such as <<modDirectory>> and <<kotorDirectory>> with their actual paths.
@@ -84,39 +77,39 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
         // ^ perhaps the above is user error though? Either way, we attempt to baby them here.
         public void SetRealPaths( bool noValidate = false )
         {
-            sourcePaths
+            RealSourcePaths
                 = Source.ConvertAll( Utility.Utility.ReplaceCustomVariables );
             // Enumerate the files/folders with wildcards and add them to the list
-            sourcePaths = FileHelper.EnumerateFilesWithWildcards( sourcePaths );
+            RealSourcePaths = FileHelper.EnumerateFilesWithWildcards( RealSourcePaths );
 
             if ( Destination == null )
             {
-                if ( !noValidate && sourcePaths.Count == 0 )
+                if ( !noValidate && RealSourcePaths.Count == 0 )
                 {
-                    throw new Exception(
-                        $"Could not find any files! Source: {string.Join( ", ", Source )}" );
+                    throw new Exception( $"Could not find any files! Source: {string.Join( ", ", Source )}" );
                 }
 
                 return;
             }
 
-            destinationPath = new DirectoryInfo(
+            RealDestinationPath = new DirectoryInfo(
                 Utility.Utility.ReplaceCustomVariables( Destination )
-                ?? throw new InvalidOperationException( "No destination set!" ) );
+                ?? throw new InvalidOperationException( "No destination set!" )
+            );
 
-            if ( !noValidate && sourcePaths.Count == 0 )
+            if ( !noValidate && RealSourcePaths.Count == 0 )
             {
-                throw new Exception(
-                    $"Could not find any files! Source: {string.Join( ", ", Source )}" );
+                throw new Exception( $"Could not find any files! Source: {string.Join( ", ", Source )}" );
             }
         }
 
-        public async Task<bool> ExtractFileAsync( DirectoryInfo argDestinationPath = null, List<string> argSourcePaths = null )
+        public async Task<bool> ExtractFileAsync
+            ( DirectoryInfo argDestinationPath = null, List<string> argSourcePaths = null )
         {
             try
             {
                 if ( argSourcePaths == null )
-                    argSourcePaths = sourcePaths;
+                    argSourcePaths = RealSourcePaths;
 
                 var extractionTasks = new List<Task>( 25 );
                 var semaphore = new SemaphoreSlim( 5 ); // Limiting to 5 concurrent extractions
@@ -126,15 +119,26 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                 {
                     await semaphore.WaitAsync(); // Acquire a semaphore slot
 
-                    extractionTasks.Add( Task.Run( async () =>
+                    extractionTasks.Add(
+                        Task.Run(
+                            function: InnerExtractFileAsync
+                        )
+                    );
+
+                    async Task InnerExtractFileAsync()
                     {
                         try
                         {
                             var thisFile = new FileInfo( sourcePath );
                             if ( argDestinationPath == null )
+                            {
                                 argDestinationPath = thisFile.Directory;
+                            }
+
                             if ( argDestinationPath == null )
-                                throw new ArgumentNullException( nameof( argDestinationPath ) );
+                            {
+                                throw new ArgumentNullException( nameof(argDestinationPath) );
+                            }
 
                             _ = Logger.LogAsync( $"File path: {thisFile.FullName}" );
 
@@ -147,12 +151,18 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
 
                             if ( thisFile.Extension.Equals( ".exe", StringComparison.OrdinalIgnoreCase ) )
                             {
-                                var result = await PlatformAgnosticMethods.ExecuteProcessAsync( thisFile, $" -o\"{thisFile.DirectoryName}\" -y" );
+                                (int, string, string) result = await PlatformAgnosticMethods.ExecuteProcessAsync(
+                                    thisFile,
+                                    $" -o\"{thisFile.DirectoryName}\" -y"
+                                );
 
                                 if ( result.Item1 == 0 )
+                                {
                                     return;
+                                }
 
-                                throw new InvalidOperationException( $"{thisFile.Name} is not a self-extracting executable as expected. Cannot extract." );
+                                success = false;
+                                throw new InvalidOperationException( $"{thisFile.Name} is not a self-extracting executable as previously assumed. Cannot extract." );
                             }
 
                             using ( FileStream stream = File.OpenRead( thisFile.FullName ) )
@@ -161,22 +171,28 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
 
                                 if ( archive == null )
                                 {
-                                    await Logger.LogExceptionAsync( new InvalidOperationException( $"Unable to parse archive '{sourcePath}'" ) );
                                     success = false;
-                                    return;
+                                    throw new InvalidOperationException( $"Unable to parse archive '{sourcePath}'" );
                                 }
 
                                 IReader reader = archive.ExtractAllEntries();
                                 while ( reader.MoveToNextEntry() )
                                 {
-                                    if ( reader.Entry.IsDirectory ) continue;
-                                    if ( argDestinationPath?.FullName == null ) continue;
+                                    if ( reader.Entry.IsDirectory )
+                                        continue;
+                                    if ( argDestinationPath?.FullName == null )
+                                        continue;
 
                                     string extractFolderName = Path.GetFileNameWithoutExtension( thisFile.Name );
-                                    string destinationItemPath = Path.Combine( argDestinationPath.FullName, extractFolderName, reader.Entry.Key );
+                                    string destinationItemPath = Path.Combine(
+                                        argDestinationPath.FullName,
+                                        extractFolderName,
+                                        reader.Entry.Key
+                                    );
                                     string destinationDirectory = Path.GetDirectoryName( destinationItemPath );
 
-                                    if ( destinationDirectory != null && !Directory.Exists( destinationDirectory ) )
+                                    if ( destinationDirectory != null
+                                        && !Directory.Exists( destinationDirectory ) )
                                     {
                                         _ = Logger.LogAsync( $"Create directory {destinationDirectory}" );
                                         _ = Directory.CreateDirectory( destinationDirectory );
@@ -186,7 +202,12 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
 
                                     try
                                     {
-                                        await Task.Run( () => reader.WriteEntryToDirectory( destinationDirectory ?? throw new InvalidOperationException(), ArchiveHelper.DefaultExtractionOptions ) );
+                                        await Task.Run(
+                                            () => reader.WriteEntryToDirectory(
+                                                destinationDirectory ?? throw new InvalidOperationException(),
+                                                ArchiveHelper.DefaultExtractionOptions
+                                            )
+                                        );
                                     }
                                     catch ( UnauthorizedAccessException )
                                     {
@@ -199,7 +220,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                         {
                             _ = semaphore.Release(); // Release the semaphore slot
                         }
-                    } ) );
+                    }
                 }
 
                 await Task.WhenAll( extractionTasks ); // Wait for all extraction tasks to complete
@@ -217,14 +238,18 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
         public void DeleteDuplicateFile( DirectoryInfo directoryPath = null, string fileExtension = "" )
         {
             if ( directoryPath == null )
-                directoryPath = this.destinationPath;
+            {
+                directoryPath = RealDestinationPath;
+            }
             else if ( !directoryPath.Exists )
             {
-                throw new ArgumentException( "Invalid directory path.", nameof( directoryPath ) );
+                throw new ArgumentException( "Invalid directory path.", nameof(directoryPath) );
             }
 
             if ( string.IsNullOrEmpty( fileExtension ) )
-                fileExtension = this.Arguments;
+            {
+                fileExtension = Arguments;
+            }
 
             string[] files = Directory.GetFiles( directoryPath.FullName );
             var fileNameCounts = new Dictionary<string, int>();
@@ -279,7 +304,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
         {
             try
             {
-                foreach ( string thisFilePath in sourcePaths )
+                foreach ( string thisFilePath in RealSourcePaths )
                 {
                     var thisFile = new FileInfo( thisFilePath );
 
@@ -335,7 +360,8 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                     // Check if the destination file already exists
                     string destinationFilePath = Path.Combine(
                         Path.GetDirectoryName( sourcePath ) ?? string.Empty,
-                        Destination );
+                        Destination
+                    );
                     if ( File.Exists( destinationFilePath ) )
                     {
                         if ( Overwrite )
@@ -385,18 +411,20 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
         {
             try
             {
-                foreach ( string sourcePath in sourcePaths )
+                foreach ( string sourcePath in RealSourcePaths )
                 {
                     string fileName = Path.GetFileName( sourcePath );
                     string destinationFilePath = Path.Combine(
-                        destinationPath.FullName,
+                        RealDestinationPath.FullName,
                         fileName
                     );
 
                     // Check if the destination file already exists
                     if ( !Overwrite && File.Exists( destinationFilePath ) )
                     {
-                        Logger.Log( $"Skipping file {Path.GetFileName( destinationFilePath )} ( Overwrite set to False )" );
+                        Logger.Log(
+                            $"Skipping file {Path.GetFileName( destinationFilePath )} ( Overwrite set to False )"
+                        );
                         continue;
                     }
 
@@ -409,8 +437,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                     }
 
                     // Copy the file
-                    Logger.Log(
-                        $"Copy '{Path.GetFileName( sourcePath )}' to '{destinationFilePath}'" );
+                    Logger.Log( $"Copy '{Path.GetFileName( sourcePath )}' to '{destinationFilePath}'" );
 
                     File.Copy( sourcePath, destinationFilePath );
                 }
@@ -428,11 +455,11 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
         {
             try
             {
-                foreach ( string sourcePath in sourcePaths )
+                foreach ( string sourcePath in RealSourcePaths )
                 {
                     string fileName = Path.GetFileName( sourcePath );
                     string destinationFilePath = Path.Combine(
-                        destinationPath.FullName,
+                        RealDestinationPath.FullName,
                         fileName
                     );
 
@@ -440,7 +467,8 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                     if ( !Overwrite && File.Exists( destinationFilePath ) )
                     {
                         Logger.Log(
-                            $"Skipping file {Path.GetFileName( destinationFilePath )} ( Overwrite set to False )" );
+                            $"Skipping file {Path.GetFileName( destinationFilePath )} ( Overwrite set to False )"
+                        );
 
                         continue;
                     }
@@ -448,15 +476,13 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                     // Check if the destination file already exists
                     if ( File.Exists( destinationFilePath ) )
                     {
-                        Logger.Log(
-                            $"File already exists, deleting existing file {destinationFilePath}" );
+                        Logger.Log( $"File already exists, deleting existing file {destinationFilePath}" );
                         // Delete the existing file
                         File.Delete( destinationFilePath );
                     }
 
                     // Move the file
-                    Logger.Log(
-                        $"Move '{Path.GetFileName( sourcePath )}' to '{destinationFilePath}'" );
+                    Logger.Log( $"Move '{Path.GetFileName( sourcePath )}' to '{destinationFilePath}'" );
 
                     File.Move( sourcePath, destinationFilePath );
                 }
@@ -474,7 +500,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
         {
             try
             {
-                foreach ( string t in sourcePaths )
+                foreach ( string t in RealSourcePaths )
                 {
                     string tslPatcherPath = t;
                     DirectoryInfo tslPatcherDirectory;
@@ -487,7 +513,8 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                         if ( tslPatcherDirectory == null || !tslPatcherDirectory.Exists )
                         {
                             throw new DirectoryNotFoundException(
-                                $"The parent directory of the file {tslPatcherPath} could not be located on the disk." );
+                                $"The parent directory of the file {tslPatcherPath} could not be located on the disk."
+                            );
                         }
                     }
                     else
@@ -498,7 +525,8 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                         if ( !tslPatcherDirectory.Exists )
                         {
                             throw new DirectoryNotFoundException(
-                                $"The directory {tslPatcherPath} could not be located on the disk." );
+                                $"The directory {tslPatcherPath} could not be located on the disk."
+                            );
                         }
                     }
 
@@ -506,9 +534,10 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                     FileHelper.ReplaceLookupGameFolder( tslPatcherDirectory );
 
                     string args = $@"""{MainConfig.DestinationPath}""" // arg1 = swkotor directory
-                        + $@" ""{MainConfig.SourcePath}"""   // arg2 = mod directory (where tslpatcherdata folder is)
-                        + ( string.IsNullOrEmpty( this.Arguments )
-                            ? "" : $" {this.Arguments}" );   // arg3 = (optional) install option integer index from namespaces.ini
+                        + $@" ""{MainConfig.SourcePath}""" // arg2 = mod directory (where tslpatcherdata folder is)
+                        + ( string.IsNullOrEmpty( Arguments )
+                            ? ""
+                            : $" {Arguments}" ); // arg3 = (optional) install option integer index from namespaces.ini
 
                     var tslPatcherCliPath = new FileInfo(
                         Path.Combine(
@@ -518,7 +547,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                     );
 
                     await Logger.LogAsync( "Run TSLPatcher..." );
-                    (int exitCode, string output, string error)
+                    ( int exitCode, string output, string error )
                         = await PlatformAgnosticMethods.ExecuteProcessAsync( tslPatcherCliPath, args );
                     await Logger.LogVerboseAsync( $"{tslPatcherCliPath.Name} exited with exit code {exitCode}" );
 
@@ -542,11 +571,10 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
             try
             {
                 bool isSuccess = true; // Track the success status
-                foreach ( string sourcePath in sourcePaths )
-                {
+                foreach ( string sourcePath in RealSourcePaths )
                     try
                     {
-                        if ( this.Action == "TSLPatcher" )
+                        if ( Action == "TSLPatcher" )
                         {
                             FileHelper.ReplaceLookupGameFolder(
                                 new DirectoryInfo( Path.GetDirectoryName( sourcePath ) ?? string.Empty )
@@ -561,9 +589,12 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                             );
                         }
 
-                        (int exitCode, string output, string error) = await PlatformAgnosticMethods.ExecuteProcessAsync( thisProgram );
+                        ( int exitCode, string output, string error )
+                            = await PlatformAgnosticMethods.ExecuteProcessAsync( thisProgram );
                         if ( exitCode == 0 )
+                        {
                             continue;
+                        }
 
                         isSuccess = false;
                         break;
@@ -573,7 +604,6 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                         await Logger.LogExceptionAsync( ex );
                         return false;
                     }
-                }
 
                 return isSuccess;
             }
@@ -587,10 +617,12 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
         // parse TSLPatcher's installlog.rtf (or installlog.txt) for errors when not using the CLI.
         public List<string> VerifyInstall()
         {
-            foreach ( string sourcePath in sourcePaths )
+            foreach ( string sourcePath in RealSourcePaths )
             {
                 if ( sourcePath == null )
+                {
                     continue;
+                }
 
                 string tslPatcherDirPath
                     = Path.GetDirectoryName( sourcePath )
@@ -607,14 +639,18 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                     //PlaintextLog=1
                     fullInstallLogFile = Path.Combine( tslPatcherDirPath, "installlog.txt" );
                     if ( !File.Exists( fullInstallLogFile ) )
+                    {
                         throw new FileNotFoundException( "Install log file not found.", fullInstallLogFile );
+                    }
                 }
 
                 string installLogContent = File.ReadAllText( fullInstallLogFile );
                 foreach ( string thisLine in installLogContent.Split( '\n' ) )
                 {
                     if ( !thisLine.Contains( "Error: " ) )
+                    {
                         continue;
+                    }
 
                     new List<string>().Add( thisLine );
                 }

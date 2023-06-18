@@ -29,18 +29,19 @@ namespace KOTORModSync
 
         private void AttachControls()
         {
-            progressTextBlock = this.FindControl<TextBlock>( "progressTextBlock" );
-            progressBar = this.FindControl<ProgressBar>( "progressBar" );
+            ProgressTextBlock = this.FindControl<TextBlock>( "ProgressTextBlock" );
+            ProgressBar = this.FindControl<ProgressBar>( "ProgressBar" );
         }
 
         public static async Task ShowProgressWindow( Window parentWindow, string message, decimal progress )
         {
             var progressWindow = new ProgressWindow { Owner = parentWindow };
-            progressWindow.progressTextBlock.Text = message;
-            progressWindow.progressBar.Value = (double)progress;
+            progressWindow.ProgressTextBlock.Text = message;
+            progressWindow.ProgressBar.Value = (double)progress;
 
             _ = await progressWindow.ShowDialog<bool?>( parentWindow );
         }
+
         public void Dispose() => Close();
     }
 }

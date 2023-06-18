@@ -1,21 +1,8 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO.Compression;
-using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 using KOTORModSync.Core;
-using KOTORModSync.Core.Utility;
-using Moq;
-using SharpCompress.Archives;
-using SharpCompress.Common;
-using SharpCompress.Readers;
-using static KOTORModSync.Core.Utility.Utility;
 
 namespace KOTORModSync.Tests
 {
@@ -23,20 +10,12 @@ namespace KOTORModSync.Tests
     [Ignore( "not finished yet" )]
     public class FileExtractor
     {
-        private DirectoryInfo? _destinationPath;
-        private List<string>? _sourcePaths;
-
         [SetUp]
         public void Setup()
         {
             // Set up the initial values for destinationPath and sourcePaths
             _destinationPath = new DirectoryInfo( "DestinationPath" );
-            _sourcePaths = new List<string>
-            {
-                "SourcePath1",
-                "SourcePath2",
-                "SourcePath3"
-            };
+            _sourcePaths = new List<string> { "SourcePath1", "SourcePath2", "SourcePath3" };
         }
 
         [TearDown]
@@ -51,6 +30,9 @@ namespace KOTORModSync.Tests
                 _destinationPath.Delete( true );
             }
         }
+
+        private DirectoryInfo? _destinationPath;
+        private List<string>? _sourcePaths;
 
         [Test]
         public async Task ExtractFileAsync_ValidArchive_Success()
@@ -160,6 +142,5 @@ namespace KOTORModSync.Tests
 
             return exePath;
         }*/
-
     }
 }

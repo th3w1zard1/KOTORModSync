@@ -32,7 +32,8 @@ namespace KOTORModSync.Tests
             {
                 SHA1 sha1 = await FileChecksumValidator.CalculateSha1Async( fileInfo );
                 Assert.That( sha1.Hash, Is.Not.EqualTo( null ) );
-                actualChecksums[fileInfo.Name] = BitConverter.ToString( sha1.Hash ?? Array.Empty<byte>() ).Replace( "-", "" );
+                actualChecksums[fileInfo.Name]
+                    = BitConverter.ToString( sha1.Hash ?? Array.Empty<byte>() ).Replace( "-", "" );
             }
 
             // Act
@@ -118,7 +119,7 @@ namespace KOTORModSync.Tests
             string filePath = Path.Combine( TestFolderPath, "Checksums.json" );
             var checksums = new Dictionary<DirectoryInfo, SHA1>
             {
-                { new DirectoryInfo(TestFolderPath), SHA1.Create() }
+                { new DirectoryInfo( TestFolderPath ), SHA1.Create() }
             };
 
             // Act
@@ -128,11 +129,15 @@ namespace KOTORModSync.Tests
             Assert.That( File.Exists( filePath ) );
 
             string json = await File.ReadAllTextAsync( filePath );
-            Dictionary<DirectoryInfo, SHA1>? loadedChecksums = JsonConvert.DeserializeObject<Dictionary<DirectoryInfo, SHA1>>( json );
+            Dictionary<DirectoryInfo, SHA1>? loadedChecksums
+                = JsonConvert.DeserializeObject<Dictionary<DirectoryInfo, SHA1>>( json );
 
             Assert.That( loadedChecksums?.Count, Is.EqualTo( checksums.Count ) );
             CollectionAssert.AreEquivalent( checksums.Keys, loadedChecksums.Keys );
-            CollectionAssert.AreEquivalent( checksums.Values.Select( FileChecksumValidator.Sha1ToString ), loadedChecksums.Values.Select( FileChecksumValidator.Sha1ToString ) );
+            CollectionAssert.AreEquivalent(
+                checksums.Values.Select( FileChecksumValidator.Sha1ToString ),
+                loadedChecksums.Values.Select( FileChecksumValidator.Sha1ToString )
+            );
 
             // Clean up
             File.Delete( filePath );
@@ -151,7 +156,7 @@ namespace KOTORModSync.Tests
                 string filePath = Path.Combine( testFolderPath, "Checksums.txt" );
                 var checksums = new Dictionary<string, string>
                 {
-                    { Path.Combine(testFolderPath, "TestFile.txt"), "SHA1HashValue" }
+                    { Path.Combine( testFolderPath, "TestFile.txt" ), "SHA1HashValue" }
                 };
 
                 // Write checksums to the file
@@ -161,14 +166,14 @@ namespace KOTORModSync.Tests
                 try
                 {
                     // Act
-                    Dictionary<FileInfo, SHA1> loadedChecksums = await FileChecksumValidator.LoadChecksumsFromFileAsync( new FileInfo( filePath ) );
+                    Dictionary<FileInfo, SHA1> loadedChecksums
+                        = await FileChecksumValidator.LoadChecksumsFromFileAsync( new FileInfo( filePath ) );
 
                     // Assert
                     Assert.That( loadedChecksums, Has.Count.EqualTo( checksums.Count ), sw.ToString() );
 
                     // Check each loaded checksum
                     foreach ( KeyValuePair<FileInfo, SHA1> loadedChecksum in loadedChecksums )
-                    {
                         Assert.Multiple(
                             () =>
                             {
@@ -181,8 +186,8 @@ namespace KOTORModSync.Tests
                                     Is.EqualTo( checksums[loadedChecksum.Key.FullName] ),
                                     $"The loaded checksum for file '{loadedChecksum.Key.FullName}' does not match the expected value."
                                 );
-                            } );
-                    }
+                            }
+                        );
                 }
                 finally
                 {
@@ -200,7 +205,8 @@ namespace KOTORModSync.Tests
             string filePath = Path.Combine( TestFolderPath, "NonExistentChecksums.json" );
 
             // Act
-            Dictionary<FileInfo, SHA1> loadedChecksums = await FileChecksumValidator.LoadChecksumsFromFileAsync( new FileInfo( filePath ) );
+            Dictionary<FileInfo, SHA1> loadedChecksums
+                = await FileChecksumValidator.LoadChecksumsFromFileAsync( new FileInfo( filePath ) );
 
             // Assert
             Assert.That( loadedChecksums, Is.Not.Null );
@@ -212,12 +218,16 @@ namespace KOTORModSync.Tests
     {
         public override bool CanConvert( Type objectType ) => objectType == typeof( FileInfo );
 
-        public override object? ReadJson( JsonReader reader, Type objectType, object? existingValue, JsonSerializer serializer ) => reader.Value is not string filePath ? default : (object)new FileInfo( filePath );
+        public override object? ReadJson
+            ( JsonReader reader, Type objectType, object? existingValue, JsonSerializer serializer ) =>
+            reader.Value is not string filePath ? default : (object)new FileInfo( filePath );
 
         public override void WriteJson( JsonWriter writer, object? value, JsonSerializer serializer )
         {
             if ( value is not FileInfo fileInfo )
+            {
                 return;
+            }
 
             writer.WriteValue( fileInfo.FullName );
         }

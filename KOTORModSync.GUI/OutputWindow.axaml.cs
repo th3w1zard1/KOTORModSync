@@ -22,9 +22,9 @@ namespace KOTORModSync
 {
     public partial class OutputWindow : Window
     {
-        private TextBox _logTextBox;
-        private ScrollViewer _logScrollViewer;
         private StringBuilder _logBuilder;
+        private ScrollViewer _logScrollViewer;
+        private TextBox _logTextBox;
 
         public OutputWindow()
         {
@@ -69,13 +69,15 @@ namespace KOTORModSync
                 // Create a local copy of _logBuilder to avoid accessing it from multiple threads
                 string logText = _logBuilder.ToString();
 
-                _ = Dispatcher.UIThread.InvokeAsync( () =>
-                {
-                    _logTextBox.Text = logText;
+                _ = Dispatcher.UIThread.InvokeAsync(
+                    () =>
+                    {
+                        _logTextBox.Text = logText;
 
-                    // Scroll to the end of the content
-                    _logScrollViewer?.ScrollToEnd();
-                } );
+                        // Scroll to the end of the content
+                        _logScrollViewer?.ScrollToEnd();
+                    }
+                );
             }
         }
 

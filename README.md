@@ -16,6 +16,7 @@ Once there's been enough success stories and enough testers, the program will pr
 
 
 ## Features
+Can install the r/KOTOR modbuilds in about 20 minutes from a vanilla install.
 A flexible configuration editor and parser utilizing TOML syntax. This is very similar to INI which TSLPatcher already uses and most modders are used to.
 Create instructions files with complex dependency structures for multiple mods, and have end users install everything exactly according to the instructions created. No more manually copying/deleting files: KOTORModSync handles all of that for your end user.
 Supports file validation using hashes of a game install and mod files to ensure each mod installed correctly. In order for this to work, this assumes the user started with a vanilla install.

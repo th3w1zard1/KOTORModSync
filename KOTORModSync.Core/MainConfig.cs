@@ -41,7 +41,6 @@ namespace KOTORModSync.Core
             set
             {
                 SourcePath = value;
-                OnPropertyChanged( nameof( sourcePath ) );
                 OnPropertyChanged( nameof( sourcePathFullName ) );
             }
         }
@@ -54,7 +53,6 @@ namespace KOTORModSync.Core
             set
             {
                 DestinationPath = value;
-                OnPropertyChanged( nameof( destinationPath ) );
                 OnPropertyChanged( nameof( destinationPathFullName ) );
             }
         }

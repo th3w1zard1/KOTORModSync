@@ -5,7 +5,7 @@ using System.Windows.Input;
 using Avalonia;
 using Avalonia.Controls;
 
-namespace KOTORModSync
+namespace KOTORModSync.GUI
 {
     public class AttachedProperties
     {

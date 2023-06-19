@@ -838,7 +838,7 @@ namespace KOTORModSync.Core.Utility
 
     public static class ArchiveHelper
     {
-        public static ExtractionOptions DefaultExtractionOptions = new ExtractionOptions
+        public static readonly ExtractionOptions DefaultExtractionOptions = new ExtractionOptions
         {
             ExtractFullPath = false,
             Overwrite = true,

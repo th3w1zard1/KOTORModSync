@@ -4,7 +4,7 @@
 using System;
 using Avalonia;
 
-namespace KOTORModSync
+namespace KOTORModSync.GUI
 {
     internal static class Program
     {

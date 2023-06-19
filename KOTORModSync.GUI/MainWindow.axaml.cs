@@ -12,12 +12,15 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Input;
+using Avalonia;
 using Avalonia.Collections;
 using Avalonia.Controls;
+using Avalonia.Data;
 using Avalonia.Data.Converters;
 using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
 using Avalonia.Threading;
+using Avalonia.Utilities;
 using JetBrains.Annotations;
 using KOTORModSync.Core;
 using KOTORModSync.Core.Utility;
@@ -25,6 +28,181 @@ using KOTORModSync.Core.Utility;
 // ReSharper disable UnusedParameter.Local
 // ReSharper disable MemberCanBeMadeStatic.Local
 // ReSharper disable AsyncVoidMethod
+
+namespace KOTORModSync.GUI.Converters
+{
+    public class IndexConverter : IValueConverter
+    {
+        public object Convert( object value, Type targetType, object parameter, CultureInfo culture )
+        {
+            if ( !( value is IEnumerable list ) || !( parameter is TextBlock textBlock ) || !( textBlock.Tag is ItemsRepeater itemsRepeater ) )
+            {
+                return string.Empty;
+            }
+
+            int index = -1;
+            if ( itemsRepeater.Tag is IEnumerable itemList )
+            {
+                index = itemList.Cast<object>().ToList().IndexOf( value );
+            }
+
+            return index.ToString();
+        }
+
+        public object ConvertBack( object value, Type targetType, object parameter, CultureInfo culture )
+        {
+            if ( !( value is string indexString ) || !( parameter is ItemsRepeater itemsRepeater ) )
+            {
+                return null;
+            }
+
+            if ( !int.TryParse( indexString, out int index ) || !( itemsRepeater.Tag is IEnumerable itemList ) )
+            {
+                return null;
+            }
+
+            IEnumerable enumerable = itemList.Cast<object>().ToList();
+            List<object> itemList2 = enumerable.Cast<object>().ToList();
+            if ( index < 0 || index >= itemList2.Count )
+            {
+                return null;
+            }
+
+            return itemList2[index];
+        }
+    }
+
+    public class ComboBoxItemConverter : IValueConverter
+    {
+        public object Convert( object value, Type targetType, object parameter, CultureInfo culture ) =>
+            value is string action
+                ? new ComboBoxItem { Content = action }
+                : (object)null;
+
+        public object ConvertBack( object value, Type targetType, object parameter, CultureInfo culture ) =>
+            value is ComboBoxItem comboBoxItem
+                ? comboBoxItem.Content?.ToString()
+                : (object)null;
+    }
+
+    public class EmptyCollectionConverter : IValueConverter
+    {
+        public object Convert( object value, Type targetType, object parameter, CultureInfo culture )
+        {
+            if ( value is ICollection collection && collection.Count == 0 )
+            {
+                return new List<string>() { string.Empty }; // Create a new collection with a default value
+            }
+
+            return value;
+        }
+
+        public object ConvertBack( object value, Type targetType, object parameter, CultureInfo culture ) =>
+            throw new NotSupportedException();
+    }
+
+    public class ListToStringConverter : IValueConverter
+    {
+        public object Convert( object value, Type targetType, object parameter, CultureInfo culture )
+        {
+            if ( !( value is IEnumerable list ) )
+            {
+                return string.Empty;
+            }
+
+            var serializedList = new StringBuilder();
+            foreach ( object item in list )
+            {
+                if ( item == null )
+                {
+                    continue;
+                }
+
+                _ = serializedList.AppendLine( item.ToString() );
+            }
+
+            return serializedList.ToString();
+        }
+
+
+        public object ConvertBack( object value, Type targetType, object parameter, CultureInfo culture )
+        {
+            if ( !( value is string text ) )
+            {
+                return new List<string>();
+            }
+
+            string[] lines = text.Split( new[] { "\r\n", "\r", "\n" }, StringSplitOptions.RemoveEmptyEntries );
+            return targetType != typeof( List<Guid> )
+                ? lines.ToList()
+                : (object)lines.Select( line => Guid.TryParse( line, out Guid guid ) ? guid : Guid.Empty ).ToList();
+        }
+    }
+
+    public class BooleanToArrowConverter : IValueConverter
+    {
+        public object Convert( object value, Type targetType, object parameter, CultureInfo culture ) =>
+            value is bool isExpanded && targetType == typeof( string ) ? isExpanded ? "▼" : "▶" : (object)string.Empty;
+
+        public object ConvertBack( object value, Type targetType, object parameter, CultureInfo culture ) =>
+            throw new NotSupportedException();
+    }
+
+    public class ActionConverter : IValueConverter
+    {
+        [CanBeNull]
+        public object Convert( [CanBeNull] object value, Type targetType, object parameter, CultureInfo culture )
+        {
+            if ( value == null )
+            {
+                return targetType.IsValueType ? AvaloniaProperty.UnsetValue : null;
+            }
+
+            if ( TypeUtilities.TryConvert( targetType, value, culture, out object result ) )
+            {
+                var validActions = new List<string>
+                {
+                    "move",
+                    "delduplicate",
+                    "copy",
+                    "rename",
+                    "tslpatcher",
+                    "execute",
+                    "delete",
+                    "choose",
+                    "extract"
+                };
+
+                if ( validActions.Contains( result ) )
+                {
+                    return result;
+                }
+
+                string msg = $"Valid actions are [{string.Join( ", ", validActions )}]";
+                return new BindingNotification( new ArgumentException( msg ), BindingErrorType.Error );
+            }
+
+            string message;
+
+            if ( TypeUtilities.IsNumeric( targetType ) )
+            {
+                message = $"'{value}' is not a valid number.";
+            }
+            else
+            {
+                message = $"Could not convert '{value}' to '{targetType.Name}'.";
+            }
+
+            return new BindingNotification( new InvalidCastException( message ), BindingErrorType.Error );
+        }
+
+        [CanBeNull]
+        public object ConvertBack( object value, Type targetType, object parameter, CultureInfo culture )
+        {
+            return Convert( value, targetType, parameter, culture );
+        }
+    }
+}
 
 namespace KOTORModSync
 {
@@ -37,7 +215,6 @@ namespace KOTORModSync
 
         private RelayCommand _itemClickCommand;
         private string _originalContent;
-        private ObservableCollection<string> _selectedComponentProperties;
 
         public MainWindow()
         {
@@ -89,7 +266,7 @@ namespace KOTORModSync
             RawEditTextBox = this.FindControl<TextBox>( "RawEditTextBox" );
             RawEditTextBox.LostFocus
                 += RawEditTextBox_LostFocus; // Prevents RawEditTextBox from being cleared when clicking elsewhere(?)
-            RawEditTextBox.DataContext = _selectedComponentProperties = new ObservableCollection<string>();
+            RawEditTextBox.DataContext = new ObservableCollection<string>();
             // Column 3
             MainConfigInstance = new MainConfig();
             MainConfigStackPanel = this.FindControl<StackPanel>( "MainConfigStackPanel" );
@@ -625,10 +802,13 @@ namespace KOTORModSync
                     return;
                 }
 
+                await Logger.LogAsync("Running validation of all components, this might take a while...");
+
                 bool success = true;
                 foreach ( Component component in _components )
                 {
                     var validator = new ComponentValidation( component );
+                    await Logger.LogVerboseAsync( $" == Validating {component.Name} == " );
                     success &= validator.Run();
                 }
 
@@ -1435,81 +1615,118 @@ namespace KOTORModSync
             public bool CanExecute( object parameter ) => _canExecute == null || _canExecute( parameter );
             public void Execute( object parameter ) => _execute( parameter );
         }
-    }
 
-    public class ComboBoxItemConverter : IValueConverter
-    {
-        public object Convert( object value, Type targetType, object parameter, CultureInfo culture ) =>
-            value is string action
-                ? new ComboBoxItem { Content = action }
-                : (object)null;
-
-        public object ConvertBack( object value, Type targetType, object parameter, CultureInfo culture ) =>
-            value is ComboBoxItem comboBoxItem
-                ? comboBoxItem.Content?.ToString()
-                : (object)null;
-    }
-
-    public class EmptyCollectionConverter : IValueConverter
-    {
-        public object Convert( object value, Type targetType, object parameter, CultureInfo culture )
+        private async void AddNewInstruction_Click( object sender, RoutedEventArgs e )
         {
-            if ( value is ICollection collection && collection.Count == 0 )
+            Button addButton = (Button)sender;
+            var thisInstruction = addButton.Tag as Instruction;
+            var thisComponent = addButton.Tag as Component;
+            if ( thisInstruction == null && thisComponent == null )
             {
-                return new List<string>() { string.Empty }; // Create a new collection with a default value
+                await Logger.LogAsync( "Cannot find instruction instance from button." );
+                return;
             }
 
-            return value;
+            if ( _currentComponent == null )
+            {
+                await InformationDialog.ShowInformationDialog( this, "Load a component first" );
+                return;
+            }
+
+            int index;
+            if ( thisInstruction == null )
+            {
+                thisInstruction = new Instruction();
+                index = _currentComponent.Instructions.Count;
+            }
+            else
+            {
+                index = _currentComponent.Instructions.IndexOf( thisInstruction );
+            }
+
+            _currentComponent.CreateInstruction( index );
+            await Logger.LogVerboseAsync( $"Instruction '{thisInstruction.Action}' created at index #{index}" );
+
+            LoadComponentDetails( _currentComponent );
         }
 
-        public object ConvertBack( object value, Type targetType, object parameter, CultureInfo culture ) =>
-            throw new NotSupportedException();
-    }
-
-    public class ListToStringConverter : IValueConverter
-    {
-        public object Convert( object value, Type targetType, object parameter, CultureInfo culture )
+        private async void DeleteInstruction_Click( object sender, RoutedEventArgs e )
         {
-            if ( !( value is IEnumerable list ) )
+            Button addButton = (Button)sender;
+            if ( !( addButton.Tag is Instruction thisInstruction ) )
             {
-                return string.Empty;
+                await Logger.LogAsync( "Cannot find instruction instance from button." );
+                return;
             }
 
-            var serializedList = new StringBuilder();
-            foreach ( object item in list )
+            if ( _currentComponent == null )
             {
-                if ( item == null )
+                await InformationDialog.ShowInformationDialog( this, "Load a component first" );
+                return;
+            }
+
+            int index = _currentComponent.Instructions.IndexOf( thisInstruction );
+
+            _currentComponent.DeleteInstruction( index );
+            await Logger.LogVerboseAsync( $"instruction '{thisInstruction.Action}' deleted at index #{index}" );
+
+            LoadComponentDetails( _currentComponent );
+        }
+
+        private async void MoveInstructionUp_Click( object sender, RoutedEventArgs e )
+        {
+            try
+            {
+                Button addButton = (Button)sender;
+                if ( !( addButton.Tag is Instruction thisInstruction ) )
                 {
-                    continue;
+                    await Logger.LogAsync( "Cannot find instruction instance from button." );
+                    return;
                 }
 
-                _ = serializedList.AppendLine( item.ToString() );
+                if ( _currentComponent == null )
+                {
+                    await InformationDialog.ShowInformationDialog( this, "Load a component first" );
+                    return;
+                }
+
+                int index = _currentComponent.Instructions.IndexOf( thisInstruction );
+
+                _currentComponent.MoveInstructionToIndex( thisInstruction, index - 1 );
+                LoadComponentDetails( _currentComponent );
             }
-
-            return serializedList.ToString();
-        }
-
-
-        public object ConvertBack( object value, Type targetType, object parameter, CultureInfo culture )
-        {
-            if ( !( value is string text ) )
+            catch ( Exception exception )
             {
-                return new List<string>();
+                await Logger.LogExceptionAsync( exception );
             }
-
-            string[] lines = text.Split( new[] { "\r\n", "\r", "\n" }, StringSplitOptions.RemoveEmptyEntries );
-            return targetType != typeof( List<Guid> )
-                ? lines.ToList()
-                : (object)lines.Select( line => Guid.TryParse( line, out Guid guid ) ? guid : Guid.Empty ).ToList();
         }
-    }
 
-    public class BooleanToArrowConverter : IValueConverter
-    {
-        public object Convert( object value, Type targetType, object parameter, CultureInfo culture ) =>
-            value is bool isExpanded && targetType == typeof( string ) ? isExpanded ? "▼" : "▶" : (object)string.Empty;
+        private async void MoveInstructionDown_Click( object sender, RoutedEventArgs e )
+        {
+            try
+            {
+                Button addButton = (Button)sender;
+                if ( !( addButton.Tag is Instruction thisInstruction ) )
+                {
+                    await Logger.LogAsync( "Cannot find instruction instance from button." );
+                    return;
+                }
 
-        public object ConvertBack( object value, Type targetType, object parameter, CultureInfo culture ) =>
-            throw new NotSupportedException();
+                if ( _currentComponent == null )
+                {
+                    await InformationDialog.ShowInformationDialog( this, "Load a component first" );
+                    return;
+                }
+
+                int index = _currentComponent.Instructions.IndexOf( thisInstruction );
+
+                _currentComponent.MoveInstructionToIndex( thisInstruction, index + 1 );
+                LoadComponentDetails( _currentComponent );
+            }
+            catch ( Exception exception )
+            {
+                await Logger.LogExceptionAsync( exception );
+            }
+        }
     }
 }

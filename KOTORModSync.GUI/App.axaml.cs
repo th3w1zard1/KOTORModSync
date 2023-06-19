@@ -7,7 +7,7 @@ using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 
-namespace KOTORModSync
+namespace KOTORModSync.GUI
 {
     public partial class App : Application
     {

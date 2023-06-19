@@ -9,7 +9,7 @@ using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
 using Component = KOTORModSync.Core.Component;
 
-namespace KOTORModSync
+namespace KOTORModSync.GUI
 {
     public class ComponentViewModel : INotifyPropertyChanged
     {
@@ -26,9 +26,7 @@ namespace KOTORModSync
             set
             {
                 if ( _isSelected == value )
-                {
                     return;
-                }
 
                 _isSelected = value;
                 OnPropertyChanged( nameof( IsSelected ) );

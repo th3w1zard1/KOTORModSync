@@ -134,9 +134,10 @@ namespace KOTORModSync.Core
             Dictionary<string, object> componentDict
                 = Serializer.ConvertTomlTableToDictionary( componentTable );
 
+            // reminder: ConvertTomlTableToDictionary lowercases all string keys automatically.
             Serializer.DeserializePath( componentDict, "paths" );
             Name = GetRequiredValue<string>( componentDict, "name" );
-            Logger.Log( $"\r\n== Deserialize next component '{Name}' ==" );
+            _ = Logger.LogAsync( $"\r\n== Deserialize next component '{Name}' ==" );
             Guid = GetRequiredValue<Guid>( componentDict, "guid" );
             Description = GetValueOrDefault<string>( componentDict, "description" );
             Directions = GetValueOrDefault<string>( componentDict, "directions" );
@@ -164,47 +165,7 @@ namespace KOTORModSync.Core
 
             // Validate and log additional errors/warnings.
             Validator = new ComponentValidation( this );
-            Logger.Log( $"Successfully deserialized component '{Name}'\r\n" );
-        }
-
-        [NotNull]
-        private Dictionary<Guid, Option> DeserializeOptions( [CanBeNull] TomlTableArray tomlObject )
-        {
-            if ( tomlObject == null )
-            {
-                Logger.LogVerbose( $"No options found for component '{Name}'" );
-                return new Dictionary<Guid, Option>();
-            }
-
-            var options = new Dictionary<Guid, Option>( 65535 );
-
-            foreach ( TomlTable item in tomlObject )
-            {
-                Dictionary<string, object> optionDict = Serializer.ConvertTomlTableToDictionary( item );
-
-                // ConvertTomlTableToDictionary lowercase all string keys.
-                Serializer.DeserializePath( optionDict, "source" );
-                Serializer.DeserializeGuidDictionary( optionDict, "restrictions" );
-                Serializer.DeserializeGuidDictionary( optionDict, "dependencies" );
-
-                var option = new Option
-                {
-                    Source = GetRequiredValue<List<string>>( optionDict, "source" ),
-                    Guid = GetValueOrDefault<Guid>( optionDict, "guid" ),
-                    Destination = GetRequiredValue<string>( optionDict, "destination" ),
-                    Restrictions = GetValueOrDefault<List<string>>( optionDict, "restrictions" )
-                    ?.Select( Guid.Parse )
-                    .ToList(),
-
-                    Dependencies = GetValueOrDefault<List<string>>( optionDict, "dependencies" )
-                    ?.Select( Guid.Parse )
-                    .ToList()
-                };
-
-                options.Add( Guid.NewGuid(), option ); // Generate a new GUID key for each option
-            }
-
-            return options;
+            _ = Logger.LogAsync( $"Successfully deserialized component '{Name}'\r\n" );
         }
 
         [NotNull]
@@ -212,7 +173,7 @@ namespace KOTORModSync.Core
         {
             if ( tomlObject == null )
             {
-                Logger.LogWarning( $"No instructions found for component '{Name}'" );
+                _ = Logger.LogWarningAsync( $"No instructions found for component '{Name}'" );
                 return new List<Instruction>();
             }
 
@@ -226,7 +187,7 @@ namespace KOTORModSync.Core
                 Dictionary<string, object> instructionDict
                     = Serializer.ConvertTomlTableToDictionary( item );
 
-                // ConvertTomlTableToDictionary lowercase all string keys.
+                // reminder: ConvertTomlTableToDictionary lowercases all string keys automatically.
                 Serializer.DeserializePath( instructionDict, "source" );
                 Serializer.DeserializeGuidDictionary( instructionDict, "restrictions" );
                 Serializer.DeserializeGuidDictionary( instructionDict, "dependencies" );
@@ -235,7 +196,7 @@ namespace KOTORModSync.Core
                 {
                     Action = GetRequiredValue<string>( instructionDict, "action" )
                 };
-                Logger.Log( $"\r\n-- Deserialize instruction #{index + 1} action {instruction.Action}" );
+                _ = Logger.LogAsync( $"\r\n-- Deserialize instruction #{index + 1} action {instruction.Action}" );
                 instruction.Arguments = GetValueOrDefault<string>( instructionDict, "arguments" );
                 instruction.Overwrite = GetValueOrDefault<bool>( instructionDict, "overwrite" );
 
@@ -275,6 +236,46 @@ namespace KOTORModSync.Core
             }
 
             return instructions;
+        }
+
+        [NotNull]
+        private Dictionary<Guid, Option> DeserializeOptions( [CanBeNull] TomlTableArray tomlObject )
+        {
+            if ( tomlObject == null )
+            {
+                _ = Logger.LogVerboseAsync( $"No options found for component '{Name}'" );
+                return new Dictionary<Guid, Option>();
+            }
+
+            var options = new Dictionary<Guid, Option>( 65535 );
+
+            foreach ( TomlTable item in tomlObject )
+            {
+                Dictionary<string, object> optionDict = Serializer.ConvertTomlTableToDictionary( item );
+
+                // reminder: ConvertTomlTableToDictionary lowercases all string keys automatically.
+                Serializer.DeserializePath( optionDict, "source" );
+                Serializer.DeserializeGuidDictionary( optionDict, "restrictions" );
+                Serializer.DeserializeGuidDictionary( optionDict, "dependencies" );
+
+                var option = new Option
+                {
+                    Source = GetRequiredValue<List<string>>( optionDict, "source" ),
+                    Guid = GetValueOrDefault<Guid>( optionDict, "guid" ),
+                    Destination = GetRequiredValue<string>( optionDict, "destination" ),
+                    Restrictions = GetValueOrDefault<List<string>>( optionDict, "restrictions" )
+                        ?.Select( Guid.Parse )
+                        .ToList(),
+
+                    Dependencies = GetValueOrDefault<List<string>>( optionDict, "dependencies" )
+                        ?.Select( Guid.Parse )
+                        .ToList()
+                };
+
+                options.Add( Guid.NewGuid(), option ); // Generate a new GUID key for each option
+            }
+
+            return options;
         }
 
         [CanBeNull]
@@ -642,11 +643,11 @@ namespace KOTORModSync.Core
                             bool checksumsMatch = await validator.ValidateChecksumsAsync();
                             if (checksumsMatch)
                             {
-                                Logger.Log($"Component {component.Name}'s instruction '{instruction.Action}' succeeded and modified files have expected checksums.");
+                                _ = Logger.LogAsync($"Component {component.Name}'s instruction '{instruction.Action}' succeeded and modified files have expected checksums.");
                             }
                             else
                             {
-                                Logger.Log($"Component {component.Name}'s instruction '{instruction.Action}' succeeded but modified files have unexpected checksums.");
+                                _ = Logger.LogAsync($"Component {component.Name}'s instruction '{instruction.Action}' succeeded but modified files have unexpected checksums.");
                                 bool confirmationResult = await confirmDialog.ShowConfirmationDialog("Warning! Checksums after running install step are not the same as expected. Continue anyway?");
                                 if (!confirmationResult)
                                 {
@@ -656,7 +657,7 @@ namespace KOTORModSync.Core
                         }
                         else
                         {
-                            Logger.Log($"Component {component.Name}'s instruction '{instruction.Action}' ran, saving the new checksums as expected.");
+                            _ = Logger.LogAsync($"Component {component.Name}'s instruction '{instruction.Action}' ran, saving the new checksums as expected.");
                             var newChecksums = new Dictionary<FileInfo, System.Security.Cryptography.SHA1>();
                             foreach (FileInfo file in MainConfig.DestinationPath.GetFiles("*.*", SearchOption.AllDirectories))
                             {
@@ -665,7 +666,7 @@ namespace KOTORModSync.Core
                             }
                         }*/
 
-                        await Logger.LogAsync( $"Successfully completed instruction #{i1 + 1} '{instruction.Action}'" );
+                        _ = Logger.LogAsync( $"Successfully completed instruction #{i1 + 1} '{instruction.Action}'" );
                     }
 
                     return (true, new Dictionary<FileInfo, SHA1>());
@@ -696,15 +697,75 @@ namespace KOTORModSync.Core
 
             List<string> archives = Validator.GetAllArchivesFromInstructions( this );
 
-            return archives.Count == 0
-                ? throw new InvalidOperationException( "No archives found." )
-                : Options.Values.Where(
-                option =>
-                    option.Source.Any(
-                        sourcePath =>
-                            archives.Contains( sourcePath )
-                    )
-            ).ToList();
+            if ( archives.Count == 0 )
+            {
+                throw new InvalidOperationException( "No archives found." );
+            }
+
+            List<Option> selectedOptions = new List<Option>();
+
+            foreach ( Option option in Options.Values )
+            {
+                foreach ( string sourcePath in option.Source )
+                {
+                    if ( !archives.Contains( sourcePath ) )
+                        continue;
+
+                    selectedOptions.Add( option );
+                    break;
+                }
+            }
+
+            return selectedOptions;
+        }
+
+        public void CreateInstruction( int index = 0)
+        {
+            var instruction = new Instruction();
+            if ( this.Instructions.Count == 0 )
+            {
+                if ( index != 0 )
+                {
+                    Logger.Log( "Cannot create instruction at index when list is empty." );
+                    return;
+                }
+
+                this.Instructions.Add( instruction );
+            }
+            else
+            {
+                this.Instructions.Insert( index, instruction );
+            }
+        }
+
+        public void DeleteInstruction( int index)
+        {
+            this.Instructions.RemoveAt( index );
+        }
+
+        public void MoveInstructionToIndex( Instruction thisInstruction, int index )
+        {
+            if ( thisInstruction == null || index < 0 || index >= Instructions.Count )
+            {
+                throw new ArgumentException( "Invalid instruction or index." );
+            }
+
+            int currentIndex = Instructions.IndexOf( thisInstruction );
+            if ( currentIndex < 0 )
+            {
+                throw new ArgumentException( "Instruction does not exist in the list." );
+            }
+
+            if ( index == currentIndex )
+            {
+                _ = Logger.LogAsync( $"Cannot move Instruction '{thisInstruction.Action}' from {currentIndex} to {index}. Reason: Indices are the same." );
+                return;
+            }
+
+            Instructions.RemoveAt( currentIndex );
+            Instructions.Insert( index, thisInstruction );
+
+            _ = Logger.LogVerboseAsync( $"Instruction '{thisInstruction.Action}' moved from {currentIndex} to {index}" );
         }
     }
 
@@ -724,13 +785,13 @@ namespace KOTORModSync.Core
             Message = message;
             IsError = isError;
 
-            Logger.Log(
+            _ = Logger.LogAsync(
                 $"{( IsError ? "[Error]" : "[Warning]" )}"
                 + $" Component: '{Component.Name}',"
                 + $" Instruction #{InstructionIndex + 1},"
                 + $" Action '{instruction.Action}'"
             );
-            Logger.Log( $"{( IsError ? "[Error]" : "[Warning]" )} {Message}" );
+            _ = Logger.LogAsync( $"{( IsError ? "[Error]" : "[Warning]" )} {Message}" );
         }
 
         public int InstructionIndex { get; }
@@ -882,7 +943,7 @@ namespace KOTORModSync.Core
                             result = IsSourcePathInArchives( path, allArchives, instruction );
                             if ( result.Item1 )
                             {
-                                Logger.Log( $"Fixing the above issue automatically..." );
+                                _ = Logger.LogAsync( $"Fixing the above issue automatically..." );
                                 instruction.Source[index] = path;
                             }
                         }
@@ -1011,7 +1072,7 @@ namespace KOTORModSync.Core
                         instruction.Destination = null;
 
                         break;
-                    // rename should never use <<kotorDirectory >>\\Override
+                    // rename should never use <<kotorDirectory>>\\Override
                     case "rename":
                         if ( instruction.Destination?.Equals(
                                 "<<kotorDirectory>>\\Override",
@@ -1032,7 +1093,9 @@ namespace KOTORModSync.Core
                         break;
                     default:
 
-                        string destinationPath = Utility.Utility.ReplaceCustomVariables( instruction.Destination );
+                        string destinationPath = string.Empty;
+                        if ( instruction.Destination != null)
+                            destinationPath = Utility.Utility.ReplaceCustomVariables( instruction.Destination );
                         if ( string.IsNullOrWhiteSpace( destinationPath )
                             || destinationPath.Any( c => Path.GetInvalidPathChars().Contains( c ) )
                             || !Directory.Exists( destinationPath ) )

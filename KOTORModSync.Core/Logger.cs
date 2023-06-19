@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
@@ -122,82 +123,43 @@ namespace KOTORModSync.Core
         {
             Log( $"Exception: {ex.GetType().Name} - {ex.Message}" );
             Log( $"Stack trace: {ex.StackTrace}" );
-            ExceptionLogged.Invoke( ex ); // Raise the ExceptionLogged event
 
             if ( !MainConfig.DebugLogging )
             {
                 return;
             }
 
-            // Get the current stack frame
-            var frame = new StackFrame( 1, true );
-            MethodBase method = frame.GetMethod();
-            Type declaringType = method.DeclaringType;
-
-            // Get the locals for the current stack frame
-            var list = new List<LocalVariableInfo>();
-            IList<LocalVariableInfo> localVariableInfos = method.GetMethodBody()?.LocalVariables;
-            if ( localVariableInfos == null )
+            StackTrace stackTrace = new StackTrace( ex, true );
+            for ( int i = 0; i < stackTrace.FrameCount; i++ )
             {
-                return;
-            }
+                StackFrame frame = stackTrace.GetFrame( i );
+                MethodBase method = frame.GetMethod();
+                Type declaringType = method.DeclaringType;
 
-            foreach ( LocalVariableInfo variable in localVariableInfos )
-            {
-                list.Add( variable );
-            }
+                Log( $"Local variables at frame {i}:" );
 
-            LocalVariableInfo[] localVariables = list?.ToArray();
-
-            // Log local variables information
-            Log( "Local Variables:" );
-            foreach ( LocalVariableInfo local in localVariables )
-            {
-                string localName = localVariableInfos?[local.LocalIndex].ToString();
-
-                if ( localName == null )
+                MethodInfo methodInfo = method as MethodInfo;
+                if ( methodInfo != null )
                 {
-                    continue;
-                }
-
-                if ( declaringType == null )
-                {
-                    continue;
-                }
-
-                MemberInfo[] members = declaringType.GetMember(
-                    localName,
-                    BindingFlags.GetField
-                    | BindingFlags.GetProperty
-                    | BindingFlags.Public
-                    | BindingFlags.NonPublic
-                    | BindingFlags.Instance
-                    | BindingFlags.Static
-                );
-
-                if ( members.Length == 0 )
-                {
-                    continue;
-                }
-
-                object value = null;
-                MemberInfo member = members[0];
-                switch ( member )
-                {
-                    case FieldInfo field when field.IsPublic || field.IsAssembly || field.IsFamilyOrAssembly:
-                        value = field.GetValue( member.ReflectedType );
-                        break;
-                    case PropertyInfo property when property.CanRead
-                        && ( property.GetGetMethod( true )?.IsPublic ?? false ):
+                    LocalVariableInfo[] localVariables = methodInfo.GetMethodBody()?.LocalVariables?.ToArray();
+                    if ( localVariables != null )
+                    {
+                        foreach ( LocalVariableInfo localVariable in localVariables )
                         {
-                            value = property.GetValue( null );
-                            break;
+                            object value = frame.GetMethod().GetMethodBody()?.LocalVariables[localVariable.LocalIndex];
+                            Log( $"{localVariable.LocalType} {localVariable} = {value}" );
                         }
+                    }
                 }
 
-                Log( $"- {localName}: {value}" );
+                Log( $"Method: {declaringType?.FullName}.{method.Name}" );
+                Log( $"File: {frame.GetFileName()}" );
+                Log( $"Line: {frame.GetFileLineNumber()}" );
             }
+
+            ExceptionLogged.Invoke( ex ); // Raise the ExceptionLogged event
         }
+
 
         private static void CurrentDomain_UnhandledException( object sender, UnhandledExceptionEventArgs e )
         {

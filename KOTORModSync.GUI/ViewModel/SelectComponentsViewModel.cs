@@ -10,7 +10,7 @@ using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
 
-namespace KOTORModSync.ViewModel
+namespace KOTORModSync.GUI.ViewModel
 {
     public class InstallerViewModel : UserControl
     {
@@ -167,9 +167,7 @@ namespace KOTORModSync.ViewModel
             set
             {
                 if ( _isSelected == value )
-                {
                     return;
-                }
 
                 _isSelected = value;
                 OnPropertyChanged( nameof( IsSelected ) );
@@ -222,9 +220,7 @@ namespace KOTORModSync.ViewModel
                 h =>
                 {
                     if ( !h.TryGetTarget( out EventHandler target ) || target != handler )
-                    {
                         return false;
-                    }
 
                     h.SetTarget( null );
                     return true;
@@ -237,9 +233,7 @@ namespace KOTORModSync.ViewModel
             foreach ( WeakReference<EventHandler> weakRef in _canExecuteChangedHandlers )
             {
                 if ( !weakRef.TryGetTarget( out EventHandler handler ) )
-                {
                     continue;
-                }
 
                 handler.Invoke( this, EventArgs.Empty );
             }

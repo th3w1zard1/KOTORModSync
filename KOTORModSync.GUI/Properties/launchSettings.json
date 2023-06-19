@@ -1,7 +1,8 @@
 {
   "profiles": {
     "KOTORModSync": {
-      "commandName": "Project"
+      "commandName": "Project",
+      "nativeDebugging": false
     },
     "WSL": {
       "commandName": "WSL2",

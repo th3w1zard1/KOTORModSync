@@ -192,10 +192,7 @@ namespace KOTORModSync.Core
                 Serializer.DeserializeGuidDictionary( instructionDict, "restrictions" );
                 Serializer.DeserializeGuidDictionary( instructionDict, "dependencies" );
 
-                var instruction = new Instruction
-                {
-                    Action = GetRequiredValue<string>( instructionDict, "action" )
-                };
+                var instruction = new Instruction { Action = GetRequiredValue<string>( instructionDict, "action" ) };
                 _ = Logger.LogAsync( $"\r\n-- Deserialize instruction #{index + 1} action {instruction.Action}" );
                 instruction.Arguments = GetValueOrDefault<string>( instructionDict, "arguments" );
                 instruction.Overwrite = GetValueOrDefault<bool>( instructionDict, "overwrite" );
@@ -266,7 +263,6 @@ namespace KOTORModSync.Core
                     Restrictions = GetValueOrDefault<List<string>>( optionDict, "restrictions" )
                         ?.Select( Guid.Parse )
                         .ToList(),
-
                     Dependencies = GetValueOrDefault<List<string>>( optionDict, "dependencies" )
                         ?.Select( Guid.Parse )
                         .ToList()
@@ -303,7 +299,9 @@ namespace KOTORModSync.Core
 
                 if ( caseInsensitiveKey == null )
                 {
-                    return !required ? (T)default : throw new ArgumentException( $"[Error] Missing or invalid '{key}' field." );
+                    return !required
+                        ? (T)default
+                        : throw new ArgumentException( $"[Error] Missing or invalid '{key}' field." );
                 }
 
                 value = dict[caseInsensitiveKey];
@@ -702,14 +700,16 @@ namespace KOTORModSync.Core
                 throw new InvalidOperationException( "No archives found." );
             }
 
-            List<Option> selectedOptions = new List<Option>();
+            var selectedOptions = new List<Option>();
 
             foreach ( Option option in Options.Values )
             {
                 foreach ( string sourcePath in option.Source )
                 {
                     if ( !archives.Contains( sourcePath ) )
+                    {
                         continue;
+                    }
 
                     selectedOptions.Add( option );
                     break;
@@ -738,10 +738,7 @@ namespace KOTORModSync.Core
             }
         }
 
-        public void DeleteInstruction( int index )
-        {
-            this.Instructions.RemoveAt( index );
-        }
+        public void DeleteInstruction( int index ) => Instructions.RemoveAt( index );
 
         public void MoveInstructionToIndex( Instruction thisInstruction, int index )
         {
@@ -758,14 +755,18 @@ namespace KOTORModSync.Core
 
             if ( index == currentIndex )
             {
-                _ = Logger.LogAsync( $"Cannot move Instruction '{thisInstruction.Action}' from {currentIndex} to {index}. Reason: Indices are the same." );
+                _ = Logger.LogAsync(
+                    $"Cannot move Instruction '{thisInstruction.Action}' from {currentIndex} to {index}. Reason: Indices are the same."
+                );
                 return;
             }
 
             Instructions.RemoveAt( currentIndex );
             Instructions.Insert( index, thisInstruction );
 
-            _ = Logger.LogVerboseAsync( $"Instruction '{thisInstruction.Action}' moved from {currentIndex} to {index}" );
+            _ = Logger.LogVerboseAsync(
+                $"Instruction '{thisInstruction.Action}' moved from {currentIndex} to {index}"
+            );
         }
     }
 
@@ -943,7 +944,7 @@ namespace KOTORModSync.Core
                             result = IsSourcePathInArchives( path, allArchives, instruction );
                             if ( result.Item1 )
                             {
-                                _ = Logger.LogAsync( $"Fixing the above issue automatically..." );
+                                _ = Logger.LogAsync( "Fixing the above issue automatically..." );
                                 instruction.Source[index] = path;
                             }
                         }
@@ -997,7 +998,7 @@ namespace KOTORModSync.Core
                     {
                         AddWarning(
                             $"Archive '{Path.GetFileName( realSourcePath )}'"
-                            + $" is referenced in a non 'extract' action. Was this intentional?",
+                            + " is referenced in a non 'extract' action. Was this intentional?",
                             instruction
                         );
                         continue;
@@ -1006,7 +1007,7 @@ namespace KOTORModSync.Core
                     if ( !File.Exists( realSourcePath ) )
                     {
                         AddError(
-                            $"Missing required download:"
+                            "Missing required download:"
                             + $" '{Path.GetFileNameWithoutExtension( realSourcePath )}'",
                             instruction
                         );
@@ -1037,7 +1038,7 @@ namespace KOTORModSync.Core
                     case "tslpatcher" when !instruction.Destination.Equals( "<<kotorDirectory>>" ):
                         success = false;
                         AddError(
-                            $"'Destination' key must be either null or string literal '<<kotorDirectory>>'"
+                            "'Destination' key must be either null or string literal '<<kotorDirectory>>'"
                             + $" for this action. Got '{instruction.Destination}'",
                             instruction
                         );
@@ -1058,7 +1059,7 @@ namespace KOTORModSync.Core
 
                         success = false;
                         AddError(
-                            $"'Destination' key cannot be used with this action."
+                            "'Destination' key cannot be used with this action."
                             + $" Got '{instruction.Destination}'",
                             instruction
                         );
@@ -1083,9 +1084,9 @@ namespace KOTORModSync.Core
                         {
                             success = false;
                             AddError(
-                                $"Incorrect 'Destination' format."
+                                "Incorrect 'Destination' format."
                                 + $" Got '{instruction.Destination}',"
-                                + $" expected a filename.",
+                                + " expected a filename.",
                                 instruction
                             );
                         }
@@ -1095,14 +1096,17 @@ namespace KOTORModSync.Core
 
                         string destinationPath = string.Empty;
                         if ( instruction.Destination != null )
+                        {
                             destinationPath = Utility.Utility.ReplaceCustomVariables( instruction.Destination );
+                        }
+
                         if ( string.IsNullOrWhiteSpace( destinationPath )
                             || destinationPath.Any( c => Path.GetInvalidPathChars().Contains( c ) )
                             || !Directory.Exists( destinationPath ) )
                         {
                             success = false;
                             AddError(
-                                $"Destination cannot be found!"
+                                "Destination cannot be found!"
                                 + $" Got '{destinationPath}'",
                                 instruction
                             );

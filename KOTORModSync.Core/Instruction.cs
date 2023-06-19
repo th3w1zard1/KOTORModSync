@@ -387,7 +387,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                                 new InvalidOperationException(
                                     $"Skipping file {sourcePath}"
                                     + $" ( A file with the name {Path.GetFileName( destinationFilePath )}"
-                                    + $" already exists )"
+                                    + " already exists )"
                                 )
                             );
                             continue;

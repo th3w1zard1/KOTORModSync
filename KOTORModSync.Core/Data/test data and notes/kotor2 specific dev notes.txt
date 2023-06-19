@@ -5,3 +5,5 @@ Integrate Options dialog to allow the user to choose customization options
 - Use existing code to parse the archive hierarchy to generate options dynamically when applicable.
   -- Add the relevant code to link up the Source of an Option to the archive
 - Use existing code from Instruction to implement GUID checks for Dependencies/Restrictions
+
+Implement method of validating source and destination keys in Instruction in real time. The problem with this is archives can be so large it can seriously slow down the app. At the very least we could implement 

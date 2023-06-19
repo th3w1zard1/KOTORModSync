@@ -5,22 +5,16 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
-using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Input;
-using Avalonia;
 using Avalonia.Collections;
 using Avalonia.Controls;
-using Avalonia.Data;
-using Avalonia.Data.Converters;
 using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
 using Avalonia.Threading;
-using Avalonia.Utilities;
 using JetBrains.Annotations;
 using KOTORModSync.Core;
 using KOTORModSync.Core.Utility;
@@ -28,181 +22,6 @@ using KOTORModSync.Core.Utility;
 // ReSharper disable UnusedParameter.Local
 // ReSharper disable MemberCanBeMadeStatic.Local
 // ReSharper disable AsyncVoidMethod
-
-namespace KOTORModSync.GUI.Converters
-{
-    public class IndexConverter : IValueConverter
-    {
-        public object Convert( object value, Type targetType, object parameter, CultureInfo culture )
-        {
-            if ( !( value is IEnumerable list ) || !( parameter is TextBlock textBlock ) || !( textBlock.Tag is ItemsRepeater itemsRepeater ) )
-            {
-                return string.Empty;
-            }
-
-            int index = -1;
-            if ( itemsRepeater.Tag is IEnumerable itemList )
-            {
-                index = itemList.Cast<object>().ToList().IndexOf( value );
-            }
-
-            return index.ToString();
-        }
-
-        public object ConvertBack( object value, Type targetType, object parameter, CultureInfo culture )
-        {
-            if ( !( value is string indexString ) || !( parameter is ItemsRepeater itemsRepeater ) )
-            {
-                return null;
-            }
-
-            if ( !int.TryParse( indexString, out int index ) || !( itemsRepeater.Tag is IEnumerable itemList ) )
-            {
-                return null;
-            }
-
-            IEnumerable enumerable = itemList.Cast<object>().ToList();
-            List<object> itemList2 = enumerable.Cast<object>().ToList();
-            if ( index < 0 || index >= itemList2.Count )
-            {
-                return null;
-            }
-
-            return itemList2[index];
-        }
-    }
-
-    public class ComboBoxItemConverter : IValueConverter
-    {
-        public object Convert( object value, Type targetType, object parameter, CultureInfo culture ) =>
-            value is string action
-                ? new ComboBoxItem { Content = action }
-                : (object)null;
-
-        public object ConvertBack( object value, Type targetType, object parameter, CultureInfo culture ) =>
-            value is ComboBoxItem comboBoxItem
-                ? comboBoxItem.Content?.ToString()
-                : (object)null;
-    }
-
-    public class EmptyCollectionConverter : IValueConverter
-    {
-        public object Convert( object value, Type targetType, object parameter, CultureInfo culture )
-        {
-            if ( value is ICollection collection && collection.Count == 0 )
-            {
-                return new List<string>() { string.Empty }; // Create a new collection with a default value
-            }
-
-            return value;
-        }
-
-        public object ConvertBack( object value, Type targetType, object parameter, CultureInfo culture ) =>
-            throw new NotSupportedException();
-    }
-
-    public class ListToStringConverter : IValueConverter
-    {
-        public object Convert( object value, Type targetType, object parameter, CultureInfo culture )
-        {
-            if ( !( value is IEnumerable list ) )
-            {
-                return string.Empty;
-            }
-
-            var serializedList = new StringBuilder();
-            foreach ( object item in list )
-            {
-                if ( item == null )
-                {
-                    continue;
-                }
-
-                _ = serializedList.AppendLine( item.ToString() );
-            }
-
-            return serializedList.ToString();
-        }
-
-
-        public object ConvertBack( object value, Type targetType, object parameter, CultureInfo culture )
-        {
-            if ( !( value is string text ) )
-            {
-                return new List<string>();
-            }
-
-            string[] lines = text.Split( new[] { "\r\n", "\r", "\n" }, StringSplitOptions.RemoveEmptyEntries );
-            return targetType != typeof( List<Guid> )
-                ? lines.ToList()
-                : (object)lines.Select( line => Guid.TryParse( line, out Guid guid ) ? guid : Guid.Empty ).ToList();
-        }
-    }
-
-    public class BooleanToArrowConverter : IValueConverter
-    {
-        public object Convert( object value, Type targetType, object parameter, CultureInfo culture ) =>
-            value is bool isExpanded && targetType == typeof( string ) ? isExpanded ? "▼" : "▶" : (object)string.Empty;
-
-        public object ConvertBack( object value, Type targetType, object parameter, CultureInfo culture ) =>
-            throw new NotSupportedException();
-    }
-
-    public class ActionConverter : IValueConverter
-    {
-        [CanBeNull]
-        public object Convert( [CanBeNull] object value, Type targetType, object parameter, CultureInfo culture )
-        {
-            if ( value == null )
-            {
-                return targetType.IsValueType ? AvaloniaProperty.UnsetValue : null;
-            }
-
-            if ( TypeUtilities.TryConvert( targetType, value, culture, out object result ) )
-            {
-                var validActions = new List<string>
-                {
-                    "move",
-                    "delduplicate",
-                    "copy",
-                    "rename",
-                    "tslpatcher",
-                    "execute",
-                    "delete",
-                    "choose",
-                    "extract"
-                };
-
-                if ( validActions.Contains( result ) )
-                {
-                    return result;
-                }
-
-                string msg = $"Valid actions are [{string.Join( ", ", validActions )}]";
-                return new BindingNotification( new ArgumentException( msg ), BindingErrorType.Error );
-            }
-
-            string message;
-
-            if ( TypeUtilities.IsNumeric( targetType ) )
-            {
-                message = $"'{value}' is not a valid number.";
-            }
-            else
-            {
-                message = $"Could not convert '{value}' to '{targetType.Name}'.";
-            }
-
-            return new BindingNotification( new InvalidCastException( message ), BindingErrorType.Error );
-        }
-
-        [CanBeNull]
-        public object ConvertBack( object value, Type targetType, object parameter, CultureInfo culture )
-        {
-            return Convert( value, targetType, parameter, culture );
-        }
-    }
-}
 
 namespace KOTORModSync
 {
@@ -405,7 +224,7 @@ namespace KOTORModSync
             {
                 if ( defaultExt == null )
                 {
-                    defaultExt = new List<string>() { "toml", "tml" };
+                    defaultExt = new List<string> { "toml", "tml" };
                 }
 
                 var dialog = new SaveFileDialog
@@ -462,9 +281,7 @@ namespace KOTORModSync
 
                 string[] results = isFolderDialog
                     ? new[] { await new OpenFolderDialog().ShowAsync( parent ) }
-                    : await new OpenFileDialog() { AllowMultiple = allowMultiple, Filters = filters }.ShowAsync(
-                        parent
-                    );
+                    : await new OpenFileDialog { AllowMultiple = allowMultiple, Filters = filters }.ShowAsync( parent );
 
                 if ( results == null || results.Length == 0 )
                 {
@@ -709,7 +526,7 @@ namespace KOTORModSync
                 if ( filePath == null )
                 {
                     _ = Logger.LogVerboseAsync(
-                        $"No file chosen in BrowseDestination_Click."
+                        "No file chosen in BrowseDestination_Click."
                         + $" Will continue using {thisInstruction.Destination}"
                     );
                     return;
@@ -848,7 +665,8 @@ namespace KOTORModSync
                 Component newComponent
                     = FileHelper.DeserializeTomlComponent(
                         Component.DefaultComponent + Instruction.DefaultInstructions
-                    ) ?? throw new NullReferenceException( "Could not deserialize default template" );
+                    )
+                    ?? throw new NullReferenceException( "Could not deserialize default template" );
 
                 newComponent.Guid = Guid.NewGuid();
                 newComponent.Name = "new mod_" + Path.GetRandomFileName();
@@ -1061,7 +879,7 @@ namespace KOTORModSync
                         async () =>
                         {
                             progressWindow.ProgressTextBlock.Text = $"Installing {component.Name}...\n\n"
-                                + $"Executing the provided directions...\n\n"
+                                + "Executing the provided directions...\n\n"
                                 + $"{component.Directions}";
                             progressWindow.ProgressBar.Value = (double)index / _components.Count;
 
@@ -1093,8 +911,8 @@ namespace KOTORModSync
                         bool? confirm = await ConfirmationDialog.ShowConfirmationDialog(
                             this,
                             $"There was a problem installing {component.Name},"
-                            + $" please check the output window."
-                            + $"\n\nContinue with the next mod anyway?"
+                            + " please check the output window."
+                            + "\n\nContinue with the next mod anyway?"
                         );
                         if ( confirm != true )
                         {
@@ -1156,7 +974,7 @@ namespace KOTORModSync
             }
             catch ( Exception ex )
             {
-                await Logger.LogExceptionAsync( ex, $"Error generating and saving documentation" );
+                await Logger.LogExceptionAsync( ex, "Error generating and saving documentation" );
                 await InformationDialog.ShowInformationDialog(
                     this,
                     "An unexpected error occurred while generating and saving documentation."
@@ -1542,7 +1360,7 @@ namespace KOTORModSync
             }
             catch ( Exception ex )
             {
-                Logger.LogException( ex, $"Unexpected exception while creating tree view item" );
+                Logger.LogException( ex, "Unexpected exception while creating tree view item" );
             }
         }
 
@@ -1597,28 +1415,9 @@ namespace KOTORModSync
             LoadComponentDetails( component );
         }
 
-        public class RelayCommand : ICommand
-        {
-            private readonly Func<object, bool> _canExecute;
-            private readonly Action<object> _execute;
-
-            public RelayCommand( Action<object> execute, [CanBeNull] Func<object, bool> canExecute = null )
-            {
-                _execute = execute ?? throw new ArgumentNullException( nameof( execute ) );
-                _canExecute = canExecute;
-            }
-
-#pragma warning disable CS0067 // warning is incorrect - it's used internally.
-            public event EventHandler CanExecuteChanged;
-#pragma warning restore CS0067
-
-            public bool CanExecute( object parameter ) => _canExecute == null || _canExecute( parameter );
-            public void Execute( object parameter ) => _execute( parameter );
-        }
-
         private async void AddNewInstruction_Click( object sender, RoutedEventArgs e )
         {
-            Button addButton = (Button)sender;
+            var addButton = (Button)sender;
             var thisInstruction = addButton.Tag as Instruction;
             var thisComponent = addButton.Tag as Component;
             if ( thisInstruction == null && thisComponent == null )
@@ -1652,7 +1451,7 @@ namespace KOTORModSync
 
         private async void DeleteInstruction_Click( object sender, RoutedEventArgs e )
         {
-            Button addButton = (Button)sender;
+            var addButton = (Button)sender;
             if ( !( addButton.Tag is Instruction thisInstruction ) )
             {
                 await Logger.LogAsync( "Cannot find instruction instance from button." );
@@ -1677,7 +1476,7 @@ namespace KOTORModSync
         {
             try
             {
-                Button addButton = (Button)sender;
+                var addButton = (Button)sender;
                 if ( !( addButton.Tag is Instruction thisInstruction ) )
                 {
                     await Logger.LogAsync( "Cannot find instruction instance from button." );
@@ -1705,7 +1504,7 @@ namespace KOTORModSync
         {
             try
             {
-                Button addButton = (Button)sender;
+                var addButton = (Button)sender;
                 if ( !( addButton.Tag is Instruction thisInstruction ) )
                 {
                     await Logger.LogAsync( "Cannot find instruction instance from button." );
@@ -1727,6 +1526,25 @@ namespace KOTORModSync
             {
                 await Logger.LogExceptionAsync( exception );
             }
+        }
+
+        public class RelayCommand : ICommand
+        {
+            private readonly Func<object, bool> _canExecute;
+            private readonly Action<object> _execute;
+
+            public RelayCommand( Action<object> execute, [CanBeNull] Func<object, bool> canExecute = null )
+            {
+                _execute = execute ?? throw new ArgumentNullException( nameof( execute ) );
+                _canExecute = canExecute;
+            }
+
+#pragma warning disable CS0067 // warning is incorrect - it's used internally.
+            public event EventHandler CanExecuteChanged;
+#pragma warning restore CS0067
+
+            public bool CanExecute( object parameter ) => _canExecute == null || _canExecute( parameter );
+            public void Execute( object parameter ) => _execute( parameter );
         }
     }
 }

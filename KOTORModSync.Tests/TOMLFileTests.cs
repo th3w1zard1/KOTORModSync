@@ -163,8 +163,7 @@ namespace KOTORModSync.Tests
 
                 AssertComponentEquality(
                     originalComponent,
-                    loadedComponent,
-                    true
+                    loadedComponent
                 );
             }
         }

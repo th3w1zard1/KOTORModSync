@@ -112,9 +112,6 @@
       <DependentUpon>SelectInstallComponents.axaml_unfinished</DependentUpon>
     </Compile>
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Converters\" />
-  </ItemGroup>
 
   <!-- WindowsDeleteString returntype changes from int to IntPtr HRESULT after net4.x We accommodate this change by replacing with our patches. -->
   <Target Name="PreBuild" BeforeTargets="PreBuildEvent">

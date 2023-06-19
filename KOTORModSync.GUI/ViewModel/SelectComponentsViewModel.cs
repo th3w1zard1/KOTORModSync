@@ -167,7 +167,9 @@ namespace KOTORModSync.GUI.ViewModel
             set
             {
                 if ( _isSelected == value )
+                {
                     return;
+                }
 
                 _isSelected = value;
                 OnPropertyChanged( nameof( IsSelected ) );
@@ -184,8 +186,8 @@ namespace KOTORModSync.GUI.ViewModel
     public class RelayCommand : ICommand
     {
         private readonly Func<bool> _canExecute;
-        private readonly Action _execute;
         private readonly List<WeakReference<EventHandler>> _canExecuteChangedHandlers;
+        private readonly Action _execute;
 
         public RelayCommand( Action execute )
             : this( execute, null )
@@ -220,7 +222,9 @@ namespace KOTORModSync.GUI.ViewModel
                 h =>
                 {
                     if ( !h.TryGetTarget( out EventHandler target ) || target != handler )
+                    {
                         return false;
+                    }
 
                     h.SetTarget( null );
                     return true;
@@ -233,7 +237,9 @@ namespace KOTORModSync.GUI.ViewModel
             foreach ( WeakReference<EventHandler> weakRef in _canExecuteChangedHandlers )
             {
                 if ( !weakRef.TryGetTarget( out EventHandler handler ) )
+                {
                     continue;
+                }
 
                 handler.Invoke( this, EventArgs.Empty );
             }

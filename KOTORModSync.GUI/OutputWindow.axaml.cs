@@ -44,14 +44,14 @@ namespace KOTORModSync
             _logBuilder = new StringBuilder( 65535 );
 
             // Subscribe to the Logger.Logged event to capture log messages
-            Logger.Logged += ( message ) =>
+            Logger.Logged += message =>
             {
                 _ = _logBuilder.AppendLine( message );
                 UpdateLogText();
             };
 
             // Subscribe to the Logger.ExceptionLogged event to capture exceptions
-            Logger.ExceptionLogged += ( ex ) =>
+            Logger.ExceptionLogged += ex =>
             {
                 _ = _logBuilder
                     .Append( "Exception: " ).Append( ex.GetType().Name ).Append( ": " )

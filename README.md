@@ -32,13 +32,23 @@ Then you can simply run the EXE like this in a terminal:
 
 `./KOTORModSync.exe`
 
+## Troubleshooting
+​
+When launching the application, if you see some text in the console and an instant crash to desktop, the most probable cause is you're using the wrong NET version.
+
+There's a log file created in the same location as the EXE that'll have the details. That log file is named:
+#### `kotormodsync_<date>.txt`
+
+It's important that you download the .NET version that closely matches the one your os uses. This will USUALLY be the following:
+Windows 10, 11, Linux, and Mac: Download `NET_6_0.zip`
+Windows Vista, 7, and 8: Determine whether you're on an x86 or x64 platform and download `NET_FRAMEWORK_46x_(PLATFORM).zip`
 
 ## Build instructions
 I'm honestly not sure what all you need, I was able to build and run it on both vs2019 and vs2022. From what I understand, the minimum build requirements are:
-- NET 6 or NET462 targetting platform and build tools
+- NET 6 or NET462 targeting platform and build tools
 - .NET Development Kit.
 
-All you need to do is build KOTORModSync.GUI, this should build the program into ./KOTORModSync.GUI/bin directory. Or run the command `dotnet build` then `dotnet run` inside KOTORModSync.GUI folder.
+All you need to do is build KOTORModSync.GUI. This should build the program into ./KOTORModSync.GUI/bin directory. Or run the command `dotnet build` then `dotnet run` inside KOTORModSync.GUI folder.
 
 #### KOTORModSync.GUI
 - Main GUI running on AvaloniaUI v0.10.x

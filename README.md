@@ -40,7 +40,9 @@ There's a log file created in the same location as the EXE that'll have the deta
 #### `kotormodsync_<date>.txt`
 
 It's important that you download the .NET version that closely matches the one your os uses. This will USUALLY be the following:
+
 Windows 10, 11, Linux, and Mac: Download `NET_6_0.zip`
+
 Windows Vista, 7, and 8: Determine whether you're on an x86 or x64 platform and download `NET_FRAMEWORK_46x_(PLATFORM).zip`
 
 ## Build instructions

@@ -14,6 +14,8 @@ using Avalonia.Collections;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
+using Avalonia.Markup.Xaml.Styling;
+using Avalonia.Styling;
 using Avalonia.Threading;
 using JetBrains.Annotations;
 using KOTORModSync.Core;
@@ -34,17 +36,21 @@ namespace KOTORModSync
 
         private RelayCommand _itemClickCommand;
         private string _originalContent;
+        private Window _outputWindow;
 
         public MainWindow()
         {
             InitializeComponent();
             DataContext = this;
-            //Testwindow();
+
+            // Initialize the logger
+            Logger.Initialize();
         }
 
         private MainConfig MainConfigInstance { get; set; }
         public ICommand ItemClickCommand => _itemClickCommand ?? ( _itemClickCommand = new RelayCommand( ItemClick ) );
 
+        // test the options dialog for use with the 'Options' TomlTable.
         public async void Testwindow()
         {
             // Create an instance of OptionsDialogCallback
@@ -1546,5 +1552,50 @@ namespace KOTORModSync
             public bool CanExecute( object parameter ) => _canExecute == null || _canExecute( parameter );
             public void Execute( object parameter ) => _execute( parameter );
         }
+
+        private async void OpenOutputWindow_Click( object sender, RoutedEventArgs e )
+        {
+            if ( _outputWindow != null && _outputWindow.IsVisible )
+            {
+                _outputWindow.Close();
+            }
+
+            _outputWindow = null;
+
+            if ( _outputWindow == null )
+            {
+                _outputWindow = new GUI.OutputWindow();
+                _outputWindow.Show();
+            }
+        }
+
+        private void StyleComboBox_SelectionChanged( object sender, SelectionChangedEventArgs e )
+        {
+            ComboBox comboBox = (ComboBox)sender;
+            ComboBoxItem selectedItem = (ComboBoxItem)comboBox.SelectedItem;
+
+            string stylePath = (string)selectedItem?.Tag;
+
+            if ( stylePath == null )
+            {
+                return;
+            }
+
+            this.Styles[0] = new Style();
+
+            if ( stylePath.Equals( "default" ) )
+            {
+                return;
+            }
+
+            Uri styleUriPath = new Uri( "avares://KOTORModSync.GUI" + stylePath );
+
+            // Apply the selected style dynamically
+            this.Styles[0] = new StyleInclude( styleUriPath )
+            {
+                Source = styleUriPath
+            };
+        }
+
     }
 }

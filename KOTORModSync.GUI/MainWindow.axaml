@@ -5,11 +5,10 @@
         x:Class="KOTORModSync.MainWindow"
         SizeToContent="Width"
 		Title="KOTORModSync"
-		Width="1200" Height="700" MinWidth="600" MinHeight="400"
-		Background="#05110D">
+		Width="1200" Height="700" MinWidth="600" MinHeight="400">
 
 	<Window.Styles>
-		<StyleInclude Source="/Styles/KotorStyle.axaml" />
+		<StyleInclude Source="/Styles/Kotor2Style.axaml" />
 	</Window.Styles>
 
 	<Window.Resources>
@@ -207,13 +206,14 @@
 			</TabItem>
 		</TabControl>
 		<StackPanel Grid.Row="1" Grid.Column="2">
-			<Grid Margin="0 5" RowDefinitions="*,*,*,*,*,*">
+			<Grid Margin="0 5" RowDefinitions="*,*,*,*,*,*,*">
 				<Button Content="Load Installation File" HorizontalContentAlignment="Center" Click="LoadInstallFile_Click" Grid.Row="0" HorizontalAlignment="Stretch" />
 				<Button Content="Generate Docs from Config" HorizontalContentAlignment="Center" Click="DocsButton_Click" Grid.Row="1" HorizontalAlignment="Stretch" />
 				<Button Content="Set Directories" HorizontalContentAlignment="Center" Click="SetDirectories_Click" Grid.Row="2" HorizontalAlignment="Stretch" />
 				<Button Content="Validate Config" HorizontalContentAlignment="Center" Click="ValidateButton_Click" Grid.Row="3" HorizontalAlignment="Stretch" />
 				<Button Content="Deserialize Markdown File" HorizontalContentAlignment="Center" Click="LoadMarkdown_Click" Grid.Row="4" HorizontalAlignment="Stretch" />
 				<Button Content="Install All" HorizontalContentAlignment="Center" Click="StartInstall_Click" Grid.Row="5" HorizontalAlignment="Stretch" />
+                <Button Content="Open Output Window" HorizontalContentAlignment="Center" Click="OpenOutputWindow_Click" Grid.Row="6" HorizontalAlignment="Stretch" />
 			</Grid>
 
 
@@ -223,7 +223,14 @@
 				<CheckBox Content="Auto-Fix Config Errors" IsChecked="{Binding attemptFixes}" Foreground="White" />
 				<CheckBox Content="Use TSLPatcherCLI" IsChecked="{Binding tslPatcherCli}" Foreground="White" ToolTip.Tip="Not tested - use at own risk"/>
 				<TextBlock Text="Compatibility Enforcement Level:" ToolTip.Tip="Determines which mods will be skipped."/>
-				<ComboBox Items="{Binding CompatibilityLevel}" SelectedItem="{Binding currentCompatibilityLevel}" />
+                <ComboBox Items="{Binding CompatibilityLevel}" SelectedItem="{Binding currentCompatibilityLevel}" />
+                <TextBlock Text="Theme"/>
+                <ComboBox x:Name="StyleComboBox" SelectedIndex="0"
+                          SelectionChanged="StyleComboBox_SelectionChanged">
+                    <ComboBoxItem Content="TSL Style" Tag="/Styles/Kotor2Style.axaml" />
+                    <ComboBoxItem Content="K1 Style" Tag="/Styles/KotorStyle.axaml" />
+                    <ComboBoxItem Content="Default Style" Tag="default" />
+                </ComboBox>
 				<TextBlock Text="Mod Location:" />
 				<TextBlock Text="{Binding sourcePathFullName}" MaxWidth="600"/>
 				<TextBlock Text="Kotor Directory:" />

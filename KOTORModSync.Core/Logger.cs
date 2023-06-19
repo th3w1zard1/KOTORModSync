@@ -135,22 +135,7 @@ namespace KOTORModSync.Core
                 MethodBase method = frame.GetMethod();
                 Type declaringType = method.DeclaringType;
 
-                Log( $"Local variables at frame {i}:" );
-
-                MethodInfo methodInfo = method as MethodInfo;
-                if ( methodInfo != null )
-                {
-                    LocalVariableInfo[] localVariables = methodInfo.GetMethodBody()?.LocalVariables?.ToArray();
-                    if ( localVariables != null )
-                    {
-                        foreach ( LocalVariableInfo localVariable in localVariables )
-                        {
-                            object value = frame.GetMethod().GetMethodBody()?.LocalVariables[localVariable.LocalIndex];
-                            Log( $"{localVariable.LocalType} {localVariable} = {value}" );
-                        }
-                    }
-                }
-
+                Log( $"Frame {i}:" );
                 Log( $"Method: {declaringType?.FullName}.{method.Name}" );
                 Log( $"File: {frame.GetFileName()}" );
                 Log( $"Line: {frame.GetFileLineNumber()}" );

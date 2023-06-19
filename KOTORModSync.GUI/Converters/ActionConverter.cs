@@ -33,12 +33,13 @@ namespace KOTORModSync.GUI.Converters
                     "rename",
                     "tslpatcher",
                     "execute",
+                    "run",
                     "delete",
                     "choose",
                     "extract"
                 };
 
-                if ( validActions.Contains( result ) )
+                if ( validActions.Any( action => string.Equals( action, (string)result, StringComparison.OrdinalIgnoreCase ) ) )
                 {
                     return result;
                 }

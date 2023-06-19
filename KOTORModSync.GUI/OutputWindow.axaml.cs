@@ -18,7 +18,7 @@ using Avalonia.Markup.Xaml;
 using Avalonia.Threading;
 using KOTORModSync.Core;
 
-namespace KOTORModSync
+namespace KOTORModSync.GUI
 {
     public partial class OutputWindow : Window
     {
@@ -30,16 +30,14 @@ namespace KOTORModSync
         {
             InitializeComponent();
             InitializeControls();
-            // Initialize the logger
-            Logger.Initialize();
         }
 
         private void InitializeComponent() => AvaloniaXamlLoader.Load( this );
 
         private void InitializeControls()
         {
-            _logTextBox = this.FindControl<TextBox>( "logTextBox" );
-            _logScrollViewer = this.FindControl<ScrollViewer>( "logScrollViewer" );
+            _logTextBox = this.FindControl<TextBox>( "LogTextBox" );
+            _logScrollViewer = this.FindControl<ScrollViewer>( "LogScrollViewer" );
 
             _logBuilder = new StringBuilder( 65535 );
 

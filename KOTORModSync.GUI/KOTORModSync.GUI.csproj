@@ -29,7 +29,6 @@
     <AllowEditAndContinue>false</AllowEditAndContinue>
     <DebugSymbols>false</DebugSymbols>
     <DebugType>portable</DebugType>
-    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
   
   <!-- Preferences: No error handling/optimizations so we can catch any problems before Release. -->
@@ -77,7 +76,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <AvaloniaXaml Update="Styles\DefaultStyle.axaml">
+    <AvaloniaXaml Update="Styles\LegacyStyle.axaml">
       <Generator>MSBuild:Compile</Generator>
     </AvaloniaXaml>
   </ItemGroup>

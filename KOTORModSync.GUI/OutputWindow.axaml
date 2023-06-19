@@ -3,19 +3,10 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-        x:Class="KOTORModSync.OutputWindow"
+        x:Class="KOTORModSync.GUI.OutputWindow"
         Title="Output Window">
     <Window.Styles>
-        <Style Selector="Window">
-            <Setter Property="Background" Value="#1B232F" />
-            <Setter Property="Foreground" Value="White" />
-        </Style>
-        <Style Selector="TextBlock">
-            <Setter Property="FontSize" Value="20" />
-            <Setter Property="FontWeight" Value="Bold" />
-            <Setter Property="HorizontalAlignment" Value="Center" />
-            <Setter Property="VerticalAlignment" Value="Center" />
-        </Style>
+        <StyleInclude Source="/Styles/LegacyStyle.axaml" />
         <Style Selector="ScrollViewer">
             <Setter Property="VerticalScrollBarVisibility" Value="Visible" />
             <Setter Property="HorizontalScrollBarVisibility" Value="Disabled" />
@@ -24,10 +15,14 @@
             <Setter Property="IsReadOnly" Value="True" />
             <Setter Property="TextWrapping" Value="Wrap" />
             <Setter Property="AcceptsReturn" Value="True" />
-            <Setter Property="Background" Value="#1B232F" />
-            <Setter Property="Foreground" Value="White" />
             <Setter Property="FontSize" Value="14" />
             <Setter Property="Padding" Value="5" />
+        </Style>
+        <Style Selector="TextBlock">
+            <Setter Property="FontSize" Value="20" />
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="HorizontalAlignment" Value="Center" />
+            <Setter Property="VerticalAlignment" Value="Center" />
         </Style>
     </Window.Styles>
     <Grid>

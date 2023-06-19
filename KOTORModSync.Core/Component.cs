@@ -719,7 +719,7 @@ namespace KOTORModSync.Core
             return selectedOptions;
         }
 
-        public void CreateInstruction( int index = 0)
+        public void CreateInstruction( int index = 0 )
         {
             var instruction = new Instruction();
             if ( this.Instructions.Count == 0 )
@@ -738,7 +738,7 @@ namespace KOTORModSync.Core
             }
         }
 
-        public void DeleteInstruction( int index)
+        public void DeleteInstruction( int index )
         {
             this.Instructions.RemoveAt( index );
         }
@@ -1094,7 +1094,7 @@ namespace KOTORModSync.Core
                     default:
 
                         string destinationPath = string.Empty;
-                        if ( instruction.Destination != null)
+                        if ( instruction.Destination != null )
                             destinationPath = Utility.Utility.ReplaceCustomVariables( instruction.Destination );
                         if ( string.IsNullOrWhiteSpace( destinationPath )
                             || destinationPath.Any( c => Path.GetInvalidPathChars().Contains( c ) )

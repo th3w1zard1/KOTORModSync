@@ -802,7 +802,7 @@ namespace KOTORModSync
                     return;
                 }
 
-                await Logger.LogAsync("Running validation of all components, this might take a while...");
+                await Logger.LogAsync( "Running validation of all components, this might take a while..." );
 
                 bool success = true;
                 foreach ( Component component in _components )

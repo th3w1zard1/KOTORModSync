@@ -207,7 +207,7 @@ namespace KOTORModSync.Core.Utility
         {
             Type type = obj.GetType();
 
-            switch (obj)
+            switch ( obj )
             {
                 // do nothing if it's already a simple type.
                 case IConvertible _:
@@ -621,7 +621,7 @@ namespace KOTORModSync.Core.Utility
             // Use regex to perform the wildcard matching
             return Regex.IsMatch( input, $"^{pattern}$" );
         }
-        
+
         public static bool IsPath
             ( string value ) => Path.IsPathRooted( value ) || Regex.IsMatch( value, @"^[a-zA-Z]:\\" );
 

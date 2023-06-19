@@ -2,7 +2,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -16,7 +15,7 @@ namespace KOTORModSync.Core
     {
         private const string LogFileName = "kotormodsync_";
 
-        private static bool s_isInitialized = false;
+        private static bool s_isInitialized;
         private static readonly object s_initializationLock = new object();
         private static readonly SemaphoreSlim s_semaphore = new SemaphoreSlim( 1 );
         public static event Action<string> Logged = delegate { };

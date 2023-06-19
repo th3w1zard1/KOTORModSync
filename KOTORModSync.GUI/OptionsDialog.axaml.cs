@@ -1,3 +1,6 @@
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -66,7 +69,7 @@ namespace KOTORModSync
 
         private void OnOpened( object sender, EventArgs e )
         {
-            var optionStackPanel = this.FindControl<StackPanel>( "OptionStackPanel" );
+            StackPanel optionStackPanel = this.FindControl<StackPanel>( "OptionStackPanel" );
 
             foreach ( string option in OptionsList )
             {

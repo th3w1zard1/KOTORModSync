@@ -210,7 +210,9 @@ namespace KOTORModSync.Tests
                 }
 
                 foreach ( object serializedItem in serializedList )
+                {
                     VerifyUniqueSerialization( serializedItem, serializedObjects );
+                }
 
                 return;
             }

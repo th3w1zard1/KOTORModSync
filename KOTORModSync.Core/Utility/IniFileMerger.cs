@@ -16,7 +16,9 @@ namespace KOTORModSync.Core.Utility
             {
                 _ = mergedIniData.Sections.AddSection( section.SectionName );
                 foreach ( KeyData key in section.Keys )
+                {
                     _ = mergedIniData[section.SectionName].AddKey( key.KeyName, key.Value );
+                }
             }
 
             // Merge sections and keys from iniData2
@@ -27,11 +29,15 @@ namespace KOTORModSync.Core.Utility
                 for ( int sectionNumber = 1;
                      mergedIniData.Sections.ContainsSection( mergedSectionName );
                      sectionNumber++ )
+                {
                     mergedSectionName = section.SectionName + sectionNumber;
+                }
 
                 _ = mergedIniData.Sections.AddSection( mergedSectionName );
                 foreach ( KeyData key in section.Keys )
+                {
                     _ = mergedIniData[mergedSectionName].AddKey( key.KeyName, key.Value );
+                }
             }
 
             return mergedIniData;

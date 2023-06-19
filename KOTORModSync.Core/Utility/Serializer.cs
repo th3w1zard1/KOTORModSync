@@ -396,12 +396,7 @@ namespace KOTORModSync.Core.Utility
                 }
             }
 
-            if ( serializedProperties.Count > 0 )
-            {
-                return serializedProperties;
-            }
-
-            return obj.ToString();
+            return serializedProperties.Count > 0 ? serializedProperties : (object)obj.ToString();
         }
 
         // ReSharper disable once SuggestBaseTypeForParameter
@@ -533,7 +528,9 @@ namespace KOTORModSync.Core.Utility
             var stringBuilder = new StringBuilder( 65535 );
 
             foreach ( Component thisComponent in components )
+            {
                 _ = stringBuilder.AppendLine( thisComponent.SerializeComponent() );
+            }
 
             string tomlString = stringBuilder.ToString();
             File.WriteAllText( filePath, tomlString );
@@ -583,7 +580,9 @@ namespace KOTORModSync.Core.Utility
             if ( tomlDocument.HasErrors )
             {
                 foreach ( DiagnosticMessage message in tomlDocument.Diagnostics )
+                {
                     Logger.Log( message.Message );
+                }
 
                 return null;
             }
@@ -601,7 +600,9 @@ namespace KOTORModSync.Core.Utility
             }
 
             foreach ( TomlTable tomlComponent in componentTables )
+            {
                 component.DeserializeComponent( tomlComponent );
+            }
 
             return component;
         }
@@ -614,6 +615,7 @@ namespace KOTORModSync.Core.Utility
             var uniquePaths = new HashSet<string>( filesAndFolders );
 
             foreach ( string path in uniquePaths.Where( path => !string.IsNullOrEmpty( path ) ) )
+            {
                 try
                 {
                     string backslashPath = path
@@ -699,6 +701,7 @@ namespace KOTORModSync.Core.Utility
                     // Handle or log the exception as required
                     Console.WriteLine( $"An error occurred while processing path '{path}': {ex.Message}" );
                 }
+            }
 
             return result;
         }
@@ -776,7 +779,9 @@ namespace KOTORModSync.Core.Utility
                 if ( tomlDocument.HasErrors )
                 {
                     foreach ( DiagnosticMessage message in tomlDocument.Diagnostics )
+                    {
                         Logger.LogException( new Exception( message.Message ) );
+                    }
                 }
 
                 TomlTable tomlTable = tomlDocument.ToModel();
@@ -800,7 +805,9 @@ namespace KOTORModSync.Core.Utility
                     }
 
                     foreach ( Instruction instruction in component.Instructions )
+                    {
                         instruction.SetParentComponent( component );
+                    }
                 }
 
                 return components;

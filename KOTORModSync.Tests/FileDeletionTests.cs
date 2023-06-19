@@ -3,14 +3,7 @@
 
 // ReSharper disable RedundantUsingDirective
 
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using KOTORModSync.Core;
-using NUnit.Framework;
 
 // ReSharper disable ConvertToConstant.Local
 #pragma warning disable U2U1000, CS8618, RCS1118 // Mark local variable as const.

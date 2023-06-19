@@ -187,17 +187,19 @@ namespace KOTORModSync.Core
                 Serializer.DeserializeGuidDictionary( optionDict, "restrictions" );
                 Serializer.DeserializeGuidDictionary( optionDict, "dependencies" );
 
-                var option = new Option();
-                option.Source = GetRequiredValue<List<string>>( optionDict, "source" );
-                option.Guid = GetValueOrDefault<Guid>( optionDict, "guid" );
-                option.Destination = GetRequiredValue<string>( optionDict, "destination" );
-                option.Restrictions = GetValueOrDefault<List<string>>( optionDict, "restrictions" )
+                var option = new Option
+                {
+                    Source = GetRequiredValue<List<string>>( optionDict, "source" ),
+                    Guid = GetValueOrDefault<Guid>( optionDict, "guid" ),
+                    Destination = GetRequiredValue<string>( optionDict, "destination" ),
+                    Restrictions = GetValueOrDefault<List<string>>( optionDict, "restrictions" )
                     ?.Select( Guid.Parse )
-                    .ToList();
+                    .ToList(),
 
-                option.Dependencies = GetValueOrDefault<List<string>>( optionDict, "dependencies" )
+                    Dependencies = GetValueOrDefault<List<string>>( optionDict, "dependencies" )
                     ?.Select( Guid.Parse )
-                    .ToList();
+                    .ToList()
+                };
 
                 options.Add( Guid.NewGuid(), option ); // Generate a new GUID key for each option
             }
@@ -229,8 +231,10 @@ namespace KOTORModSync.Core
                 Serializer.DeserializeGuidDictionary( instructionDict, "restrictions" );
                 Serializer.DeserializeGuidDictionary( instructionDict, "dependencies" );
 
-                var instruction = new Instruction();
-                instruction.Action = GetRequiredValue<string>( instructionDict, "action" );
+                var instruction = new Instruction
+                {
+                    Action = GetRequiredValue<string>( instructionDict, "action" )
+                };
                 Logger.Log( $"\r\n-- Deserialize instruction #{index + 1} action {instruction.Action}" );
                 instruction.Arguments = GetValueOrDefault<string>( instructionDict, "arguments" );
                 instruction.Overwrite = GetValueOrDefault<bool>( instructionDict, "overwrite" );
@@ -298,12 +302,7 @@ namespace KOTORModSync.Core
 
                 if ( caseInsensitiveKey == null )
                 {
-                    if ( !required )
-                    {
-                        return default;
-                    }
-
-                    throw new ArgumentException( $"[Error] Missing or invalid '{key}' field." );
+                    return !required ? (T)default : throw new ArgumentException( $"[Error] Missing or invalid '{key}' field." );
                 }
 
                 value = dict[caseInsensitiveKey];
@@ -371,10 +370,12 @@ namespace KOTORModSync.Core
 
                 var tomlTableArray = new TomlTableArray();
                 foreach ( object tomlValue in valueTomlArray )
+                {
                     if ( tomlValue is TomlTable table )
                     {
                         tomlTableArray.Add( table );
                     }
+                }
 
                 return (T)(object)tomlTableArray;
             }
@@ -404,8 +405,8 @@ namespace KOTORModSync.Core
         public async Task<(bool success, Dictionary<FileInfo, SHA1> originalChecksums)>
             ExecuteInstructions
             (
-                Utility.CallbackObjects.IConfirmationDialogCallback confirmDialog,
-                Utility.CallbackObjects.IOptionsDialogCallback optionsDialog,
+                CallbackObjects.IConfirmationDialogCallback confirmDialog,
+                CallbackObjects.IOptionsDialogCallback optionsDialog,
                 List<Component> componentsList
             )
         {
@@ -695,12 +696,9 @@ namespace KOTORModSync.Core
 
             List<string> archives = Validator.GetAllArchivesFromInstructions( this );
 
-            if ( archives.Count == 0 )
-            {
-                throw new InvalidOperationException( "No archives found." );
-            }
-
-            return Options.Values.Where(
+            return archives.Count == 0
+                ? throw new InvalidOperationException( "No archives found." )
+                : Options.Values.Where(
                 option =>
                     option.Source.Any(
                         sourcePath =>
@@ -965,6 +963,7 @@ namespace KOTORModSync.Core
         {
             bool success = true;
             foreach ( Instruction instruction in component.Instructions )
+            {
                 switch ( instruction.Action )
                 {
                     case null:
@@ -1059,6 +1058,7 @@ namespace KOTORModSync.Core
 
                         break;
                 }
+            }
 
             return success;
         }
@@ -1203,10 +1203,12 @@ namespace KOTORModSync.Core
 
                 // check if instruction.Source matches a folder.
                 foreach ( string folderPath in folderPaths )
+                {
                     if ( FileHelper.WildcardMatch( folderPath, relativePath ) )
                     {
                         return ArchivePathCode.FoundSuccessfully;
                     }
+                }
 
                 // quickly parse the path so the verbose log below is accurate.
                 string result = relativePath;

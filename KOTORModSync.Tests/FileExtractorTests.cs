@@ -46,12 +46,14 @@ namespace KOTORModSync.Tests
             bool extractionResult = await new Instruction().ExtractFileAsync( _destinationPath, _sourcePaths );
 
             // Assert
-            Assert.Multiple( () =>
-            {
-                Assert.That( extractionResult, Is.True );
-                // Add more specific assertions if necessary
-                Assert.That( Directory.Exists( _destinationPath?.FullName ), Is.True );
-            } );
+            Assert.Multiple(
+                () =>
+                {
+                    Assert.That( extractionResult, Is.True );
+                    // Add more specific assertions if necessary
+                    Assert.That( Directory.Exists( _destinationPath?.FullName ), Is.True );
+                }
+            );
         }
 
         [Test]
@@ -66,12 +68,14 @@ namespace KOTORModSync.Tests
             bool extractionResult = await new Instruction().ExtractFileAsync( _destinationPath, _sourcePaths );
 
             // Assert
-            Assert.Multiple( () =>
-            {
-                Assert.That( extractionResult, Is.False );
-                // Add more specific assertions if necessary
-                Assert.That( Directory.Exists( _destinationPath?.FullName ), Is.False );
-            } );
+            Assert.Multiple(
+                () =>
+                {
+                    Assert.That( extractionResult, Is.False );
+                    // Add more specific assertions if necessary
+                    Assert.That( Directory.Exists( _destinationPath?.FullName ), Is.False );
+                }
+            );
         }
 
         [Test]
@@ -87,12 +91,14 @@ namespace KOTORModSync.Tests
             bool extractionResult = await new Instruction().ExtractFileAsync( _destinationPath, _sourcePaths );
 
             // Assert
-            Assert.Multiple( () =>
-            {
-                Assert.That( extractionResult, Is.True );
-                // Add more specific assertions if necessary
-                Assert.That( Directory.Exists( _destinationPath?.FullName ), Is.True );
-            } );
+            Assert.Multiple(
+                () =>
+                {
+                    Assert.That( extractionResult, Is.True );
+                    // Add more specific assertions if necessary
+                    Assert.That( Directory.Exists( _destinationPath?.FullName ), Is.True );
+                }
+            );
         }
 
         [Test]
@@ -107,12 +113,14 @@ namespace KOTORModSync.Tests
             bool extractionResult = await new Instruction().ExtractFileAsync( _destinationPath, _sourcePaths );
 
             // Assert
-            Assert.Multiple( () =>
-            {
-                Assert.That( extractionResult, Is.True );
-                // Add more specific assertions if necessary
-                Assert.That( Directory.Exists( _destinationPath?.FullName ), Is.True );
-            } );
+            Assert.Multiple(
+                () =>
+                {
+                    Assert.That( extractionResult, Is.True );
+                    // Add more specific assertions if necessary
+                    Assert.That( Directory.Exists( _destinationPath?.FullName ), Is.True );
+                }
+            );
         }
 
         // Helper methods to create temporary archive files

@@ -134,19 +134,15 @@ namespace KOTORModSync
 
                 // Add child TreeViewItems to the parent TreeViewItem
                 var items = treeViewItem.Items as IList;
-                foreach ( TreeViewItem childItem in childItems.Values
-                             .Where(
-                                 childItem => childItem == null
-                                     ? throw new ArgumentNullException( nameof( childItem ) )
-                                     : items != null
-                             ) )
+                foreach ( TreeViewItem childItem in childItems.Values )
                 {
-                    if ( items == null )
+                    if ( childItem != null
+                            ? items != null
+                            : throw new ArgumentNullException( nameof( childItem ) )
+                       )
                     {
-                        continue;
+                        _ = items.Add( childItem );
                     }
-
-                    _ = items.Add( childItem );
                 }
 
                 return treeViewItem;
@@ -332,7 +328,9 @@ namespace KOTORModSync
                     = components.FirstOrDefault( c => c.Guid == component.Guid && c != component );
 
                 if ( duplicateComponent == null )
+                {
                     continue;
+                }
 
                 if ( !Guid.TryParse( duplicateComponent.Guid.ToString(), out Guid _ ) )
                 {
@@ -355,7 +353,8 @@ namespace KOTORModSync
                     || await ConfirmationDialog.ShowConfirmationDialog(
                         this,
                         $"{message}.\r\nAssign a random GUID to '{duplicateComponent.Name}'? (default: NO)"
-                    ) == true;
+                    )
+                    == true;
 
                 if ( confirm == true )
                 {
@@ -447,7 +446,8 @@ namespace KOTORModSync
                         && await ConfirmationDialog.ShowConfirmationDialog(
                             this,
                             "You already have a config loaded. Do you want to load the markdown anyway?"
-                        ) != true )
+                        )
+                        != true )
                     {
                         return;
                     }
@@ -585,6 +585,7 @@ namespace KOTORModSync
 
                 if ( !CheckForChanges() )
                 {
+                    await Logger.LogVerboseAsync( "No changes detected, ergo nothing to save." );
                     return;
                 }
 
@@ -722,15 +723,22 @@ namespace KOTORModSync
                     "Please select your KOTOR(2) directory. (e.g. \"C:\\Program Files (x86)\\Steam\\steamapps\\common\\Knights of the Old Republic II\")"
                 );
                 string chosenFolder = await OpenFolder();
-                var kotorInstallDir = new DirectoryInfo( chosenFolder );
-                MainConfigInstance.destinationPath = kotorInstallDir;
+                if ( chosenFolder != null )
+                {
+                    var kotorInstallDir = new DirectoryInfo( chosenFolder );
+                    MainConfigInstance.destinationPath = kotorInstallDir;
+                }
+
                 await InformationDialog.ShowInformationDialog(
                     this,
                     "Please select your mod directory (where the archives live)."
                 );
                 chosenFolder = await OpenFolder();
-                var modDirectory = new DirectoryInfo( chosenFolder );
-                MainConfigInstance.sourcePath = modDirectory;
+                if ( chosenFolder != null )
+                {
+                    var modDirectory = new DirectoryInfo( chosenFolder );
+                    MainConfigInstance.sourcePath = modDirectory;
+                }
             }
             catch ( ArgumentNullException )
             {
@@ -932,7 +940,9 @@ namespace KOTORModSync
         private void ProgressWindowClosed( object sender, EventArgs e )
         {
             if ( !( sender is ProgressWindow progressWindow ) )
+            {
                 return;
+            }
 
             progressWindow.ProgressBar.Value = 0;
             progressWindow.Closed -= ProgressWindowClosed;
@@ -1052,18 +1062,11 @@ namespace KOTORModSync
                     }
                 }
 
-                // ReSharper disable once BuiltInTypeReferenceStyleForMemberAccess
-#pragma warning disable IDE0079 // Remove unnecessary suppression
-#pragma warning disable IDE0049 // Simplify Names
-
                 // default to GuiEditTabItem.
-                if ( InitialTab.IsSelected || TabControl.SelectedIndex == Int32.MaxValue )
+                if ( InitialTab.IsSelected || TabControl.SelectedIndex == int.MaxValue )
                 {
                     TabControl.SelectedItem = GuiEditTabItem;
                 }
-
-#pragma warning restore IDE0049 // Simplify Names
-#pragma warning restore IDE0079 // Remove unnecessary suppression
 
                 // populate raw editor
                 RawEditTextBox.Text = _originalContent;
@@ -1130,7 +1133,8 @@ namespace KOTORModSync
                     );
 
                 RefreshTreeView(); // Refresh the tree view to reflect the changes
-                return (true, $"Saved {newComponent.Name} successfully. Refer to the output window for more information.");
+                return (true,
+                    $"Saved {newComponent.Name} successfully. Refer to the output window for more information.");
             }
             catch ( InvalidDataException ex )
             {
@@ -1279,14 +1283,20 @@ namespace KOTORModSync
                 foreach ( object item in parentItem.Items )
                 {
                     if ( !( item is TreeViewItem treeViewItem ) )
+                    {
                         continue;
+                    }
 
                     string headerString = treeViewItem.Header?.ToString();
                     if ( headerString == null )
+                    {
                         continue;
+                    }
 
                     if ( !headerString.Equals( componentName, StringComparison.Ordinal ) )
+                    {
                         continue;
+                    }
 
                     existingItem = treeViewItem;
                     break;
@@ -1330,12 +1340,15 @@ namespace KOTORModSync
 
                 // Iterate over the dependencies and create tree view items
                 foreach ( string dependencyGuid in component.Dependencies )
+                {
                     try
                     {
                         // Find the dependency in the components list
                         Component dependency = _components.Find( c => c.Guid == new Guid( dependencyGuid ) );
                         if ( dependency == null )
+                        {
                             continue;
+                        }
 
                         // Create the dependency tree view item
                         CreateTreeViewItem( dependency, componentItem );
@@ -1345,6 +1358,7 @@ namespace KOTORModSync
                         // Usually catches invalid guid from the user
                         Logger.LogException( ex );
                     }
+                }
             }
             catch ( Exception ex )
             {
@@ -1361,15 +1375,14 @@ namespace KOTORModSync
             using ( var writer = new StreamWriter( filePath ) )
             {
                 foreach ( TreeViewItem item in items )
+                {
                     WriteTreeViewItemToFile( item, writer, maxDepth: 1 );
+                }
             }
         }
 
         private static void WriteTreeViewItemToFile
-            // ReSharper disable once BuiltInTypeReferenceStyleForMemberAccess
-#pragma warning disable IDE0049 // Simplify Names
-            ( ItemsControl item, TextWriter writer, int depth = 0, int maxDepth = Int32.MaxValue )
-#pragma warning restore IDE0049 // Simplify Names
+            ( ItemsControl item, TextWriter writer, int depth = 0, int maxDepth = int.MaxValue )
         {
             if ( item.Tag is Component component )
             {
@@ -1383,7 +1396,9 @@ namespace KOTORModSync
             }
 
             foreach ( TreeViewItem childItem in item.Items.OfType<TreeViewItem>() )
+            {
                 WriteTreeViewItemToFile( childItem, writer, depth + 1, maxDepth );
+            }
         }
 
         // used for leftTreeView double-click event.
@@ -1424,13 +1439,11 @@ namespace KOTORModSync
 
     public class ComboBoxItemConverter : IValueConverter
     {
-        [CanBeNull]
         public object Convert( object value, Type targetType, object parameter, CultureInfo culture ) =>
             value is string action
                 ? new ComboBoxItem { Content = action }
                 : (object)null;
 
-        [CanBeNull]
         public object ConvertBack( object value, Type targetType, object parameter, CultureInfo culture ) =>
             value is ComboBoxItem comboBoxItem
                 ? comboBoxItem.Content?.ToString()
@@ -1449,8 +1462,7 @@ namespace KOTORModSync
             return value;
         }
 
-        public object ConvertBack
-            ( object value, Type targetType, object parameter, CultureInfo culture ) =>
+        public object ConvertBack( object value, Type targetType, object parameter, CultureInfo culture ) =>
             throw new NotSupportedException();
     }
 
@@ -1486,23 +1498,18 @@ namespace KOTORModSync
             }
 
             string[] lines = text.Split( new[] { "\r\n", "\r", "\n" }, StringSplitOptions.RemoveEmptyEntries );
-            if ( targetType != typeof( List<Guid> ) )
-            {
-                return lines.ToList();
-            }
-
-            return lines.Select( line => Guid.TryParse( line, out Guid guid ) ? guid : Guid.Empty ).ToList();
+            return targetType != typeof( List<Guid> )
+                ? lines.ToList()
+                : (object)lines.Select( line => Guid.TryParse( line, out Guid guid ) ? guid : Guid.Empty ).ToList();
         }
     }
 
     public class BooleanToArrowConverter : IValueConverter
     {
-        public object Convert
-            ( object value, Type targetType, object parameter, CultureInfo culture ) =>
+        public object Convert( object value, Type targetType, object parameter, CultureInfo culture ) =>
             value is bool isExpanded && targetType == typeof( string ) ? isExpanded ? "▼" : "▶" : (object)string.Empty;
 
-        public object ConvertBack
-            ( object value, Type targetType, object parameter, CultureInfo culture ) =>
+        public object ConvertBack( object value, Type targetType, object parameter, CultureInfo culture ) =>
             throw new NotSupportedException();
     }
 }

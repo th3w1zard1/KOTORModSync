@@ -83,7 +83,9 @@ namespace KOTORModSync.ConsoleApp
                                 $"Found {modFiles.Length} mod files in directory '{modDownloads.FullName}':"
                             );
                             foreach ( string modFile in modFiles )
+                            {
                                 Console.WriteLine( $"  {Path.GetFileName( modFile )}" );
+                            }
 
                             Console.WriteLine(
                                 "Please specify the location of your KOTOR2 installation folder (e.g. \"C:\\Program Files (x86)\\Steam\\steamapps\\common\\Knights of the Old Republic II\")"

@@ -29,7 +29,9 @@ namespace KOTORModSync.Tests
                 Logger.Log( "Here are the currently running processes on the machine:" );
                 Process[] processes = Process.GetProcesses();
                 foreach ( Process process in processes )
+                {
                     Logger.Log( $"{process.ProcessName} (ID: {process.Id})" );
+                }
 
                 Logger.Log( "Standard output from the timed-out process:" );
                 (int exitCode, string output, string error) = PlatformAgnosticMethods.TryExecuteCommand( "echo" );

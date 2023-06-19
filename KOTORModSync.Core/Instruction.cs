@@ -583,6 +583,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
             {
                 bool isSuccess = true; // Track the success status
                 foreach ( string sourcePath in RealSourcePaths )
+                {
                     try
                     {
                         if ( Action == "TSLPatcher" )
@@ -615,6 +616,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                         await Logger.LogExceptionAsync( ex );
                         return false;
                     }
+                }
 
                 return isSuccess;
             }

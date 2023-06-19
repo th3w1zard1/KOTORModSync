@@ -44,7 +44,7 @@ namespace KOTORModSync
         private void UpdateInfoText() => Dispatcher.UIThread.InvokeAsync(
             () =>
             {
-                var textBlock = this.FindControl<TextBlock>( "InfoTextBlock" );
+                TextBlock textBlock = this.FindControl<TextBlock>( "InfoTextBlock" );
                 textBlock.Text = InfoText;
             }
         );

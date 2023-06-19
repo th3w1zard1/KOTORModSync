@@ -6,7 +6,6 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -29,7 +28,7 @@ namespace KOTORModSync.Core.Utility
                 Parallel.Invoke( () => maxParallelism = Math.Max( 1, maxParallelism / 2 ) );
             }
 
-            Task<double> maxDiskSpeedTask = Task.Run( () => GetMaxDiskSpeed( Path.GetPathRoot( thisDir.FullName ) ) );
+            var maxDiskSpeedTask = Task.Run( () => GetMaxDiskSpeed( Path.GetPathRoot( thisDir.FullName ) ) );
             double maxDiskSpeed = await maxDiskSpeedTask;
 
             const double diskSpeedThreshold = 100.0; // MB/sec threshold
@@ -96,12 +95,7 @@ namespace KOTORModSync.Core.Utility
             }
 
             Match match = Regex.Match( output, pattern );
-            if ( match.Success && long.TryParse( match.Value, out long memory ) )
-            {
-                return memory;
-            }
-
-            return 0;
+            return match.Success && long.TryParse( match.Value, out long memory ) ? memory : 0;
         }
 
 
@@ -393,6 +387,7 @@ namespace KOTORModSync.Core.Utility
             var ex = new Exception();
             bool startedProcess = false;
             foreach ( ProcessStartInfo startInfo in processStartInfosWithFallbacks )
+            {
                 try
                 {
                     // K1CP can take ages to install, set the timeout time to an hour.
@@ -475,6 +470,7 @@ namespace KOTORModSync.Core.Utility
                     await Logger.LogExceptionAsync( startinfoException );
                     return (-6, string.Empty, string.Empty);
                 }
+            }
 
             if ( startedProcess )
             {

@@ -71,7 +71,9 @@ namespace KOTORModSync.Tests
 
             // Clean up
             foreach ( FileInfo fileInfo in expectedChecksums.Keys )
+            {
                 File.Delete( fileInfo.FullName );
+            }
 
             Directory.Delete( testFolderPath, true );
 
@@ -174,6 +176,7 @@ namespace KOTORModSync.Tests
 
                     // Check each loaded checksum
                     foreach ( KeyValuePair<FileInfo, SHA1> loadedChecksum in loadedChecksums )
+                    {
                         Assert.Multiple(
                             () =>
                             {
@@ -188,6 +191,7 @@ namespace KOTORModSync.Tests
                                 );
                             }
                         );
+                    }
                 }
                 finally
                 {

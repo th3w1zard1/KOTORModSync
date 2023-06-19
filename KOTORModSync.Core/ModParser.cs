@@ -53,12 +53,7 @@ namespace KOTORModSync.Core
             string pattern = $@"(?i)\*\*{propertyName}:\*\* ([^_*]+)";
             Match match = Regex.Match( text, pattern, RegexOptions.Singleline );
 
-            if ( !match.Success )
-            {
-                return string.Empty;
-            }
-
-            return match.Groups[1].Value.Trim();
+            return !match.Success ? string.Empty : match.Groups[1].Value.Trim();
         }
 
         private static string GetName( (string, string) nameAndModLink ) => nameAndModLink.Item1;

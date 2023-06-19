@@ -5,7 +5,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
@@ -46,8 +45,7 @@ namespace KOTORModSync.Core
             }
         }
 
-        public static Task LogAsync
-            ( string message ) =>
+        public static Task LogAsync( string message ) =>
             LogInternalAsync( message ); // Start the logging operation asynchronously without awaiting it
 
         private static async Task LogInternalAsync( string internalMessage )
@@ -140,10 +138,15 @@ namespace KOTORModSync.Core
             var list = new List<LocalVariableInfo>();
             IList<LocalVariableInfo> localVariableInfos = method.GetMethodBody()?.LocalVariables;
             if ( localVariableInfos == null )
+            {
                 return;
+            }
 
             foreach ( LocalVariableInfo variable in localVariableInfos )
+            {
                 list.Add( variable );
+            }
+
             LocalVariableInfo[] localVariables = list?.ToArray();
 
             // Log local variables information
@@ -214,7 +217,9 @@ namespace KOTORModSync.Core
             }
 
             foreach ( Exception ex in e.Exception.InnerExceptions )
+            {
                 LogException( ex );
+            }
 
             e.SetObserved();
         }

@@ -14,7 +14,7 @@ namespace KOTORModSync.ViewModel
 {
     public class InstallerViewModel : UserControl
     {
-        private List<Component> allComponents;
+        private readonly List<Component> allComponents;
         private ConfirmationScreenViewModel confirmationScreenViewModel;
         private InstallationProgressScreenViewModel installationProgressScreenViewModel;
         private ResultsScreenViewModel resultsScreenViewModel;
@@ -187,7 +187,7 @@ namespace KOTORModSync.ViewModel
     {
         private readonly Func<bool> _canExecute;
         private readonly Action _execute;
-        private List<WeakReference<EventHandler>> _canExecuteChangedHandlers;
+        private readonly List<WeakReference<EventHandler>> _canExecuteChangedHandlers;
 
         public RelayCommand( Action execute )
             : this( execute, null )
@@ -213,7 +213,7 @@ namespace KOTORModSync.ViewModel
 
         private void AddWeakEventHandler( EventHandler handler )
         {
-            _canExecuteChangedHandlers.RemoveAll( h => !h.TryGetTarget( out _ ) );
+            _ = _canExecuteChangedHandlers.RemoveAll( h => !h.TryGetTarget( out _ ) );
             _canExecuteChangedHandlers.Add( new WeakReference<EventHandler>( handler ) );
         }
 
@@ -233,7 +233,7 @@ namespace KOTORModSync.ViewModel
 
         public void RaiseCanExecuteChanged()
         {
-            _canExecuteChangedHandlers.RemoveAll( h => !h.TryGetTarget( out _ ) );
+            _ = _canExecuteChangedHandlers.RemoveAll( h => !h.TryGetTarget( out _ ) );
             foreach ( WeakReference<EventHandler> weakRef in _canExecuteChangedHandlers )
             {
                 if ( !weakRef.TryGetTarget( out EventHandler handler ) )

@@ -71,7 +71,6 @@ namespace KOTORModSync.Core.Utility
             if ( allChecksumsMatch ) return allChecksumsMatch;
 
             await Logger.LogAsync( "Checksum validation failed for the following files:" );
-            bool thisMatch = true;
             foreach ( KeyValuePair<FileInfo, SHA1> expectedChecksum in _expectedChecksums )
             {
                 FileInfo expectedFileInfo = expectedChecksum.Key;
@@ -83,20 +82,17 @@ namespace KOTORModSync.Core.Utility
                     await Logger.LogAsync(
                         $"Problem looking up sha1 of {expectedFileInfo.FullName} - expected: {expectedSha1String}"
                     );
-                    thisMatch = false;
                     continue;
                 }
 
                 if ( actualSha1.Equals( expectedSha1String, StringComparison.OrdinalIgnoreCase ) )
                 {
-                    thisMatch = false;
                     continue;
                 }
 
                 await Logger.LogAsync(
                     $"  {expectedFileInfo.FullName} - expected: {expectedSha1String}, actual: {actualSha1}"
                 );
-                thisMatch = false;
             }
 
             return allChecksumsMatch;

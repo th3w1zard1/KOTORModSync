@@ -94,13 +94,13 @@ namespace KOTORModSync.Tests
             File.WriteAllText( modifiedFilePath, tomlContents );
 
             // Arrange
-            List<Component> originalComponents = FileHelper.ReadComponentsFromFile( modifiedFilePath );
+            List<Component> originalComponents = Component.ReadComponentsFromFile( modifiedFilePath );
 
             // Act
-            FileHelper.OutputConfigFile( originalComponents, modifiedFilePath );
+            Component.OutputConfigFile( originalComponents, modifiedFilePath );
 
             // Reload the modified TOMLIN file
-            List<Component> loadedComponents = FileHelper.ReadComponentsFromFile( modifiedFilePath );
+            List<Component> loadedComponents = Component.ReadComponentsFromFile( modifiedFilePath );
 
             // Assert
             Assert.That( loadedComponents, Has.Count.EqualTo( originalComponents.Count ) );
@@ -119,7 +119,7 @@ namespace KOTORModSync.Tests
         {
             // Deserialize default component
             Component newComponent
-                = FileHelper.DeserializeTomlComponent( Component.DefaultComponent + Instruction.DefaultInstructions );
+                = Component.DeserializeTomlComponent( Component.DefaultComponent + Instruction.DefaultInstructions ) ?? throw new InvalidOperationException();
             newComponent.Guid = Guid.NewGuid();
             newComponent.Name = "new mod_" + Path.GetRandomFileName();
 
@@ -127,7 +127,7 @@ namespace KOTORModSync.Tests
             string tomlString = newComponent.SerializeComponent();
 
             // Deserialize into new instance
-            Component duplicateComponent = FileHelper.DeserializeTomlComponent( tomlString );
+            Component duplicateComponent = Component.DeserializeTomlComponent( tomlString ) ?? throw new InvalidOperationException();
 
             // Compare
             AssertComponentEquality( newComponent, duplicateComponent );
@@ -138,7 +138,7 @@ namespace KOTORModSync.Tests
         public void SaveAndLoadTOMLFile_CaseInsensitive()
         {
             // Arrange
-            List<Component> originalComponents = FileHelper.ReadComponentsFromFile( _filePath );
+            List<Component> originalComponents = Component.ReadComponentsFromFile( _filePath );
 
             // Modify the TOML file contents
             Debug.Assert( _filePath != null, nameof( _filePath ) + " != null" );
@@ -151,7 +151,7 @@ namespace KOTORModSync.Tests
             string modifiedFilePath = Path.GetTempFileName();
             File.WriteAllText( modifiedFilePath, tomlContents );
 
-            List<Component> loadedComponents = FileHelper.ReadComponentsFromFile( modifiedFilePath );
+            List<Component> loadedComponents = Component.ReadComponentsFromFile( modifiedFilePath );
 
             // Assert
             Assert.That( loadedComponents, Has.Count.EqualTo( originalComponents.Count ) );
@@ -172,7 +172,7 @@ namespace KOTORModSync.Tests
         public void SaveAndLoadTOMLFile_WhitespaceTests()
         {
             // Arrange
-            List<Component> originalComponents = FileHelper.ReadComponentsFromFile( _filePath );
+            List<Component> originalComponents = Component.ReadComponentsFromFile( _filePath );
 
             // Modify the TOMLIN file contents
             Debug.Assert( _filePath != null, nameof( _filePath ) + " != null" );
@@ -186,7 +186,7 @@ namespace KOTORModSync.Tests
             File.WriteAllText( modifiedFilePath, tomlContents );
 
             // Act
-            List<Component> loadedComponents = FileHelper.ReadComponentsFromFile( modifiedFilePath );
+            List<Component> loadedComponents = Component.ReadComponentsFromFile( modifiedFilePath );
 
             // Assert
             Assert.That( loadedComponents, Has.Count.EqualTo( originalComponents.Count ) );
@@ -248,8 +248,8 @@ namespace KOTORModSync.Tests
             // Arrange
             List<Component> originalComponents = new();
             // Act
-            FileHelper.OutputConfigFile( originalComponents, _filePath );
-            List<Component> loadedComponents = FileHelper.ReadComponentsFromFile( _filePath );
+            Component.OutputConfigFile( originalComponents, _filePath );
+            List<Component> loadedComponents = Component.ReadComponentsFromFile( _filePath );
 
             // Assert
             Assert.That( loadedComponents, Is.Null );
@@ -276,8 +276,8 @@ namespace KOTORModSync.Tests
             };
 
             // Act
-            FileHelper.OutputConfigFile( originalComponents, _filePath );
-            List<Component> loadedComponents = FileHelper.ReadComponentsFromFile( _filePath );
+            Component.OutputConfigFile( originalComponents, _filePath );
+            List<Component> loadedComponents = Component.ReadComponentsFromFile( _filePath );
 
             // Assert
             Assert.That( loadedComponents, Has.Count.EqualTo( originalComponents.Count ) );
@@ -295,14 +295,14 @@ namespace KOTORModSync.Tests
         public void SaveAndLoadTOMLFile_ModifyComponents()
         {
             // Arrange
-            List<Component> originalComponents = FileHelper.ReadComponentsFromFile( _filePath );
+            List<Component> originalComponents = Component.ReadComponentsFromFile( _filePath );
 
             // Modify some component properties
             originalComponents[0].Name = "Modified Name";
 
             // Act
-            FileHelper.OutputConfigFile( originalComponents, _filePath );
-            List<Component> loadedComponents = FileHelper.ReadComponentsFromFile( _filePath );
+            Component.OutputConfigFile( originalComponents, _filePath );
+            List<Component> loadedComponents = Component.ReadComponentsFromFile( _filePath );
 
             // Assert
             Assert.That( loadedComponents, Has.Count.EqualTo( originalComponents.Count ) );
@@ -371,8 +371,8 @@ namespace KOTORModSync.Tests
             // Act and Assert
             foreach ( List<Component> components in rounds )
             {
-                FileHelper.OutputConfigFile( components, _filePath );
-                List<Component> loadedComponents = FileHelper.ReadComponentsFromFile( _filePath );
+                Component.OutputConfigFile( components, _filePath );
+                List<Component> loadedComponents = Component.ReadComponentsFromFile( _filePath );
 
                 Assert.That( loadedComponents, Has.Count.EqualTo( components.Count ) );
 

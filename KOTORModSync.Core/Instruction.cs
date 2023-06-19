@@ -86,7 +86,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
             {
                 if ( !noValidate && RealSourcePaths.Count == 0 )
                 {
-                    throw new Exception( $"Could not find any files! Source: {string.Join( ", ", Source )}" );
+                    throw new Exception( $"Could not find any files! Source: [{string.Join( ", ", Source )}]" );
                 }
 
                 return;
@@ -99,7 +99,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
 
             if ( !noValidate && RealSourcePaths.Count == 0 )
             {
-                throw new Exception( $"Could not find any files! Source: {string.Join( ", ", Source )}" );
+                throw new Exception( $"Could not find any files! Source: [{string.Join( ", ", Source )}]" );
             }
         }
 
@@ -143,7 +143,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                             if ( !ArchiveHelper.IsArchive( thisFile ) )
                             {
                                 _ = Logger.LogAsync(
-                                    $"[Error] {ParentComponent.Name} failed to extract file '{thisFile.Name}'. Invalid archive?"
+                                    $"[Error] '{ParentComponent.Name}' failed to extract file '{thisFile.Name}'. Invalid archive?"
                                 );
                                 success = false;
                                 return;
@@ -163,7 +163,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
 
                                 success = false;
                                 throw new InvalidOperationException(
-                                    $"{thisFile.Name} is not a self-extracting executable as previously assumed. Cannot extract."
+                                    $"'{thisFile.Name}' is not a self-extracting executable as previously assumed. Cannot extract."
                                 );
                             }
 
@@ -201,7 +201,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                                     if ( destinationDirectory != null
                                         && !Directory.Exists( destinationDirectory ) )
                                     {
-                                        _ = Logger.LogAsync( $"Create directory {destinationDirectory}" );
+                                        _ = Logger.LogAsync( $"Create directory '{destinationDirectory}'" );
                                         _ = Directory.CreateDirectory( destinationDirectory );
                                     }
 
@@ -302,7 +302,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                 try
                 {
                     File.Delete( filePath );
-                    Logger.Log( $"Deleted file: {fileName}" );
+                    Logger.Log( $"Deleted file: '{fileName}'" );
                 }
                 catch ( Exception ex )
                 {
@@ -322,7 +322,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                     if ( !Path.IsPathRooted( thisFilePath ) || !thisFile.Exists )
                     {
                         var ex = new ArgumentNullException(
-                            $"Invalid wildcards or file does not exist: {thisFilePath}"
+                            $"Invalid wildcards or file does not exist: '{thisFilePath}'"
                         );
                         Logger.LogException( ex );
                         return false;
@@ -332,7 +332,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                     try
                     {
                         File.Delete( thisFilePath );
-                        Logger.Log( $"Deleting {thisFilePath}..." );
+                        Logger.Log( $"Deleting '{thisFilePath}'..." );
                     }
                     catch ( Exception ex )
                     {
@@ -363,7 +363,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                     string fileName = Path.GetFileName( sourcePath );
                     if ( !File.Exists( sourcePath ) )
                     {
-                        Logger.Log( $"{fileName} does not exist!" );
+                        Logger.Log( $"'{fileName}' does not exist!" );
                         success = false;
                         continue;
                     }
@@ -377,7 +377,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                     {
                         if ( Overwrite )
                         {
-                            Logger.Log( $"Replacing {destinationFilePath}" );
+                            Logger.Log( $"Replacing pre-existing '{destinationFilePath}'" );
                             File.Delete( destinationFilePath );
                         }
                         else
@@ -385,8 +385,8 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                             success = false;
                             Logger.LogException(
                                 new InvalidOperationException(
-                                    $"Skipping file {sourcePath}"
-                                    + $" ( A file with the name {Path.GetFileName( destinationFilePath )}"
+                                    $"Skipping file '{sourcePath}'"
+                                    + $" ( A file with the name '{Path.GetFileName( destinationFilePath )}'"
                                     + " already exists )"
                                 )
                             );
@@ -434,7 +434,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                     if ( !Overwrite && File.Exists( destinationFilePath ) )
                     {
                         Logger.Log(
-                            $"Skipping file {Path.GetFileName( destinationFilePath )} ( Overwrite set to False )"
+                            $"Skipping file '{Path.GetFileName( destinationFilePath )}' ( Overwrite set to False )"
                         );
                         continue;
                     }
@@ -442,7 +442,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                     // Check if the destination file already exists
                     if ( File.Exists( destinationFilePath ) )
                     {
-                        Logger.Log( $"File already exists, deleting existing file {destinationFilePath}" );
+                        Logger.Log( $"File already exists, deleting existing file '{destinationFilePath}'" );
                         // Delete the existing file
                         File.Delete( destinationFilePath );
                     }
@@ -478,7 +478,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                     if ( !Overwrite && File.Exists( destinationFilePath ) )
                     {
                         Logger.Log(
-                            $"Skipping file {Path.GetFileName( destinationFilePath )} ( Overwrite set to False )"
+                            $"Skipping file '{Path.GetFileName( destinationFilePath )}' ( Overwrite set to False )"
                         );
 
                         continue;
@@ -487,7 +487,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                     // Check if the destination file already exists
                     if ( File.Exists( destinationFilePath ) )
                     {
-                        Logger.Log( $"File already exists, deleting existing file {destinationFilePath}" );
+                        Logger.Log( $"File already exists, deleting pre-existing file '{destinationFilePath}'" );
                         // Delete the existing file
                         File.Delete( destinationFilePath );
                     }
@@ -524,7 +524,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                         if ( tslPatcherDirectory == null || !tslPatcherDirectory.Exists )
                         {
                             throw new DirectoryNotFoundException(
-                                $"The parent directory of the file {tslPatcherPath} could not be located on the disk."
+                                $"The parent directory of the file '{tslPatcherPath}' could not be located on the disk."
                             );
                         }
                     }
@@ -536,7 +536,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                         if ( !tslPatcherDirectory.Exists )
                         {
                             throw new DirectoryNotFoundException(
-                                $"The directory {tslPatcherPath} could not be located on the disk."
+                                $"The directory '{tslPatcherPath}' could not be located on the disk."
                             );
                         }
                     }
@@ -545,7 +545,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                     FileHelper.ReplaceLookupGameFolder( tslPatcherDirectory );
 
                     string args = $@"""{MainConfig.DestinationPath}""" // arg1 = swkotor directory
-                        + $@" ""{MainConfig.SourcePath}""" // arg2 = mod directory (where tslpatcherdata folder is)
+                        + $@" ""{MainConfig.SourcePath}""" // arg2 = mod directory (where tslpatchdata folder is)
                         + ( string.IsNullOrEmpty( Arguments )
                             ? ""
                             : $" {Arguments}" ); // arg3 = (optional) install option integer index from namespaces.ini
@@ -560,7 +560,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                     await Logger.LogAsync( "Run TSLPatcher..." );
                     (int exitCode, string output, string error)
                         = await PlatformAgnosticMethods.ExecuteProcessAsync( tslPatcherCliPath, args );
-                    await Logger.LogVerboseAsync( $"{tslPatcherCliPath.Name} exited with exit code {exitCode}" );
+                    await Logger.LogVerboseAsync( $"'{tslPatcherCliPath.Name}' exited with exit code {exitCode}" );
 
                     await Logger.LogAsync( !string.IsNullOrEmpty( output ) ? output : null );
                     await Logger.LogAsync( !string.IsNullOrEmpty( error ) ? error : null );
@@ -597,7 +597,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                         if ( !thisProgram.Exists )
                         {
                             throw new FileNotFoundException(
-                                $"The file {sourcePath} could not be located on the disk"
+                                $"The file '{sourcePath}' could not be located on the disk"
                             );
                         }
 
@@ -639,7 +639,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
 
                 string tslPatcherDirPath
                     = Path.GetDirectoryName( sourcePath )
-                    ?? throw new DirectoryNotFoundException( $"Could not retrieve parent directory of {sourcePath}." );
+                    ?? throw new DirectoryNotFoundException( $"Could not retrieve parent directory of '{sourcePath}'." );
 
                 //PlaintextLog=0
                 string fullInstallLogFile = Path.Combine(
@@ -671,6 +671,46 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
 
             Logger.LogVerbose( "No errors found in TSLPatcher installlog file!" );
             return new List<string>();
+        }
+
+        // this method removes the tslpatcher log file.
+        // should be called BEFORE any tslpatcher install takes place from KOTORModSync, never post-install.
+        public void CleanupTSLPatcherInstall()
+        {
+            Logger.LogVerbose( "Preparing TSLPatcher install..." );
+            foreach ( string sourcePath in this.RealSourcePaths )
+            {
+                if ( sourcePath == null )
+                {
+                    continue;
+                }
+
+                string tslPatcherDirPath
+                    = Path.GetDirectoryName( sourcePath )
+                    ?? throw new DirectoryNotFoundException( $"Could not retrieve parent directory of '{sourcePath}'." );
+
+                //PlaintextLog=0
+                string fullInstallLogFile = Path.Combine(
+                    tslPatcherDirPath,
+                    "installlog.rtf"
+                );
+
+                if ( !File.Exists( fullInstallLogFile ) )
+                {
+                    //PlaintextLog=1
+                    fullInstallLogFile = Path.Combine( tslPatcherDirPath, "installlog.txt" );
+                    if ( !File.Exists( fullInstallLogFile ) )
+                    {
+                        Logger.LogVerbose( $"No prior install found for {sourcePath}" );
+                        return;
+                    }
+                }
+
+                Logger.LogVerbose( $"Delete {fullInstallLogFile}" );
+                File.Delete( fullInstallLogFile );
+            }
+
+            Logger.LogVerbose( "Finished cleaning tslpatcher install" );
         }
     }
 }

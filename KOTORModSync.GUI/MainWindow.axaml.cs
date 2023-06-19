@@ -25,7 +25,7 @@ using KOTORModSync.Core.Utility;
 // ReSharper disable MemberCanBeMadeStatic.Local
 // ReSharper disable AsyncVoidMethod
 
-namespace KOTORModSync
+namespace KOTORModSync.GUI
 {
     public partial class MainWindow : Window
     {
@@ -106,7 +106,7 @@ namespace KOTORModSync
                 var childItems = new Dictionary<string, TreeViewItem>( 10000 );
                 if ( !( data is Component component ) )
                 {
-                    throw new InvalidCastException( "data variable should always be a Component." );
+                    throw new InvalidCastException( "Data variable should always be a Component." );
                 }
 
                 // If no dependencies we can return here.
@@ -197,7 +197,7 @@ namespace KOTORModSync
                     return null;
                 }
 
-                await Logger.LogAsync( $"Selected files: {string.Join( ", ", filePaths )}" );
+                await Logger.LogAsync( $"Selected files: [{string.Join( $",{Environment.NewLine}", filePaths )}]" );
                 return filePaths.ToList();
             }
             catch ( Exception ex )
@@ -360,12 +360,12 @@ namespace KOTORModSync
                 {
                     i++;
                     duplicateComponent.Guid = Guid.NewGuid();
-                    _ = Logger.LogAsync( $"Replaced GUID of component {duplicateComponent.Name}" );
+                    _ = Logger.LogAsync( $"Replaced GUID of component '{duplicateComponent.Name}'" );
                 }
                 else
                 {
                     _ = Logger.LogVerboseAsync(
-                        $"User canceled GUID replacement for component {duplicateComponent.Name}"
+                        $"User canceled GUID replacement for component '{duplicateComponent.Name}'"
                     );
                 }
             }
@@ -423,7 +423,7 @@ namespace KOTORModSync
                 }
 
                 // Load components dynamically
-                _components = FileHelper.ReadComponentsFromFile( filePath );
+                _components = Component.ReadComponentsFromFile( filePath );
 
                 // Validate the components.
                 await ProcessComponents( _components );
@@ -489,7 +489,7 @@ namespace KOTORModSync
                     await Logger.LogExceptionAsync(
                         new ArgumentOutOfRangeException(
                             nameof( files ),
-                            $"Invalid files found. Please report this issue to the developer: '{files}'"
+                            $"Invalid files found. Please report this issue to the developer: [{string.Join( ",", files )}]"
                         )
                     );
                 }
@@ -503,7 +503,7 @@ namespace KOTORModSync
 
                 if ( MainConfig.SourcePath == null )
                 {
-                    _ = Logger.LogAsync(
+                    _ = Logger.LogWarningAsync(
                         "Not using custom variables <<kotorDirectory>> and <<modDirectory>> due to directories not being set prior."
                     );
                 }
@@ -524,16 +524,13 @@ namespace KOTORModSync
                 Instruction thisInstruction = (Instruction)button.DataContext
                     ?? throw new NullReferenceException( "Could not find instruction instance" );
 
-                // Get the TextBox associated with the current item
-                //var textBox = (TextBox)button.Tag;
-
                 // Open the file dialog to select a file
                 string filePath = await OpenFolder();
                 if ( filePath == null )
                 {
                     _ = Logger.LogVerboseAsync(
                         "No file chosen in BrowseDestination_Click."
-                        + $" Will continue using {thisInstruction.Destination}"
+                        + $" Will continue using '{thisInstruction.Destination}'"
                     );
                     return;
                 }
@@ -669,7 +666,7 @@ namespace KOTORModSync
             try
             {
                 Component newComponent
-                    = FileHelper.DeserializeTomlComponent(
+                    = Component.DeserializeTomlComponent(
                         Component.DefaultComponent + Instruction.DefaultInstructions
                     )
                     ?? throw new NullReferenceException( "Could not deserialize default template" );
@@ -857,13 +854,44 @@ namespace KOTORModSync
                     return;
                 }
 
+                await Logger.LogAsync( "Running validation of all components, this might take a while..." );
+
+                bool valSuccess = true;
+                foreach ( Component component in _components )
+                {
+                    var validator = new ComponentValidation( component );
+                    await Logger.LogVerboseAsync( $" == Validating {component.Name} == " );
+                    valSuccess &= validator.Run();
+                }
+
+                // Ensure necessary directories are writable.
+                bool isWritable = Utility.IsDirectoryWritable( MainConfig.DestinationPath )
+                    && Utility.IsDirectoryWritable( MainConfig.SourcePath );
+
+                string informationMessage = "There were issues with your instructions file."
+                    + " Please review the output window for more information."
+                    + " Absolutely no files were modified during this process.";
+
+                if ( !isWritable )
+                {
+                    informationMessage = "The Mod directory and/or the KOTOR directory are not writable."
+                        + " Please ensure administrative privileges or reinstall KOTOR"
+                        + " to a directory of which you have write access.";
+                }
+
+                if ( !valSuccess || !isWritable )
+                {
+                    await InformationDialog.ShowInformationDialog( this, informationMessage );
+                    return;
+                }
+
                 if ( await ConfirmationDialog.ShowConfirmationDialog(
                         this,
                         "WARNING! While there is code in place to prevent incorrect instructions from running,"
-                        + $" the program cannot predict every possible mistake a user could make in a config file.{Environment.NewLine}{Environment.NewLine}"
+                        + $" the program cannot predict every possible mistake a user could make in a config file.{Environment.NewLine}"
                         + " Additionally, the modbuild can be 20GB or larger! As a result, we cannot create any backups."
                         + " Please ensure you've backed up your KOTOR2 directory"
-                        + $" and you've ensured you're running a Vanilla installation.{Environment.NewLine}"
+                        + $" and you've ensured you're running a Vanilla installation.{Environment.NewLine}{Environment.NewLine}"
                         + " Are you sure you're ready to continue?"
                     )
                     != true )
@@ -972,7 +1000,7 @@ namespace KOTORModSync
                     return;
                 }
 
-                string docs = Serializer.GenerateModDocumentation( _components );
+                string docs = Component.GenerateModDocumentation( _components );
                 await SaveDocsToFileAsync( file, docs );
                 string message = $"Saved documentation of {_components.Count} mods to '{file}'";
                 await InformationDialog.ShowInformationDialog( this, message );
@@ -1108,7 +1136,7 @@ namespace KOTORModSync
                         + "Please report this issue to a developer, this should never happen.");
                 }
 
-                Component newComponent = FileHelper.DeserializeTomlComponent( RawEditTextBox.Text );
+                Component newComponent = Component.DeserializeTomlComponent( RawEditTextBox.Text );
 
                 // Find the corresponding component in the collection
                 int index = _components.IndexOf( _currentComponent );
@@ -1235,7 +1263,7 @@ namespace KOTORModSync
                     return;
                 }
 
-                TreeViewItem rootItem = LeftTreeView.Items.OfType<TreeViewItem>().FirstOrDefault();
+                TreeViewItem rootItem = Enumerable.OfType<TreeViewItem>( LeftTreeView.Items ).FirstOrDefault();
                 if ( rootItem != null )
                 {
                     WriteTreeViewItemsToFile( new List<TreeViewItem> { rootItem }, filePath );

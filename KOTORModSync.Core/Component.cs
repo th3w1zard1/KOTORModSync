@@ -8,11 +8,15 @@ using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
+using System.Text;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
 using KOTORModSync.Core.Utility;
 using Nett;
 using SharpCompress.Archives;
+using Tomlyn.Syntax;
+using Tomlyn;
+using Toml = Tomlyn.Toml;
 using TomlObject = Tomlyn.Model.TomlObject;
 using TomlTable = Tomlyn.Model.TomlTable;
 using TomlTableArray = Tomlyn.Model.TomlTableArray;
@@ -118,7 +122,7 @@ namespace KOTORModSync.Core
                 break;
             }
 
-            string tomlString = Toml.WriteString( rootTable );
+            string tomlString = Nett.Toml.WriteString( rootTable );
             return Serializer.FixWhitespaceIssues( tomlString );
         }
 
@@ -166,6 +170,101 @@ namespace KOTORModSync.Core
             // Validate and log additional errors/warnings.
             Validator = new ComponentValidation( this );
             _ = Logger.LogAsync( $"Successfully deserialized component '{Name}'\r\n" );
+        }
+
+        public static void OutputConfigFile( IEnumerable<Component> components, string filePath )
+        {
+            var stringBuilder = new StringBuilder( 65535 );
+
+            foreach ( Component thisComponent in components )
+            {
+                _ = stringBuilder.AppendLine( thisComponent.SerializeComponent() );
+            }
+
+            string tomlString = stringBuilder.ToString();
+            File.WriteAllText( filePath, tomlString );
+        }
+
+        public static string GenerateModDocumentation( List<Component> componentsList )
+        {
+            var sb = new StringBuilder( 50000 );
+            const string indentation = "    ";
+
+            // Loop through each 'thisMod' entry
+            foreach ( Component component in componentsList )
+            {
+                _ = sb.AppendLine();
+
+                // Component Information
+                _ = sb.Append( "####**" ).Append( component.Name ).AppendLine( "**" );
+                _ = sb.Append( "**Author**: " ).AppendLine( component.Author );
+                _ = sb.AppendLine();
+                _ = sb.Append( "**Description**: " ).AppendLine( component.Description );
+                _ = sb.Append( "**Tier & Category**: " )
+                    .Append( component.Tier )
+                    .Append( " - " )
+                    .AppendLine( component.Category );
+                if ( component.Language != null )
+                {
+                    _ = string.Equals(
+                        component.Language.FirstOrDefault(),
+                        "All",
+                        StringComparison.OrdinalIgnoreCase
+                    )
+                        ? sb.AppendLine( "**Supported Languages**: ALL" )
+                        : sb
+                            .Append( "**Supported Languages**: [" )
+                            .Append( Environment.NewLine )
+                            .Append(
+                                string.Join(
+                                    $",{Environment.NewLine}",
+                                    component.Language.Select( item => $"{indentation}{item}" )
+                                )
+                            )
+                            .Append( Environment.NewLine )
+                            .Append( ']' )
+                            .AppendLine();
+                }
+
+                _ = sb.Append( "**Directions**: " ).AppendLine( component.Directions );
+
+                // Instructions
+                if ( component.Instructions == null ) continue;
+
+                _ = sb.AppendLine();
+                _ = sb.AppendLine( "**Installation Instructions:" );
+                foreach ( Instruction instruction in component.Instructions.Where(
+                             instruction => instruction.Action != "extract"
+                         ) )
+                {
+                    _ = sb.Append( "**Action**: " ).AppendLine( instruction.Action );
+                    if ( instruction.Action == "move" )
+                    {
+                        _ = sb.Append( "**Overwrite existing files?**: " )
+                            .AppendLine( instruction.Overwrite ? "NO" : "YES" );
+                    }
+
+                    if ( instruction.Source != null )
+                    {
+                        string thisLine
+                            = $"Source: [{Environment.NewLine}{string.Join( $",{Environment.NewLine}", instruction.Source.Select( item => $"{indentation}{item}" ) )}{Environment.NewLine}]";
+
+                        if ( instruction.Action != "move" )
+                        {
+                            thisLine = thisLine?.Replace( "Source: ", "" );
+                        }
+
+                        _ = sb.AppendLine( thisLine );
+                    }
+
+                    if ( instruction.Destination != null && instruction.Action == "move" )
+                    {
+                        _ = sb.Append( "Destination: " ).AppendLine( instruction.Destination );
+                    }
+                }
+            }
+
+            return sb.ToString();
         }
 
         [NotNull]
@@ -399,6 +498,110 @@ namespace KOTORModSync.Core
             }
 
             return default;
+        }
+
+        [CanBeNull]
+        public static Component DeserializeTomlComponent( string tomlString )
+        {
+            tomlString = Serializer.FixWhitespaceIssues( tomlString );
+
+            // Can't be bothered to find a real fix when this works fine.
+            tomlString = tomlString.Replace( "Instructions = []", "" );
+            tomlString = tomlString.Replace( "Options = []", "" );
+
+            // Parse the TOML syntax into a TomlTable
+            DocumentSyntax tomlDocument = Tomlyn.Toml.Parse( tomlString );
+
+            // Print any errors on the syntax
+            if ( tomlDocument.HasErrors )
+            {
+                foreach ( DiagnosticMessage message in tomlDocument.Diagnostics )
+                {
+                    Logger.Log( message.Message );
+                }
+
+                return null;
+            }
+
+            TomlTable tomlTable = tomlDocument.ToModel();
+
+            // Get the array of Component tables
+
+            var component = new Component();
+
+            // Deserialize each TomlTable into a Component object
+            if ( !( tomlTable["thisMod"] is TomlTableArray componentTables ) )
+            {
+                return component;
+            }
+
+            foreach ( TomlTable tomlComponent in componentTables )
+            {
+                component.DeserializeComponent( tomlComponent );
+            }
+
+            return component;
+        }
+
+        public static List<Component> ReadComponentsFromFile( string filePath )
+        {
+            try
+            {
+                // Read the contents of the file into a string
+                string tomlString = File.ReadAllText( filePath )
+                    // the code expects instructions to always be defined. When it's not, this happens on save. Then our code errors when it sees this.
+                    // make the user experience better by just removing an empty instructions key.
+                    .Replace( "Instructions = []", "" )
+                    .Replace( "Options = []", "" );
+
+                tomlString = Serializer.FixWhitespaceIssues( tomlString );
+
+                // Parse the TOML syntax into a TomlTable
+                DocumentSyntax tomlDocument = Toml.Parse( tomlString );
+
+                // Print any errors on the syntax
+                if ( tomlDocument.HasErrors )
+                {
+                    foreach ( DiagnosticMessage message in tomlDocument.Diagnostics )
+                    {
+                        Logger.LogException( new Exception( message.Message ) );
+                    }
+                }
+
+                TomlTable tomlTable = tomlDocument.ToModel();
+
+                // Get the array of Component tables
+                var componentTables = tomlTable["thisMod"] as TomlTableArray;
+
+                var components = new List<Component>( 65535 );
+                foreach ( (TomlObject tomlComponent, Component component) in
+                         // Deserialize each TomlTable into a Component object
+                         from TomlObject tomlComponent in componentTables
+                         let component = new Component()
+                         select (tomlComponent, component) )
+                {
+                    component.DeserializeComponent( tomlComponent );
+                    components.Add( component );
+                    if ( component.Instructions == null )
+                    {
+                        Logger.Log( $"{component.Name} is missing instructions" );
+                        continue;
+                    }
+
+                    foreach ( Instruction instruction in component.Instructions )
+                    {
+                        instruction.SetParentComponent( component );
+                    }
+                }
+
+                return components;
+            }
+            catch ( Exception ex )
+            {
+                Logger.LogException( ex );
+            }
+
+            return null;
         }
 
         public async Task<(bool success, Dictionary<FileInfo, SHA1> originalChecksums)>
@@ -1287,9 +1490,6 @@ namespace KOTORModSync.Core
                 {
                     result = result.Substring( result.IndexOf( '\\' ) + 1 );
                 }
-
-                // not necessarily an error as there could be other archives to loop through.
-                Logger.LogVerbose( $"'{result}' not found in '{Path.GetFileName( archivePath )}'" );
             }
 
             return ArchivePathCode.NotFoundInArchive;

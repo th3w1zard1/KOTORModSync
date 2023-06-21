@@ -10,20 +10,9 @@ using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
 using Avalonia.Threading;
 using JetBrains.Annotations;
-using KOTORModSync.Core.Utility;
 
 namespace KOTORModSync
 {
-    internal sealed class ConfirmationDialogCallback : CallbackObjects.IConfirmationDialogCallback
-    {
-        private readonly Window _topLevelWindow;
-
-        public ConfirmationDialogCallback( Window topLevelWindow ) => _topLevelWindow = topLevelWindow;
-
-        public Task<bool?> ShowConfirmationDialog
-            ( string message ) => ConfirmationDialog.ShowConfirmationDialog( _topLevelWindow, message );
-    }
-
     public partial class ConfirmationDialog : Window
     {
         public static readonly AvaloniaProperty s_confirmTextProperty =

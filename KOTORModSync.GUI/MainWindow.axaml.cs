@@ -6,10 +6,8 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.ComponentModel;
 using System.IO;
 using System.Linq;
-using System.Security.Cryptography;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using Avalonia.Collections;
@@ -20,6 +18,7 @@ using Avalonia.Markup.Xaml.Styling;
 using Avalonia.Styling;
 using Avalonia.Threading;
 using JetBrains.Annotations;
+using KOTORModSync.CallbackDialogs;
 using KOTORModSync.Core;
 using KOTORModSync.Core.Utility;
 using Component = KOTORModSync.Core.Component;
@@ -28,7 +27,7 @@ using Component = KOTORModSync.Core.Component;
 // ReSharper disable MemberCanBeMadeStatic.Local
 // ReSharper disable AsyncVoidMethod
 
-namespace KOTORModSync.GUI
+namespace KOTORModSync
 {
     public partial class MainWindow : Window
     {
@@ -1637,7 +1636,7 @@ namespace KOTORModSync.GUI
 
             if ( _outputWindow == null )
             {
-                _outputWindow = new GUI.OutputWindow();
+                _outputWindow = new OutputWindow();
                 _outputWindow.Show();
             }
         }
@@ -1661,7 +1660,7 @@ namespace KOTORModSync.GUI
                 return;
             }
 
-            Uri styleUriPath = new Uri( "avares://KOTORModSync.GUI" + stylePath );
+            Uri styleUriPath = new Uri( "avares://KOTORModSync" + stylePath );
 
             // Apply the selected style dynamically
             this.Styles[0] = new StyleInclude( styleUriPath )

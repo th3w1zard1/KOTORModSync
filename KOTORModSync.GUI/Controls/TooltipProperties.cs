@@ -5,7 +5,7 @@
 using Avalonia;
 using Avalonia.Controls;
 
-namespace KOTORModSync.GUI.Controls
+namespace KOTORModSync.Controls
 {
     public class TooltipProperties
     {

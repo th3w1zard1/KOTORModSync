@@ -8,7 +8,7 @@ using Avalonia.Controls;
 using Avalonia.Data.Converters;
 using JetBrains.Annotations;
 
-namespace KOTORModSync.GUI.Converters
+namespace KOTORModSync.Converters
 {
     public class ComboBoxItemConverter : IValueConverter
     {

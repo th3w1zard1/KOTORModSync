@@ -8,16 +8,14 @@ using System.Collections.Generic;
 using System.Globalization;
 using Avalonia.Data.Converters;
 
-namespace KOTORModSync.GUI.Converters
+namespace KOTORModSync.Converters
 {
     public class EmptyCollectionConverter : IValueConverter
     {
         public object Convert( object value, Type targetType, object parameter, CultureInfo culture )
         {
             if ( value is ICollection collection && collection.Count == 0 )
-            {
                 return new List<string> { string.Empty }; // Create a new collection with a default value
-            }
 
             return value;
         }

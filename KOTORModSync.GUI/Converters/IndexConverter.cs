@@ -10,7 +10,7 @@ using Avalonia.Controls;
 using Avalonia.Data.Converters;
 using JetBrains.Annotations;
 
-namespace KOTORModSync.GUI.Converters
+namespace KOTORModSync.Converters
 {
     public class IndexConverter : IValueConverter
     {
@@ -25,9 +25,7 @@ namespace KOTORModSync.GUI.Converters
 
             int index = -1;
             if ( itemsRepeater.Tag is IEnumerable itemList )
-            {
                 index = itemList.Cast<object>().ToList().IndexOf( value );
-            }
 
             return index.ToString();
         }
@@ -35,14 +33,10 @@ namespace KOTORModSync.GUI.Converters
         public object ConvertBack( object value, Type targetType, object parameter, CultureInfo culture )
         {
             if ( !( value is string indexString ) || !( parameter is ItemsRepeater itemsRepeater ) )
-            {
                 return null;
-            }
 
             if ( !int.TryParse( indexString, out int index ) || !( itemsRepeater.Tag is IEnumerable itemList ) )
-            {
                 return null;
-            }
 
             IEnumerable enumerable = itemList.Cast<object>().ToList();
             var itemList2 = enumerable.Cast<object>().ToList();

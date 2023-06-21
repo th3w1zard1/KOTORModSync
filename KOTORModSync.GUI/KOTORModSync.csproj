@@ -1,0 +1,169 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Main KOTORModSync.GUI Project Settings -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <Nullable>disable</Nullable>
+    <LangVersion>7.3</LangVersion>
+    <EnableNETAnalyzers>true</EnableNETAnalyzers>
+    <EnforceCodeStyleInBuild>True</EnforceCodeStyleInBuild>
+    <ApplicationIcon>icon53.ico</ApplicationIcon>
+  </PropertyGroup>
+
+  <!-- Target Platforms/Frameworks -->
+  <PropertyGroup>
+    <TargetFrameworks>net6.0;net462</TargetFrameworks>
+    <Platforms>x86;x64</Platforms>
+  </PropertyGroup>
+
+  <!-- Release Configuration: Additional error handling, at the slight cost of performance. All optimizations enabled.-->
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+    <Optimize>true</Optimize>
+    <AllowOptimize>true</AllowOptimize>
+    <RemoveIntegerChecks>false</RemoveIntegerChecks>
+    <CheckForOverflowUnderflow>true</CheckForOverflowUnderflow>
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+    <AllowEditAndContinue>false</AllowEditAndContinue>
+    <DebugSymbols>false</DebugSymbols>
+    <DebugType>portable</DebugType>
+  </PropertyGroup>
+
+  <!-- Debug Configuration: No error handling/optimizations, this provides a way to find more problems before release. -->
+  <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
+    <Optimize>false</Optimize>
+    <AllowOptimize>false</AllowOptimize>
+    <RemoveIntegerChecks>true</RemoveIntegerChecks>
+    <CheckForOverflowUnderflow>false</CheckForOverflowUnderflow>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <AllowEditAndContinue>true</AllowEditAndContinue>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+  </PropertyGroup>
+
+  <!-- Customization -->
+  <ItemGroup>
+    <Content Include="icon53.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\KOTORModSync.Core\KOTORModSync.Core.csproj">
+      <!-- I believe this builds the 'KOTORModSync.Core.dll' separate rather than packaging into EXE/another dll. -->
+      <PrivateAssets>none</PrivateAssets>
+    </ProjectReference>
+    <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
+  </ItemGroup>
+
+  <!-- AvaloniaUI defs -->
+  <PropertyGroup>
+    <AvaloniaCopyWin32Dll>false</AvaloniaCopyWin32Dll>
+    <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
+    <NoWin32Manifest>true</NoWin32Manifest>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectCapability Include="Avalonia" />
+    <TrimmerRootAssembly Include="Avalonia.Themes.Fluent" />
+    <PackageReference Include="Avalonia" Version="0.10.21" />
+    <PackageReference Include="Avalonia.Desktop" Version="0.10.21" />
+    <PackageReference Include="Avalonia.LinuxFramebuffer" Version="0.10.21" />
+    <!--Condition below is needed to remove Avalonia.Diagnostics package from build output in Release configuration.-->
+    <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="0.10.21" />
+    <PackageReference Include="XamlNameReferenceGenerator" Version="1.6.1" />
+    <AvaloniaXaml Update="Styles\LegacyStyle.axaml">
+      <Generator>MSBuild:Compile</Generator>
+    </AvaloniaXaml>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Update="ConfirmationDialog.axaml.cs">
+      <DependentUpon>ConfirmationDialog.axaml</DependentUpon>
+    </Compile>
+    <Compile Update="InformationDialog.axaml.cs">
+      <DependentUpon>InformationDialog.axaml</DependentUpon>
+    </Compile>
+    <Compile Update="ProgressWindow.axaml.cs">
+      <DependentUpon>ProgressWindow.axaml</DependentUpon>
+    </Compile>
+    <Compile Update="OptionsDialog.axaml.cs">
+      <DependentUpon>OptionsDialog.axaml</DependentUpon>
+    </Compile>
+    <Compile Update="ComponentViewModel.cs">
+      <DependentUpon>SelectInstallComponents.axaml_unfinished</DependentUpon>
+    </Compile>
+    <None Remove="SelectInstallComponents.axaml_unfinished" />
+    <AvaloniaXaml Include="SelectInstallComponents.axaml_unfinished" />
+  </ItemGroup>
+
+  <PropertyGroup Condition=" '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))' OR '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::OSX)))' ">
+    <IsLinux>true</IsLinux>
+  </PropertyGroup>
+
+  <Target Name="PreBuild" BeforeTargets="PreBuildEvent" Condition=" '$(OS)' == 'Windows_NT'">
+    <Exec Condition=" '$(OS)' == 'Windows_NT'" Command="xcopy /Y $(SolutionDir)vendor\lib\TSLPatcherCLI.exe $(TargetDir)" />
+    <Exec Condition=" '$(IsLinux)' == 'true'" Command="cp -f $(SolutionDir)vendor\lib\TSLPatcherCLI.exe $(TargetDir)" />
+
+    <!-- WindowsDeleteString returntype changes from int to IntPtr HRESULT after net framework 4.x.x, replace with our patches. -->
+    <Exec Condition=" '$(OS)' == 'Windows_NT' AND '$(TargetPlatform)'=='x86' AND '$(TargetFramework)' == 'net462' "
+          Command="xcopy /Y $(SolutionDir)vendor\lib\Avalonia.Win32_net4.x_x86.dll $(TargetDir)" />
+    <Exec Condition=" '$(OS)' == 'Windows_NT' AND '$(TargetPlatform)'=='x86' AND '$(TargetFramework)' == 'net462' "
+          Command="del /F $(TargetDir)Avalonia.Win32.dll" />
+    <Exec Condition=" '$(OS)' == 'Windows_NT' AND '$(TargetPlatform)'=='x86' AND '$(TargetFramework)' == 'net462' "
+          Command="ren $(TargetDir)Avalonia.Win32_net4.x_x86.dll Avalonia.Win32.dll" />
+  </Target>
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent" Condition=" '$(OS)' == 'Windows_NT'">
+    <Exec Condition=" '$(OS)' == 'Windows_NT' AND '$(TargetFramework)' == 'net462'" Command="xcopy /Y $(SolutionDir)vendor\lib\TSLPatcherCLI.exe $(TargetDir)" />
+    <Exec Condition=" '$(IsLinux)' == 'true'" Command="cp -f $(SolutionDir)vendor\lib\TSLPatcherCLI.exe $(TargetDir)" />
+
+    <!-- WindowsDeleteString returntype changes from int to IntPtr HRESULT after net framework 4.x.x, replace with our patches. -->
+    <Exec Condition=" '$(OS)' == 'Windows_NT' AND '$(TargetFramework)' == 'net462'" Command="xcopy /Y $(SolutionDir)vendor\lib\Avalonia.Win32_net4.x_x86.dll $(TargetDir)" />
+    <Exec Condition=" '$(OS)' == 'Windows_NT' AND '$(TargetFramework)' == 'net462'" Command="del /F $(TargetDir)Avalonia.Win32.dll" />
+    <Exec Condition=" '$(OS)' == 'Windows_NT' AND '$(TargetFramework)' == 'net462'" Command="ren $(TargetDir)Avalonia.Win32_net4.x_x86.dll Avalonia.Win32.dll" />
+  </Target>
+
+    <!-- Delete KOTORModSync logs and other data -->
+  <Target Name="MyDistClean" AfterTargets="Clean">
+    <Message Importance="High" Text=" ## Running custom Clean target..." />
+    <Exec Condition=" '$(OS)' == 'Windows_NT'" Command="if not exist &quot;$(SolutionDir)\logs_and_data_saved_from_dotnet_clean&quot; mkdir &quot;$(SolutionDir)\logs_and_data_saved_from_dotnet_clean&quot;" />
+    <Exec Condition=" '$(OS)' == 'Windows_NT'" Command="for %%F in ($(TargetDir)*.tml) do move /Y &quot;%%F&quot; &quot;$(SolutionDir)\logs_and_data_saved_from_dotnet_clean&quot;" />
+    <Exec Condition=" '$(OS)' == 'Windows_NT'" Command="for %%F in ($(TargetDir)*.txt) do move /Y &quot;%%F&quot; &quot;$(SolutionDir)\logs_and_data_saved_from_dotnet_clean&quot;" />
+    <Exec Condition=" '$(OS)' == 'Windows_NT'" Command="for %%F in ($(TargetDir)*.log) do move /Y &quot;%%F&quot; &quot;$(SolutionDir)\logs_and_data_saved_from_dotnet_clean&quot;" />
+    <Exec Condition=" '$(OS)' == 'Windows_NT'" Command="for %%F in ($(TargetDir)*.toml) do move /Y &quot;%%F&quot; &quot;$(SolutionDir)\logs_and_data_saved_from_dotnet_clean&quot;" />
+    <Exec Condition=" '$(IsLinux)' == 'true'" Command="mv $(TargetDir)\*.tml $(SolutionDir)\logs_and_data_saved_from_dotnet_clean" />
+    <Exec Condition=" '$(IsLinux)' == 'true'" Command="mv $(TargetDir)\*.toml $(SolutionDir)\logs_and_data_saved_from_dotnet_clean" />
+    <Exec Condition=" '$(IsLinux)' == 'true'" Command="mv $(TargetDir)\*.txt $(SolutionDir)\logs_and_data_saved_from_dotnet_clean" />
+    <Exec Condition=" '$(IsLinux)' == 'true'" Command="mv $(TargetDir)\*.log $(SolutionDir)\logs_and_data_saved_from_dotnet_clean" />
+  </Target>
+
+  <!-- Zip everything up for a release -->
+  <Target Name="Zip" AfterTargets="Publish">
+    <PropertyGroup>
+      <TargetFolders>$(TargetDir)</TargetFolders>
+      <ZipOutputDir>$(TargetDir)..\</ZipOutputDir>
+    </PropertyGroup>
+    <ItemGroup>
+      <ZipFiles Include="$(TargetFolders)**\*.*" Exclude="$(TargetFolders)**\*.zip" />
+      <ZipArchiveItems Include="@(ZipFiles)">
+        <TargetPath>$([System.IO.Path]::GetFullPath("%(ZipFiles.RecursiveDir)%(ZipFiles.Filename).zip"))</TargetPath>
+      </ZipArchiveItems>
+    </ItemGroup>
+    <MakeDir Directories="@(ZipArchiveItems->'%(RootDir)%(Directory)')" />
+    <PropertyGroup>
+      <SevenZipExecuted Condition="'$(SevenZipExecuted)' != 'true' and '$(OS)' == 'Windows_NT' and !Exists('C:\Program Files\7-Zip\7z.exe')">true</SevenZipExecuted>
+      <SevenZipExecuted Condition="'$(SevenZipExecuted)' != 'true' and '$(OS)' != 'Windows_NT' and !Exists('/usr/bin/7z')">true</SevenZipExecuted>
+    </PropertyGroup>
+    <Exec Command="7z a &quot;%(ZipArchiveItems.Identity)&quot; &quot;%(ZipFiles.FullPath)&quot;" IgnoreExitCode="true" Condition="'$(SevenZipExecuted)' == 'true'">
+      <Output TaskParameter="ExitCode" PropertyName="SevenZipExitCode" />
+    </Exec>
+    <Message Text="7-Zip command not found. Skipping zip portion." Importance="High" Condition="'$(SevenZipExecuted)' == 'true' and '$(SevenZipExitCode)' != '0'" />
+  </Target>
+
+  <!-- Licensing -->
+  <PropertyGroup>
+    <Copyright>2023 th3w1zard1</Copyright>
+    <Title>KOTORModSync</Title>
+    <PackageLicenseExpression>GPL-3.0-or-later</PackageLicenseExpression>
+    <PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
+    <RepositoryType>git</RepositoryType>
+    <PackageProjectUrl>http://github.com/th3w1zard1/KOTORModSync</PackageProjectUrl>
+    <RepositoryUrl>http://github.com/th3w1zard1/KOTORModSync</RepositoryUrl>
+  </PropertyGroup>
+
+</Project>
+

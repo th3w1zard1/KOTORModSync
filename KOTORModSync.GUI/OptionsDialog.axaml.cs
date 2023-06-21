@@ -13,20 +13,9 @@ using Avalonia.Markup.Xaml;
 using Avalonia.Platform;
 using Avalonia.Threading;
 using JetBrains.Annotations;
-using KOTORModSync.Core.Utility;
 
 namespace KOTORModSync
 {
-    internal sealed class OptionsDialogCallback : CallbackObjects.IOptionsDialogCallback
-    {
-        private readonly Window _topLevelWindow;
-
-        public OptionsDialogCallback( Window topLevelWindow ) => _topLevelWindow = topLevelWindow;
-
-        public Task<string> ShowOptionsDialog
-            ( List<string> options ) => OptionsDialog.ShowOptionsDialog( _topLevelWindow, options );
-    }
-
     public partial class OptionsDialog : Window
     {
         public static readonly AvaloniaProperty OptionsListProperty =

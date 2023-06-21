@@ -4,9 +4,15 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <EnableNETAnalyzers>true</EnableNETAnalyzers>
     <Platforms>AnyCPU</Platforms>
+  </PropertyGroup>
+
+  <!-- Licensing -->
+  <PropertyGroup>
     <PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
     <PackageLicenseExpression>GPL-3.0-or-later</PackageLicenseExpression>
+    <RepositoryType>git</RepositoryType>
     <PackageProjectUrl>http://github.com/th3w1zard1/KOTORModSync</PackageProjectUrl>
+    <RepositoryUrl>http://github.com/th3w1zard1/KOTORModSync</RepositoryUrl>
     <Copyright>2023 th3w1zard1</Copyright>
     <Title>KOTORModSync</Title>
   </PropertyGroup>

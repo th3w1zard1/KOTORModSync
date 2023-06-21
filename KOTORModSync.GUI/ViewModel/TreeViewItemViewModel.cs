@@ -18,7 +18,7 @@ using System.Threading.Tasks;
 namespace KOTORModSync.ViewModel
 */
 
-namespace KOTORModSync.GUI.ViewModel
+namespace KOTORModSync.ViewModel
 {
     public class TreeViewItemViewModel : INotifyPropertyChanged
     {

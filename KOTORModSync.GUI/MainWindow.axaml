@@ -1,8 +1,8 @@
 <Window xmlns="https://github.com/avaloniaui"
 		xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:core="clr-namespace:KOTORModSync.Core;assembly=KOTORModSync.Core"
-        xmlns:converters="clr-namespace:KOTORModSync.GUI.Converters"
-        x:Class="KOTORModSync.GUI.MainWindow"
+        xmlns:converters="clr-namespace:KOTORModSync.Converters"
+        x:Class="KOTORModSync.MainWindow"
         SizeToContent="Width"
 		Title="KOTORModSync"
 		Width="1200" Height="700" MinWidth="600" MinHeight="400">

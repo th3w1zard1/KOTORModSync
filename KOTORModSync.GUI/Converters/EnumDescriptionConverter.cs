@@ -15,7 +15,7 @@ using Avalonia.Data.Converters;
 using JetBrains.Annotations;
 using KOTORModSync.Core;
 
-namespace KOTORModSync.GUI.Converters
+namespace KOTORModSync.Converters
 {
     // from https://code.4noobz.net/wpf-enum-binding-with-description-in-a-combobox/
     public class EnumDescriptionConverter : IValueConverter

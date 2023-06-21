@@ -6,7 +6,7 @@ using System;
 using System.Globalization;
 using Avalonia.Data.Converters;
 
-namespace KOTORModSync.GUI.Converters
+namespace KOTORModSync.Converters
 {
     public class BooleanToArrowConverter : IValueConverter
     {

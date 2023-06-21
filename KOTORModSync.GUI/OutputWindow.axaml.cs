@@ -9,7 +9,7 @@ using Avalonia.Markup.Xaml;
 using Avalonia.Threading;
 using KOTORModSync.Core;
 
-namespace KOTORModSync.GUI
+namespace KOTORModSync
 {
     public partial class OutputWindow : Window
     {

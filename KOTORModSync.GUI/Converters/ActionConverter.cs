@@ -12,16 +12,14 @@ using Avalonia.Data.Converters;
 using Avalonia.Utilities;
 using JetBrains.Annotations;
 
-namespace KOTORModSync.GUI.Converters
+namespace KOTORModSync.Converters
 {
     public class ActionConverter : IValueConverter
     {
         public object Convert( object value, Type targetType, object parameter, CultureInfo culture )
         {
             if ( value == null )
-            {
                 return targetType.IsValueType ? AvaloniaProperty.UnsetValue : null;
-            }
 
             if ( TypeUtilities.TryConvert( targetType, value, culture, out object result ) )
             {
@@ -40,9 +38,7 @@ namespace KOTORModSync.GUI.Converters
                 };
 
                 if ( validActions.Any( action => string.Equals( action, (string)result, StringComparison.OrdinalIgnoreCase ) ) )
-                {
                     return result;
-                }
 
                 string msg = $"Valid actions are [{string.Join( ", ", validActions )}]";
                 return new BindingNotification( new ArgumentException( msg ), BindingErrorType.Error );

@@ -363,5 +363,6 @@ MigrationBackup/
 FodyWeavers.xsd
 
 # Custom
-modconfig*.toml
-log.txt
+*.toml
+*.tml
+logs_and_data_saved_from_dotnet_clean/*

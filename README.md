@@ -1,14 +1,15 @@
 # KOTORModSync
 KOTORModSync is a multi-mod installer for KOTOR games that makes it easier to install and manage mods. I usually install the Reddit modbuild every year or so. The last time I did so I made a mistake on a single different step 3 times in a row and had to start over each time. So I decided to create an installer creator in C# to simplify the process.
 
-![image](https://github.com/th3w1zard1/KOTORModSync/assets/2219836/beb2259b-0417-4a75-bc10-8de0345b3e2f)
-
-
 ## Goals
 Mod creators work really hard on their mods. It's the least we can do to install them and use them, right? However who wants to reinstall to vanilla just to spend several hours reinstalling mods, just to add 1 or 2 extra mods on top of it?
 Other modmanagers I've tried were either too difficult to configure, requiring significant changes to a hard-to-understand configuration file; or only provided limited functionality for defining new mods. KOTOR mods do have complex dependency relationships with each other in regards to compatibility.
 
-Enter KOTORMODSync.
+### Enter KOTORMODSync.
+
+![image](https://github.com/th3w1zard1/KOTORModSync/assets/2219836/8aa943af-47d8-4ef9-9e54-bd015db64496)
+
+
 ## Features
 - Can install the r/KOTOR modbuilds in about 20 minutes from a vanilla install.
 - This program has a built-in GUI editor and a installer packed into one. Modbuild creators can create instructions with little to no knowledge of the format and easily share with end users. End users can install everything from the instruction file with a simple click of a button. Edit any instruction and verify the configuration with built-in tools. There's also some support to dry run an install.

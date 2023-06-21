@@ -613,7 +613,7 @@ namespace KOTORModSync.Core
             [Description( "User cancelled the installation." )]
             UserCancelledInstall,
 
-            [Description("something about invalid operations")]
+            [Description( "something about invalid operations" )]
             InvalidOperation,
 
             [Description( "An unexpected exception was thrown" )]
@@ -625,12 +625,12 @@ namespace KOTORModSync.Core
             ValidationPostInstallMismatch
         }
 
-        public async Task<InstallExitCode> InstallAsync(List<Component> componentsList)
+        public async Task<InstallExitCode> InstallAsync( List<Component> componentsList )
         {
             try
             {
                 (InstallExitCode, Dictionary<SHA1, FileInfo>) result = await ExecuteInstructionsAsync( componentsList );
-                await Logger.LogVerboseAsync( (string)Utility.Utility.GetEnumDescription(result.Item1) );
+                await Logger.LogVerboseAsync( (string)Utility.Utility.GetEnumDescription( result.Item1 ) );
                 return result.Item1;
             }
             catch ( InvalidOperationException ex )
@@ -664,11 +664,11 @@ namespace KOTORModSync.Core
                     continue;
 
                 // Get the original check-sums before making any modifications
-                await Logger.LogAsync("Checking file hashes of the install location for mismatch...");
-                var preinstallChecksums = MainConfig.DestinationPath.GetFiles("*.*", SearchOption.AllDirectories)
-                    .ToDictionary(file => file, file => FileChecksumValidator.CalculateSha1Async(file).Result);
+                await Logger.LogAsync( "Checking file hashes of the install location for mismatch..." );
+                var preinstallChecksums = MainConfig.DestinationPath.GetFiles( "*.*", SearchOption.AllDirectories )
+                    .ToDictionary( file => file, file => FileChecksumValidator.CalculateSha1Async( file ).Result );
 
-                if (instruction.OriginalChecksums == null)
+                if ( instruction.OriginalChecksums == null )
                 {
                     _ = Logger.LogVerboseAsync(
                         "Instructions file has no checksums available, storing checksums for the current install location as the default checksums."

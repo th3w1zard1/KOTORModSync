@@ -53,12 +53,12 @@ namespace KOTORModSync.Core
 
         public enum AvailablePatchers
         {
-            [DefaultValue(true)]
+            [DefaultValue( true )]
             [Description( "Use TSLPatcher" )]
             TSLPatcher = 0,
 
-            [Category("Not Tested - use as own risk")]
-            [Description( "Use TSLPatcherCLI")]
+            [Category( "Not Tested - use as own risk" )]
+            [Description( "Use TSLPatcherCLI" )]
             TSLPatcherCLI = 1, // not tested
 
             [Description( "Use HoloPatcher" )]

@@ -89,7 +89,7 @@ namespace KOTORModSync.Core
         }
 
         public static Task LogAsync( string message ) => LogInternalAsync( message );
-        public static void LogVerbose( string message ) => Log( "[Verbose] " + message, fileOnly:true );
+        public static void LogVerbose( string message ) => Log( "[Verbose] " + message, fileOnly: true );
         public static Task LogVerboseAsync( string message ) => LogInternalAsync( "[Verbose] " + message, fileOnly: true );
         public static void LogWarning( string message ) => Log( "[Warning] " + message );
         public static Task LogWarningAsync( string message ) => LogInternalAsync( "[Warning] " + message );

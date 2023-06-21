@@ -48,7 +48,7 @@ namespace KOTORModSync.GUI
 
             // Create callback objects for use with KOTORModSync.Core
             CallbackObjects.SetCallbackObjects(
-                new ConfirmationDialogCallback(this),
+                new ConfirmationDialogCallback( this ),
                 new OptionsDialogCallback( this )
             );
         }
@@ -936,7 +936,7 @@ namespace KOTORModSync.GUI
                     // Ensure the UI updates are processed
                     await Task.Yield();
                     await Task.Delay( 200 );
-                    
+
                     await Logger.LogAsync( $"Start Install of '{component.Name}'..." );
                     Component.InstallExitCode exitCode = await component.InstallAsync( _components );
                     await Logger.LogVerboseAsync( $"Install of {component.Name} finished with exit code {exitCode}" );

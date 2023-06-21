@@ -45,16 +45,33 @@ namespace KOTORModSync.Core
             }
         }
 
-        public static Task LogAsync( string message ) =>
-            LogInternalAsync( message ); // Start the logging operation asynchronously without awaiting it
+        public static void Log( string message, bool fileOnly = false )
+        {
+            string logMessage = $"[{DateTime.Now}] {message}";
+            if ( !fileOnly )
+            {
+                Console.WriteLine( logMessage );
+            }
 
-        private static async Task LogInternalAsync( string internalMessage )
+            Debug.WriteLine( logMessage );
+
+            string formattedDate = DateTime.Now.ToString( "yyyy-MM-dd" );
+            File.AppendAllText( LogFileName + formattedDate + ".txt", logMessage + Environment.NewLine );
+
+            Logged.Invoke( logMessage ); // Raise the Logged event
+        }
+
+        private static async Task LogInternalAsync( string internalMessage, bool fileOnly = false )
         {
             await s_semaphore.WaitAsync();
             try
             {
                 string logMessage = $"[{DateTime.Now}] {internalMessage}";
-                await Console.Out.WriteLineAsync( logMessage );
+                if ( !fileOnly )
+                {
+                    await Console.Out.WriteLineAsync( logMessage );
+                }
+
                 Debug.WriteLine( logMessage );
 
                 string formattedDate = DateTime.Now.ToString( "yyyy-MM-dd" );
@@ -71,46 +88,15 @@ namespace KOTORModSync.Core
             }
         }
 
-        public static void Log( string message )
-        {
-            string logMessage = $"[{DateTime.Now}] {message}";
-            Console.WriteLine( logMessage );
-            Debug.WriteLine( logMessage );
-
-            string formattedDate = DateTime.Now.ToString( "yyyy-MM-dd" );
-            File.AppendAllText( LogFileName + formattedDate + ".txt", logMessage + Environment.NewLine );
-
-            Logged.Invoke( logMessage ); // Raise the Logged event
-        }
-
-        public static void LogVerbose( string message )
-        {
-            if ( !MainConfig.DebugLogging )
-            {
-                return;
-            }
-
-            Log( "[Verbose] " + message );
-        }
-
-        public static async Task LogVerboseAsync( string message )
-        {
-            if ( !MainConfig.DebugLogging )
-            {
-                return;
-            }
-
-            await LogAsync( "[Verbose] " + message );
-        }
-
+        public static Task LogAsync( string message ) => LogInternalAsync( message );
+        public static void LogVerbose( string message ) => Log( "[Verbose] " + message, fileOnly:true );
+        public static Task LogVerboseAsync( string message ) => LogInternalAsync( "[Verbose] " + message, fileOnly: true );
         public static void LogWarning( string message ) => Log( "[Warning] " + message );
+        public static Task LogWarningAsync( string message ) => LogInternalAsync( "[Warning] " + message );
         public static void LogError( string message ) => Log( "[Error] " + message );
-
-        public static Task LogWarningAsync( string message ) => LogAsync( "[Warning] " + message );
+        public static Task LogErrorAsync( string message ) => LogInternalAsync( "[Error} " + message );
         public static async Task LogExceptionAsync( Exception ex ) => await Task.Run( () => LogException( ex ) );
-
-        public static async Task LogExceptionAsync
-            ( Exception ex, string customMessage ) => await Task.Run( () => LogException( ex, customMessage ) );
+        public static async Task LogExceptionAsync( Exception ex, string customMessage ) => await Task.Run( () => LogException( ex, customMessage ) );
 
         public static void LogException( Exception exception, string customMessage )
         {
@@ -143,7 +129,6 @@ namespace KOTORModSync.Core
 
             ExceptionLogged.Invoke( ex ); // Raise the ExceptionLogged event
         }
-
 
         private static void CurrentDomain_UnhandledException( object sender, UnhandledExceptionEventArgs e )
         {

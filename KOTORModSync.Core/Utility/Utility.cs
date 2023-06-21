@@ -2,9 +2,10 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using System;
-using System.Diagnostics;
+using System.ComponentModel;
 using System.IO;
-using System.Threading.Tasks;
+using System.Linq;
+using System.Reflection;
 using JetBrains.Annotations;
 
 namespace KOTORModSync.Core.Utility
@@ -18,6 +19,23 @@ namespace KOTORModSync.Core.Utility
         public static string RestoreCustomVariables
             ( string fullPath ) => fullPath.Replace( MainConfig.SourcePath.FullName, "<<modDirectory>>" )
             .Replace( MainConfig.DestinationPath.FullName, "<<kotorDirectory>>" );
+
+        [CanBeNull]
+        public static object GetEnumDescription( Enum value )
+        {
+            Type type = value.GetType();
+            string name = Enum.GetName( type, value );
+            if ( name == null )
+                return null;
+
+            FieldInfo field = type.GetField( name );
+            if ( field == null )
+                return null;
+
+            DescriptionAttribute attribute = field.GetCustomAttribute<DescriptionAttribute>();
+            return attribute?.Description;
+        }
+
 
         public static bool IsDirectoryWritable( [CanBeNull] DirectoryInfo dirPath )
         {
@@ -44,7 +62,8 @@ namespace KOTORModSync.Core.Utility
                 Logger.LogException( ex );
                 Logger.Log( $"The pathname is too long: '{dirPath.FullName}'" );
                 Logger.Log(
-                    "Please utilize the registry patch that increases the Windows legacy path limit of 260 characters or move your KOTOR2 installation to a shorter directory path."
+                    "Please utilize the registry patch that increases the Windows legacy path limit of 260 characters"
+                    + " or move your KOTOR2 installation to a shorter directory path."
                 );
             }
             catch ( IOException ex )
@@ -53,19 +72,6 @@ namespace KOTORModSync.Core.Utility
             }
 
             return false;
-        }
-
-        public static async Task WaitForProcessExitAsync( [NotNull] Process process, string processName )
-        {
-            // Wait for the process to exit
-            while ( !process.HasExited )
-                await Task.Delay( 1000 ); // 1 second is the recommended default
-
-            // Make sure the process exited correctly
-            if ( process.ExitCode != 0 )
-            {
-                throw new Exception( $"The process {processName} exited with code {process.ExitCode}." );
-            }
         }
 
         [CanBeNull]

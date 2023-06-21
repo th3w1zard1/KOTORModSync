@@ -54,9 +54,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
 
         public string Action { get; set; }
         public List<string> Source { get; set; }
-        private List<string> RealSourcePaths { get; set; }
         public string Destination { get; set; }
-        private DirectoryInfo RealDestinationPath { get; set; }
         public List<Guid> Dependencies { get; set; }
         public List<Guid> Restrictions { get; set; }
         public bool Overwrite { get; set; }
@@ -65,11 +63,33 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
         public Dictionary<FileInfo, SHA1> ExpectedChecksums { get; set; }
         public Dictionary<FileInfo, SHA1> OriginalChecksums { get; internal set; }
 
+        public enum ActionExitCode
+        {
+            UnauthorizedAccessException = -1,
+            Success,
+            InvalidSelfExtractingExecutable,
+            InvalidArchive,
+            ArchiveParseError,
+            FileNotFoundPost,
+            IOException,
+            RenameTargetAlreadyExists,
+            TSLPatcherCLIError,
+            ChildProcessError,
+            UnknownError,
+            UnknownInnerError,
+            TSLPatcherError,
+            UnknownInstruction,
+        }
+
         public void SetParentComponent( Component parentComponent ) =>
             ParentComponent = parentComponent;
 
         public static async Task<bool> ExecuteInstructionAsync( Func<Task<bool>> instructionMethod ) =>
             await instructionMethod().ConfigureAwait( false );
+
+        private List<string> RealSourcePaths { get; set; }
+        private DirectoryInfo RealDestinationPath { get; set; }
+
 
         // This method will replace custom variables such as <<modDirectory>> and <<kotorDirectory>> with their actual paths.
         // This method should not be ran before an instruction is executed.
@@ -103,7 +123,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
             }
         }
 
-        public async Task<bool> ExtractFileAsync
+        public async Task<ActionExitCode> ExtractFileAsync
             ( DirectoryInfo argDestinationPath = null, List<string> argSourcePaths = null )
         {
             try
@@ -111,11 +131,12 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                 if ( argSourcePaths == null )
                 {
                     argSourcePaths = RealSourcePaths;
+                    //argDestinationPath = RealDestinationPath; // not used in this action.
                 }
 
                 var extractionTasks = new List<Task>( 25 );
                 var semaphore = new SemaphoreSlim( 5 ); // Limiting to 5 concurrent extractions
-                bool success = true;
+                ActionExitCode exitCode = ActionExitCode.Success;
 
                 foreach ( string sourcePath in argSourcePaths )
                 {
@@ -145,7 +166,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                                 _ = Logger.LogAsync(
                                     $"[Error] '{ParentComponent.Name}' failed to extract file '{thisFile.Name}'. Invalid archive?"
                                 );
-                                success = false;
+                                exitCode = ActionExitCode.InvalidArchive;
                                 return;
                             }
 
@@ -161,7 +182,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                                     return;
                                 }
 
-                                success = false;
+                                exitCode = ActionExitCode.InvalidSelfExtractingExecutable;
                                 throw new InvalidOperationException(
                                     $"'{thisFile.Name}' is not a self-extracting executable as previously assumed. Cannot extract."
                                 );
@@ -173,7 +194,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
 
                                 if ( archive == null )
                                 {
-                                    success = false;
+                                    exitCode = ActionExitCode.ArchiveParseError;
                                     throw new InvalidOperationException( $"Unable to parse archive '{sourcePath}'" );
                                 }
 
@@ -223,6 +244,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                                         _ = Logger.LogWarningAsync(
                                             $"Skipping file '{reader.Entry.Key}' due to lack of permissions."
                                         );
+                                        exitCode = ActionExitCode.UnauthorizedAccessException;
                                     }
                                 }
                             }
@@ -236,12 +258,12 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
 
                 await Task.WhenAll( extractionTasks ); // Wait for all extraction tasks to complete
 
-                return success; // Extraction succeeded
+                return exitCode; // Extraction succeeded
             }
             catch ( Exception ex )
             {
                 await Logger.LogExceptionAsync( ex );
-                return false; // Extraction failed
+                return ActionExitCode.UnknownError; // Extraction failed
             }
         }
 
@@ -311,7 +333,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
             }
         }
 
-        public bool DeleteFile()
+        public ActionExitCode DeleteFile()
         {
             try
             {
@@ -325,7 +347,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                             $"Invalid wildcards or file does not exist: '{thisFilePath}'"
                         );
                         Logger.LogException( ex );
-                        return false;
+                        return ActionExitCode.FileNotFoundPost;
                     }
 
                     // Delete the file synchronously
@@ -337,24 +359,24 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                     catch ( Exception ex )
                     {
                         Logger.LogException( ex );
-                        return false;
+                        return ActionExitCode.UnknownInnerError;
                     }
                 }
 
-                return true;
+                return ActionExitCode.Success;
             }
             catch ( Exception ex )
             {
                 Logger.LogException( ex );
-                return false;
+                return ActionExitCode.UnknownError;
             }
         }
 
-        public bool RenameFile()
+        public ActionExitCode RenameFile()
         {
             try
             {
-                bool success = true;
+                ActionExitCode exitCode = ActionExitCode.Success;
                 foreach ( string sourcePath
                          in Source.ConvertAll( Utility.Utility.ReplaceCustomVariables )
                         )
@@ -364,7 +386,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                     if ( !File.Exists( sourcePath ) )
                     {
                         Logger.Log( $"'{fileName}' does not exist!" );
-                        success = false;
+                        exitCode = ActionExitCode.FileNotFoundPost;
                         continue;
                     }
 
@@ -382,7 +404,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                         }
                         else
                         {
-                            success = false;
+                            exitCode = ActionExitCode.RenameTargetAlreadyExists;
                             Logger.LogException(
                                 new InvalidOperationException(
                                     $"Skipping file '{sourcePath}'"
@@ -403,22 +425,22 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                     catch ( IOException ex )
                     {
                         // Handle file move error, such as destination file already exists
-                        success = false;
+                        exitCode = ActionExitCode.IOException;
                         Logger.LogException( ex );
                     }
                 }
 
-                return success;
+                return exitCode;
             }
             catch ( Exception ex )
             {
                 // Handle any unexpected exceptions
                 Logger.LogException( ex );
-                return false;
+                return ActionExitCode.UnknownError;
             }
         }
 
-        public bool CopyFile()
+        public ActionExitCode CopyFile()
         {
             try
             {
@@ -453,16 +475,16 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                     File.Copy( sourcePath, destinationFilePath );
                 }
 
-                return true;
+                return ActionExitCode.Success;
             }
             catch ( Exception ex )
             {
                 Logger.LogException( ex );
-                return false;
+                return ActionExitCode.UnknownError;
             }
         }
 
-        public bool MoveFile()
+        public ActionExitCode MoveFile()
         {
             try
             {
@@ -498,16 +520,17 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                     File.Move( sourcePath, destinationFilePath );
                 }
 
-                return true;
+                return ActionExitCode.Success;
             }
             catch ( Exception ex )
             {
                 Logger.LogException( ex );
-                return false;
+                return ActionExitCode.UnknownError;
             }
         }
 
-        public async Task<bool> ExecuteTSLPatcherAsync()
+        // todo: define exit codes here.
+        public async Task<ActionExitCode> ExecuteTSLPatcherAsync()
         {
             try
             {
@@ -558,17 +581,22 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                     );
 
                     await Logger.LogAsync( "Run TSLPatcher..." );
-                    (int exitCode, string output, string error)
+                    ( int exitCode, string output, string error )
                         = await PlatformAgnosticMethods.ExecuteProcessAsync( tslPatcherCliPath, args );
                     await Logger.LogVerboseAsync( $"'{tslPatcherCliPath.Name}' exited with exit code {exitCode}" );
 
                     await Logger.LogAsync( !string.IsNullOrEmpty( output ) ? output : null );
                     await Logger.LogAsync( !string.IsNullOrEmpty( error ) ? error : null );
 
-                    return exitCode == 0;
+                    return exitCode == 0 ? ActionExitCode.Success : ActionExitCode.TSLPatcherCLIError;
                 }
 
-                return false;
+                return ActionExitCode.Success;
+            }
+            catch ( DirectoryNotFoundException ex)
+            {
+                await Logger.LogExceptionAsync( ex );
+                throw;
             }
             catch ( Exception ex )
             {
@@ -577,11 +605,11 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
             }
         }
 
-        public async Task<bool> ExecuteProgramAsync()
+        public async Task<ActionExitCode> ExecuteProgramAsync()
         {
             try
             {
-                bool isSuccess = true; // Track the success status
+                ActionExitCode exitCode = ActionExitCode.Success; // Track the success status
                 foreach ( string sourcePath in RealSourcePaths )
                 {
                     try
@@ -601,29 +629,36 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                             );
                         }
 
-                        (int exitCode, string output, string error)
+                        ( int childExitCode, string output, string error )
                             = await PlatformAgnosticMethods.ExecuteProcessAsync( thisProgram );
-                        if ( exitCode == 0 )
+
+                        _ = Logger.LogVerboseAsync( output + Environment.NewLine + error );
+                        if ( childExitCode == 0 )
                         {
                             continue;
                         }
 
-                        isSuccess = false;
+                        exitCode = ActionExitCode.ChildProcessError;
                         break;
+                    }
+                    catch ( FileNotFoundException ex )
+                    {
+                        await Logger.LogExceptionAsync( ex );
+                        return ActionExitCode.FileNotFoundPost;
                     }
                     catch ( Exception ex )
                     {
                         await Logger.LogExceptionAsync( ex );
-                        return false;
+                        return ActionExitCode.UnknownInnerError;
                     }
                 }
 
-                return isSuccess;
+                return exitCode;
             }
             catch ( Exception ex )
             {
                 await Logger.LogExceptionAsync( ex );
-                return false;
+                return ActionExitCode.UnknownError;
             }
         }
 

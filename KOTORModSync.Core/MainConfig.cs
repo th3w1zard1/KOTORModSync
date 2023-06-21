@@ -18,12 +18,34 @@ namespace KOTORModSync.Core
     [SuppressMessage( "CodeQuality", "IDE0079:Remove unnecessary suppression", Justification = "<Pending>" )]
     public class MainConfig : INotifyPropertyChanged
     {
+        [Description( "Only components with the selected compatibility level will be installed" )]
         public enum CompatibilityLevel
         {
+            [Description( "Fully Compatibile" )]
             Compatible = 0,
+
+            [Description( "Mostly Compatible" )]
             MostlyCompatible = 1,
+
+            [Description( "Not Tested" )]
             Untested = 2,
+
+            [Description( "INCOMPATIBLE" )]
             Incompatible = 3
+        }
+
+        public enum AvailablePatchers
+        {
+            [DefaultValue(true)]
+            [Description( "Use TSLPatcher" )]
+            TSLPatcher = 0,
+
+            [Category("Not Tested - use as own risk")]
+            [Description( "Use TSLPatcherCLI")]
+            TSLPatcherCLI = 1, // not tested
+
+            [Description( "Use HoloPatcher" )]
+            HoloPatcher = 2
         }
 
         public static DirectoryInfo SourcePath { get; private set; }
@@ -32,8 +54,9 @@ namespace KOTORModSync.Core
         public static DirectoryInfo LastOutputDirectory { get; private set; }
         public static bool AttemptFixes { get; private set; }
         public static bool DefaultInstall { get; private set; }
-        public static bool TslPatcherCli { get; private set; }
+        public static AvailablePatchers PatcherOption { get; private set; }
         public static CompatibilityLevel CurrentCompatibilityLevel { get; private set; }
+        public static bool NoAdmin { get; private set; }
 
         public DirectoryInfo sourcePath
         {
@@ -59,6 +82,16 @@ namespace KOTORModSync.Core
 
         [CanBeNull] public string destinationPathFullName => DestinationPath?.FullName;
 
+        public AvailablePatchers patcherOption
+        {
+            get => PatcherOption;
+            set
+            {
+                PatcherOption = value;
+                OnPropertyChanged( nameof( PatcherOption ) );
+            }
+        }
+
         public CompatibilityLevel currentCompatibilityLevel
         {
             get => CurrentCompatibilityLevel;
@@ -67,6 +100,12 @@ namespace KOTORModSync.Core
                 CurrentCompatibilityLevel = value;
                 OnPropertyChanged( nameof( CurrentCompatibilityLevel ) );
             }
+        }
+
+        public bool noAdmin
+        {
+            get => NoAdmin;
+            set => NoAdmin = value;
         }
 
         public bool debugLogging
@@ -91,12 +130,6 @@ namespace KOTORModSync.Core
         {
             get => AttemptFixes;
             set => AttemptFixes = value;
-        }
-
-        public bool tslPatcherCli
-        {
-            get => TslPatcherCli;
-            set => TslPatcherCli = value;
         }
 
         public event PropertyChangedEventHandler PropertyChanged;

@@ -16,6 +16,7 @@ using Nett;
 using SharpCompress.Archives;
 using Tomlyn;
 using Tomlyn.Syntax;
+using static KOTORModSync.Core.Utility.CallbackObjects;
 using Toml = Tomlyn.Toml;
 using TomlObject = Tomlyn.Model.TomlObject;
 using TomlTable = Tomlyn.Model.TomlTable;
@@ -584,7 +585,7 @@ namespace KOTORModSync.Core
                     components.Add( component );
                     if ( component.Instructions == null )
                     {
-                        Logger.Log( $"{component.Name} is missing instructions" );
+                        Logger.Log( $"'{component.Name}' is missing instructions" );
                         continue;
                     }
 
@@ -604,274 +605,33 @@ namespace KOTORModSync.Core
             return null;
         }
 
-        public async Task<(bool success, Dictionary<FileInfo, SHA1> originalChecksums)>
-            ExecuteInstructions
-            (
-                CallbackObjects.IConfirmationDialogCallback confirmDialog,
-                CallbackObjects.IOptionsDialogCallback optionsDialog,
-                List<Component> componentsList
-            )
+        public enum InstallExitCode
+        {
+            [Description( "Completed Successfully" )]
+            Success,
+
+            [Description( "User cancelled the installation." )]
+            UserCancelledInstall,
+
+            [Description("something about invalid operations")]
+            InvalidOperation,
+
+            [Description( "An unexpected exception was thrown" )]
+            UnexpectedException,
+
+            [Description( "something about an unknown error" )]
+            UnknownError,
+            TSLPatcherError,
+            ValidationPostInstallMismatch
+        }
+
+        public async Task<InstallExitCode> InstallAsync(List<Component> componentsList)
         {
             try
             {
-                // Check if we have permission to write to the Destination directory
-                if ( !Utility.Utility.IsDirectoryWritable( MainConfig.DestinationPath ) )
-                {
-                    throw new InvalidOperationException( "[Error] Cannot write to the destination directory." );
-                }
-
-                (bool, Dictionary<FileInfo, SHA1>) result = await ProcessComponentAsync( this );
-                if ( result.Item1 )
-                {
-                    return (true, null);
-                }
-
-                await Logger.LogExceptionAsync(
-                    new Exception( $"[Error] Component {Name} failed to install the mod correctly with {result}" )
-                );
-                return (false, null);
-
-                async Task<(bool, Dictionary<FileInfo, SHA1>)> ProcessComponentAsync( Component component )
-                {
-                    for ( int i1 = 0;
-                         i1 < component.Instructions.Count;
-                         i1++ )
-                    {
-                        Instruction instruction = component.Instructions[i1]
-                            ?? throw new ArgumentException(
-                                $"[Error] instruction null at index {i1}",
-                                nameof( componentsList )
-                            );
-
-                        //The instruction will run if any of the following conditions are met:
-                        //The instruction has no dependencies or restrictions.
-                        //The instruction has dependencies, and all of the required components are being installed.
-                        //The instruction has restrictions, but none of the restricted components are being installed.
-                        bool shouldRunInstruction = true;
-                        if ( instruction.Dependencies?.Count > 0 )
-                        {
-                            shouldRunInstruction = instruction.Dependencies.All(
-                                requiredGuid => componentsList.Any(
-                                    checkComponent => checkComponent.Guid == requiredGuid
-                                )
-                            );
-                            if ( !shouldRunInstruction )
-                            {
-                                await Logger.LogAsync(
-                                    $"[Information] Skipping instruction '{instruction.Action}' index {i1} due to missing dependency(s): {instruction.Dependencies}"
-                                );
-                            }
-                        }
-
-                        if ( instruction.Restrictions?.Count > 0 )
-                        {
-                            shouldRunInstruction &= !instruction.Restrictions.Any(
-                                restrictedGuid => componentsList.Any(
-                                    checkComponent => checkComponent.Guid == restrictedGuid
-                                )
-                            );
-                            if ( !shouldRunInstruction )
-                            {
-                                await Logger.LogAsync(
-                                    $"[Information] Not running instruction {instruction.Action} index {i1} due to restricted components installed: {instruction.Restrictions}"
-                                );
-                            }
-                        }
-
-                        if ( !shouldRunInstruction ) continue;
-
-                        // Get the original check-sums before making any modifications
-                        /*Logger.Log("Calculating game install file hashes");
-                    var originalPathsToChecksum = MainConfig.DestinationPath.GetFiles("*.*", SearchOption.AllDirectories)
-                        .ToDictionary(file => file, file => FileChecksumValidator.CalculateSHA1Async(file).Result);
-
-                    if (instruction.OriginalChecksums == null)
-                    {
-                        instruction.OriginalChecksums = originalPathsToChecksum;
-                    }
-                    else if (!instruction.OriginalChecksums.SequenceEqual(originalPathsToChecksum))
-                    {
-                        Logger.Log("Warning! Original checksums of your KOTOR directory do not match the instructions file.");
-                    }*/
-
-                        //parse the source/destinations
-
-                        bool success = false;
-
-                        switch ( instruction.Action.ToLower() )
-                        {
-                            case "extract":
-                                instruction.SetRealPaths();
-                                success = await instruction.ExtractFileAsync();
-                                break;
-                            case "delete":
-                                instruction.SetRealPaths();
-                                success = instruction.DeleteFile();
-                                break;
-                            case "delduplicate":
-                                instruction.SetRealPaths( true );
-                                instruction.DeleteDuplicateFile();
-                                success = true;
-                                break;
-                            case "copy":
-                                instruction.SetRealPaths();
-                                success = instruction.CopyFile();
-                                break;
-                            case "move":
-                                instruction.SetRealPaths();
-                                success = instruction.MoveFile();
-                                break;
-                            case "rename":
-                                instruction.SetRealPaths();
-                                success = instruction.RenameFile();
-                                break;
-                            case "patch":
-                            case "tslpatcher":
-                                instruction.SetRealPaths();
-                                success = MainConfig.TslPatcherCli
-                                    ? await instruction.ExecuteTSLPatcherAsync()
-                                    : await instruction.ExecuteProgramAsync();
-                                if ( !success )
-                                {
-                                    break;
-                                }
-
-                                try
-                                {
-                                    List<string> installErrors = instruction.VerifyInstall();
-                                    if ( installErrors.Count > 0 )
-                                    {
-                                        await Logger.LogAsync( string.Join( "\n", installErrors ) );
-                                    }
-
-                                    success &= installErrors.Count == 0;
-                                }
-                                catch ( FileNotFoundException )
-                                {
-                                    success = false;
-                                }
-
-                                break;
-                            case "execute":
-                            case "run":
-                                instruction.SetRealPaths();
-                                success = await instruction.ExecuteProgramAsync();
-                                break;
-
-                            case "choose":
-                                instruction.SetRealPaths();
-                                List<Option> options = ChooseOptions( instruction );
-                                List<string> optionNames = options.ConvertAll( option => option.Name );
-
-                                string selectedOptionName = await optionsDialog.ShowOptionsDialog( optionNames )
-                                    ?? throw new NullReferenceException( nameof( optionNames ) );
-                                Option selectedOption = null;
-
-                                foreach ( Option option in options )
-                                {
-                                    string optionName = option.Name;
-                                    if ( optionName != selectedOptionName )
-                                    {
-                                        continue;
-                                    }
-
-                                    selectedOption = option;
-                                    break;
-                                }
-
-                                if ( selectedOption != null )
-                                {
-                                    ChosenOptions.Add( selectedOption );
-                                }
-
-                                break;
-                            case "backup": //todo
-                            case "confirm":
-                            /*(var sourcePaths, var something) = instruction.ParsePaths();
-                        bool confirmationResult = await confirmDialog.ShowConfirmationDialog(sourcePaths.FirstOrDefault());
-                        if (!confirmationResult)
-                        {
-                            this.Confirmations.Add(true);
-                        }
-                        break;*/
-                            case "inform":
-                            default:
-                                // Handle unknown instruction type here
-                                await Logger.LogWarningAsync( $"Unknown instruction {instruction.Action}" );
-                                success = false;
-                                break;
-                        }
-
-                        if ( !success )
-                        {
-                            await Logger.LogAsync( $"Instruction {instruction.Action} failed at index {i1}." );
-                            bool? confirmationResult = await confirmDialog.ShowConfirmationDialog(
-                                $"An error occurred during the installation of mod '{Name}'."
-                                + " Do you want to retry this instruction?"
-                                + Environment.NewLine
-                                + Environment.NewLine
-                                + " Select 'Yes' to retry,"
-                                + " 'No' to proceed to the next instruction,"
-                                + $" or close this window to abort the installation of '{Name}'."
-                            );
-
-
-                            switch ( confirmationResult )
-                            {
-                                // repeat instruction
-                                case true:
-                                    i1--;
-                                    continue;
-
-                                // execute next instruction
-                                case false:
-                                    continue;
-
-                                // case null: cancel installing this mod (user closed confirmation dialog)
-                                default:
-                                    return (false, null);
-                            }
-                        }
-
-                        /*if (instruction.ExpectedChecksums != null)
-                        {
-                            // Get the new checksums after the modifications
-                            var validator = new FileChecksumValidator(
-                                destinationPath: MainConfig.DestinationPath.FullName,
-                                expectedChecksums: instruction.ExpectedChecksums,
-                                originalChecksums: originalPathsToChecksum
-                            );
-                            bool checksumsMatch = await validator.ValidateChecksumsAsync();
-                            if (checksumsMatch)
-                            {
-                                _ = Logger.LogAsync($"Component {component.Name}'s instruction '{instruction.Action}' succeeded and modified files have expected checksums.");
-                            }
-                            else
-                            {
-                                _ = Logger.LogAsync($"Component {component.Name}'s instruction '{instruction.Action}' succeeded but modified files have unexpected checksums.");
-                                bool confirmationResult = await confirmDialog.ShowConfirmationDialog("Warning! Checksums after running install step are not the same as expected. Continue anyway?");
-                                if (!confirmationResult)
-                                {
-                                    return (false, originalPathsToChecksum);
-                                }
-                            }
-                        }
-                        else
-                        {
-                            _ = Logger.LogAsync($"Component {component.Name}'s instruction '{instruction.Action}' ran, saving the new checksums as expected.");
-                            var newChecksums = new Dictionary<FileInfo, System.Security.Cryptography.SHA1>();
-                            foreach (FileInfo file in MainConfig.DestinationPath.GetFiles("*.*", SearchOption.AllDirectories))
-                            {
-                                System.Security.Cryptography.SHA1 sha1 = await FileChecksumValidator.CalculateSHA1Async(file);
-                                newChecksums[file] = sha1;
-                            }
-                        }*/
-
-                        _ = Logger.LogAsync( $"Successfully completed instruction #{i1 + 1} '{instruction.Action}'" );
-                    }
-
-                    return (true, new Dictionary<FileInfo, SHA1>());
-                }
+                (InstallExitCode, Dictionary<SHA1, FileInfo>) result = await ExecuteInstructionsAsync( componentsList );
+                await Logger.LogVerboseAsync( (string)Utility.Utility.GetEnumDescription(result.Item1) );
+                return result.Item1;
             }
             catch ( InvalidOperationException ex )
             {
@@ -886,7 +646,287 @@ namespace KOTORModSync.Core
                 );
             }
 
-            return (false, new Dictionary<FileInfo, SHA1>());
+            return InstallExitCode.UnknownError;
+        }
+
+        private async Task<(InstallExitCode, Dictionary<SHA1, FileInfo>)> ExecuteInstructionsAsync
+        (
+            List<Component> componentsList
+        )
+        {
+            for ( int instructionIndex = 1;
+                 instructionIndex <= this.Instructions.Count;
+                 instructionIndex++ )
+            {
+                Instruction instruction = this.Instructions[instructionIndex - 1];
+
+                if ( !ShouldRunInstruction( instruction, componentsList ) )
+                    continue;
+
+                // Get the original check-sums before making any modifications
+                await Logger.LogAsync("Checking file hashes of the install location for mismatch...");
+                var preinstallChecksums = MainConfig.DestinationPath.GetFiles("*.*", SearchOption.AllDirectories)
+                    .ToDictionary(file => file, file => FileChecksumValidator.CalculateSha1Async(file).Result);
+
+                if (instruction.OriginalChecksums == null)
+                {
+                    _ = Logger.LogVerboseAsync(
+                        "Instructions file has no checksums available, storing checksums for the current install location as the default checksums."
+                    );
+                    instruction.OriginalChecksums = preinstallChecksums;
+                }
+                else if ( !instruction.OriginalChecksums.SequenceEqual( preinstallChecksums ) )
+                {
+                    await Logger.LogAsync( "Warning! Original checksums of your KOTOR directory do not match the expected checksums from the instructions file." );
+
+                    string message =
+                        "WARNING! Some files from your install directory do not match what is expected." + Environment.NewLine
+                        + "This usually happens when there's unexpected components already installed." + Environment.NewLine
+                        + "Ensure your install location has the required mods installed (usually you want to start with the Vanilla (factory) defaults)";
+
+                    bool? confirmationResult = await PromptUserInstallError( message );
+                    switch ( confirmationResult )
+                    {
+                        // repeat instruction
+                        case true:
+                            instructionIndex -= 1;
+                            continue;
+
+                        // execute next instruction
+                        case false:
+                            continue;
+
+                        // case null: cancel installing this mod (user closed confirmation dialog)
+                        default:
+                            return (InstallExitCode.UserCancelledInstall, null);
+                    }
+                }
+
+                Instruction.ActionExitCode exitCode = Instruction.ActionExitCode.Success;
+
+                switch ( instruction.Action.ToLower() )
+                {
+                    case "extract":
+                        instruction.SetRealPaths();
+                        exitCode = await instruction.ExtractFileAsync();
+                        break;
+                    case "delete":
+                        instruction.SetRealPaths();
+                        exitCode = instruction.DeleteFile();
+                        break;
+                    case "delduplicate":
+                        instruction.SetRealPaths( true );
+                        instruction.DeleteDuplicateFile();
+                        exitCode = Instruction.ActionExitCode.Success;
+                        break;
+                    case "copy":
+                        instruction.SetRealPaths();
+                        exitCode = instruction.CopyFile();
+                        break;
+                    case "move":
+                        instruction.SetRealPaths();
+                        exitCode = instruction.MoveFile();
+                        break;
+                    case "rename":
+                        instruction.SetRealPaths();
+                        exitCode = instruction.RenameFile();
+                        break;
+                    case "patch":
+                    case "holopatcher":
+                    case "tslpatcher":
+                        instruction.SetRealPaths();
+                        switch ( MainConfig.PatcherOption )
+                        {
+                            case MainConfig.AvailablePatchers.TSLPatcher:
+                                exitCode = await instruction.ExecuteTSLPatcherAsync();
+                                break;
+                            case MainConfig.AvailablePatchers.TSLPatcherCLI:
+                                exitCode = await instruction.ExecuteProgramAsync();
+                                break;
+                            case MainConfig.AvailablePatchers.HoloPatcher:
+                                throw new NotImplementedException();
+                            default:
+                                throw new InvalidOperationException();
+                        }
+
+                        try
+                        {
+                            List<string> installErrors = instruction.VerifyInstall();
+                            if ( installErrors.Count > 0 )
+                            {
+                                await Logger.LogAsync( string.Join( "\n", installErrors ) );
+                                exitCode = Instruction.ActionExitCode.TSLPatcherError;
+                            }
+                        }
+                        catch ( FileNotFoundException )
+                        {
+                            exitCode = Instruction.ActionExitCode.TSLPatcherError;
+                        }
+
+                        break;
+                    case "execute":
+                    case "run":
+                        instruction.SetRealPaths();
+                        exitCode = await instruction.ExecuteProgramAsync();
+                        break;
+
+                    case "choose":
+                        instruction.SetRealPaths();
+                        List<Option> options = ChooseOptions( instruction );
+                        List<string> optionNames = options.ConvertAll( option => option.Name );
+
+                        string selectedOptionName = await OptionsCallback.ShowOptionsDialog( optionNames )
+                            ?? throw new NullReferenceException( nameof( optionNames ) );
+                        Option selectedOption = null;
+
+                        foreach ( Option option in options )
+                        {
+                            string optionName = option.Name;
+                            if ( optionName != selectedOptionName )
+                            {
+                                continue;
+                            }
+
+                            selectedOption = option;
+                            break;
+                        }
+
+                        if ( selectedOption != null )
+                        {
+                            ChosenOptions.Add( selectedOption );
+                        }
+
+                        break;
+                    case "backup": //todo
+                    case "confirm":
+                    /*(var sourcePaths, var something) = instruction.ParsePaths();
+                bool confirmationResult = await confirmDialog.ShowConfirmationDialog(sourcePaths.FirstOrDefault());
+                if (!confirmationResult)
+                {
+                    this.Confirmations.Add(true);
+                }
+                break;*/
+                    case "inform":
+                    default:
+                        // Handle unknown instruction type here
+                        await Logger.LogWarningAsync( $"Unknown instruction {instruction.Action}" );
+                        exitCode = Instruction.ActionExitCode.UnknownInstruction;
+                        break;
+                }
+
+
+                _ = Logger.LogVerboseAsync( $"Instruction #{instructionIndex} '{instruction.Action}' exited with code {exitCode}" );
+                if ( exitCode != Instruction.ActionExitCode.Success )
+                {
+                    await Logger.LogErrorAsync( $"FAILED Instruction #{instructionIndex} Action '{instruction.Action}'" );
+                    bool? confirmationResult = await PromptUserInstallError(
+                        $"An error occurred during the installation of '{this.Name}':" + Environment.NewLine
+                        + Utility.Utility.GetEnumDescription( exitCode )
+                    );
+
+                    switch ( confirmationResult )
+                    {
+                        // repeat instruction
+                        case true:
+                            instructionIndex -= 1;
+                            continue;
+
+                        // execute next instruction
+                        case false:
+                            continue;
+
+                        // case null: cancel installing this mod (user closed confirmation dialog)
+                        default:
+                            return (InstallExitCode.UserCancelledInstall, null);
+                    }
+                }
+
+                /*if (instruction.ExpectedChecksums != null)
+                {
+                    // Get the new checksums after the modifications
+                    var validator = new FileChecksumValidator(
+                        destinationPath: MainConfig.DestinationPath.FullName,
+                        expectedChecksums: instruction.ExpectedChecksums,
+                        originalChecksums: preinstallChecksums
+                    );
+                    bool checksumsMatch = await validator.ValidateChecksumsAsync();
+                    if (!checksumsMatch)
+                    {
+                        _ = Logger.LogWarningAsync($"Component '{this.Name}' instruction #{instructionIndex} '{instruction.Action}' succeeded but modified files have unexpected checksums.");
+                        return (InstallExitCode.ValidationPostInstallMismatch, preinstallChecksums);
+                    }
+
+                    _ = Logger.LogVerboseAsync($"Component '{this.Name}' instruction #{instructionIndex} '{instruction.Action}': The modified files have expected checksums.");
+                }
+                else
+                {
+                    _ = Logger.LogAsync($"Component '{this.Name}' instruction #{instructionIndex} '{instruction.Action}' ran, saving the new checksums as expected.");
+                    var newChecksums = new Dictionary<FileInfo, System.Security.Cryptography.SHA1>();
+                    foreach (FileInfo file in MainConfig.DestinationPath.GetFiles("*.*", SearchOption.AllDirectories))
+                    {
+                        System.Security.Cryptography.SHA1 sha1 = await FileChecksumValidator.CalculateSha1Async(file);
+                        newChecksums[file] = sha1;
+                    }
+                }*/
+
+                _ = Logger.LogAsync( $"Successfully completed instruction #{instructionIndex} '{instruction.Action}'" );
+
+
+                async Task<bool?> PromptUserInstallError( string message )
+                {
+                    return await ConfirmCallback.ShowConfirmationDialog(
+                        message + Environment.NewLine
+                        + "Retry this Instruction?" + Environment.NewLine
+                        + Environment.NewLine
+                        + " 'YES': RETRY this Instruction" + Environment.NewLine
+                        + " 'NO':  SKIP this instruction" + Environment.NewLine
+                        + $" CLOSE THIS WINDOW to ABORT the installation of '{this.Name}'."
+                    );
+                }
+            }
+
+            return (InstallExitCode.Success, new Dictionary<SHA1, FileInfo>());
+        }
+
+        //The instruction will run if any of the following conditions are met:
+        //The instruction has no dependencies or restrictions.
+        //The instruction has dependencies, and all of the required components are being installed.
+        //The instruction has restrictions, but none of the restricted components are being installed.
+        public bool ShouldRunInstruction( Instruction instruction, List<Component> componentsList )
+        {
+            bool shouldRunInstruction = true;
+            int instructionIndex = this.Instructions.IndexOf( instruction ) + 1;
+            if ( instruction.Dependencies?.Count > 0 )
+            {
+                shouldRunInstruction = instruction.Dependencies.All(
+                    requiredGuid => componentsList.Any(
+                        checkComponent => checkComponent.Guid == requiredGuid
+                    )
+                );
+                if ( !shouldRunInstruction )
+                {
+                    _ = Logger.LogAsync(
+                        $"[Information] Skipping instruction '{instruction.Action}' index {instructionIndex} due to missing dependency(s): {instruction.Dependencies}"
+                    );
+                }
+            }
+
+            if ( instruction.Restrictions?.Count > 0 )
+            {
+                shouldRunInstruction &= !instruction.Restrictions.Any(
+                    restrictedGuid => componentsList.Any(
+                        checkComponent => checkComponent.Guid == restrictedGuid
+                    )
+                );
+                if ( !shouldRunInstruction )
+                {
+                    _ = Logger.LogAsync(
+                        $"[Information] Not running instruction {instruction.Action} index {instructionIndex} due to restricted components installed: {instruction.Restrictions}"
+                    );
+                }
+            }
+
+            return shouldRunInstruction;
         }
 
         private List<Option> ChooseOptions( Instruction instruction )

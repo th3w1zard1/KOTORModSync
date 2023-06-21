@@ -45,6 +45,12 @@ namespace KOTORModSync.GUI
 
             // Initialize the logger
             Logger.Initialize();
+
+            // Create callback objects for use with KOTORModSync.Core
+            CallbackObjects.SetCallbackObjects(
+                new ConfirmationDialogCallback(this),
+                new OptionsDialogCallback( this )
+            );
         }
 
         private MainConfig MainConfigInstance { get; set; }
@@ -791,16 +797,12 @@ namespace KOTORModSync.GUI
                 }
 
                 _installRunning = true;
-                var confirmationDialogCallback = new ConfirmationDialogCallback( this );
-                var optionsDialogCallback = new OptionsDialogCallback( this );
-                (bool success, Dictionary<FileInfo, SHA1> originalChecksums) = await Task.Run(
-                    () => _currentComponent.ExecuteInstructions(
-                        confirmationDialogCallback,
-                        optionsDialogCallback,
+                Component.InstallExitCode exitCode = await Task.Run(
+                    () => _currentComponent.InstallAsync(
                         _components
                     )
                 );
-                if ( !success )
+                if ( exitCode == 0 )
                 {
                     await InformationDialog.ShowInformationDialog(
                         this,
@@ -912,10 +914,14 @@ namespace KOTORModSync.GUI
                     await Dispatcher.UIThread.InvokeAsync(
                         async () =>
                         {
-                            progressWindow.ProgressTextBlock.Text = $"Installing {component.Name}...\n\n"
-                                + "Executing the provided directions...\n\n"
-                                + $"{component.Directions}";
-                            progressWindow.ProgressBar.Value = (double)index / _components.Count;
+                            progressWindow.ProgressTextBlock.Text = $"Installing {component.Name}..." + Environment.NewLine
+                                + Environment.NewLine
+                                + "Executing the provided directions..." + Environment.NewLine
+                                + Environment.NewLine
+                                + component.Directions;
+
+                            double percentComplete = (double)index / _components.Count;
+                            progressWindow.ProgressBar.Value = percentComplete;
 
 
                             // Additional fallback options
@@ -930,32 +936,32 @@ namespace KOTORModSync.GUI
                     // Ensure the UI updates are processed
                     await Task.Yield();
                     await Task.Delay( 200 );
+                    
+                    await Logger.LogAsync( $"Start Install of '{component.Name}'..." );
+                    Component.InstallExitCode exitCode = await component.InstallAsync( _components );
+                    await Logger.LogVerboseAsync( $"Install of {component.Name} finished with exit code {exitCode}" );
 
-                    // Call the ExecuteInstructions method asynchronously using Task.Run
-                    await Logger.LogAsync( $"Call ExecuteInstructions for {component.Name}..." );
-                    (bool success, Dictionary<FileInfo, SHA1> originalChecksums)
-                        = await component.ExecuteInstructions(
-                            new ConfirmationDialogCallback( this ),
-                            new OptionsDialogCallback( this ),
-                            _components
-                        );
-
-                    if ( !success )
-                    {
-                        bool? confirm = await ConfirmationDialog.ShowConfirmationDialog(
-                            this,
-                            $"There was a problem installing {component.Name},"
-                            + " please check the output window."
-                            + "\n\nContinue with the next mod anyway?"
-                        );
-                        if ( confirm != true )
-                        {
-                            break;
-                        }
-                    }
-                    else
+                    if ( exitCode == 0 )
                     {
                         await Logger.LogAsync( $"Successfully installed {component.Name}" );
+                        return;
+                    }
+
+                    bool? confirm = await ConfirmationDialog.ShowConfirmationDialog(
+                        this,
+                        $"There was a problem installing {component.Name}:"
+                        + Environment.NewLine
+                        + Utility.GetEnumDescription( exitCode )
+                        + Environment.NewLine
+                        + Environment.NewLine
+                        + " Check the output window for details."
+                        + Environment.NewLine
+                        + Environment.NewLine
+                        + $"Skip '{component.Name} and install the next mod anyway? (NOT RECOMMENDED!)"
+                    );
+                    if ( confirm != true )
+                    {
+                        break;
                     }
                 }
 

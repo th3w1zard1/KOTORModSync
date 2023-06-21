@@ -7,6 +7,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
+using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 
@@ -101,50 +102,41 @@ namespace KOTORModSync.Core.Utility
         public static async Task<SHA1> CalculateSha1Async( FileInfo filePath )
         {
             var sha1 = SHA1.Create();
-            using ( FileStream stream = File.OpenRead( filePath.FullName ) )
+            using ( var stream = File.OpenRead( filePath.FullName ) )
             {
                 byte[] buffer = new byte[81920];
-                var tasks = new List<Task>( 65535 );
+                var tasks = new List<Task>();
 
                 int bytesRead;
-                long totalBytesRead = 0;
 
                 while ( ( bytesRead = await stream.ReadAsync( buffer, 0, buffer.Length ) ) > 0 )
                 {
-                    totalBytesRead += bytesRead;
-
                     byte[] data = new byte[bytesRead];
                     Buffer.BlockCopy( buffer, 0, data, 0, bytesRead );
 
-                    tasks.Add(
-                        Task.Run(
-                            () => _ = sha1.TransformBlock(
-                                data,
-                                0,
-                                bytesRead,
-                                null,
-                                0
-                            )
-                        )
-                    );
+                    int read = bytesRead;
 
-                    if ( tasks.Count < Environment.ProcessorCount * 2 ) continue;
+                    tasks.Add( Task.Run( () =>
+                    {
+                        sha1.TransformBlock( data, 0, read, null, 0 );
+                    } ) );
+
+                    if ( tasks.Count < Environment.ProcessorCount * 2 )
+                        continue;
 
                     await Task.WhenAll( tasks );
                     tasks.Clear();
                 }
 
-                _ = sha1.TransformFinalBlock(
-                    buffer,
-                    0,
-                    bytesRead // Use 'bytesRead' instead of 0
-                );
-
                 await Task.WhenAll( tasks );
+
+                sha1.TransformFinalBlock( buffer, 0, 0 );
 
                 return sha1;
             }
         }
+
+
 
         public static async Task SaveChecksumsToFileAsync( string filePath, Dictionary<DirectoryInfo, SHA1> checksums )
         {

@@ -8,6 +8,19 @@ namespace KOTORModSync.Core.Utility
 {
     public class CallbackObjects
     {
+        public static IConfirmationDialogCallback ConfirmCallback { get; private set; }
+        public static IOptionsDialogCallback OptionsCallback { get; private set; }
+
+        public static void SetCallbackObjects
+        (
+            IConfirmationDialogCallback confirmDialog,
+            IOptionsDialogCallback optionsDialog
+        )
+        {
+            ConfirmCallback = confirmDialog;
+            OptionsCallback = optionsDialog;
+        }
+
         public interface IConfirmationDialogCallback
         {
             Task<bool?> ShowConfirmationDialog( string message );

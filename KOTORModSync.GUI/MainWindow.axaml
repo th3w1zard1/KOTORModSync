@@ -16,6 +16,8 @@
 		<converters:ListToStringConverter x:Key="ListToStringConverter" />
         <converters:IndexConverter x:Key="IndexConverter"/>
         <converters:ActionConverter x:Key="ActionConverter"/>
+        <converters:ComboBoxItemConverter x:Key="ComboBoxItemConverter"/>
+        <converters:EnumDescriptionConverter x:Key="enumConverter" />
 	</Window.Resources>
 	<Grid x:Name="MainGrid" MinWidth="200" RowDefinitions="Auto,*">
 		<Grid.ColumnDefinitions>
@@ -221,9 +223,13 @@
 				<CheckBox Content="Default Install" IsChecked="{Binding defaultInstall}" Foreground="White" />
 				<CheckBox Content="Verbose Logging" IsChecked="{Binding debugLogging}" Foreground="White" />
 				<CheckBox Content="Auto-Fix Config Errors" IsChecked="{Binding attemptFixes}" Foreground="White" />
-				<CheckBox Content="Use TSLPatcherCLI" IsChecked="{Binding tslPatcherCli}" Foreground="White" ToolTip.Tip="Not tested - use at own risk"/>
+				<ComboBox Items="{Binding PatcherOption}" SelectedItem="{Binding patcherOption, Converter={StaticResource ComboBoxItemConverter}}" Foreground="White" ToolTip.Tip="TSLPatcherCLI is NOT tested - use at own risk"/>
 				<TextBlock Text="Compatibility Enforcement Level:" ToolTip.Tip="Determines which mods will be skipped."/>
-                <ComboBox Items="{Binding CompatibilityLevel}" SelectedItem="{Binding currentCompatibilityLevel}" />
+                <ComboBox
+                    Items="{Binding currentCompatibilityLevel}"
+                    SelectedItem="{Binding currentCompatibilityLevel, Mode=TwoWay, Converter={StaticResource enumConverter}}"
+                    Margin="0"
+                    IsTabStop="True"/>
                 <TextBlock Text="Theme"/>
                 <ComboBox x:Name="StyleComboBox" SelectedIndex="0"
                           SelectionChanged="StyleComboBox_SelectionChanged">

@@ -5,6 +5,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
@@ -20,6 +21,7 @@ using Avalonia.Threading;
 using JetBrains.Annotations;
 using KOTORModSync.Core;
 using KOTORModSync.Core.Utility;
+using Component = KOTORModSync.Core.Component;
 
 // ReSharper disable UnusedParameter.Local
 // ReSharper disable MemberCanBeMadeStatic.Local
@@ -522,7 +524,7 @@ namespace KOTORModSync.GUI
             }
         }
 
-        private async void BrowseDestination_Click( object sender, RoutedEventArgs e )
+        private async void BrowseDestination_Click( [CanBeNull] object sender, RoutedEventArgs e )
         {
             try
             {
@@ -757,6 +759,15 @@ namespace KOTORModSync.GUI
         {
             try
             {
+                if ( _installRunning )
+                {
+                    await InformationDialog.ShowInformationDialog(
+                        this,
+                        "There's already another installation running, please check the output window."
+                    );
+                    return;
+                }
+
                 if ( MainConfigInstance == null || MainConfig.DestinationPath == null )
                 {
                     var informationDialog = new InformationDialog { InfoText = "Please set your directories first" };
@@ -778,55 +789,71 @@ namespace KOTORModSync.GUI
                 {
                     bool? confirm = await ConfirmationDialog.ShowConfirmationDialog(
                         this,
-                        _currentComponent.Directions + "\r\n\r\n Press Yes to execute these directions now."
+                        _currentComponent.Directions + Environment.NewLine
+                        + Environment.NewLine
+                        + "Press Yes to execute these directions now."
                     );
                     if ( confirm != true )
                     {
-                        await Logger.LogAsync( $"User cancelled install of {_currentComponent.Name}" );
+                        await Logger.LogAsync( $"User cancelled install of '{_currentComponent.Name}'" );
                         return;
                     }
                 }
 
-                if ( _installRunning )
+                try
                 {
-                    await InformationDialog.ShowInformationDialog(
-                        this,
-                        "There's already another installation running, please check the output window."
+                    _installRunning = true;
+                    Component.InstallExitCode exitCode = await Task.Run(
+                        () => _currentComponent.InstallAsync(
+                            _components
+                        )
                     );
-                    return;
-                }
+                    if ( exitCode == 0 )
+                    {
+                        await InformationDialog.ShowInformationDialog(
+                            this,
+                            $"There was a problem installing '{_currentComponent.Name}':"
+                            + Environment.NewLine
+                            + Utility.GetEnumDescription( exitCode )
+                            + Environment.NewLine
+                            + Environment.NewLine
+                            + " Check the output window for details."
+                        );
+                    }
+                    else
+                    {
+                        await Logger.LogAsync( $"Successfully installed '{_currentComponent.Name}'" );
+                    }
 
-                _installRunning = true;
-                Component.InstallExitCode exitCode = await Task.Run(
-                    () => _currentComponent.InstallAsync(
-                        _components
-                    )
-                );
-                if ( exitCode == 0 )
-                {
-                    await InformationDialog.ShowInformationDialog(
-                        this,
-                        $"There was a problem installing {_currentComponent.Name}, please check the output window"
-                    );
+                    _installRunning = false;
                 }
-                else
+                catch ( Exception )
                 {
-                    await Logger.LogAsync( $"Successfully installed {_currentComponent.Name}" );
+                    _installRunning = false;
+                    throw;
                 }
-
-                _installRunning = false;
             }
             catch ( Exception ex )
             {
                 await Logger.LogExceptionAsync( ex );
-                _installRunning = false;
             }
         }
+
+        private bool _progressWindowClosed = false;
 
         private async void StartInstall_Click( object sender, RoutedEventArgs e )
         {
             try
             {
+                if ( _installRunning )
+                {
+                    await InformationDialog.ShowInformationDialog(
+                        this,
+                        "There's already an installation running, please check the output window."
+                    );
+                    return;
+                }
+
                 if ( MainConfigInstance == null || MainConfig.DestinationPath == null )
                 {
                     await InformationDialog.ShowInformationDialog( this, "Please set your directories first" );
@@ -842,136 +869,146 @@ namespace KOTORModSync.GUI
                     return;
                 }
 
-                if ( _installRunning )
+                try
                 {
-                    await InformationDialog.ShowInformationDialog(
-                        this,
-                        "There's already an installation running, please check the output window."
-                    );
-                    return;
-                }
+                    _ = Logger.LogAsync( "Start installing all mods..." );
+                    _installRunning = true;
 
-                if ( await ConfirmationDialog.ShowConfirmationDialog( this, "Really install all mods?" ) != true )
-                {
-                    return;
-                }
+                    await Logger.LogAsync( "Running validation of all components, this might take a while..." );
 
-                await Logger.LogAsync( "Running validation of all components, this might take a while..." );
-
-                bool valSuccess = true;
-                foreach ( Component component in _components )
-                {
-                    var validator = new ComponentValidation( component );
-                    await Logger.LogVerboseAsync( $" == Validating {component.Name} == " );
-                    valSuccess &= validator.Run();
-                }
-
-                // Ensure necessary directories are writable.
-                bool isWritable = Utility.IsDirectoryWritable( MainConfig.DestinationPath )
-                    && Utility.IsDirectoryWritable( MainConfig.SourcePath );
-
-                string informationMessage = "There were issues with your instructions file."
-                    + " Please review the output window for more information."
-                    + " Absolutely no files were modified during this process.";
-
-                if ( !isWritable )
-                {
-                    informationMessage = "The Mod directory and/or the KOTOR directory are not writable."
-                        + " Please ensure administrative privileges or reinstall KOTOR"
-                        + " to a directory of which you have write access.";
-                }
-
-                if ( !valSuccess || !isWritable )
-                {
-                    await InformationDialog.ShowInformationDialog( this, informationMessage );
-                    return;
-                }
-
-                if ( await ConfirmationDialog.ShowConfirmationDialog(
-                        this,
-                        "WARNING! While there is code in place to prevent incorrect instructions from running,"
-                        + $" the program cannot predict every possible mistake a user could make in a config file.{Environment.NewLine}"
-                        + " Additionally, the modbuild can be 20GB or larger! As a result, we cannot create any backups."
-                        + " Please ensure you've backed up your KOTOR2 directory"
-                        + $" and you've ensured you're running a Vanilla installation.{Environment.NewLine}{Environment.NewLine}"
-                        + " Are you sure you're ready to continue?"
-                    )
-                    != true )
-                {
-                    return;
-                }
-
-                _ = Logger.LogAsync( "Start installing all mods..." );
-                _installRunning = true;
-                var progressWindow = new ProgressWindow();
-                progressWindow.Closed += ProgressWindowClosed;
-                progressWindow.ProgressBar.Value = 0;
-                progressWindow.Show();
-
-                for ( int index = 0; index < _components.Count; index++ )
-                {
-                    Component component = _components[index];
-                    await Dispatcher.UIThread.InvokeAsync(
-                        async () =>
-                        {
-                            progressWindow.ProgressTextBlock.Text = $"Installing {component.Name}..." + Environment.NewLine
-                                + Environment.NewLine
-                                + "Executing the provided directions..." + Environment.NewLine
-                                + Environment.NewLine
-                                + component.Directions;
-
-                            double percentComplete = (double)index / _components.Count;
-                            progressWindow.ProgressBar.Value = percentComplete;
-
-
-                            // Additional fallback options
-                            await Task.Delay( 100 ); // Introduce a small delay
-                            await Dispatcher.UIThread.InvokeAsync(
-                                () => { }
-                            ); // Invoke an empty action to ensure UI updates are processed
-                            await Task.Delay( 50 ); // Introduce another small delay
-                        }
-                    );
-
-                    // Ensure the UI updates are processed
-                    await Task.Yield();
-                    await Task.Delay( 200 );
-
-                    await Logger.LogAsync( $"Start Install of '{component.Name}'..." );
-                    Component.InstallExitCode exitCode = await component.InstallAsync( _components );
-                    await Logger.LogVerboseAsync( $"Install of {component.Name} finished with exit code {exitCode}" );
-
-                    if ( exitCode == 0 )
+                    bool valSuccess = true;
+                    foreach ( Component component in _components )
                     {
-                        await Logger.LogAsync( $"Successfully installed {component.Name}" );
+                        var validator = new ComponentValidation( component );
+                        await Logger.LogVerboseAsync( $" == Validating '{component.Name}' == " );
+                        valSuccess &= validator.Run();
+                    }
+
+                    // Ensure necessary directories are writable.
+                    bool isWritable = Utility.IsDirectoryWritable( MainConfig.DestinationPath )
+                        && Utility.IsDirectoryWritable( MainConfig.SourcePath );
+
+                    string informationMessage = "There were issues with your instructions file."
+                        + " Please review the output window for more information."
+                        + " Absolutely no files were modified during this process.";
+
+                    if ( !isWritable )
+                    {
+                        informationMessage = "The Mod directory and/or the KOTOR directory are not writable."
+                            + " Please ensure administrative privileges or reinstall KOTOR"
+                            + " to a directory of which you have write access.";
+                    }
+
+                    if ( !valSuccess || !isWritable )
+                    {
+                        await InformationDialog.ShowInformationDialog( this, informationMessage );
                         return;
                     }
 
-                    bool? confirm = await ConfirmationDialog.ShowConfirmationDialog(
-                        this,
-                        $"There was a problem installing {component.Name}:"
-                        + Environment.NewLine
-                        + Utility.GetEnumDescription( exitCode )
-                        + Environment.NewLine
-                        + Environment.NewLine
-                        + " Check the output window for details."
-                        + Environment.NewLine
-                        + Environment.NewLine
-                        + $"Skip '{component.Name} and install the next mod anyway? (NOT RECOMMENDED!)"
-                    );
-                    if ( confirm != true )
+                    if ( await ConfirmationDialog.ShowConfirmationDialog( this, "Really install all mods?" ) != true )
                     {
-                        break;
+                        return;
                     }
-                }
 
-                progressWindow.Close();
-                _installRunning = false;
+                    if ( await ConfirmationDialog.ShowConfirmationDialog(
+                            this,
+                            "WARNING! While there is code in place to prevent incorrect instructions from running,"
+                            + $" the program cannot predict every possible mistake a user could make in a config file.{Environment.NewLine}"
+                            + " Additionally, the modbuild can be 20GB or larger! As a result, we cannot create any backups."
+                            + " Please ensure you've backed up your Install directory"
+                            + $" and you've ensured you're running a Vanilla installation.{Environment.NewLine}{Environment.NewLine}"
+                            + " Are you sure you're ready to continue?"
+                        )
+                        != true )
+                    {
+                        return;
+                    }
+
+                    var progressWindow = new ProgressWindow();
+                    progressWindow.Closed += ProgressWindowClosed;
+                    progressWindow.ProgressBar.Value = 0;
+                    progressWindow.Show();
+
+                    for ( int index = 0; index < _components.Count; index++ )
+                    {
+                        if ( _progressWindowClosed )
+                        {
+                            _installRunning = false;
+                            _ = Logger.LogAsync( "User cancelled install by closing the progress window." );
+                            return;
+                        }
+
+                        Component component = _components[index];
+                        await Dispatcher.UIThread.InvokeAsync(
+                            async () =>
+                            {
+                                progressWindow.ProgressTextBlock.Text = $"Installing '{component.Name}'..." + Environment.NewLine
+                                    + Environment.NewLine
+                                    + "Executing the provided directions..." + Environment.NewLine
+                                    + Environment.NewLine
+                                    + component.Directions;
+
+                                double percentComplete = (double)index / _components.Count;
+                                progressWindow.ProgressBar.Value = percentComplete;
+                                progressWindow.InstalledRemaining.Text = $"{index}/{_components.Count + 1} Components Installed";
+                                progressWindow.PercentCompleted.Text = $"{(int)percentComplete}%";
+
+
+                                // Additional fallback options
+                                await Task.Delay( 100 ); // Introduce a small delay
+                                await Dispatcher.UIThread.InvokeAsync(
+                                    () => { }
+                                ); // Invoke an empty action to ensure UI updates are processed
+                                await Task.Delay( 50 ); // Introduce another small delay
+                            }
+                        );
+
+                        // Ensure the UI updates are processed
+                        await Task.Yield();
+                        await Task.Delay( 200 );
+
+                        await Logger.LogAsync( $"Start Install of '{component.Name}'..." );
+                        Component.InstallExitCode exitCode = await component.InstallAsync( _components );
+                        await Logger.LogVerboseAsync( $"Install of '{component.Name}' finished with exit code {exitCode}" );
+
+                        if ( exitCode != 0 )
+                        {
+                            bool? confirm = await ConfirmationDialog.ShowConfirmationDialog(
+                                this,
+                                $"There was a problem installing '{component.Name}':"
+                                + Environment.NewLine
+                                + Utility.GetEnumDescription( exitCode )
+                                + Environment.NewLine
+                                + Environment.NewLine
+                                + " Check the output window for details."
+                                + Environment.NewLine
+                                + Environment.NewLine
+                                + $"Skip '{component.Name}' and install the next mod anyway? (NOT RECOMMENDED!)"
+                            );
+                            if ( confirm == true )
+                            {
+                                continue;
+                            }
+
+                            await Logger.LogAsync( "Install cancelled" );
+                            break;
+                        }
+
+                        await Logger.LogAsync( $"Finished installed '{component.Name}'" );
+                    }
+
+                    progressWindow.Close();
+                    _installRunning = false;
+                }
+                catch ( Exception )
+                {
+                    _installRunning = false;
+                    throw;
+                }
             }
             catch ( Exception ex )
             {
                 await Logger.LogExceptionAsync( ex );
-                _installRunning = false;
             }
         }
 
@@ -985,6 +1022,7 @@ namespace KOTORModSync.GUI
             progressWindow.ProgressBar.Value = 0;
             progressWindow.Closed -= ProgressWindowClosed;
             progressWindow.Dispose();
+            _progressWindowClosed = true;
         }
 
         private async void DocsButton_Click( object sender, RoutedEventArgs e )
@@ -1069,7 +1107,7 @@ namespace KOTORModSync.GUI
 
         private async void LoadComponentDetails
         (
-            Component selectedComponent,
+            [CanBeNull] Component selectedComponent,
             bool confirmation = true
         )
         {

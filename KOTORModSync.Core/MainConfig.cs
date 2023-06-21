@@ -27,6 +27,7 @@ namespace KOTORModSync.Core
             this.patcherOption = AvailablePatchers.TSLPatcher;
             this.attemptFixes = true;
             this.defaultInstall = true;
+            this.noAdmin = false;
         }
 
         [Description( "Only components with the selected compatibility level will be installed" )]
@@ -138,6 +139,14 @@ namespace KOTORModSync.Core
         {
             get => AttemptFixes;
             set => AttemptFixes = value;
+        }
+
+        public static bool NoAdmin { get; private set; }
+
+        public bool noAdmin
+        {
+            get => NoAdmin;
+            set => NoAdmin = value;
         }
 
         public event PropertyChangedEventHandler PropertyChanged;

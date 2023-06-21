@@ -8,6 +8,7 @@ using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
 using Avalonia.Threading;
+using JetBrains.Annotations;
 using KOTORModSync.Core.Utility;
 
 namespace KOTORModSync
@@ -41,6 +42,7 @@ namespace KOTORModSync
 
         public ConfirmationDialog() => InitializeComponent();
 
+        [CanBeNull]
         public string ConfirmText
         {
             get => GetValue( s_confirmTextProperty ) as string;

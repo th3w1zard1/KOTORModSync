@@ -9,6 +9,7 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
+using JetBrains.Annotations;
 using Newtonsoft.Json;
 
 namespace KOTORModSync.Core.Utility
@@ -208,7 +209,7 @@ namespace KOTORModSync.Core.Utility
             return checksums;
         }
 
-        private static bool TryConvertHexStringToBytes( string hexString, out byte[] bytes )
+        private static bool TryConvertHexStringToBytes( string hexString, [CanBeNull] out byte[] bytes )
         {
             int numberChars = hexString.Length;
             if ( numberChars % 2 != 0 )

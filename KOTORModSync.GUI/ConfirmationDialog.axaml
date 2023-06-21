@@ -3,7 +3,7 @@
         Title="Confirmation" Width="400" Height="300"
         x:Class="KOTORModSync.ConfirmationDialog">
     <Grid>
-        <TextBlock x:Name="ConfirmTextBlock" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="16" TextWrapping="Wrap" TextTrimming="CharacterEllipsis" Margin="10" />
+        <TextBlock x:Name="ConfirmTextBlock" HorizontalAlignment="Center" TextAlignment="Center" VerticalAlignment="Center" FontSize="16" TextWrapping="Wrap" TextTrimming="CharacterEllipsis" Margin="10" />
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="10">
             <Button Content="Yes" Tag="Yes" Click="YesButton_Click" MinWidth="80" Margin="5" />
             <Button Content="No" Tag="No" Click="NoButton_Click" MinWidth="80" Margin="5" />

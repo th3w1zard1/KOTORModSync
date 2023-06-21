@@ -10,7 +10,7 @@
 		<Setter Property="FontSize" Value="14" />
 		<Setter Property="FontWeight" Value="Normal" />
 		<Setter Property="Margin" Value="0,2" />
-		<Setter Property="Foreground" Value="#2773AC" />
+		<Setter Property="Foreground" Value="#3AAAFF" />
 	</Style>
 
 	<Style Selector="Button:pointerover">
@@ -25,11 +25,11 @@
 	<Style Selector="Button">
 		<Setter Property="Margin" Value="0,2" />
 		<Setter Property="BorderThickness" Value="2" />
-		<Setter Property="BorderBrush" Value="#031332" />
+		<Setter Property="BorderBrush" Value="#062766" />
 		<Setter Property="Padding" Value="10" />
 		<Setter Property="MinWidth" Value="100" />
 		<Setter Property="Background" Value="#010116" />
-		<Setter Property="Foreground" Value="#2773AC" />
+		<Setter Property="Foreground" Value="#3AAAFF" />
 		<Setter Property="HorizontalAlignment" Value="Center" />
 		<Setter Property="VerticalAlignment" Value="Center" />
 	</Style>
@@ -71,11 +71,30 @@
 		<Setter Property="Padding" Value="2" />
 		<Setter Property="Background" Value="#010116" />
 		<Setter Property="FontFamily" Value="Verdana" />
-		<Setter Property="Foreground" Value="#2773AC" />
-		<Setter Property="BorderBrush" Value="#031332" />
+		<Setter Property="Foreground" Value="#3AAAFF" />
+		<Setter Property="BorderBrush" Value="#062766" />
 		<Setter Property="BorderThickness" Value="2" />
 		<Setter Property="FontSize" Value="14" />
 	</Style>
+    <Style Selector="ComboBox">
+        <Setter Property="Background" Value="#010116" />
+        <Setter Property="Foreground" Value="#3AAAFF"/>
+    </Style>
+    <Style Selector="CheckBox:pointerover /template/ Border#PART_BorderElement">
+        <Setter Property="BorderBrush" Value="#FFFFFF" />
+        <Setter Property="Background" Value="#010116" />
+    </Style>
+    <Style Selector="CheckBox:checked">
+        <Setter Property="BorderBrush" Value="#FFFFFF" />
+        <Setter Property="Foreground" Value="#3AAAFF"/>
+    </Style>
+    <Style Selector="CheckBox:pointerover">
+        <Setter Property="BorderBrush" Value="#FFFFFF" />
+        <Setter Property="Foreground" Value="#3AAAFF"/>
+    </Style>
+    <Style Selector="CheckBox">
+        <Setter Property="Foreground" Value="#3AAAFF"/>
+    </Style>
 
 	<Style Selector="TreeView">
 		<Setter Property="Margin" Value="2" />

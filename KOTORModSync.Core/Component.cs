@@ -544,14 +544,15 @@ namespace KOTORModSync.Core
             return component;
         }
 
+        [CanBeNull]
         public static List<Component> ReadComponentsFromFile( string filePath )
         {
             try
             {
                 // Read the contents of the file into a string
                 string tomlString = File.ReadAllText( filePath )
-                    // the code expects instructions to always be defined. When it's not, this happens on save. Then our code errors when it sees this.
-                    // make the user experience better by just removing an empty instructions key.
+                    // the code expects instructions to always be defined. When it's not, code errors and prevents a save.
+                    // make the user experience better by just removing the empty instructions key.
                     .Replace( "Instructions = []", "" )
                     .Replace( "Options = []", "" );
 
@@ -622,6 +623,8 @@ namespace KOTORModSync.Core
             [Description( "something about an unknown error" )]
             UnknownError,
             TSLPatcherError,
+
+            [Description( "The files in the install directory do not match the expected contents provided by the instructions file" )]
             ValidationPostInstallMismatch
         }
 
@@ -640,7 +643,7 @@ namespace KOTORModSync.Core
             catch ( Exception ex )
             {
                 await Logger.LogExceptionAsync( ex );
-                await Logger.LogAsync(
+                await Logger.LogErrorAsync(
                     "The above exception is not planned and has not been experienced."
                     + " Please report this to the developer."
                 );
@@ -658,13 +661,14 @@ namespace KOTORModSync.Core
                  instructionIndex <= this.Instructions.Count;
                  instructionIndex++ )
             {
+                int index = instructionIndex;
                 Instruction instruction = this.Instructions[instructionIndex - 1];
 
                 if ( !ShouldRunInstruction( instruction, componentsList ) )
                     continue;
 
                 // Get the original check-sums before making any modifications
-                await Logger.LogAsync( "Checking file hashes of the install location for mismatch..." );
+                /*await Logger.LogAsync( "Checking file hashes of the install location for mismatch..." );
                 var preinstallChecksums = MainConfig.DestinationPath.GetFiles( "*.*", SearchOption.AllDirectories )
                     .ToDictionary( file => file, file => FileChecksumValidator.CalculateSha1Async( file ).Result );
 
@@ -700,7 +704,7 @@ namespace KOTORModSync.Core
                         default:
                             return (InstallExitCode.UserCancelledInstall, null);
                     }
-                }
+                }*/
 
                 Instruction.ActionExitCode exitCode = Instruction.ActionExitCode.Success;
 
@@ -738,10 +742,10 @@ namespace KOTORModSync.Core
                         switch ( MainConfig.PatcherOption )
                         {
                             case MainConfig.AvailablePatchers.TSLPatcher:
-                                exitCode = await instruction.ExecuteTSLPatcherAsync();
+                                exitCode = await instruction.ExecuteProgramAsync();
                                 break;
                             case MainConfig.AvailablePatchers.TSLPatcherCLI:
-                                exitCode = await instruction.ExecuteProgramAsync();
+                                exitCode = await instruction.ExecuteTSLPatcherAsync();
                                 break;
                             case MainConfig.AvailablePatchers.HoloPatcher:
                                 throw new NotImplementedException();
@@ -871,16 +875,16 @@ namespace KOTORModSync.Core
 
                 _ = Logger.LogAsync( $"Successfully completed instruction #{instructionIndex} '{instruction.Action}'" );
 
-
                 async Task<bool?> PromptUserInstallError( string message )
                 {
                     return await ConfirmCallback.ShowConfirmationDialog(
                         message + Environment.NewLine
+                        + $"Instruction #{index} action '{instruction.Action}'" + Environment.NewLine
                         + "Retry this Instruction?" + Environment.NewLine
                         + Environment.NewLine
                         + " 'YES': RETRY this Instruction" + Environment.NewLine
-                        + " 'NO':  SKIP this instruction" + Environment.NewLine
-                        + $" CLOSE THIS WINDOW to ABORT the installation of '{this.Name}'."
+                        + " 'NO':  SKIP this Instruction" + Environment.NewLine
+                        + $" or CLOSE THIS WINDOW to ABORT the installation of '{this.Name}'."
                     );
                 }
             }
@@ -905,8 +909,8 @@ namespace KOTORModSync.Core
                 );
                 if ( !shouldRunInstruction )
                 {
-                    _ = Logger.LogAsync(
-                        $"[Information] Skipping instruction '{instruction.Action}' index {instructionIndex} due to missing dependency(s): {instruction.Dependencies}"
+                    _ = Logger.LogAsync( // todo: create GuidToComponent method.
+                        $"[Information] Skipping instruction '{instruction.Action}' index {instructionIndex} due to missing dependency(s): [{instruction.Dependencies}]"
                     );
                 }
             }
@@ -921,7 +925,7 @@ namespace KOTORModSync.Core
                 if ( !shouldRunInstruction )
                 {
                     _ = Logger.LogAsync(
-                        $"[Information] Not running instruction {instruction.Action} index {instructionIndex} due to restricted components installed: {instruction.Restrictions}"
+                        $"[Information] Not running instruction {instruction.Action} index {instructionIndex} due to restricted components installed: [{instruction.Restrictions}]"
                     );
                 }
             }

@@ -76,6 +76,25 @@
 		<Setter Property="BorderThickness" Value="2" />
 		<Setter Property="FontSize" Value="14" />
 	</Style>
+    <Style Selector="ComboBox">
+        <Setter Property="Background" Value="#09241D" />
+        <Setter Property="Foreground" Value="#33C3A2"/>
+    </Style>
+    <Style Selector="CheckBox:pointerover /template/ Border#PART_BorderElement">
+        <Setter Property="BorderBrush" Value="#FFFFFF" />
+        <Setter Property="Background" Value="#09241D" />
+    </Style>
+    <Style Selector="CheckBox:checked">
+        <Setter Property="BorderBrush" Value="#FFFFFF" />
+        <Setter Property="Foreground" Value="#33C3A2"/>
+    </Style>
+    <Style Selector="CheckBox:pointerover">
+        <Setter Property="BorderBrush" Value="#FFFFFF" />
+        <Setter Property="Foreground" Value="#33C3A2"/>
+    </Style>
+    <Style Selector="CheckBox">
+        <Setter Property="Foreground" Value="#33C3A2"/>
+    </Style>
 
 	<Style Selector="TreeView">
 		<Setter Property="Margin" Value="2" />

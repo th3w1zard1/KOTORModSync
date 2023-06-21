@@ -7,6 +7,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
+using System.Security.Principal;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -140,7 +141,7 @@ namespace KOTORModSync.Core.Utility
         {
             string[] shellExecutables =
             {
-                "cmd.exe", "powershell.exe", "sh", "/bin/sh", "/usr/bin/sh", "/usr/local/bin/sh", "bash",
+                "cmd.exe", "powershell.exe", "sh", "bash", "/bin/sh", "/usr/bin/sh", "/usr/local/bin/sh",
                 "/bin/bash", "/usr/bin/bash", "/usr/local/bin/bash"
             };
 
@@ -237,10 +238,69 @@ namespace KOTORModSync.Core.Utility
             switch ( unit )
             {
                 // Convert bytes/sec to MB/sec
-                case "bytes/sec": return speed / 1048576;
+                case "bytes/sec": return speed / 1024 / 1024;
                 case "mb/sec": return speed;
                 default: return maxSpeed;
             }
+        }
+
+        public static bool? IsExecutorAdmin()
+        {
+            if ( RuntimeInformation.IsOSPlatform( OSPlatform.Windows ) )
+            {
+                // Check for administrator privileges on Windows
+                WindowsIdentity windowsIdentity = WindowsIdentity.GetCurrent();
+                WindowsPrincipal windowsPrincipal = new WindowsPrincipal( windowsIdentity );
+                return windowsPrincipal.IsInRole( WindowsBuiltInRole.Administrator );
+            }
+
+            // Unsupported platform
+            if ( !RuntimeInformation.IsOSPlatform( OSPlatform.Linux )
+                && !RuntimeInformation.IsOSPlatform( OSPlatform.OSX ) )
+            {
+                return null;
+            }
+
+            // Check for root privileges on Linux and macOS
+            try
+            {
+                // Try to load the libc library and call geteuid
+                int effectiveUserId = (int)Interop.geteuid();
+                return effectiveUserId == 0;
+            }
+            catch ( DllNotFoundException )
+            {
+                // Fallback logic when the libc library is not found
+                Process process = new Process
+                {
+                    StartInfo =
+                    {
+                        FileName = "sudo",
+                        Arguments = "-n true",
+                        UseShellExecute = false,
+                        RedirectStandardOutput = true,
+                        CreateNoWindow = true
+                    }
+                };
+
+                try
+                {
+                    _ = process.Start();
+                    process.WaitForExit();
+                    return process.ExitCode == 0;
+                }
+                catch
+                {
+                    // Failed to execute the 'sudo' command
+                    return null;
+                }
+            }
+        }
+
+        private static class Interop
+        {
+            [DllImport( "libc" )]
+            public static extern uint geteuid();
         }
 
         private static List<ProcessStartInfo> GetProcessStartInfos
@@ -260,8 +320,7 @@ namespace KOTORModSync.Core.Utility
                 RedirectStandardError = true,
                 RedirectStandardInput = true,
                 ErrorDialog = false,
-                WindowStyle = ProcessWindowStyle.Hidden,
-                EnvironmentVariables = { ["__COMPAT_LAYER"] = "RunAsInvoker" }
+                WindowStyle = ProcessWindowStyle.Hidden
             },
             // perhaps the error dialog was the problem.
             new ProcessStartInfo
@@ -273,7 +332,7 @@ namespace KOTORModSync.Core.Utility
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
                 RedirectStandardInput = true,
-                EnvironmentVariables = { ["__COMPAT_LAYER"] = "RunAsInvoker" }
+                WindowStyle = ProcessWindowStyle.Hidden
             },
             // if it's not a console app or command, it needs a window.
             new ProcessStartInfo
@@ -284,15 +343,13 @@ namespace KOTORModSync.Core.Utility
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
                 RedirectStandardInput = true,
-                EnvironmentVariables = { ["__COMPAT_LAYER"] = "RunAsInvoker" }
             },
             // try without redirecting output
             new ProcessStartInfo
             {
                 FileName = programFile.FullName,
                 Arguments = cmdlineArgs,
-                UseShellExecute = false,
-                EnvironmentVariables = { ["__COMPAT_LAYER"] = "RunAsInvoker" }
+                UseShellExecute = false
             },
             // try using native shell (doesn't support output redirection, perhaps they need admin)
             new ProcessStartInfo
@@ -384,16 +441,23 @@ namespace KOTORModSync.Core.Utility
                 cmdlineArgs
             );
 
-            var ex = new Exception();
+            Exception ex = null;
             bool startedProcess = false;
-            foreach ( ProcessStartInfo startInfo in processStartInfosWithFallbacks )
+            bool? isAdmin = IsExecutorAdmin();
+            for ( int index = 0; index < processStartInfosWithFallbacks.Count; index++ )
             {
+                ProcessStartInfo startInfo = processStartInfosWithFallbacks[index];
                 try
                 {
                     // K1CP can take ages to install, set the timeout time to an hour.
                     using ( var cancellationTokenSource = new CancellationTokenSource( timeout ) )
                     using ( var process = new Process() )
                     {
+                        if ( noAdmin && !startInfo.UseShellExecute )
+                        {
+                            startInfo.EnvironmentVariables["__COMPAT_LAYER"] = "RunAsInvoker";
+                        }
+
                         process.StartInfo = startInfo;
 
                         var tcs = new TaskCompletionSource<(int, string, string)>();
@@ -442,12 +506,9 @@ namespace KOTORModSync.Core.Utility
 
                         _ = await tcs.Task;
 
-                        if ( timeout > 0 )
+                        if ( timeout > 0 && cancellationTokenSource.Token.IsCancellationRequested )
                         {
-                            if ( cancellationTokenSource.Token.IsCancellationRequested )
-                            {
-                                throw new TimeoutException( "Process timed out" );
-                            }
+                            throw new TimeoutException( "Process timed out" );
                         }
 
                         return tcs.Task.Result;
@@ -455,20 +516,25 @@ namespace KOTORModSync.Core.Utility
                 }
                 catch ( Win32Exception localException )
                 {
-                    if ( !MainConfig.DebugLogging )
+                    await Logger.LogVerboseAsync( $"Exception occurred for startInfo: '{startInfo}'" );
+                    if ( !noAdmin && isAdmin == true)
                     {
+                        startInfo.Verb = "runas";
+                        index--;
                         continue;
                     }
 
-                    await Logger.LogAsync( $"Exception occurred for startInfo: {startInfo}" );
+                    if ( !MainConfig.DebugLogging )
+                        continue;
+
                     await Logger.LogExceptionAsync( localException );
                     ex = localException;
                 }
                 catch ( Exception startinfoException )
                 {
-                    await Logger.LogAsync( $"An unplanned error has occurred trying to run {programFile.Name}." );
+                    await Logger.LogAsync( $"An unplanned error has occurred trying to run '{programFile.Name}'" );
                     await Logger.LogExceptionAsync( startinfoException );
-                    return (-6, string.Empty, string.Empty);
+                    return ( -6, string.Empty, string.Empty );
                 }
             }
 
@@ -480,7 +546,7 @@ namespace KOTORModSync.Core.Utility
             }
 
             await Logger.LogAsync( "Process failed to start with all possible combinations of arguments." );
-            await Logger.LogExceptionAsync( ex );
+            await Logger.LogExceptionAsync( ex ?? new InvalidOperationException());
             return (-1, string.Empty, string.Empty);
         }
     }

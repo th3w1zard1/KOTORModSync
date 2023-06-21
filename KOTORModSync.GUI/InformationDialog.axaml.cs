@@ -8,6 +8,7 @@ using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
 using Avalonia.Threading;
+using JetBrains.Annotations;
 
 namespace KOTORModSync
 {
@@ -18,6 +19,7 @@ namespace KOTORModSync
 
         public InformationDialog() => InitializeComponent();
 
+        [CanBeNull]
         public string InfoText
         {
             get => GetValue( InfoTextProperty ) as string;

@@ -115,7 +115,7 @@ namespace KOTORModSync.Tests
                 do
                 {
                     bytesRead = await stream.ReadAsync( buffer, 0, buffer.Length );
-                    expectedSha1.TransformBlock( buffer, 0, bytesRead, null, 0 );
+                    _ = expectedSha1.TransformBlock( buffer, 0, bytesRead, null, 0 );
                 }
                 while ( bytesRead > 0 );
             }
@@ -162,7 +162,7 @@ namespace KOTORModSync.Tests
         public async Task CalculateSHA1Async_ValidationConsistency_ChecksumConsistent()
         {
             // Arrange
-            Directory.CreateDirectory( _testDirectory );
+            _ = Directory.CreateDirectory( _testDirectory );
 
             string filePath = Path.Combine( _testDirectory, "TestFile.txt" );
             await File.WriteAllTextAsync( filePath, "test content" );
@@ -180,7 +180,7 @@ namespace KOTORModSync.Tests
                     do
                     {
                         bytesRead = await stream.ReadAsync( buffer, 0, buffer.Length );
-                        expectedSha1.TransformBlock( buffer, 0, bytesRead, null, 0 );
+                        _ = expectedSha1.TransformBlock( buffer, 0, bytesRead, null, 0 );
                     }
                     while ( bytesRead > 0 );
                 }

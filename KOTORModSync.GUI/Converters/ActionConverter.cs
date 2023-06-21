@@ -15,8 +15,7 @@ namespace KOTORModSync.GUI.Converters
 {
     public class ActionConverter : IValueConverter
     {
-        [CanBeNull]
-        public object Convert( [CanBeNull] object value, Type targetType, object parameter, CultureInfo culture )
+        public object Convert( object value, Type targetType, object parameter, CultureInfo culture )
         {
             if ( value == null )
             {
@@ -54,7 +53,6 @@ namespace KOTORModSync.GUI.Converters
             return new BindingNotification( new InvalidCastException( message ), BindingErrorType.Error );
         }
 
-        [CanBeNull]
         public object ConvertBack
             ( object value, Type targetType, object parameter, CultureInfo culture ) =>
             Convert( value, targetType, parameter, culture );

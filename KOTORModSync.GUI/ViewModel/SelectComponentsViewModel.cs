@@ -14,27 +14,27 @@ namespace KOTORModSync.GUI.ViewModel
 {
     public class InstallerViewModel : UserControl
     {
-        private readonly List<Component> allComponents;
-        private ConfirmationScreenViewModel confirmationScreenViewModel;
-        private InstallationProgressScreenViewModel installationProgressScreenViewModel;
-        private ResultsScreenViewModel resultsScreenViewModel;
-        private SelectComponentsViewModel selectComponentsViewModel;
+        private readonly List<Component> _allComponents;
+        private ConfirmationScreenViewModel _confirmationScreenViewModel;
+        private InstallationProgressScreenViewModel _installationProgressScreenViewModel;
+        private ResultsScreenViewModel _resultsScreenViewModel;
+        private SelectComponentsViewModel _selectComponentsViewModel;
 
         public InstallerViewModel( List<Component> availableComponents )
         {
             InitializeComponent();
             InitializeViewModels();
-            DataContext = selectComponentsViewModel;
+            DataContext = _selectComponentsViewModel;
         }
 
         private void InitializeComponent() => AvaloniaXamlLoader.Load( this );
 
         private void InitializeViewModels()
         {
-            selectComponentsViewModel = new SelectComponentsViewModel();
-            confirmationScreenViewModel = new ConfirmationScreenViewModel();
-            installationProgressScreenViewModel = new InstallationProgressScreenViewModel();
-            resultsScreenViewModel = new ResultsScreenViewModel();
+            _selectComponentsViewModel = new SelectComponentsViewModel();
+            _confirmationScreenViewModel = new ConfirmationScreenViewModel();
+            _installationProgressScreenViewModel = new InstallationProgressScreenViewModel();
+            _resultsScreenViewModel = new ResultsScreenViewModel();
         }
 
         private void ShowScreen( object screenViewModel ) => DataContext = screenViewModel;
@@ -44,13 +44,13 @@ namespace KOTORModSync.GUI.ViewModel
             switch ( DataContext )
             {
                 case SelectComponentsViewModel _:
-                    ShowScreen( confirmationScreenViewModel );
+                    ShowScreen( _confirmationScreenViewModel );
                     break;
                 case ConfirmationScreenViewModel _:
-                    ShowScreen( installationProgressScreenViewModel );
+                    ShowScreen( _installationProgressScreenViewModel );
                     break;
                 case InstallationProgressScreenViewModel _:
-                    ShowScreen( resultsScreenViewModel );
+                    ShowScreen( _resultsScreenViewModel );
                     break;
             }
             // Handle navigation to additional screens if needed
@@ -61,13 +61,13 @@ namespace KOTORModSync.GUI.ViewModel
             switch ( DataContext )
             {
                 case ConfirmationScreenViewModel _:
-                    ShowScreen( selectComponentsViewModel );
+                    ShowScreen( _selectComponentsViewModel );
                     break;
                 case InstallationProgressScreenViewModel _:
-                    ShowScreen( confirmationScreenViewModel );
+                    ShowScreen( _confirmationScreenViewModel );
                     break;
                 case ResultsScreenViewModel _:
-                    ShowScreen( installationProgressScreenViewModel );
+                    ShowScreen( _installationProgressScreenViewModel );
                     break;
             }
             // Handle navigation to previous screens if needed

@@ -367,7 +367,7 @@ namespace KOTORModSync.Core.Utility
         }
 
         // A guid can't be dynamically converted by Nett and Tomlyn, so we convert to string instead.
-        private static bool TryParseGuidAsString( object obj, out string guidString )
+        private static bool TryParseGuidAsString( object obj, [CanBeNull] out string guidString )
         {
             Type objType = obj.GetType();
             if ( obj is Guid guidValue )
@@ -672,6 +672,7 @@ namespace KOTORModSync.Core.Utility
             return false;
         }
 
+        [CanBeNull]
         public static IArchive OpenArchive( Stream stream )
         {
             try
@@ -684,6 +685,7 @@ namespace KOTORModSync.Core.Utility
             }
         }
 
+        [CanBeNull]
         public static IArchive OpenArchive( string archivePath )
         {
             FileStream stream = null;
@@ -722,6 +724,7 @@ namespace KOTORModSync.Core.Utility
             }
         }
 
+        [CanBeNull]
         public static Dictionary<string, object> GenerateArchiveTreeJson( DirectoryInfo directory )
         {
             var root = new Dictionary<string, object>( 65535 )

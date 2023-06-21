@@ -17,7 +17,7 @@
         <converters:IndexConverter x:Key="IndexConverter"/>
         <converters:ActionConverter x:Key="ActionConverter"/>
         <converters:ComboBoxItemConverter x:Key="ComboBoxItemConverter"/>
-        <converters:EnumDescriptionConverter x:Key="enumConverter" />
+        <converters:EnumDescriptionConverter x:Key="EnumConverter" />
 	</Window.Resources>
 	<Grid x:Name="MainGrid" MinWidth="200" RowDefinitions="Auto,*">
 		<Grid.ColumnDefinitions>
@@ -220,21 +220,21 @@
 
 
 			<StackPanel x:Name="MainConfigStackPanel" DataContext="{Binding MainConfigInstance}">
-				<CheckBox Content="Default Install" IsChecked="{Binding defaultInstall}" Foreground="White" />
-				<CheckBox Content="Verbose Logging" IsChecked="{Binding debugLogging}" Foreground="White" />
-				<CheckBox Content="Auto-Fix Config Errors" IsChecked="{Binding attemptFixes}" Foreground="White" />
+				<CheckBox Content="Default Install" IsChecked="{Binding defaultInstall}"/>
+				<CheckBox Content="Verbose Logging" IsChecked="{Binding debugLogging}"/>
+				<CheckBox Content="Auto-Fix Config Errors" IsChecked="{Binding attemptFixes}"/>
+                <CheckBox Content="No Admin" IsChecked="{Binding noAdmin}" ToolTip.Tip="(NOT RECOMMENDED) Do not prompt for admin on any instruction. It's recommended you run KOTORModSync as admin instead. Does nothing on Linux"/>
                 <TextBlock Text="Patcher Option" ToolTip.Tip="Mods are packaged with 'TSLPatcher' by default. Try another patcher if you run into problems."/>
 				<ComboBox
                     Items="{Binding AllAvailablePatchers}"
-                    SelectedItem="{Binding patcherOption, Mode=TwoWay, Converter={StaticResource enumConverter}}"
+                    SelectedItem="{Binding patcherOption, Mode=TwoWay, Converter={StaticResource EnumConverter}}"
                     ToolTip.Tip="TSLPatcherCLI is NOT tested - use at own risk"
-                    Foreground="White"
                     Margin="0"
                     IsTabStop="True"/>
                 <TextBlock Text="Compatibility Enforcement Level:" ToolTip.Tip="Determines which mods will be skipped."/>
                 <ComboBox
                     Items="{Binding AllCompatibilityLevels}"
-                    SelectedItem="{Binding currentCompatibilityLevel, Mode=TwoWay, Converter={StaticResource enumConverter}}"
+                    SelectedItem="{Binding currentCompatibilityLevel, Mode=TwoWay, Converter={StaticResource EnumConverter}}"
                     Margin="0"
                     IsTabStop="True"/>
                 <TextBlock Text="Theme"/>

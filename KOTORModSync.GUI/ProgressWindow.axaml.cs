@@ -29,8 +29,10 @@ namespace KOTORModSync
 
         private void AttachControls()
         {
-            ProgressTextBlock = this.FindControl<TextBlock>( "ProgressTextBlock" );
-            ProgressBar = this.FindControl<ProgressBar>( "ProgressBar" );
+            this.ProgressTextBlock = this.FindControl<TextBlock>( "ProgressTextBlock" );
+            this.ProgressBar = this.FindControl<ProgressBar>( "ProgressBar" );
+            this.InstalledRemaining = this.FindControl<TextBlock>( "InstalledRemaining" );
+            this.PercentCompleted = this.FindControl<TextBlock>( "PercentCompleted" );
         }
 
         public static async Task ShowProgressWindow( Window parentWindow, string message, decimal progress )

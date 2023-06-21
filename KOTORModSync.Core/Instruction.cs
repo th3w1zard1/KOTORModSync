@@ -174,7 +174,8 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                             {
                                 (int, string, string) result = await PlatformAgnosticMethods.ExecuteProcessAsync(
                                     thisFile,
-                                    $" -o\"{thisFile.DirectoryName}\" -y"
+                                    $" -o\"{thisFile.DirectoryName}\" -y",
+                                    noAdmin: MainConfig.NoAdmin
                                 );
 
                                 if ( result.Item1 == 0 )
@@ -582,7 +583,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
 
                     await Logger.LogAsync( "Run TSLPatcher..." );
                     (int exitCode, string output, string error)
-                        = await PlatformAgnosticMethods.ExecuteProcessAsync( tslPatcherCliPath, args );
+                        = await PlatformAgnosticMethods.ExecuteProcessAsync( tslPatcherCliPath, args, noAdmin: MainConfig.NoAdmin );
                     await Logger.LogVerboseAsync( $"'{tslPatcherCliPath.Name}' exited with exit code {exitCode}" );
 
                     await Logger.LogAsync( !string.IsNullOrEmpty( output ) ? output : null );
@@ -630,7 +631,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                         }
 
                         (int childExitCode, string output, string error)
-                            = await PlatformAgnosticMethods.ExecuteProcessAsync( thisProgram );
+                            = await PlatformAgnosticMethods.ExecuteProcessAsync( thisProgram, noAdmin: MainConfig.NoAdmin );
 
                         _ = Logger.LogVerboseAsync( output + Environment.NewLine + error );
                         if ( childExitCode == 0 )
@@ -693,6 +694,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                 }
 
                 string installLogContent = File.ReadAllText( fullInstallLogFile );
+                var installErrors = new List<string>();
                 foreach ( string thisLine in installLogContent.Split( '\n' ) )
                 {
                     if ( !thisLine.Contains( "Error: " ) )
@@ -700,8 +702,10 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                         continue;
                     }
 
-                    new List<string>().Add( thisLine );
+                    installErrors.Add( thisLine );
                 }
+
+                return installErrors;
             }
 
             Logger.LogVerbose( "No errors found in TSLPatcher installlog file!" );

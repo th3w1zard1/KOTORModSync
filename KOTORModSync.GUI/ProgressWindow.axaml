@@ -4,11 +4,11 @@
         Title="Progress Window" Width="600" Height="400"
         x:Class="KOTORModSync.ProgressWindow">
     <StackPanel>
-        <TextBlock x:Name="ProgressTextBlock" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="16" TextWrapping="Wrap" TextTrimming="CharacterEllipsis" Margin="10"/>
+        <TextBlock x:Name="ProgressTextBlock" HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center" FontSize="16" TextWrapping="Wrap" TextTrimming="CharacterEllipsis" Margin="10"/>
         <ProgressBar x:Name="ProgressBar" Minimum="0" Maximum="1" Value="0" HorizontalAlignment="Center" VerticalAlignment="Bottom" Width="200" Margin="10"/>
         <DockPanel Margin="10" HorizontalAlignment="Center" VerticalAlignment="Center">
-            <TextBlock x:Name="PercentCompleted" Text="0% Completed"/>
-            <TextBlock x:Name="InstalledRemaining" Text="0/0 Completed"/>
+            <TextBlock x:Name="PercentCompleted" Text="0%" Margin="10" TextAlignment="Center"/>
+            <TextBlock x:Name="InstalledRemaining" Text="0/0 Components Installed" Margin="10" TextAlignment="Center"/>
         </DockPanel>
     </StackPanel>
 </Window>

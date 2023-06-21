@@ -107,25 +107,7 @@ namespace KOTORModSync.Core
         public static void LogException( Exception ex )
         {
             Log( $"Exception: {ex.GetType().Name} - {ex.Message}" );
-            Log( $"Stack trace: {ex.StackTrace}" );
-
-            if ( !MainConfig.DebugLogging )
-            {
-                return;
-            }
-
-            StackTrace stackTrace = new StackTrace( ex, true );
-            for ( int i = 0; i < stackTrace.FrameCount; i++ )
-            {
-                StackFrame frame = stackTrace.GetFrame( i );
-                MethodBase method = frame.GetMethod();
-                Type declaringType = method.DeclaringType;
-
-                Log( $"Frame {i}:" );
-                Log( $"Method: {declaringType?.FullName}.{method.Name}" );
-                Log( $"File: {frame.GetFileName()}" );
-                Log( $"Line: {frame.GetFileLineNumber()}" );
-            }
+            LogVerbose( $"Stack trace: {ex.StackTrace}" );
 
             ExceptionLogged.Invoke( ex ); // Raise the ExceptionLogged event
         }

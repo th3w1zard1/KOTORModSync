@@ -4,6 +4,11 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <EnableNETAnalyzers>true</EnableNETAnalyzers>
     <Platforms>AnyCPU</Platforms>
+    <PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
+    <PackageLicenseExpression>GPL-3.0-or-later</PackageLicenseExpression>
+    <PackageProjectUrl>http://github.com/th3w1zard1/KOTORModSync</PackageProjectUrl>
+    <Copyright>2023 th3w1zard1</Copyright>
+    <Title>KOTORModSync</Title>
   </PropertyGroup>
 
   <ItemGroup>

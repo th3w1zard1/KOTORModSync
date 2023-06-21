@@ -51,6 +51,14 @@
     <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
     <NoWin32Manifest>true</NoWin32Manifest>
     <ApplicationIcon>icon53.ico</ApplicationIcon>
+    <Copyright>2023 th3w1zard1</Copyright>
+    <PackageProjectUrl>http://github.com/th3w1zard1/KOTORModSync</PackageProjectUrl>
+    <RepositoryUrl>http://github.com/th3w1zard1/KOTORModSync</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <AssemblyVersion>v0.4.10</AssemblyVersion>
+    <FileVersion>v0.4.10</FileVersion>
+    <PackageLicenseExpression>GPL-3.0-or-later</PackageLicenseExpression>
+    <PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
   </PropertyGroup>
   <ItemGroup>
     <None Remove="SelectInstallComponents.axaml_unfinished" />

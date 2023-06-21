@@ -1,9 +1,12 @@
 # KOTORModSync
-KOTORModSync is a multi-mod installer for KOTOR games that makes it easier to install and manage mods. I usually install the Reddit modbuild every year or so. The last time I did so I made a mistake on a single different step 3 times in a row and had to start over each time. So I decided to create an installer creator in C# to simplify the process.
+KOTORModSync is a multi-mod installer for KOTOR games that makes it easier to install and manage mods.
+
+I usually install the Reddit mod build every year or so. The process takes about an hour and it's repetitive moving files, running tslpatcher, deleting specific files, and occasionally renaming some files. The last time I installed the modbuild I made a mistake on a single different step, 3 times in a row. Most mistakes require a full restart from the beginning.
+This is tedious, so I decided to create an installer creator in C# to simplify the process.
 
 ## Goals
-Mod creators work really hard on their mods. It's the least we can do to install them and use them, right? However who wants to reinstall to vanilla just to spend several hours reinstalling mods, just to add 1 or 2 extra mods on top of it?
-Other modmanagers I've tried were either too difficult to configure, requiring significant changes to a hard-to-understand configuration file; or only provided limited functionality for defining new mods. KOTOR mods do have complex dependency relationships with each other in regards to compatibility.
+Mod creators work really hard on their mods. It's the least we can do to install them and use them, right? However, who wants to reinstall to vanilla and spend several hours reinstalling mods, just to add 1 or 2 extra mods on top of it?
+Other mod managers I've tried were either too difficult to configure, require significant changes to a hard-to-understand configuration file, or only provided limited functionality for defining new mods. KOTOR mods definitely can have complex dependency relationships with each other in regard to compatibility, due to the nature and age of TSLPatcher.
 
 ### Enter KOTORMODSync.
 
@@ -11,49 +14,41 @@ Other modmanagers I've tried were either too difficult to configure, requiring s
 
 
 ## Features
-- Can install the r/KOTOR modbuilds in about 20 minutes from a vanilla install.
-- This program has a built-in GUI editor and a installer packed into one. Modbuild creators can create instructions with little to no knowledge of the format and easily share with end users. End users can install everything from the instruction file with a simple click of a button. Edit any instruction and verify the configuration with built-in tools. There's also some support to dry run an install.
+- Can install the r/KOTOR mod builds in about 20 minutes from a vanilla install.
+- This program has a built-in GUI editor and an installer packed into one. Modbuild creators can create instructions with little to no knowledge of the format and easily share them with end users. End users can install everything from the instruction file with a simple click of a button. Edit any instructions and verify the configuration with built-in tools. There's also some support to dry run an install.
 
 - A flexible configuration editor and parser utilizing TOML syntax. This is very user-friendly and similar to INI which TSLPatcher already uses and most modders are used to.
 - Create instructions files with complex dependency structures for multiple mods, and have end users install everything exactly according to the instructions created. No more manually copying/deleting files: KOTORModSync handles all of that for your end user.
 
-## Platforms
-KOTORModSync is compatible with Windows7-11, Linux, and Mac, as well as anything supported by .NET Standard 2.0.
+## Supported Platforms
+KOTORModSync is a cross-platform 32-bit and 64-bit .NET application. It is compatible with the following operating systems:
+- **Windows 7 and 8:** Compatible if running **.NET Framework 4.6.2** or **higher**. The NET6 version is NOT supported.
+- **Windows 10 and 11:** Compatible with both the **.NET Framework 4.6.2** *and* the **NET6** builds.
+- **Linux and Mac:** Compatible with the **NET6** x64 builds - choose one of the two that match your operating system.
+Users do not need to download any additional runtimes: everything is self-contained within the application. Additionally, **.NET Framework 4.6.2** is preinstalled on Windows 7 and 8 or at least provided by Windows Updates.
 
 ### Linux/Mac
-edit: the below instructions apparently are specific to WSL. The project can run on Linux but it needs to be built again from source using 'dotnet build' and 'dotnet run' on a native linux os. Will update when I find time.
-```
-You need NET6 or higher, the .NET Framework version I believe isn't compatible. You may need additional X11 development libraries. In order to get this working on WSL I had to install the following packages:
+The Linux build runs correctly on my Ubuntu laptop. You may need additional X11 development libraries. In order to get this working on WSL, for example, I had to install the following packages:
 
 `sudo apt install libsm6 libice6 libx11-dev libfontconfig1 libx11-6 libx11-xcb1 libxau6 libxcb1 libxdmcp6 libxcb-xkb1 libxcb-render0 libxcb-shm0 libxcb-xfixes0 libxcb-util1 libxcb-xinerama0 libxcb-randr0 libxcb-image0 libxcb-keysyms1 libxcb-sync1 libxcb-xtest0`
 
 Then you can simply run the EXE like this in a terminal:
 
-`./KOTORModSync.exe`
-```
+`./KOTORModSync`
 
-## Troubleshooting
-​
-When launching the application, if you see some text in the console and an instant crash to desktop, the most probable cause is you're using the wrong NET version.
+If you run into problems with the Linux or Mac builds, please contact me and I'll happily get a fix ready for the next release build. 
 
-There's a log file created in the same location as the EXE that'll have the details. That log file is named:
-#### `kotormodsync_<date>.txt`
-
-It's important that you download the .NET version that closely matches the one your os uses. This will USUALLY be the following:
-
-Windows 10, 11, Linux, and Mac: Download `NET_6_0.zip`
-
-Windows Vista, 7, and 8: Determine whether you're on an x86 or x64 platform and download `NET_FRAMEWORK_46x_(PLATFORM).zip`
 
 ## Build instructions
 I'm honestly not sure what all you need, I was able to build and run it on both vs2019 and vs2022. From what I understand, the minimum build requirements are:
-- NET 6 or NET462 targeting platform and build tools
-- .NET Development Kit.
+- **NET6 or .NET Framework 4.6.2 targeting platform and build tools.**
+- **.NET Standard Development Kit.**
 
 All you need to do is build KOTORModSync.GUI. This should build the program into ./KOTORModSync.GUI/bin directory. Or run the command `dotnet build` then `dotnet run` inside KOTORModSync.GUI folder.
 
-#### KOTORModSync.GUI
+#### KOTORModSync
 - Main GUI running on AvaloniaUI v0.10.x
+- Buttons, windows, dialogs, and controls defined here.
 #### KOTORModSync.Core
 - All the main logic is defined here.
 - Targets .net standard 2.0
@@ -63,23 +58,23 @@ All you need to do is build KOTORModSync.GUI. This should build the program into
 
 ## Credit
 #### Snigaroo
-This man saved me countless amount of hours. I'd still be struggling through game glitches and mod-specific instructions I didn't understand. Actually I'd probably still be on Dantooine trying to determine why I'm getting visual glitches and crashes which he solved with the one word message 'grass'.
+This man saved me countless amount of hours. I'd still be struggling through game glitches and mod-specific instructions I didn't understand. Actually, I'd probably still be on Dantooine trying to determine why I'm getting visual glitches and crashes which he solved with the one-word message 'grass'.
 
 #### JCarter426
-Ditto. There was so much KOTOR-specific things to learn, without his help I'd still be trying to deserialize encapsulated resource files. His time and patience were incredibly useful to the project and this project would be impossible without him.
+Ditto. There were so many KOTOR-specific things to learn, without his help I'd still be trying to deserialize encapsulated resource files. His time and patience were incredibly useful to the project and this project would be impossible without him.
 
 ### Testers:
 ##### Lewok from r/KOTOR
-Thank you for helping test that obnoxious UAC elevation problem legacy Windows apps like TSLPatcher has!
+Thank you for helping test that obnoxious UAC elevation problem legacy Windows apps like TSLPatcher have.
 
 #### Other notable users
 #### @Woodske
-Created TSLPatcherCLI used in the project.
+Created *TSLPatcherCLI* used in the project.
 
 #### Fair-Strides
-Made TSLPatcher open-source on Github
+Made *TSLPatcher* open-source on GitHub
 
-#### Stoffe
-Original creator of TSLPatcher
+#### *Stoffe*
+The original creator of *TSLPatcher*
 
 Thank you to the entire KOTOR community for what you do.

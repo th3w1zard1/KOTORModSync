@@ -7,9 +7,7 @@ Other modmanagers I've tried were either too difficult to configure, requiring s
 
 ### Enter KOTORMODSync.
 
-![image](https://github.com/th3w1zard1/KOTORModSync/assets/2219836/b2b9f4f9-c00c-4096-abb8-4690f8b53a07)
-
-
+![image](https://github.com/th3w1zard1/KOTORModSync/assets/2219836/3643440b-0070-4016-b45a-b17560f3f9b5)
 
 
 ## Features

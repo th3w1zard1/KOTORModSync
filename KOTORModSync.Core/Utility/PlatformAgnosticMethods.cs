@@ -517,7 +517,7 @@ namespace KOTORModSync.Core.Utility
                 catch ( Win32Exception localException )
                 {
                     await Logger.LogVerboseAsync( $"Exception occurred for startInfo: '{startInfo}'" );
-                    if ( !noAdmin && isAdmin == true)
+                    if ( !noAdmin && isAdmin == true )
                     {
                         startInfo.Verb = "runas";
                         index--;
@@ -534,7 +534,7 @@ namespace KOTORModSync.Core.Utility
                 {
                     await Logger.LogAsync( $"An unplanned error has occurred trying to run '{programFile.Name}'" );
                     await Logger.LogExceptionAsync( startinfoException );
-                    return ( -6, string.Empty, string.Empty );
+                    return (-6, string.Empty, string.Empty);
                 }
             }
 
@@ -546,7 +546,7 @@ namespace KOTORModSync.Core.Utility
             }
 
             await Logger.LogAsync( "Process failed to start with all possible combinations of arguments." );
-            await Logger.LogExceptionAsync( ex ?? new InvalidOperationException());
+            await Logger.LogExceptionAsync( ex ?? new InvalidOperationException() );
             return (-1, string.Empty, string.Empty);
         }
     }

@@ -70,7 +70,7 @@ namespace KOTORModSync.GUI.ViewModel
         public event PropertyChangedEventHandler PropertyChanged;
 
         protected virtual void OnPropertyChanged
-            ( [CallerMemberName] [CanBeNull] string propertyName = null ) => PropertyChanged?.Invoke(
+            ( [CallerMemberName][CanBeNull] string propertyName = null ) => PropertyChanged?.Invoke(
             this,
             new PropertyChangedEventArgs( propertyName )
         );

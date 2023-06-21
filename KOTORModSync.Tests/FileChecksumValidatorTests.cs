@@ -256,7 +256,7 @@ namespace KOTORModSync.Tests
 
 
         [Test]
-        [Ignore("NotFinished")]
+        [Ignore( "NotFinished" )]
         public async Task LoadChecksumsFromFileAsync_FileExists_LoadsChecksums()
         {
             await using ( StringWriter sw = new() )

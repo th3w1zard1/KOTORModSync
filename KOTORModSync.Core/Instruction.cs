@@ -581,7 +581,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                     );
 
                     await Logger.LogAsync( "Run TSLPatcher..." );
-                    ( int exitCode, string output, string error )
+                    (int exitCode, string output, string error)
                         = await PlatformAgnosticMethods.ExecuteProcessAsync( tslPatcherCliPath, args );
                     await Logger.LogVerboseAsync( $"'{tslPatcherCliPath.Name}' exited with exit code {exitCode}" );
 
@@ -593,7 +593,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
 
                 return ActionExitCode.Success;
             }
-            catch ( DirectoryNotFoundException ex)
+            catch ( DirectoryNotFoundException ex )
             {
                 await Logger.LogExceptionAsync( ex );
                 throw;
@@ -629,7 +629,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                             );
                         }
 
-                        ( int childExitCode, string output, string error )
+                        (int childExitCode, string output, string error)
                             = await PlatformAgnosticMethods.ExecuteProcessAsync( thisProgram );
 
                         _ = Logger.LogVerboseAsync( output + Environment.NewLine + error );

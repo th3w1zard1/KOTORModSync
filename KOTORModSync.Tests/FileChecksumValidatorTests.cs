@@ -56,7 +56,6 @@ namespace KOTORModSync.Tests
         }
 
 
-
         [Test]
         public async Task ValidateChecksumsAsync_MismatchedChecksums_ReturnsFalse()
         {
@@ -76,7 +75,7 @@ namespace KOTORModSync.Tests
             }
 
             // Calculate the SHA1 hash for the test files
-            foreach ( FileInfo? fileInfo in expectedChecksums.Select( expectedChecksum => expectedChecksum.Key ) )
+            foreach ( FileInfo? fileInfo in expectedChecksums.Select( static expectedChecksum => expectedChecksum.Key ) )
             {
                 SHA1 sha1 = await FileChecksumValidator.CalculateSha1Async( fileInfo );
                 actualChecksums[fileInfo] = sha1;
@@ -102,7 +101,7 @@ namespace KOTORModSync.Tests
         public async Task CalculateSHA1Async_ValidFile_CalculatesChecksum()
         {
             // Arrange
-            Directory.CreateDirectory( _testDirectory );
+            _ = Directory.CreateDirectory( _testDirectory );
 
             string filePath = Path.Combine( _testDirectory, "TestFile.txt" );
             await File.WriteAllTextAsync( filePath, "test content" );
@@ -226,29 +225,32 @@ namespace KOTORModSync.Tests
 
         // Test method
         [Test]
-        [Ignore( "NotFinished" )]
+        [Ignore("NotFinished")]
         public async Task SaveChecksumsToFileAsync_ValidData_SavesChecksumsToFile()
         {
             // Arrange
             string filePath = Path.Combine( _testDirectory, "Checksums.json" );
-            var checksums = new Dictionary<DirectoryInfo, SHA1>();
-            checksums.Add( new DirectoryInfo( _testDirectory ), SHA1.Create() );
+            var checksums = new Dictionary<string, string>();
+            checksums.Add( _testDirectory, FileChecksumValidator.Sha1ToString( SHA1.Create() ) );
+
+            // Convert the directory paths to DirectoryInfo objects
+            Dictionary<DirectoryInfo, SHA1> directoryChecksums = checksums.ToDictionary(
+                kvp => new DirectoryInfo( kvp.Key ),
+                kvp => SHA1.Create()
+            );
 
             // Act
-            JsonSerializerSettings settings = new JsonSerializerSettings();
-            settings.Converters.Add( new DirectoryInfoConverter() ); // Add the custom converter
-            string json = JsonConvert.SerializeObject( checksums, settings );
-            await File.WriteAllTextAsync( filePath, json );
+            await FileChecksumValidator.SaveChecksumsToFileAsync( filePath, directoryChecksums );
 
             // Assert
             Assert.That( File.Exists( filePath ) );
 
-            string loadedJson = await File.ReadAllTextAsync( filePath );
-            Dictionary<DirectoryInfo, SHA1> loadedChecksums = JsonConvert.DeserializeObject<Dictionary<DirectoryInfo, SHA1>>( loadedJson, settings );
+            string json = await File.ReadAllTextAsync( filePath );
+            Dictionary<DirectoryInfo, SHA1> loadedChecksums = JsonConvert.DeserializeObject<Dictionary<DirectoryInfo, SHA1>>( json );
 
-            Assert.That( loadedChecksums.Count, Is.EqualTo( checksums.Count ) );
-            CollectionAssert.AreEquivalent( checksums.Keys, loadedChecksums.Keys );
-            CollectionAssert.AreEquivalent( checksums.Values, loadedChecksums.Values );
+            Assert.That( loadedChecksums.Count, Is.EqualTo( directoryChecksums.Count ) );
+            CollectionAssert.AreEquivalent( directoryChecksums.Keys, loadedChecksums.Keys );
+            CollectionAssert.AreEquivalent( directoryChecksums.Values, loadedChecksums.Values );
 
             // Clean up
             File.Delete( filePath );

@@ -1,10 +1,12 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
 
@@ -18,6 +20,15 @@ namespace KOTORModSync.Core
     [SuppressMessage( "CodeQuality", "IDE0079:Remove unnecessary suppression", Justification = "<Pending>" )]
     public class MainConfig : INotifyPropertyChanged
     {
+        public MainConfig()
+        {
+            this.currentCompatibilityLevel = CompatibilityLevel.Compatible;
+            this.debugLogging = true;
+            this.patcherOption = AvailablePatchers.TSLPatcher;
+            this.attemptFixes = true;
+            this.defaultInstall = true;
+        }
+
         [Description( "Only components with the selected compatibility level will be installed" )]
         public enum CompatibilityLevel
         {
@@ -34,6 +45,12 @@ namespace KOTORModSync.Core
             Incompatible = 3
         }
 
+        public IEnumerable<CompatibilityLevel> AllCompatibilityLevels
+        {
+            get { return Enum.GetValues( typeof( CompatibilityLevel ) ).Cast<CompatibilityLevel>(); }
+        }
+
+
         public enum AvailablePatchers
         {
             [DefaultValue(true)]
@@ -48,6 +65,12 @@ namespace KOTORModSync.Core
             HoloPatcher = 2
         }
 
+        public IEnumerable<AvailablePatchers> AllAvailablePatchers
+        {
+            get { return Enum.GetValues( typeof( AvailablePatchers ) ).Cast<AvailablePatchers>(); }
+        }
+
+
         public static DirectoryInfo SourcePath { get; private set; }
         public static DirectoryInfo DestinationPath { get; private set; }
         public static bool DebugLogging { get; private set; }
@@ -56,7 +79,6 @@ namespace KOTORModSync.Core
         public static bool DefaultInstall { get; private set; }
         public static AvailablePatchers PatcherOption { get; private set; }
         public static CompatibilityLevel CurrentCompatibilityLevel { get; private set; }
-        public static bool NoAdmin { get; private set; }
 
         public DirectoryInfo sourcePath
         {
@@ -85,27 +107,13 @@ namespace KOTORModSync.Core
         public AvailablePatchers patcherOption
         {
             get => PatcherOption;
-            set
-            {
-                PatcherOption = value;
-                OnPropertyChanged( nameof( PatcherOption ) );
-            }
+            set => PatcherOption = value;
         }
 
         public CompatibilityLevel currentCompatibilityLevel
         {
             get => CurrentCompatibilityLevel;
-            set
-            {
-                CurrentCompatibilityLevel = value;
-                OnPropertyChanged( nameof( CurrentCompatibilityLevel ) );
-            }
-        }
-
-        public bool noAdmin
-        {
-            get => NoAdmin;
-            set => NoAdmin = value;
+            set => CurrentCompatibilityLevel = value;
         }
 
         public bool debugLogging

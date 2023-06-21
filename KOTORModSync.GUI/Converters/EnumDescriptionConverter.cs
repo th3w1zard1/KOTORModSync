@@ -9,7 +9,9 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using Avalonia.Controls;
 using Avalonia.Data.Converters;
+using JetBrains.Annotations;
 
 namespace KOTORModSync.GUI.Converters
 {
@@ -49,7 +51,7 @@ namespace KOTORModSync.GUI.Converters
 
         object IValueConverter.ConvertBack( object value, Type targetType, object parameter, CultureInfo culture )
         {
-            return string.Empty;
+            return value;
         }
     }
 }

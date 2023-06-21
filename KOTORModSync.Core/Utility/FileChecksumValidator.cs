@@ -102,7 +102,7 @@ namespace KOTORModSync.Core.Utility
         public static async Task<SHA1> CalculateSha1Async( FileInfo filePath )
         {
             var sha1 = SHA1.Create();
-            using ( var stream = File.OpenRead( filePath.FullName ) )
+            using ( FileStream stream = File.OpenRead( filePath.FullName ) )
             {
                 byte[] buffer = new byte[81920];
                 var tasks = new List<Task>();
@@ -118,7 +118,7 @@ namespace KOTORModSync.Core.Utility
 
                     tasks.Add( Task.Run( () =>
                     {
-                        sha1.TransformBlock( data, 0, read, null, 0 );
+                        _ = sha1.TransformBlock( data, 0, read, null, 0 );
                     } ) );
 
                     if ( tasks.Count < Environment.ProcessorCount * 2 )
@@ -130,7 +130,7 @@ namespace KOTORModSync.Core.Utility
 
                 await Task.WhenAll( tasks );
 
-                sha1.TransformFinalBlock( buffer, 0, 0 );
+                _ = sha1.TransformFinalBlock( buffer, 0, 0 );
 
                 return sha1;
             }

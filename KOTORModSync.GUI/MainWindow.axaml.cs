@@ -1587,7 +1587,7 @@ namespace KOTORModSync.GUI
             public void Execute( object parameter ) => _execute( parameter );
         }
 
-        private async void OpenOutputWindow_Click( object sender, RoutedEventArgs e )
+        private void OpenOutputWindow_Click( object sender, RoutedEventArgs e )
         {
             if ( _outputWindow != null && _outputWindow.IsVisible )
             {

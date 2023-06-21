@@ -223,10 +223,17 @@
 				<CheckBox Content="Default Install" IsChecked="{Binding defaultInstall}" Foreground="White" />
 				<CheckBox Content="Verbose Logging" IsChecked="{Binding debugLogging}" Foreground="White" />
 				<CheckBox Content="Auto-Fix Config Errors" IsChecked="{Binding attemptFixes}" Foreground="White" />
-				<ComboBox Items="{Binding PatcherOption}" SelectedItem="{Binding patcherOption, Converter={StaticResource ComboBoxItemConverter}}" Foreground="White" ToolTip.Tip="TSLPatcherCLI is NOT tested - use at own risk"/>
-				<TextBlock Text="Compatibility Enforcement Level:" ToolTip.Tip="Determines which mods will be skipped."/>
+                <TextBlock Text="Patcher Option" ToolTip.Tip="Mods are packaged with 'TSLPatcher' by default. Try another patcher if you run into problems."/>
+				<ComboBox
+                    Items="{Binding AllAvailablePatchers}"
+                    SelectedItem="{Binding patcherOption, Mode=TwoWay, Converter={StaticResource enumConverter}}"
+                    ToolTip.Tip="TSLPatcherCLI is NOT tested - use at own risk"
+                    Foreground="White"
+                    Margin="0"
+                    IsTabStop="True"/>
+                <TextBlock Text="Compatibility Enforcement Level:" ToolTip.Tip="Determines which mods will be skipped."/>
                 <ComboBox
-                    Items="{Binding currentCompatibilityLevel}"
+                    Items="{Binding AllCompatibilityLevels}"
                     SelectedItem="{Binding currentCompatibilityLevel, Mode=TwoWay, Converter={StaticResource enumConverter}}"
                     Margin="0"
                     IsTabStop="True"/>

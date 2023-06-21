@@ -225,7 +225,7 @@ namespace KOTORModSync.Tests
 
         // Test method
         [Test]
-        [Ignore("NotFinished")]
+        [Ignore( "NotFinished" )]
         public async Task SaveChecksumsToFileAsync_ValidData_SavesChecksumsToFile()
         {
             // Arrange

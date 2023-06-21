@@ -2,17 +2,6 @@
 // Licensed under the GNU General Public License v3.0 (GPLv3).
 // See LICENSE.txt file in the project root for full license information.
 
-/* Unmerged change from project 'KOTORModSync (net6.0)'
-Before:
-using System;
-After:
-// Licensed to the .NET Foundation under one or more agreements.
-// The .NET Foundation licenses this file to you under the MIT System;
-*/
-// Copyright 2021-2023 KOTORModSync
-// Licensed under the GNU General Public License v3.0 (GPLv3).
-// See LICENSE.txt file in the project root for full license information.
-
 using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;

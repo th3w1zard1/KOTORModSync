@@ -808,7 +808,7 @@ namespace KOTORModSync
                             _components
                         )
                     );
-                    if ( exitCode == 0 )
+                    if ( exitCode != 0 )
                     {
                         await InformationDialog.ShowInformationDialog(
                             this,

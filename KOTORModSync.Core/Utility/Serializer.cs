@@ -699,7 +699,8 @@ namespace KOTORModSync.Core.Utility
                     return archive;
                 }
             }
-            catch ( Exception ex) {
+            catch ( Exception ex )
+            {
                 Logger.LogException( ex );
                 return null;
             }

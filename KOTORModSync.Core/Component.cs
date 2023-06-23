@@ -1132,18 +1132,12 @@ namespace KOTORModSync.Core
         {
             try
             {
-                List<string> allArchives = GetAllArchivesFromInstructions( component );
-                if ( allArchives.Count == 0 ) return true;
-
                 bool success = true;
+                List<string> allArchives = GetAllArchivesFromInstructions( component );
+
+
                 foreach ( Instruction instruction in component.Instructions )
                 {
-                    // we already checked if the archive exists in GetAllArchivesFromInstructions.
-                    if ( instruction.Action.Equals( "extract", StringComparison.OrdinalIgnoreCase ) )
-                    {
-                        continue;
-                    }
-
                     bool archiveNameFound = true;
                     if ( instruction.Source == null )
                     {
@@ -1163,7 +1157,7 @@ namespace KOTORModSync.Core
 
                     for ( int index = 0; index < instruction.Source.Count; index++ )
                     {
-                        string sourcePath = instruction.Source[index];
+                        string sourcePath = Serializer.FixPathFormatting( instruction.Source[index] );
 
                         // todo
                         if ( sourcePath.StartsWith( "<<kotorDirectory>>", StringComparison.OrdinalIgnoreCase ) )
@@ -1179,8 +1173,9 @@ namespace KOTORModSync.Core
                         if ( !result.Item1 && MainConfig.AttemptFixes )
                         {
                             // Split the directory name using the directory separator character
-                            string[] parts = sourcePath.Split( Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar, '/', '\\' );
+                            string[] parts = sourcePath.Split( Path.DirectorySeparatorChar );
 
+                            // Add the first part of the path and repeat it at the beginning (i.e. archive/my/custom/path becomes archive/archive/my/custom/path).
                             string duplicatedPart = parts[1] + Path.DirectorySeparatorChar + parts[1];
                             string[] remainingParts = parts.Skip( 2 ).ToArray();
 
@@ -1468,7 +1463,7 @@ namespace KOTORModSync.Core
 
             using ( FileStream stream = File.OpenRead( archivePath ) )
             {
-                IArchive archive = ArchiveHelper.OpenArchive( stream );
+                IArchive archive = ArchiveHelper.OpenArchive( archivePath );
 
                 if ( archive == null )
                 {

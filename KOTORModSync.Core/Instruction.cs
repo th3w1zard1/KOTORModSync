@@ -192,7 +192,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
 
                             using ( FileStream stream = File.OpenRead( thisFile.FullName ) )
                             {
-                                IArchive archive = ArchiveHelper.OpenArchive( stream );
+                                IArchive archive = ArchiveHelper.OpenArchive( thisFile.FullName );
 
                                 if ( archive == null )
                                 {

@@ -16,6 +16,8 @@ using JetBrains.Annotations;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using SharpCompress.Archives;
+using SharpCompress.Archives.Rar;
+using SharpCompress.Archives.SevenZip;
 using SharpCompress.Common;
 using Tomlyn;
 using Tomlyn.Model;
@@ -136,7 +138,7 @@ namespace KOTORModSync.Core.Utility
 
         public static string PrefixPath( string path ) =>
             !path.StartsWith( "<<modDirectory>>" ) && !path.StartsWith( "<<kotorDirectory>>" )
-                ? "<<modDirectory>>" + path
+                ? FixPathFormatting( "<<modDirectory>>" + Environment.NewLine + path )
                 : path;
 
         public static string FixPathFormatting( string path )
@@ -185,7 +187,7 @@ namespace KOTORModSync.Core.Utility
         public static string FixWhitespaceIssues( string tomlContents )
         {
             tomlContents = tomlContents
-                .Replace( "\r\n", Environment.NewLine )
+                .Replace( "\r\n", "\n" )
                 .Replace( "\r", Environment.NewLine )
                 .Replace( "\n", Environment.NewLine );
             string[] lines = Regex.Split(
@@ -362,6 +364,7 @@ namespace KOTORModSync.Core.Utility
             return serializedList;
         }
 
+        /*
         public static bool IsNonClassEnumerable( object obj )
         {
             Type type = obj.GetType();
@@ -378,7 +381,7 @@ namespace KOTORModSync.Core.Utility
             isNonClassEnumerable &= !isCustomType;
 
             return isNonClassEnumerable;
-        }
+        }*/
 
         // A guid can't be dynamically converted by Nett and Tomlyn, so we convert to string instead.
         private static bool TryParseGuidAsString( object obj, [CanBeNull] out string guidString )
@@ -487,31 +490,30 @@ namespace KOTORModSync.Core.Utility
             ( IEnumerable<string> filesAndFolders, bool topLevelOnly = false )
         {
             var result = new List<string>();
-
             var uniquePaths = new HashSet<string>( filesAndFolders );
 
             foreach ( string path in uniquePaths.Where( path => !string.IsNullOrEmpty( path ) ) )
             {
                 try
                 {
-                    string backslashPath = Serializer.FixPathFormatting( path );
+                    string formattedPath = Serializer.FixPathFormatting( path );
 
-                    if ( !ContainsWildcards( backslashPath ) )
+                    if ( !ContainsWildcards( formattedPath ) )
                     {
                         // Handle non-wildcard paths
-                        if ( File.Exists( backslashPath ) )
+                        if ( File.Exists( formattedPath ) )
                         {
-                            result.Add( backslashPath );
+                            result.Add( formattedPath );
                             continue;
                         }
 
-                        if ( !Directory.Exists( backslashPath ) )
+                        if ( !Directory.Exists( formattedPath ) )
                         {
                             continue;
                         }
 
                         IEnumerable<string> matchingFiles = Directory.EnumerateFiles(
-                            backslashPath,
+                            formattedPath,
                             "*",
                             topLevelOnly
                                 ? SearchOption.TopDirectoryOnly
@@ -523,7 +525,7 @@ namespace KOTORModSync.Core.Utility
                     }
 
                     // Handle wildcard paths
-                    string directory = Path.GetDirectoryName( backslashPath );
+                    string directory = Path.GetDirectoryName( formattedPath );
 
                     if ( !string.IsNullOrEmpty( directory )
                         && directory.IndexOfAny( Path.GetInvalidPathChars() ) != -1
@@ -531,7 +533,7 @@ namespace KOTORModSync.Core.Utility
                     {
                         IEnumerable<string> matchingFiles = Directory.EnumerateFiles(
                             directory,
-                            Path.GetFileName( backslashPath ),
+                            Path.GetFileName( formattedPath ),
                             topLevelOnly
                                 ? SearchOption.TopDirectoryOnly
                                 : SearchOption.AllDirectories
@@ -542,7 +544,7 @@ namespace KOTORModSync.Core.Utility
                     }
 
                     // Handle wildcard paths
-                    string currentDirectory = backslashPath;
+                    string currentDirectory = formattedPath;
 
                     while ( ContainsWildcards( currentDirectory ) )
                     {
@@ -568,7 +570,7 @@ namespace KOTORModSync.Core.Utility
                             : SearchOption.AllDirectories
                     );
 
-                    result.AddRange( checkFiles.Where( thisFile => WildcardMatch( thisFile, backslashPath ) ) );
+                    result.AddRange( checkFiles.Where( thisFile => WildcardMatch( thisFile, formattedPath ) ) );
                 }
                 catch ( Exception ex )
                 {
@@ -586,7 +588,7 @@ namespace KOTORModSync.Core.Utility
         {
             // Fix path formatting
             input = Serializer.FixPathFormatting( input );
-            patternInput = patternInput.TrimEnd( Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar, '/', '\\' );
+            patternInput = Serializer.FixPathFormatting( patternInput.TrimEnd( Path.DirectorySeparatorChar ) );
 
             // Split the input and pattern into directory levels
             string[] inputLevels = input.Split( Path.DirectorySeparatorChar );
@@ -634,9 +636,6 @@ namespace KOTORModSync.Core.Utility
             return Regex.IsMatch( input, $"^{pattern}$" );
         }
 
-        public static bool IsPath
-            ( string value ) => Path.IsPathRooted( value ) || Regex.IsMatch( value, $"^[a-zA-Z]:{Path.DirectorySeparatorChar}" );
-
         public static bool IsDirectoryWithName( object directory, string name )
             => directory is Dictionary<string, object> dict
                 && dict.ContainsKey( "Name" )
@@ -663,56 +662,46 @@ namespace KOTORModSync.Core.Utility
 
         public static bool IsArchive( FileInfo thisFile )
         {
-            try
+            if ( // speeds up execution to do these checks rather than throw exceptions
+                thisFile.Extension.Equals( ".zip" )
+                || thisFile.Extension.Equals( ".7z" )
+                || thisFile.Extension.Equals( ".rar" )
+                || thisFile.Extension.Equals( ".exe" ) // assume self-extracting executable?
+               )
             {
-                using ( IArchive archive = ArchiveFactory.Open( thisFile.FullName ) )
-                {
-                    return true;
-                }
-            }
-            catch ( InvalidOperationException )
-            {
-                if ( thisFile.Extension.Equals(
-                        ".exe",
-                        StringComparison.OrdinalIgnoreCase
-                    ) ) // assume self-extracting executable?
-                {
-                    return true;
-                }
+                return true;
             }
 
             return false;
         }
 
         [CanBeNull]
-        public static IArchive OpenArchive( Stream stream )
-        {
-            try
-            {
-                return ArchiveFactory.Open( stream );
-            }
-            catch ( ArchiveException )
-            {
-                return null;
-            }
-        }
-
-        [CanBeNull]
         public static IArchive OpenArchive( string archivePath )
         {
-            FileStream stream = null;
             try
             {
-                stream = File.OpenRead( archivePath );
-                return ArchiveFactory.Open( stream );
+                IArchive archive = null;
+                using ( FileStream stream = File.OpenRead( archivePath ) )
+                {
+                    if ( archivePath.EndsWith( ".zip" ) )
+                    {
+                        archive = SharpCompress.Archives.Zip.ZipArchive.Open( stream );
+                    }
+                    else if ( archivePath.EndsWith( ".rar" ) )
+                    {
+                        archive = RarArchive.Open( stream );
+                    }
+                    else if ( archivePath.EndsWith( ".7z" ) )
+                    {
+                        archive = SevenZipArchive.Open( stream );
+                    }
+                }
+
+                return archive;
             }
-            catch ( ArchiveException )
-            {
+            catch ( Exception ex) {
+                Logger.LogException( ex );
                 return null;
-            }
-            finally
-            {
-                stream?.Dispose();
             }
         }
 
@@ -732,7 +721,7 @@ namespace KOTORModSync.Core.Utility
             }
             catch ( Exception ex )
             {
-                Logger.LogException( ex, $"Error writing output file {outputPath}: {ex.Message}" );
+                Logger.LogException( ex, $"Error writing output file '{outputPath}': {ex.Message}" );
             }
         }
 
@@ -780,7 +769,7 @@ namespace KOTORModSync.Core.Utility
             }
             catch ( Exception ex )
             {
-                Logger.Log( $"Error generating archive tree for {directory.FullName}: {ex.Message}" );
+                Logger.Log( $"Error generating archive tree for '{directory.FullName}': {ex.Message}" );
                 return null;
             }
 
@@ -796,7 +785,7 @@ namespace KOTORModSync.Core.Utility
                 IArchive archive = OpenArchive( archivePath );
                 if ( archive == null )
                 {
-                    Logger.Log( $"Unsupported archive format: {Path.GetExtension( archivePath )}" );
+                    Logger.Log( $"Unsupported archive format: '{Path.GetExtension( archivePath )}'" );
                     return archiveEntries;
                 }
 
@@ -812,7 +801,7 @@ namespace KOTORModSync.Core.Utility
             }
             catch ( Exception ex )
             {
-                Logger.Log( $"Error reading archive {archivePath}: {ex.Message}" );
+                Logger.Log( $"Error reading archive '{archivePath}': {ex.Message}" );
             }
 
             return archiveEntries;
@@ -827,7 +816,7 @@ namespace KOTORModSync.Core.Utility
             {
                 List<object> existingDirectory = currentDirectory["Contents"] as List<object>
                     ?? throw new InvalidDataException(
-                        $"Unexpected data type for directory contents: {currentDirectory["Contents"]?.GetType()}"
+                        $"Unexpected data type for directory contents: '{currentDirectory["Contents"]?.GetType()}'"
                     );
 
                 string name1 = name;

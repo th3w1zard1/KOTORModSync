@@ -1139,14 +1139,14 @@ namespace KOTORModSync.Core
                 // probably something wrong if there's no archives found.
                 if ( allArchives.Count == 0 )
                 {
-                    foreach ( var instruction in component.Instructions)
+                    foreach ( var instruction in component.Instructions )
                     {
                         if ( !instruction.Action.Equals( "extract", StringComparison.OrdinalIgnoreCase ) )
                         {
                             continue;
                         }
 
-                        AddError( $"Missing Required Archives for 'Extract' action: [{string.Join(",", instruction.Source)}]", instruction );
+                        AddError( $"Missing Required Archives for 'Extract' action: [{string.Join( ",", instruction.Source )}]", instruction );
                         success = false;
                     }
 

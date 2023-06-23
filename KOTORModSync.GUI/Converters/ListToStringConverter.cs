@@ -37,7 +37,7 @@ namespace KOTORModSync.Converters
             if ( !( value is string text ) )
                 return new List<string>();
 
-            string[] lines = text.Split( new[] { "\r\n", "\r", "\n" }, StringSplitOptions.RemoveEmptyEntries );
+            string[] lines = text.Split( new[] { "\r\n", "\n", Environment.NewLine.ToString() }, StringSplitOptions.RemoveEmptyEntries );
             return targetType != typeof( List<Guid> )
                 ? lines.ToList()
                 : (object)lines.Select( line => Guid.TryParse( line, out Guid guid ) ? guid : Guid.Empty ).ToList();

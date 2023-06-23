@@ -47,7 +47,7 @@ namespace KOTORModSync.Tests
                 serialized,
                 Is.EqualTo( guid.ToString() ),
                 "Serialized value should be equal to the string representation"
-                + $" of the Guid,\r\nbut was {serialized.GetType()}"
+                + $" of the Guid,{Environment.NewLine}but was {serialized.GetType()}"
             );
         }
 

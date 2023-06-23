@@ -184,9 +184,9 @@ namespace KOTORModSync.Core.Utility
 
         public static string FixWhitespaceIssues( string tomlContents )
         {
-            tomlContents = tomlContents.Replace( "\r\n", "\n" ).Replace( '\r', '\n' );
-            string[] lines = tomlContents.Split( '\n' ).Select( line => line.Trim() ).ToArray();
-            return string.Join( "\n", lines );
+            tomlContents = tomlContents.Replace( "\r\n", Environment.NewLine ).Replace( '\r', Environment.NewLine );
+            string[] lines = tomlContents.Split( Environment.NewLine ).Select( line => line.Trim() ).ToArray();
+            return string.Join( Environment.NewLine.ToString(), lines );
         }
 
         public static List<object> MergeLists( IEnumerable<object> list1, IEnumerable<object> list2 )

@@ -143,7 +143,7 @@ namespace KOTORModSync.Core
             // reminder: ConvertTomlTableToDictionary lowercases all string keys automatically.
             Serializer.DeserializePath( componentDict, "paths" );
             Name = GetRequiredValue<string>( componentDict, "name" );
-            _ = Logger.LogAsync( $"{Path.DirectorySeparatorChar}== Deserialize next component '{Name}' ==" );
+            _ = Logger.LogAsync( $"{Environment.NewLine}== Deserialize next component '{Name}' ==" );
             Guid = GetRequiredValue<Guid>( componentDict, "guid" );
             Description = GetValueOrDefault<string>( componentDict, "description" );
             Directions = GetValueOrDefault<string>( componentDict, "directions" );

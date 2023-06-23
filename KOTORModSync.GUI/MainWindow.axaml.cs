@@ -360,7 +360,7 @@ namespace KOTORModSync
                 bool? confirm = i >= 2
                     || await ConfirmationDialog.ShowConfirmationDialog(
                         this,
-                        $"{message}.\r\nAssign a random GUID to '{duplicateComponent.Name}'? (default: NO)"
+                        $"{message}.{Environment.NewLine}Assign a random GUID to '{duplicateComponent.Name}'? (default: NO)"
                     )
                     == true;
 

@@ -1,4 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
+  <!-- ensure this is defined, sometimes is ignored in cli -->
+  <PropertyGroup>
+    <SolutionDir Condition="'$(SolutionDir)'=='' or '$(SolutionDir)'=='*Undefined*'">..\</SolutionDir>
+  </PropertyGroup>
 
   <!-- Main KOTORModSync.GUI Project Settings -->
   <PropertyGroup>

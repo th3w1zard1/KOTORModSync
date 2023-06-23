@@ -143,7 +143,7 @@ namespace KOTORModSync.Core
             // reminder: ConvertTomlTableToDictionary lowercases all string keys automatically.
             Serializer.DeserializePath( componentDict, "paths" );
             Name = GetRequiredValue<string>( componentDict, "name" );
-            _ = Logger.LogAsync( $"\r\n== Deserialize next component '{Name}' ==" );
+            _ = Logger.LogAsync( $"{Path.DirectorySeparatorChar}== Deserialize next component '{Name}' ==" );
             Guid = GetRequiredValue<Guid>( componentDict, "guid" );
             Description = GetValueOrDefault<string>( componentDict, "description" );
             Directions = GetValueOrDefault<string>( componentDict, "directions" );
@@ -171,7 +171,7 @@ namespace KOTORModSync.Core
 
             // Validate and log additional errors/warnings.
             Validator = new ComponentValidation( this );
-            _ = Logger.LogAsync( $"Successfully deserialized component '{Name}'\r\n" );
+            _ = Logger.LogAsync( $"Successfully deserialized component '{this.Name}'" );
         }
 
         public static void OutputConfigFile( IEnumerable<Component> components, string filePath )
@@ -294,7 +294,7 @@ namespace KOTORModSync.Core
                 Serializer.DeserializeGuidDictionary( instructionDict, "dependencies" );
 
                 var instruction = new Instruction { Action = GetRequiredValue<string>( instructionDict, "action" ) };
-                _ = Logger.LogAsync( $"\r\n-- Deserialize instruction #{index + 1} action {instruction.Action}" );
+                _ = Logger.LogAsync( $"{Environment.NewLine}-- Deserialize instruction #{index + 1} action {instruction.Action}" );
                 instruction.Arguments = GetValueOrDefault<string>( instructionDict, "arguments" );
                 instruction.Overwrite = GetValueOrDefault<bool>( instructionDict, "overwrite" );
 
@@ -759,7 +759,7 @@ namespace KOTORModSync.Core
                             List<string> installErrors = instruction.VerifyInstall();
                             if ( installErrors.Count > 0 )
                             {
-                                await Logger.LogAsync( string.Join( "\n", installErrors ) );
+                                await Logger.LogAsync( string.Join( Environment.NewLine, installErrors ) );
                                 exitCode = Instruction.ActionExitCode.TSLPatcherError;
                             }
                         }
@@ -814,7 +814,7 @@ namespace KOTORModSync.Core
                     case "inform":
                     default:
                         // Handle unknown instruction type here
-                        await Logger.LogWarningAsync( $"Unknown instruction {instruction.Action}" );
+                        await Logger.LogWarningAsync( $"Unknown instruction '{instruction.Action}'" );
                         exitCode = Instruction.ActionExitCode.UnknownInstruction;
                         break;
                 }
@@ -926,7 +926,7 @@ namespace KOTORModSync.Core
                 if ( !shouldRunInstruction )
                 {
                     _ = Logger.LogAsync(
-                        $"[Information] Not running instruction {instruction.Action} index {instructionIndex} due to restricted components installed: [{instruction.Restrictions}]"
+                        $"[Information] Not running instruction '{instruction.Action}' index {instructionIndex} due to restricted components installed: [{instruction.Restrictions}]"
                     );
                 }
             }
@@ -1166,7 +1166,7 @@ namespace KOTORModSync.Core
                         string sourcePath = instruction.Source[index];
 
                         // todo
-                        if ( sourcePath.StartsWith( "<<kotorDirectory>>" ) )
+                        if ( sourcePath.StartsWith( "<<kotorDirectory>>", StringComparison.OrdinalIgnoreCase ) )
                         {
                             continue;
                         }
@@ -1179,13 +1179,13 @@ namespace KOTORModSync.Core
                         if ( !result.Item1 && MainConfig.AttemptFixes )
                         {
                             // Split the directory name using the directory separator character
-                            string[] parts = sourcePath.Split( '\\', '/' );
+                            string[] parts = sourcePath.Split(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar, '/', '\\');
 
-                            string duplicatedPart = parts[1] + "\\" + parts[1];
+                            string duplicatedPart = parts[1] + Path.DirectorySeparatorChar + parts[1];
                             string[] remainingParts = parts.Skip( 2 ).ToArray();
 
                             string path = string.Join(
-                                "\\",
+                                Path.DirectorySeparatorChar.ToString(),
                                 new[] { parts[0], duplicatedPart }.Concat( remainingParts )
                             );
 
@@ -1283,7 +1283,7 @@ namespace KOTORModSync.Core
                         instruction.Destination = "<<kotorDirectory>>";
                         break;
 
-                    case "tslpatcher" when !instruction.Destination.Equals( "<<kotorDirectory>>" ):
+                    case "tslpatcher" when !instruction.Destination.Equals( "<<kotorDirectory>>", StringComparison.OrdinalIgnoreCase ):
                         success = false;
                         AddError(
                             "'Destination' key must be either null or string literal '<<kotorDirectory>>'"
@@ -1324,7 +1324,7 @@ namespace KOTORModSync.Core
                     // rename should never use <<kotorDirectory>>\\Override
                     case "rename":
                         if ( instruction.Destination?.Equals(
-                                "<<kotorDirectory>>\\Override",
+                                $"<<kotorDirectory>>{Path.DirectorySeparatorChar}Override",
                                 StringComparison.Ordinal
                             )
                             != false
@@ -1366,9 +1366,9 @@ namespace KOTORModSync.Core
 
                             Logger.Log(
                                 "Fixing the above issue automatically"
-                                + " (setting Destination to '<<kotorDirectory>>\\Override')"
+                                + $" (setting Destination to '<<kotorDirectory>>{Path.DirectorySeparatorChar}Override')"
                             );
-                            instruction.Destination = "<<kotorDirectory>>\\Override";
+                            instruction.Destination = $"<<kotorDirectory>>{Path.DirectorySeparatorChar}Override";
                         }
 
                         break;
@@ -1411,20 +1411,16 @@ namespace KOTORModSync.Core
             bool archiveNameFound = false;
             string errorDescription = string.Empty;
 
-            sourcePath = sourcePath
-                .Replace( '/', '\\' )
-                .Replace( "<<modDirectory>>\\", "" )
-                .Replace( "<<kotorDirectory>>\\", "" );
+            sourcePath = Serializer.FixPathFormatting( sourcePath )
+                .Replace( $"<<modDirectory>>{Path.DirectorySeparatorChar}", "" )
+                .Replace( $"<<kotorDirectory>>{Path.DirectorySeparatorChar}", "" );
 
             foreach ( string archivePath in allArchives )
             {
                 // Check if the archive name matches the first portion of the sourcePath
                 string archiveName = Path.GetFileNameWithoutExtension( archivePath );
-                string[] pathParts = sourcePath.TrimEnd( '\\' ).Split( '\\' );
+                string[] pathParts = sourcePath.Split( Path.DirectorySeparatorChar );
                 archiveNameFound = FileHelper.WildcardMatch( archiveName, pathParts[0] );
-
-                // Remove the trailing backslash from sourcePath if it exists
-                sourcePath = sourcePath.TrimEnd( '\\' );
 
                 ArchivePathCode code = IsPathInArchive( sourcePath, archivePath );
 
@@ -1452,19 +1448,15 @@ namespace KOTORModSync.Core
                 return (false, archiveNameFound);
             }
 
-            if ( !foundInAnyArchive )
-            {
-                // todo, stop displaying errors for self extracting executables. This is the only mod using one that I've seen out of 200-some.
-                if ( Component.Name.Equals( "Improved AI" ) )
-                {
-                    return (true, true);
-                }
+            if ( foundInAnyArchive )
+                return ( true, true );
 
-                AddError( $"Failed to find '{sourcePath}' in any archives!", instruction );
-                return (false, archiveNameFound);
-            }
+            // todo, stop displaying errors for self extracting executables. This is the only mod using one that I've seen out of 200-some.
+            if ( Component.Name.Equals( "Improved AI", StringComparison.OrdinalIgnoreCase ) )
+                return ( true, true );
 
-            return (true, true);
+            AddError( $"Failed to find '{sourcePath}' in any archives!", instruction );
+            return (false, archiveNameFound);
         }
 
         private static ArchivePathCode IsPathInArchive( string relativePath, string archivePath )
@@ -1484,7 +1476,7 @@ namespace KOTORModSync.Core
                 }
 
                 // everything is extracted to a new directory named after the archive.
-                string archiveNameAppend = Path.GetFileNameWithoutExtension( archivePath ) + "\\";
+                string archiveNameAppend = Path.GetFileNameWithoutExtension( archivePath ) + Path.DirectorySeparatorChar;
 
                 // if the Source key represents the top level extraction directory, check that first.
                 if ( FileHelper.WildcardMatch( archiveNameAppend, relativePath ) )
@@ -1497,7 +1489,7 @@ namespace KOTORModSync.Core
                 foreach ( IArchiveEntry entry in archive.Entries )
                 {
                     // Append extracted directory and ensure every slash is a backslash.
-                    string itemInArchivePath = archiveNameAppend + entry.Key.Replace( '/', '\\' );
+                    string itemInArchivePath = archiveNameAppend + entry.Key.Replace( Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar );
 
                     // Some archives loop through folders while others don't.
                     // Check if itemInArchivePath has an extension to determine folderName.
@@ -1506,7 +1498,7 @@ namespace KOTORModSync.Core
                     // Add the folder path to the list, after removing trailing slashes.
                     if ( !string.IsNullOrEmpty( folderName ) )
                     {
-                        _ = folderPaths.Add( folderName.TrimEnd( '\\', '/' ) );
+                        _ = folderPaths.Add( folderName.TrimEnd( Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar ) );
                     }
 
                     // Check if itemInArchivePath matches relativePath using wildcard matching.
@@ -1523,17 +1515,6 @@ namespace KOTORModSync.Core
                     {
                         return ArchivePathCode.FoundSuccessfully;
                     }
-                }
-
-                // quickly parse the path so the verbose log below is accurate.
-                string result = relativePath;
-
-                bool hasMultipleBackslashes = result.Count( c => c == '\\' ) > 1;
-                bool endsWithBackslash = result.EndsWith( "\\", StringComparison.Ordinal );
-
-                if ( hasMultipleBackslashes || endsWithBackslash )
-                {
-                    result = result.Substring( result.IndexOf( '\\' ) + 1 );
                 }
             }
 

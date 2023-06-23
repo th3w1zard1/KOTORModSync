@@ -142,13 +142,20 @@ namespace KOTORModSync.Core.Utility
         public static string FixPathFormatting( string path )
         {
             // Replace backslashes with forward slashes
-            string formattedPath = path.Replace( '\\', '/' );
+            string formattedPath = path
+                .Replace( Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar )
+                .Replace( '\\', Path.DirectorySeparatorChar )
+                .Replace( '/', Path.DirectorySeparatorChar );
 
             // Fix repeated slashes
-            formattedPath = Regex.Replace( formattedPath, "(?<!:)//+", "/" );
+            formattedPath = Regex.Replace(
+                formattedPath,
+                $"(?<!:){Path.DirectorySeparatorChar}{Path.DirectorySeparatorChar}+",
+                Path.DirectorySeparatorChar.ToString()
+            );
 
             // Fix trailing slashes
-            formattedPath = formattedPath.TrimEnd( '/' );
+            formattedPath = formattedPath.TrimEnd( Path.DirectorySeparatorChar );
 
             return formattedPath;
         }
@@ -481,9 +488,7 @@ namespace KOTORModSync.Core.Utility
             {
                 try
                 {
-                    string backslashPath = path
-                        .Replace( '/', Path.DirectorySeparatorChar )
-                        .Replace( '\\', Path.DirectorySeparatorChar );
+                    string backslashPath = Serializer.FixPathFormatting( path );
 
                     if ( !ContainsWildcards( backslashPath ) )
                     {
@@ -573,9 +578,9 @@ namespace KOTORModSync.Core.Utility
 
         public static bool WildcardMatch( string input, string patternInput )
         {
-            // Remove trailing slashes.
-            input = input.TrimEnd( '\\', '/' );
-            patternInput = patternInput.TrimEnd( '\\', '/' );
+            // Fix path formatting
+            input = Serializer.FixPathFormatting( input );
+            patternInput = patternInput.TrimEnd( Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar, '/', '\\' );
 
             // Split the input and pattern into directory levels
             string[] inputLevels = input.Split( Path.DirectorySeparatorChar );
@@ -616,15 +621,15 @@ namespace KOTORModSync.Core.Utility
 
             // Replace * with .* and ? with . in the pattern
             pattern = pattern
-                .Replace( @"\*", ".*" )
-                .Replace( @"\?", "." );
+                .Replace( $"{Path.DirectorySeparatorChar}*", ".*" )
+                .Replace( $"{Path.DirectorySeparatorChar}?", "." );
 
             // Use regex to perform the wildcard matching
             return Regex.IsMatch( input, $"^{pattern}$" );
         }
 
         public static bool IsPath
-            ( string value ) => Path.IsPathRooted( value ) || Regex.IsMatch( value, @"^[a-zA-Z]:\\" );
+            ( string value ) => Path.IsPathRooted( value ) || Regex.IsMatch( value, $"^[a-zA-Z]:{Path.DirectorySeparatorChar}" );
 
         public static bool IsDirectoryWithName( object directory, string name )
             => directory is Dictionary<string, object> dict
@@ -721,7 +726,7 @@ namespace KOTORModSync.Core.Utility
             }
             catch ( Exception ex )
             {
-                Logger.LogException( ex, "Error writing output file {outputPath}: {ex.Message}" );
+                Logger.LogException( ex, $"Error writing output file {outputPath}: {ex.Message}" );
             }
         }
 

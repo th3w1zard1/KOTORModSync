@@ -31,7 +31,7 @@ namespace KOTORModSync.Tests
                 Process[] processes = Process.GetProcesses();
                 foreach ( Process process in processes )
                 {
-                    Logger.Log( $"{process.ProcessName} (ID: {process.Id})" );
+                    Logger.Log( $"'{process.ProcessName}' (ID: {process.Id})" );
                 }
 
                 Logger.Log( "Standard output from the timed-out process:" );

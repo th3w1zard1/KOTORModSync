@@ -26,3 +26,5 @@ for /r "%publishProfilesDir%" %%F in (*.pubxml) do (
         echo An error occurred while publishing with framework '!framework!': !errorlevel!
     )
 )
+echo Built all targets.
+pause

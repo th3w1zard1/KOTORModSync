@@ -10,6 +10,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using KOTORModSync.Core.Utility;
 using SharpCompress.Archives;
+using SharpCompress.Archives.Rar;
+using SharpCompress.Archives.SevenZip;
 using SharpCompress.Readers;
 
 namespace KOTORModSync.Core
@@ -192,7 +194,20 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
 
                             using ( FileStream stream = File.OpenRead( thisFile.FullName ) )
                             {
-                                IArchive archive = ArchiveHelper.OpenArchive( thisFile.FullName );
+                                IArchive archive = null;
+
+                                switch (thisFile.Extension)
+                                {
+                                    case ".zip":
+                                        archive = SharpCompress.Archives.Zip.ZipArchive.Open( stream );
+                                        break;
+                                    case ".rar":
+                                        archive = RarArchive.Open( stream );
+                                        break;
+                                    case ".7z":
+                                        archive = SevenZipArchive.Open( stream );
+                                        break;
+                                }
 
                                 if ( archive == null )
                                 {

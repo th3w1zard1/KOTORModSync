@@ -22,3 +22,6 @@ foreach ($file in $publishProfileFiles) {
         Write-Host "An error occurred while publishing with framework '$framework': $errorMessage"
     }
 }
+Write-Host "Built all targets."
+Write-Host "Press any key to continue..."
+$null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")

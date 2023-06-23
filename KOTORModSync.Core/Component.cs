@@ -15,6 +15,8 @@ using JetBrains.Annotations;
 using KOTORModSync.Core.Utility;
 using Nett;
 using SharpCompress.Archives;
+using SharpCompress.Archives.Rar;
+using SharpCompress.Archives.SevenZip;
 using Tomlyn;
 using Tomlyn.Syntax;
 using static KOTORModSync.Core.Utility.CallbackObjects;
@@ -1134,10 +1136,31 @@ namespace KOTORModSync.Core
             {
                 bool success = true;
                 List<string> allArchives = GetAllArchivesFromInstructions( component );
+                // probably something wrong if there's no archives found.
+                if ( allArchives.Count == 0 )
+                {
+                    foreach ( var instruction in component.Instructions)
+                    {
+                        if ( !instruction.Action.Equals( "extract", StringComparison.OrdinalIgnoreCase ) )
+                        {
+                            continue;
+                        }
 
+                        AddError( $"Missing Required Archives for 'Extract' action: [{string.Join(",", instruction.Source)}]", instruction );
+                        success = false;
+                    }
+
+                    return success;
+                }
 
                 foreach ( Instruction instruction in component.Instructions )
                 {
+                    // we already checked if the archive exists in GetAllArchivesFromInstructions.
+                    if ( instruction.Action.Equals( "extract", StringComparison.OrdinalIgnoreCase ) )
+                    {
+                        continue;
+                    }
+
                     bool archiveNameFound = true;
                     if ( instruction.Source == null )
                     {
@@ -1463,7 +1486,20 @@ namespace KOTORModSync.Core
 
             using ( FileStream stream = File.OpenRead( archivePath ) )
             {
-                IArchive archive = ArchiveHelper.OpenArchive( archivePath );
+                IArchive archive = null;
+
+                if ( archivePath.EndsWith( ".zip" ) )
+                {
+                    archive = SharpCompress.Archives.Zip.ZipArchive.Open( stream );
+                }
+                else if ( archivePath.EndsWith( ".rar" ) )
+                {
+                    archive = RarArchive.Open( stream );
+                }
+                else if ( archivePath.EndsWith( ".7z" ) )
+                {
+                    archive = SevenZipArchive.Open( stream );
+                }
 
                 if ( archive == null )
                 {

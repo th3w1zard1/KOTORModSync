@@ -695,9 +695,9 @@ namespace KOTORModSync.Core.Utility
                     {
                         archive = SevenZipArchive.Open( stream );
                     }
-                }
 
-                return archive;
+                    return archive;
+                }
             }
             catch ( Exception ex) {
                 Logger.LogException( ex );

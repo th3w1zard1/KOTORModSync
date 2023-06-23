@@ -1179,7 +1179,7 @@ namespace KOTORModSync.Core
                         if ( !result.Item1 && MainConfig.AttemptFixes )
                         {
                             // Split the directory name using the directory separator character
-                            string[] parts = sourcePath.Split(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar, '/', '\\');
+                            string[] parts = sourcePath.Split( Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar, '/', '\\' );
 
                             string duplicatedPart = parts[1] + Path.DirectorySeparatorChar + parts[1];
                             string[] remainingParts = parts.Skip( 2 ).ToArray();
@@ -1449,11 +1449,11 @@ namespace KOTORModSync.Core
             }
 
             if ( foundInAnyArchive )
-                return ( true, true );
+                return (true, true);
 
             // todo, stop displaying errors for self extracting executables. This is the only mod using one that I've seen out of 200-some.
             if ( Component.Name.Equals( "Improved AI", StringComparison.OrdinalIgnoreCase ) )
-                return ( true, true );
+                return (true, true);
 
             AddError( $"Failed to find '{sourcePath}' in any archives!", instruction );
             return (false, archiveNameFound);

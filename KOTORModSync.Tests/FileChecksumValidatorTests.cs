@@ -2,12 +2,12 @@
 // Licensed under the GNU General Public License v3.0 (GPLv3).
 // See LICENSE.txt file in the project root for full license information.
 
+using System;
 using System.Collections.Specialized;
 using System.Diagnostics;
 using System.Security.Cryptography;
 using KOTORModSync.Core.Utility;
 using Newtonsoft.Json;
-using System;
 
 namespace KOTORModSync.Tests
 {

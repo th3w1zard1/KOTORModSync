@@ -196,7 +196,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                             {
                                 IArchive archive = null;
 
-                                switch (thisFile.Extension)
+                                switch ( thisFile.Extension )
                                 {
                                     case ".zip":
                                         archive = SharpCompress.Archives.Zip.ZipArchive.Open( stream );

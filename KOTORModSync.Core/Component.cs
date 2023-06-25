@@ -168,7 +168,7 @@ namespace KOTORModSync.Core
                 = Serializer.ConvertTomlTableToDictionary( componentTable );
 
             // reminder: ConvertTomlTableToDictionary lowercases all string keys automatically.
-            _ = Logger.LogAsync($"{Environment.NewLine}== Deserialize next component '{Name}' ==");
+            _ = Logger.LogAsync( $"{Environment.NewLine}== Deserialize next component '{Name}' ==" );
             this.Name = GetRequiredValue<string>( componentDict, "name" );
             this.Guid = GetRequiredValue<Guid>( componentDict, "guid" );
             Description = GetValueOrDefault<string>( componentDict, "description" );

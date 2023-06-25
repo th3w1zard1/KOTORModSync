@@ -262,7 +262,7 @@ namespace KOTORModSync
             return null;
         }
 
-        private async Task<bool> FindDuplicateComponents(List<Component> components )
+        private async Task<bool> FindDuplicateComponents( List<Component> components )
         {
             bool duplicatesFixed = true;
             // Check for duplicate GUID
@@ -1456,7 +1456,7 @@ namespace KOTORModSync
                     throw new ArgumentNullException( nameof( component ) );
                 }
 
-                if ( !(parentItem.Items is AvaloniaList<object> parentItemItems) )
+                if ( !( parentItem.Items is AvaloniaList<object> parentItemItems ) )
                 {
                     throw new NullReferenceException( "parentItem must have a non-nullable Items property and be of type AvaloniaList<object>." );
                 }

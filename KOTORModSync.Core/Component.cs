@@ -1188,6 +1188,13 @@ namespace KOTORModSync.Core
                             continue;
                         }
 
+                        // ensure tslpatcher.exe sourcePaths use the action 'tslpatcher'
+                        if ( sourcePath.EndsWith( "tslpatcher.exe", StringComparison.OrdinalIgnoreCase )
+                            && !instruction.Action.Equals( "tslpatcher", StringComparison.OrdinalIgnoreCase ) )
+                        {
+                            AddWarning( "'tslpatcher.exe' used in Source path without the action 'tslpatcher', was this intentional?", instruction );
+                        }
+
                         (bool, bool) result = IsSourcePathInArchives( sourcePath, allArchives, instruction );
 
                         // For some unholy reason, some archives act like there's another top level folder named after the archive to extract.

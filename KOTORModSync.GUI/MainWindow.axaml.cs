@@ -10,11 +10,15 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Input;
+using Avalonia;
 using Avalonia.Collections;
 using Avalonia.Controls;
+using Avalonia.Data;
 using Avalonia.Interactivity;
+using Avalonia.Layout;
 using Avalonia.Markup.Xaml;
 using Avalonia.Markup.Xaml.Styling;
+using Avalonia.Media;
 using Avalonia.Styling;
 using Avalonia.Threading;
 using JetBrains.Annotations;
@@ -56,32 +60,6 @@ namespace KOTORModSync
         }
 
         private MainConfig MainConfigInstance { get; set; }
-        public ICommand ItemClickCommand => _itemClickCommand ?? ( _itemClickCommand = new RelayCommand( ItemClick ) );
-
-        // test the options dialog for use with the 'Options' TomlTable.
-        public async void Testwindow()
-        {
-            // Create an instance of OptionsDialogCallback
-            var optionsDialogCallback = new OptionsDialogCallback( this );
-
-            // Create a list of options
-            var options = new List<string> { "Option 1", "Option 2", "Option 3" };
-
-            // Show the options dialog and get the selected option
-            string selectedOption = await optionsDialogCallback.ShowOptionsDialog( options );
-
-            // Use the selected option
-            if ( selectedOption != null )
-            {
-                // Option selected, do something with it
-                Console.WriteLine( "Selected option: " + selectedOption );
-            }
-            else
-            {
-                // No option selected or dialog closed
-                Console.WriteLine( "No option selected or dialog closed" );
-            }
-        }
 
         private void InitializeComponent()
         {
@@ -106,61 +84,48 @@ namespace KOTORModSync
             MainConfigStackPanel.DataContext = MainConfigInstance;
         }
 
-        public static IControl Build( object data )
+        // handles clicks on TreeViewItems.
+        public ICommand ItemClickCommand => _itemClickCommand
+            ?? ( _itemClickCommand = new RelayCommand(
+                    ( object parameter ) =>
+                    {
+                        if ( !( parameter is Component component ) )
+                        {
+                            return;
+                        }
+
+                        if ( !_selectedComponents.Contains( component ) )
+                        {
+                            _selectedComponents.Add( component );
+                        }
+
+                        LoadComponentDetails( component );
+                    }
+                )
+            );
+
+        // test the options dialog for use with the 'Options' TomlTable.
+        public async void Testwindow()
         {
-            try
+            // Create an instance of OptionsDialogCallback
+            var optionsDialogCallback = new OptionsDialogCallback( this );
+
+            // Create a list of options
+            var options = new List<string> { "Option 1", "Option 2", "Option 3" };
+
+            // Show the options dialog and get the selected option
+            string selectedOption = await optionsDialogCallback.ShowOptionsDialog( options );
+
+            // Use the selected option
+            if ( selectedOption != null )
             {
-                // Create a dictionary to keep track of child TreeViewItems
-                var childItems = new Dictionary<string, TreeViewItem>( 10000 );
-                if ( !( data is Component component ) )
-                {
-                    throw new InvalidCastException( "Data variable should always be a Component." );
-                }
-
-                // If no dependencies we can return here.
-                if ( component.Dependencies == null || component.Dependencies.Count == 0 )
-                {
-                    return new TextBlock
-                    {
-                        Text = component.Name
-                    }; // Use a TextBlock for components without dependencies
-                }
-
-                // Create a TreeViewItem for the component
-                var treeViewItem = new TreeViewItem { Header = component.Name };
-
-                // Check if the component has any dependencies
-                foreach ( string dependency in component.Dependencies )
-                {
-                    if ( childItems.ContainsKey( dependency ) )
-                    {
-                        continue;
-                    }
-
-                    // Create a new child TreeViewItem for each unique dependency
-                    var childItem = new TreeViewItem { Header = dependency };
-                    childItems.Add( dependency, childItem );
-                }
-
-                // Add child TreeViewItems to the parent TreeViewItem
-                var items = treeViewItem.Items as IList;
-                foreach ( TreeViewItem childItem in childItems.Values )
-                {
-                    if ( childItem != null
-                            ? items != null
-                            : throw new ArgumentNullException( nameof( childItem ) )
-                       )
-                    {
-                        _ = items.Add( childItem );
-                    }
-                }
-
-                return treeViewItem;
+                // Option selected, do something with it
+                Console.WriteLine( "Selected option: " + selectedOption );
             }
-            catch ( Exception e )
+            else
             {
-                Console.WriteLine( e );
-                throw;
+                // No option selected or dialog closed
+                Console.WriteLine( "No option selected or dialog closed" );
             }
         }
 
@@ -851,7 +816,7 @@ namespace KOTORModSync
             }
         }
 
-        private bool _progressWindowClosed = false;
+        private bool _progressWindowClosed;
 
         private async void StartInstall_Click( object sender, RoutedEventArgs e )
         {
@@ -996,6 +961,12 @@ namespace KOTORModSync
                         await Task.Yield();
                         await Task.Delay( 200 );
 
+                        if ( !component.IsSelected )
+                        {
+                            await Logger.LogVerboseAsync( $"Skipping install of '{component.Name}' (unchecked)" );
+                            continue;
+                        }
+
                         await Logger.LogAsync( $"Start Install of '{component.Name}'..." );
                         Component.InstallExitCode exitCode = await component.InstallAsync( _components );
                         await Logger.LogVerboseAsync( $"Install of '{component.Name}' finished with exit code {exitCode}" );
@@ -1093,7 +1064,17 @@ namespace KOTORModSync
         {
             try
             {
-                await new StreamWriter( filePath ).WriteAsync( documentation );
+                if ( !string.IsNullOrEmpty( documentation ) )
+                {
+                    using ( var writer = new StreamWriter( filePath ) )
+                    {
+                        await writer.WriteAsync( documentation );
+                        await writer.FlushAsync();
+                        // ReSharper disable once MethodHasAsyncOverload
+                        // not available in net462
+                        writer.Dispose();
+                    }
+                }
             }
             catch ( Exception e )
             {
@@ -1336,7 +1317,7 @@ namespace KOTORModSync
                     return;
                 }
 
-                TreeViewItem rootItem = Enumerable.OfType<TreeViewItem>( LeftTreeView.Items ).FirstOrDefault();
+                TreeViewItem rootItem = LeftTreeView.Items.OfType<TreeViewItem>().FirstOrDefault();
                 if ( rootItem != null )
                 {
                     WriteTreeViewItemsToFile( new List<TreeViewItem> { rootItem }, filePath );
@@ -1419,7 +1400,32 @@ namespace KOTORModSync
                 var componentItem = new TreeViewItem
                 {
                     Header = component.Name,
-                    Tag = component // this allows us to access the item later
+                    Tag = component, // this allows us to access the item later
+                };
+
+                var checkBox = new CheckBox
+                {
+                    Name = "IsSelected",
+                    IsChecked = true
+                };
+
+                // Create a binding between the IsChecked property of the checkbox and the IsSelected property of the component
+                var binding = new Binding( "IsSelected" )
+                {
+                    Source = component,
+                    Mode = BindingMode.TwoWay
+                };
+
+                _ = checkBox.Bind( Avalonia.Controls.Primitives.ToggleButton.IsCheckedProperty, binding );
+
+                // Add the checkbox to the tree view item
+                componentItem.Header = new DockPanel
+                {
+                    Children =
+                    {
+                        checkBox,
+                        new TextBlock { Text = component.Name }
+                    },
                 };
 
                 // Assign the ItemClickCommand to the componentItem.
@@ -1504,22 +1510,6 @@ namespace KOTORModSync
             {
                 WriteTreeViewItemToFile( childItem, writer, depth + 1, maxDepth );
             }
-        }
-
-        // used for leftTreeView double-click event.
-        private void ItemClick( object parameter )
-        {
-            if ( !( parameter is Component component ) )
-            {
-                return;
-            }
-
-            if ( !_selectedComponents.Contains( component ) )
-            {
-                _selectedComponents.Add( component );
-            }
-
-            LoadComponentDetails( component );
         }
 
         private async void AddNewInstruction_Click( object sender, RoutedEventArgs e )

@@ -198,7 +198,7 @@ namespace KOTORModSync.ConsoleApp
                                 Console.WriteLine( "Enter the output directory for parsed_reddit.toml file" );
 
                                 string outPath = Console.ReadLine();
-                                Component.OutputConfigFile( components, outPath + Environment.DirectorySeparatorChar + "parsed_reddit.toml" );
+                                Component.OutputConfigFile( components, outPath + Path.DirectorySeparatorChar + "parsed_reddit.toml" );
                                 Console.WriteLine( $"File saved as 'parsed_reddit.toml' in directory {outPath}" );
                             }
                             else

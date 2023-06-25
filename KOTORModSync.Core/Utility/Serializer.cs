@@ -588,7 +588,7 @@ namespace KOTORModSync.Core.Utility
         {
             // Fix path formatting
             input = Serializer.FixPathFormatting( input );
-            patternInput = Serializer.FixPathFormatting( patternInput.TrimEnd( Path.DirectorySeparatorChar ) );
+            patternInput = Serializer.FixPathFormatting( patternInput );
 
             // Split the input and pattern into directory levels
             string[] inputLevels = input.Split( Path.DirectorySeparatorChar );

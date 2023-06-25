@@ -83,6 +83,7 @@ namespace KOTORModSync.Core
         public string ModLink { get; set; }
         public List<Option> ChosenOptions { get; set; }
         private ComponentValidation Validator { get; set; }
+        public bool IsSelected { get; set; }
 
         public string SerializeComponent()
         {
@@ -1288,10 +1289,11 @@ namespace KOTORModSync.Core
             {
                 bool success = true;
                 List<string> allArchives = GetAllArchivesFromInstructions( component );
+
                 // probably something wrong if there's no archives found.
                 if ( allArchives.Count == 0 )
                 {
-                    foreach ( var instruction in component.Instructions )
+                    foreach ( Instruction instruction in component.Instructions )
                     {
                         if ( !instruction.Action.Equals( "extract", StringComparison.OrdinalIgnoreCase ) )
                         {
@@ -1334,7 +1336,7 @@ namespace KOTORModSync.Core
                             continue;
                         }
 
-                        //ensure tslpatcher.exe sourcePaths use the action 'tslpatcher'
+                        // ensure tslpatcher.exe sourcePaths use the action 'tslpatcher'
                         if ( sourcePath.EndsWith( "tslpatcher.exe", StringComparison.OrdinalIgnoreCase )
                             && !instruction.Action.Equals( "tslpatcher", StringComparison.OrdinalIgnoreCase ) )
                         {
@@ -1351,7 +1353,8 @@ namespace KOTORModSync.Core
                             // Split the directory name using the directory separator character
                             string[] parts = sourcePath.Split( Path.DirectorySeparatorChar );
 
-                            // Add the first part of the path and repeat it at the beginning (i.e. archive/my/custom/path becomes archive/archive/my/custom/path).
+                            // Add the first part of the path and repeat it at the beginning
+                            // i.e. archive/my/custom/path becomes archive/archive/my/custom/path
                             string duplicatedPart = parts[1] + Path.DirectorySeparatorChar + parts[1];
                             string[] remainingParts = parts.Skip( 2 ).ToArray();
 
@@ -1410,6 +1413,7 @@ namespace KOTORModSync.Core
                 {
                     if ( Path.GetExtension( realSourcePath ).Equals( ".exe", StringComparison.OrdinalIgnoreCase ) )
                     {
+                        allArchives.Add( realSourcePath );
                         continue; // no way to verify self-extracting executables.
                     }
 

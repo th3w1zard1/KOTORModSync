@@ -10,11 +10,15 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Input;
+using Avalonia;
 using Avalonia.Collections;
 using Avalonia.Controls;
+using Avalonia.Data;
 using Avalonia.Interactivity;
+using Avalonia.Layout;
 using Avalonia.Markup.Xaml;
 using Avalonia.Markup.Xaml.Styling;
+using Avalonia.Media;
 using Avalonia.Styling;
 using Avalonia.Threading;
 using JetBrains.Annotations;
@@ -104,64 +108,6 @@ namespace KOTORModSync
             MainConfigInstance = new MainConfig();
             MainConfigStackPanel = this.FindControl<StackPanel>( "MainConfigStackPanel" );
             MainConfigStackPanel.DataContext = MainConfigInstance;
-        }
-
-        public static IControl Build( object data )
-        {
-            try
-            {
-                // Create a dictionary to keep track of child TreeViewItems
-                var childItems = new Dictionary<string, TreeViewItem>( 10000 );
-                if ( !( data is Component component ) )
-                {
-                    throw new InvalidCastException( "Data variable should always be a Component." );
-                }
-
-                // If no dependencies we can return here.
-                if ( component.Dependencies == null || component.Dependencies.Count == 0 )
-                {
-                    return new TextBlock
-                    {
-                        Text = component.Name
-                    }; // Use a TextBlock for components without dependencies
-                }
-
-                // Create a TreeViewItem for the component
-                var treeViewItem = new TreeViewItem { Header = component.Name };
-
-                // Check if the component has any dependencies
-                foreach ( string dependency in component.Dependencies )
-                {
-                    if ( childItems.ContainsKey( dependency ) )
-                    {
-                        continue;
-                    }
-
-                    // Create a new child TreeViewItem for each unique dependency
-                    var childItem = new TreeViewItem { Header = dependency };
-                    childItems.Add( dependency, childItem );
-                }
-
-                // Add child TreeViewItems to the parent TreeViewItem
-                var items = treeViewItem.Items as IList;
-                foreach ( TreeViewItem childItem in childItems.Values )
-                {
-                    if ( childItem != null
-                            ? items != null
-                            : throw new ArgumentNullException( nameof( childItem ) )
-                       )
-                    {
-                        _ = items.Add( childItem );
-                    }
-                }
-
-                return treeViewItem;
-            }
-            catch ( Exception e )
-            {
-                Console.WriteLine( e );
-                throw;
-            }
         }
 
         private async Task<string> OpenFile()
@@ -839,7 +785,7 @@ namespace KOTORModSync
             }
         }
 
-        private bool _progressWindowClosed = false;
+        private bool _progressWindowClosed;
 
         private async void StartInstall_Click( object sender, RoutedEventArgs e )
         {
@@ -966,6 +912,12 @@ namespace KOTORModSync
                         // Ensure the UI updates are processed
                         await Task.Yield();
                         await Task.Delay( 200 );
+
+                        if ( !component.IsSelected )
+                        {
+                            await Logger.LogVerboseAsync( $"Skipping install of '{component.Name}' (unchecked)" );
+                            continue;
+                        }
 
                         await Logger.LogAsync( $"Start Install of '{component.Name}'..." );
                         Component.InstallExitCode exitCode = await component.InstallAsync( _components );
@@ -1307,7 +1259,7 @@ namespace KOTORModSync
                     return;
                 }
 
-                TreeViewItem rootItem = Enumerable.OfType<TreeViewItem>( LeftTreeView.Items ).FirstOrDefault();
+                TreeViewItem rootItem = LeftTreeView.Items.OfType<TreeViewItem>().FirstOrDefault();
                 if ( rootItem != null )
                 {
                     WriteTreeViewItemsToFile( new List<TreeViewItem> { rootItem }, filePath );
@@ -1390,7 +1342,32 @@ namespace KOTORModSync
                 var componentItem = new TreeViewItem
                 {
                     Header = component.Name,
-                    Tag = component // this allows us to access the item later
+                    Tag = component, // this allows us to access the item later
+                };
+
+                var checkBox = new CheckBox
+                {
+                    Name = "IsSelected",
+                    IsChecked = true
+                };
+
+                // Create a binding between the IsChecked property of the checkbox and the IsSelected property of the component
+                var binding = new Binding( "IsSelected" )
+                {
+                    Source = component,
+                    Mode = BindingMode.TwoWay
+                };
+
+                _ = checkBox.Bind( Avalonia.Controls.Primitives.ToggleButton.IsCheckedProperty, binding );
+
+                // Add the checkbox to the tree view item
+                componentItem.Header = new DockPanel
+                {
+                    Children =
+                    {
+                        checkBox,
+                        new TextBlock { Text = component.Name }
+                    },
                 };
 
                 // Assign the ItemClickCommand to the componentItem.

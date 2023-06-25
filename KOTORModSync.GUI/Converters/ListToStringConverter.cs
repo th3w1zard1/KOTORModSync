@@ -63,7 +63,7 @@ namespace KOTORModSync.Converters
                 {
                     try
                     {
-                        guids.Add( Guid.Parse(Serializer.FixGuidString((string)line) ?? string.Empty ));
+                        guids.Add( Guid.Parse( Serializer.FixGuidString( (string)line ) ?? string.Empty ) );
                     }
                     catch ( FormatException e )
                     {

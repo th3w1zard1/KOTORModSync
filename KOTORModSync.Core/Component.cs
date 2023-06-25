@@ -931,7 +931,7 @@ namespace KOTORModSync.Core
         //The component has dependencies, and all of the required components are being installed.
         //The component has restrictions, but none of the restricted components are being installed.
         [CanBeNull]
-        public bool ShouldInstallComponent( List<Component> componentsList, bool isInstall = true)
+        public bool ShouldInstallComponent( List<Component> componentsList, bool isInstall = true )
         {
             Dictionary<string, List<Component>> conflicts = GetConflictingComponents( this.Dependencies, this.Restrictions, componentsList, isInstall );
             return conflicts.Count == 0;
@@ -990,7 +990,7 @@ namespace KOTORModSync.Core
             }
 
             if ( installDependencies.Count == 0 )
-                return ( true, componentsList );
+                return (true, componentsList);
 
             Logger.LogVerbose( "Installation order dependencies have been populated." );
 

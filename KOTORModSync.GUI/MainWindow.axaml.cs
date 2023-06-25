@@ -614,7 +614,7 @@ namespace KOTORModSync
 
                 if ( informationMessage.Equals( string.Empty ) )
                 {
-                    return ( true, "No issues found."
+                    return (true, "No issues found."
                         + " If you encounter any problems during the installation, please contact the developer.");
                 }
 

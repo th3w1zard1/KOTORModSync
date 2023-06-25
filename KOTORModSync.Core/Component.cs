@@ -81,6 +81,7 @@ namespace KOTORModSync.Core
         public string ModLink { get; set; }
         public List<Option> ChosenOptions { get; set; }
         private ComponentValidation Validator { get; set; }
+        public bool IsSelected { get; set; }
 
         public string SerializeComponent()
         {

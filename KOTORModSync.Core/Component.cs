@@ -73,6 +73,8 @@ namespace KOTORModSync.Core
         public string Directions { get; set; }
         public List<string> Dependencies { get; private set; }
         public List<string> Restrictions { get; set; }
+        public List<Guid> InstallBefore { get; set; }
+        public List<Guid> InstallAfter { get; set; }
         public bool NonEnglishFunctionality { get; set; }
         public string InstallationMethod { get; set; }
         public List<Instruction> Instructions { get; set; }
@@ -155,6 +157,34 @@ namespace KOTORModSync.Core
             Author = GetValueOrDefault<string>( componentDict, "author" );
             Dependencies = GetValueOrDefault<List<string>>( componentDict, "dependencies" );
             Restrictions = GetValueOrDefault<List<string>>( componentDict, "restrictions" );
+            InstallBefore = GetValueOrDefault<List<string>>( componentDict, "installbefore" )
+                ?.Where( beforeComponent => beforeComponent != null )
+                .Select(
+                    beforeComponent =>
+                    {
+                        if ( Guid.TryParse( beforeComponent, out Guid parsedGuid ) )
+                        {
+                            return parsedGuid;
+                        }
+
+                        return Guid.Empty; // or any other default value for invalid GUIDs
+                    }
+                )
+                .ToList();
+            InstallAfter = GetValueOrDefault<List<string>>( componentDict, "installafter" )
+                ?.Where( afterComponent => afterComponent != null )
+                .Select(
+                    afterComponent =>
+                    {
+                        if ( Guid.TryParse( afterComponent, out Guid parsedGuid ) )
+                        {
+                            return parsedGuid;
+                        }
+
+                        return Guid.Empty; // or any other default value for invalid GUIDs
+                    }
+                )
+                .ToList();
             ModLink = GetValueOrDefault<string>( componentDict, "modlink" );
 
             Instructions = DeserializeInstructions(
@@ -936,6 +966,122 @@ namespace KOTORModSync.Core
             return shouldRunInstruction;
         }
 
+
+
+        public static (bool Success, List<Component> ReorderedComponents) ConfirmComponentsInstallOrder( List<Component> componentsList )
+        {
+            Logger.LogVerbose( "Confirming the install order is correct..." );
+
+            // Create a dictionary to store the installation order dependencies
+            Dictionary<Guid, List<Guid>> installDependencies = new Dictionary<Guid, List<Guid>>();
+
+            // Populate the dictionary with the InstallAfter and InstallBefore dependencies
+            foreach ( Component component in componentsList )
+            {
+                Guid componentGuid = component.Guid;
+                List<Guid> installAfter = component.InstallAfter;
+                List<Guid> installBefore = component.InstallBefore;
+
+                // Add InstallAfter dependencies
+                if ( installAfter != null )
+                {
+                    if ( !installDependencies.ContainsKey( componentGuid ) )
+                    {
+                        installDependencies.Add( componentGuid, new List<Guid>() );
+                    }
+
+                    installDependencies[componentGuid].AddRange( installAfter );
+                }
+
+                // Add InstallBefore dependencies
+                if ( installBefore != null )
+                {
+                    foreach ( Guid guid in installBefore )
+                    {
+                        if ( !installDependencies.ContainsKey( guid ) )
+                        {
+                            installDependencies.Add( guid, new List<Guid>() );
+                        }
+
+                        installDependencies[guid].Add( componentGuid );
+                    }
+                }
+            }
+
+            Logger.LogVerbose( "Installation order dependencies have been populated." );
+
+            // Perform a topological sort to check the installation order
+            List<Guid> sortedOrder = TopologicalSort( installDependencies );
+
+            // Compare the sorted order with the original order of components
+            bool isInstallOrderCorrect = sortedOrder.SequenceEqual( componentsList.Select( c => c.Guid ) );
+
+            Logger.LogVerbose( "Installation order confirmation completed." );
+
+            // Create the reordered list of components
+            List<Component> reorderedComponents = sortedOrder.Select( guid => componentsList.First( c => c.Guid == guid ) ).ToList();
+
+            if ( isInstallOrderCorrect )
+            {
+                return (true, reorderedComponents);
+            }
+
+            // Log out-of-order components and their correct positions
+            for ( int i = 0; i < componentsList.Count; i++ )
+            {
+                if ( componentsList[i].Guid != reorderedComponents[i].Guid )
+                {
+                    Logger.Log( $"Component {componentsList[i].Guid} should be installed " +
+                        $"{( i > 0 ? "after " + componentsList[i - 1].Guid : "at the beginning" )}, " +
+                        $"but it is currently at position {i}." );
+                }
+            }
+
+            return (false, reorderedComponents);
+        }
+
+        // Topological sort algorithm
+        private static List<Guid> TopologicalSort( Dictionary<Guid, List<Guid>> dependencies )
+        {
+            Logger.LogVerbose( "Performing topological sort..." );
+
+            List<Guid> sortedOrder = new List<Guid>();
+            HashSet<Guid> visited = new HashSet<Guid>();
+
+            foreach ( Guid componentGuid in dependencies.Keys )
+            {
+                if ( !visited.Contains( componentGuid ) )
+                {
+                    VisitComponent( componentGuid, dependencies, visited, sortedOrder );
+                }
+            }
+
+            sortedOrder.Reverse(); // Reverse the order to get the correct installation order
+
+            Logger.LogVerbose( "Topological sort completed." );
+
+            return sortedOrder;
+        }
+
+        private static void VisitComponent( Guid componentGuid, Dictionary<Guid, List<Guid>> dependencies,
+            HashSet<Guid> visited, List<Guid> sortedOrder )
+        {
+            visited.Add( componentGuid );
+
+            if ( dependencies.ContainsKey( componentGuid ) )
+            {
+                foreach ( Guid dependency in dependencies[componentGuid] )
+                {
+                    if ( !visited.Contains( dependency ) )
+                    {
+                        VisitComponent( dependency, dependencies, visited, sortedOrder );
+                    }
+                }
+            }
+
+            sortedOrder.Add( componentGuid );
+        }
+
         private List<Option> ChooseOptions( Instruction instruction )
         {
             if ( instruction is null )
@@ -1074,6 +1220,12 @@ namespace KOTORModSync.Core
             _validationResults = new List<ValidationResult>();
         }
 
+        public bool Run() =>
+            // Verify all the instructions' paths line up with hierarchy of the archives
+            VerifyExtractPaths( Component )
+            // Ensure all the 'Destination' keys are valid for their respective action.
+            && ParseDestinationWithAction( Component );
+
         private void AddError( string message, Instruction instruction ) =>
             _validationResults.Add(
                 new ValidationResult(
@@ -1172,12 +1324,6 @@ namespace KOTORModSync.Core
                         continue;
                     }
 
-                    if ( instruction.Source == null )
-                    {
-                        AddError( "Missing 'Source' key", instruction );
-                        continue;
-                    }
-
                     for ( int index = 0; index < instruction.Source.Count; index++ )
                     {
                         string sourcePath = Serializer.FixPathFormatting( instruction.Source[index] );
@@ -1186,6 +1332,13 @@ namespace KOTORModSync.Core
                         if ( sourcePath.StartsWith( "<<kotorDirectory>>", StringComparison.OrdinalIgnoreCase ) )
                         {
                             continue;
+                        }
+
+                        //ensure tslpatcher.exe sourcePaths use the action 'tslpatcher'
+                        if ( sourcePath.EndsWith( "tslpatcher.exe", StringComparison.OrdinalIgnoreCase )
+                            && !instruction.Action.Equals( "tslpatcher", StringComparison.OrdinalIgnoreCase ))
+                        {
+                            AddWarning( "'tslpatcher.exe' used in Source path without the action 'tslpatcher', was this intentional?", instruction );
                         }
 
                         (bool, bool) result = IsSourcePathInArchives( sourcePath, allArchives, instruction );
@@ -1551,11 +1704,5 @@ namespace KOTORModSync.Core
 
             return ArchivePathCode.NotFoundInArchive;
         }
-
-        public bool Run() =>
-            // Verify all the instructions' paths line up with hierarchy of the archives
-            VerifyExtractPaths( Component )
-            // Ensure all the 'Destination' keys are valid for their respective action.
-            && ParseDestinationWithAction( Component );
     }
 }

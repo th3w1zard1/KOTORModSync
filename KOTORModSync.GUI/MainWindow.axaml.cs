@@ -644,6 +644,18 @@ namespace KOTORModSync
                 bool isWritable = Utility.IsDirectoryWritable( MainConfig.DestinationPath )
                     && Utility.IsDirectoryWritable( MainConfig.SourcePath );
 
+                // Confirm the install order is correct.
+                (bool isCorrectOrder, List<Component> reorderedList) = Component.ConfirmComponentsInstallOrder( _components );
+                switch (isCorrectOrder)
+                {
+                    case false when !MainConfig.AttemptFixes:
+                        success = false;
+                        break;
+                    case false:
+                        _components = reorderedList;
+                        break;
+                }
+
                 string informationMessage = "There were issues with your instructions file."
                     + " Please review the output window for more information.";
 
@@ -867,6 +879,23 @@ namespace KOTORModSync
                         "No instructions loaded! Press 'Load Instructions File' or create some instructions first."
                     );
                     return;
+                }
+
+
+                // Confirm the install order is correct.
+                (bool isCorrectOrder, List<Component> reorderedList) = Component.ConfirmComponentsInstallOrder( _components );
+                switch ( isCorrectOrder )
+                {
+                    case false when !MainConfig.AttemptFixes:
+                        await InformationDialog.ShowInformationDialog(
+                            this,
+                            "Your mods need to be reordered to respect the 'InstallAfter' and 'InstallBefore' keys. Please check the output window for more information."
+                        );
+                        return;
+                    case false:
+                        Logger.Log( "Reordering components by InstallAfter and InstallBefore keys..." );
+                        _components = reorderedList;
+                        break;
                 }
 
                 try

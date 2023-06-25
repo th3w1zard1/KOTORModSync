@@ -40,6 +40,11 @@ namespace KOTORModSync.Core
             ComponentInstallationFailed
         }
 
+        public Component()
+        {
+            IsSelected = true;
+        }
+
         /*
         public DateTime SourceLastModified { get; internal set; }
         public event EventHandler<PropertyChangedEventArgs> PropertyChanged;
@@ -144,26 +149,32 @@ namespace KOTORModSync.Core
                 = Serializer.ConvertTomlTableToDictionary( componentTable );
 
             // reminder: ConvertTomlTableToDictionary lowercases all string keys automatically.
-            Serializer.DeserializePath( componentDict, "paths" );
-            Name = GetRequiredValue<string>( componentDict, "name" );
-            _ = Logger.LogAsync( $"{Environment.NewLine}== Deserialize next component '{Name}' ==" );
-            Guid = GetRequiredValue<Guid>( componentDict, "guid" );
-            Description = GetValueOrDefault<string>( componentDict, "description" );
-            Directions = GetValueOrDefault<string>( componentDict, "directions" );
-            Category = GetValueOrDefault<string>( componentDict, "category" );
-            Tier = GetValueOrDefault<string>( componentDict, "tier" );
-            Language = GetValueOrDefault<List<string>>( componentDict, "language" );
-            Author = GetValueOrDefault<string>( componentDict, "author" );
-            Dependencies = GetValueOrDefault<List<string>>( componentDict, "dependencies" );
-            Restrictions = GetValueOrDefault<List<string>>( componentDict, "restrictions" );
-            ModLink = GetValueOrDefault<string>( componentDict, "modlink" );
+            this.Name = GetRequiredValue<string>( componentDict, "name" );
+            _ = Logger.LogAsync( $"{Environment.NewLine}== Deserialize next component '{this.Name}' ==" );
+            this.Guid = GetRequiredValue<Guid>( componentDict, "guid" );
 
-            Instructions = DeserializeInstructions(
+            if ( this.Guid == Guid.Empty )
+            {
+                Logger.Log( $"Component '{this.Name}' has no guid, assigning a random one." );
+                this.Guid = new Guid();
+            }
+
+            this.Description = GetValueOrDefault<string>( componentDict, "description" );
+            this.Directions = GetValueOrDefault<string>( componentDict, "directions" );
+            this.Category = GetValueOrDefault<string>( componentDict, "category" );
+            this.Tier = GetValueOrDefault<string>( componentDict, "tier" );
+            this.Language = GetValueOrDefault<List<string>>( componentDict, "language" );
+            this.Author = GetValueOrDefault<string>( componentDict, "author" );
+            this.Dependencies = GetValueOrDefault<List<string>>( componentDict, "dependencies" );
+            this.Restrictions = GetValueOrDefault<List<string>>( componentDict, "restrictions" );
+            this.ModLink = GetValueOrDefault<string>( componentDict, "modlink" );
+
+            this.Instructions = DeserializeInstructions(
                 GetValueOrDefault<TomlTableArray>( componentDict, "instructions" )
             );
-            Instructions.ForEach( instruction => instruction.SetParentComponent( this ) );
+            this.Instructions.ForEach( instruction => instruction.SetParentComponent( this ) );
 
-            Options = DeserializeOptions( GetValueOrDefault<TomlTableArray>( componentDict, "options" ) );
+            this.Options = DeserializeOptions( GetValueOrDefault<TomlTableArray>( componentDict, "options" ) );
 
             // can't validate anything if directories aren't set.
             if ( string.IsNullOrWhiteSpace( MainConfig.SourcePath?.FullName )
@@ -173,7 +184,7 @@ namespace KOTORModSync.Core
             }
 
             // Validate and log additional errors/warnings.
-            Validator = new ComponentValidation( this );
+            this.Validator = new ComponentValidation( this );
             _ = Logger.LogAsync( $"Successfully deserialized component '{this.Name}'" );
         }
 

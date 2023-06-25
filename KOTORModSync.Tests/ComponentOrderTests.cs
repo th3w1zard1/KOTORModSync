@@ -35,11 +35,12 @@ namespace KOTORModSync.Tests
         public void ConfirmComponentsInstallOrder_ComponentOrderIncorrect_ReturnsFalse()
         {
             // Arrange
+            var thisGuid = Guid.NewGuid();
             var componentsList = new List<Component>
             {
-                new Component { Guid = Guid.NewGuid(), InstallAfter = null, InstallBefore = null },
-                new Component { Guid = Guid.NewGuid(), InstallAfter = null, InstallBefore = null },
-                new Component { Guid = Guid.NewGuid(), InstallAfter = null, InstallBefore = null }
+                new() { Guid = thisGuid, InstallAfter = null, InstallBefore = null },
+                new() { Guid = Guid.NewGuid(), InstallAfter = null, InstallBefore = null },
+                new() { Guid = Guid.NewGuid(), InstallAfter = null, InstallBefore = new List<Guid>{thisGuid} }
             };
 
             // Swap the order of the first two components
@@ -53,12 +54,18 @@ namespace KOTORModSync.Tests
         }
 
         [Test]
-        public void ConfirmComponentsInstallOrder_ComponentWithInstallAfterDependency_Success()
+        public void ConfirmComponentsInstallOrder_ComponentWithInstallAfterDependency()
         {
             // Arrange
             var component1 = new Component { Guid = Guid.NewGuid(), InstallAfter = null, InstallBefore = null };
             var component2 = new Component { Guid = Guid.NewGuid(), InstallAfter = new List<Guid> { component1.Guid }, InstallBefore = null };
-            var componentsList = new List<Component> { component1, component2 };
+            var componentsList = new List<Component>
+            {
+                new Component() { Guid = Guid.NewGuid(), InstallAfter = null, InstallBefore = null },
+                component1,
+                component2,
+                new Component() { Guid = Guid.NewGuid(), InstallAfter = null, InstallBefore = null }
+            };
 
             // Act
             (bool isCorrectOrder, _) = Component.ConfirmComponentsInstallOrder( componentsList );
@@ -68,7 +75,7 @@ namespace KOTORModSync.Tests
         }
 
         [Test]
-        public void ConfirmComponentsInstallOrder_ComponentWithInstallBeforeDependency_Success()
+        public void ConfirmComponentsInstallOrder_ComponentWithInstallBeforeDependency()
         {
             // Arrange
             var component1 = new Component { Guid = Guid.NewGuid(), InstallAfter = null, InstallBefore = null };
@@ -79,12 +86,9 @@ namespace KOTORModSync.Tests
             (bool isCorrectOrder, _) = Component.ConfirmComponentsInstallOrder( componentsList );
 
             // Assert
-            Assert.That( isCorrectOrder, Is.True );
+            Assert.That( isCorrectOrder, Is.False );
         }
 
-        private static void Swap<T>( IList<T> list, int index1, int index2 )
-        {
-            (list[index1], list[index2]) = (list[index2], list[index1]);
-        }
+        private static void Swap<T>( IList<T> list, int index1, int index2 ) => (list[index1], list[index2]) = (list[index2], list[index1]);
     }
 }

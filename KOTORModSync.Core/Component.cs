@@ -924,8 +924,6 @@ namespace KOTORModSync.Core
             return conflicts;
         }
 
-
-
         //The component will be installed if any of the following conditions are met:
         //The component has no dependencies or restrictions.
         //The component has dependencies, and all of the required components are being installed.
@@ -937,137 +935,104 @@ namespace KOTORModSync.Core
             return conflicts.Count == 0;
         }
 
-
         //The instruction will run if any of the following conditions are met:
         //The instruction has no dependencies or restrictions.
         //The instruction has dependencies, and all of the required components are being installed.
         //The instruction has restrictions, but none of the restricted components are being installed.
         [CanBeNull]
-        public bool ShouldRunInstruction( Instruction instruction, List<Component> componentsList, bool isInstall = true )
+        public static bool ShouldRunInstruction( Instruction instruction, List<Component> componentsList, bool isInstall = true )
         {
             Dictionary<string, List<Component>> conflicts = GetConflictingComponents( instruction.Dependencies, instruction.Restrictions, componentsList, isInstall );
             return conflicts.Count == 0;
         }
 
-        public static (bool Success, List<Component> ReorderedComponents) ConfirmComponentsInstallOrder( List<Component> componentsList )
+        public static (bool, IEnumerable<Guid>) ConfirmComponentsInstallOrder( List<Component> componentsList )
         {
-            Logger.LogVerbose( "Confirming the install order is correct..." );
+            var componentGuids = componentsList.Select( c => c.Guid ).ToList();
+            var installAfterDependencies = componentsList.Where( c => c.InstallAfter != null )
+                .ToDictionary( c => c.Guid, c => c.InstallAfter );
+            var installBeforeDependencies = componentsList.Where( c => c.InstallBefore != null )
+                .ToDictionary( c => c.Guid, c => c.InstallBefore );
 
-            // Create a dictionary to store the installation order dependencies
-            Dictionary<Guid, List<Guid>> installDependencies = new Dictionary<Guid, List<Guid>>();
+            var visited = new HashSet<Guid>();
+            var orderedComponents = new List<Guid>();
 
-            // Populate the dictionary with the InstallAfter and InstallBefore dependencies
-            foreach ( Component component in componentsList )
+            foreach ( Guid componentGuid in componentGuids )
             {
-                Guid componentGuid = component.Guid;
-                List<Guid> installAfter = component.InstallAfter;
-                List<Guid> installBefore = component.InstallBefore;
-
-                // Add InstallAfter dependencies
-                if ( installAfter != null )
+                if ( visited.Contains( componentGuid ) )
                 {
-                    if ( !installDependencies.ContainsKey( componentGuid ) )
-                    {
-                        installDependencies.Add( componentGuid, new List<Guid>() );
-                    }
-
-                    installDependencies[componentGuid].AddRange( installAfter );
+                    continue;
                 }
 
-                // Add InstallBefore dependencies
-                if ( installBefore != null )
+                if ( !VisitComponent( componentGuid, visited, orderedComponents, installAfterDependencies, installBeforeDependencies ) )
                 {
-                    foreach ( Guid guid in installBefore )
-                    {
-                        if ( !installDependencies.ContainsKey( guid ) )
-                        {
-                            installDependencies.Add( guid, new List<Guid>() );
-                        }
-
-                        installDependencies[guid].Add( componentGuid );
-                    }
+                    return (false, orderedComponents);
                 }
             }
 
-            if ( installDependencies.Count == 0 )
-                return (true, componentsList);
-
-            Logger.LogVerbose( "Installation order dependencies have been populated." );
-
-            // Perform a topological sort to check the installation order
-            List<Guid> sortedOrder = TopologicalSort( installDependencies );
-
-            // Compare the sorted order with the original order of components
-            bool isInstallOrderCorrect = sortedOrder.SequenceEqual( componentsList.Select( c => c.Guid ) );
-
-            Logger.LogVerbose( $"Installation order confirmation completed, reordered? {isInstallOrderCorrect}" );
-
-            // Create the reordered list of components
-            List<Component> reorderedComponents = sortedOrder.Select( guid => componentsList.First( c => c.Guid == guid ) ).ToList();
-
-            if ( isInstallOrderCorrect )
-            {
-                return (true, reorderedComponents);
-            }
-
-            // Log out-of-order components and their correct positions
-            for ( int i = 0; i < componentsList.Count; i++ )
-            {
-                if ( componentsList[i].Guid != reorderedComponents[i].Guid )
-                {
-                    Logger.Log( $"Component {componentsList[i].Guid} should be installed " +
-                        $"{( i > 0 ? "after " + componentsList[i - 1].Guid : "at the beginning" )}, " +
-                        $"but it is currently at position {i}." );
-                }
-            }
-
-            return (false, reorderedComponents);
+            return (true, orderedComponents);
         }
 
-        // Topological sort algorithm
-        private static List<Guid> TopologicalSort( Dictionary<Guid, List<Guid>> dependencies )
-        {
-            Logger.LogVerbose( "Performing topological sort..." );
-
-            List<Guid> sortedOrder = new List<Guid>();
-            HashSet<Guid> visited = new HashSet<Guid>();
-
-            foreach ( Guid componentGuid in dependencies.Keys )
-            {
-                if ( !visited.Contains( componentGuid ) )
-                {
-                    VisitComponent( componentGuid, dependencies, visited, sortedOrder );
-                }
-            }
-
-            sortedOrder.Reverse(); // Reverse the order to get the correct installation order
-
-            Logger.LogVerbose( "Topological sort completed." );
-
-            return sortedOrder;
-        }
-
-        private static void VisitComponent
-        (
-            Guid componentGuid,
-            IReadOnlyDictionary<Guid, List<Guid>> dependencies,
-            ISet<Guid> visited, ICollection<Guid> sortedOrder
-        )
+        private static bool VisitComponent( Guid componentGuid, ISet<Guid> visited, List<Guid> orderedComponents,
+            IReadOnlyDictionary<Guid, List<Guid>> installAfterDependencies, IReadOnlyDictionary<Guid, List<Guid>> installBeforeDependencies )
         {
             _ = visited.Add( componentGuid );
 
-            if ( dependencies.ContainsKey( componentGuid ) )
+            if ( installAfterDependencies.TryGetValue( componentGuid, out List<Guid> afterDependency ) )
             {
-                foreach ( Guid dependency in dependencies[componentGuid] )
+                foreach ( Guid dependencyGuid in afterDependency )
                 {
-                    if ( !visited.Contains( dependency ) )
+                    if ( !visited.Contains( dependencyGuid ) )
                     {
-                        VisitComponent( dependency, dependencies, visited, sortedOrder );
+                        if ( !VisitComponent(
+                                dependencyGuid,
+                                visited,
+                                orderedComponents,
+                                installAfterDependencies,
+                                installBeforeDependencies
+                            ) )
+                        {
+                            return false;
+                        }
+                    }
+                    else if ( !orderedComponents.Contains( dependencyGuid ) )
+                    {
+                        return false; // Circular dependency detected
                     }
                 }
             }
 
-            sortedOrder.Add( componentGuid );
+            orderedComponents.Add( componentGuid );
+
+            if ( !installBeforeDependencies.TryGetValue( componentGuid, out List<Guid> beforeDependency ) )
+            {
+                return true;
+            }
+
+            {
+                foreach ( Guid dependencyGuid in beforeDependency )
+                {
+                    if ( !visited.Contains( dependencyGuid ) )
+                    {
+                        if ( !VisitComponent(
+                                dependencyGuid,
+                                visited,
+                                orderedComponents,
+                                installAfterDependencies,
+                                installBeforeDependencies
+                            ) )
+                        {
+                            return false;
+                        }
+                    }
+                    else if ( orderedComponents.Contains( dependencyGuid ) )
+                    {
+                        return false; // Circular dependency detected
+                    }
+                }
+            }
+
+            return true;
         }
 
         private List<Option> ChooseOptions( Instruction instruction )

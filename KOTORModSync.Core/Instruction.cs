@@ -4,7 +4,9 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
+using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
@@ -16,7 +18,7 @@ using SharpCompress.Readers;
 
 namespace KOTORModSync.Core
 {
-    public class Instruction
+    public class Instruction : INotifyPropertyChanged
     {
         public static readonly string DefaultInstructions = @"
 [[thisMod.instructions]]
@@ -56,8 +58,31 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
 ";
 
         public string Action { get; set; }
-        public List<string> Source { get; set; }
-        public string Destination { get; set; }
+
+        private List<string> _source;
+
+        public List<string> Source
+        {
+            get => _source;
+            set
+            {
+                _source = value;
+                OnPropertyChanged();
+            }
+        }
+
+        private string _destination;
+
+        public string Destination
+        {
+            get => _destination;
+            set
+            {
+                _destination = value;
+                OnPropertyChanged();
+            }
+        }
+
         public List<Guid> Dependencies { get; set; }
         public List<Guid> Restrictions { get; set; }
         public bool Overwrite { get; set; }
@@ -766,6 +791,22 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
             }
 
             Logger.LogVerbose( "Finished cleaning tslpatcher install" );
+        }
+
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        protected virtual void OnPropertyChanged( [CallerMemberName] string propertyName = null )
+        {
+            PropertyChanged?.Invoke( this, new PropertyChangedEventArgs( propertyName ) );
+        }
+
+        protected bool SetField<T>( ref T field, T value, [CallerMemberName] string propertyName = null )
+        {
+            if ( EqualityComparer<T>.Default.Equals( field, value ) )
+                return false;
+            field = value;
+            OnPropertyChanged( propertyName );
+            return true;
         }
     }
 }

@@ -152,12 +152,12 @@ namespace KOTORModSync.Core
 
         public event PropertyChangedEventHandler PropertyChanged;
 
+
         // used for the ui.
-        protected virtual void OnPropertyChanged
-            ( [CallerMemberName][CanBeNull] string propertyName = null ) => PropertyChanged?.Invoke(
-            this,
-            new PropertyChangedEventArgs( propertyName )
-        );
+        protected virtual void OnPropertyChanged( [CallerMemberName][CanBeNull] string propertyName = null )
+        {
+            PropertyChanged?.Invoke( this, new PropertyChangedEventArgs( propertyName ) );
+        }
     }
 
     public static class ModDirectory

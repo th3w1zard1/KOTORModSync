@@ -99,26 +99,25 @@
     <IsLinux>true</IsLinux>
   </PropertyGroup>
 
-  <Target Name="PreBuild" BeforeTargets="PreBuildEvent" Condition=" '$(OS)' == 'Windows_NT'">
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent" Condition=" '$(OS)' == 'Windows_NT'">
+
     <Exec Condition=" '$(OS)' == 'Windows_NT'" Command="xcopy /Y $(SolutionDir)vendor\lib\TSLPatcherCLI.exe $(TargetDir)" />
     <Exec Condition=" '$(IsLinux)' == 'true'" Command="cp -f $(SolutionDir)vendor\lib\TSLPatcherCLI.exe $(TargetDir)" />
 
     <!-- WindowsDeleteString returntype changes from int to IntPtr HRESULT after net framework 4.x.x, replace with our patches. -->
-    <Exec Condition=" '$(OS)' == 'Windows_NT' AND '$(TargetPlatform)'=='x86' AND '$(TargetFramework)' == 'net462' "
+    <Exec Condition=" '$(OS)' == 'Windows_NT' AND '$(Platform)'=='x86' AND '$(TargetFramework)' == 'net462' "
           Command="xcopy /Y $(SolutionDir)vendor\lib\Avalonia.Win32_net4.x_x86.dll $(TargetDir)" />
-    <Exec Condition=" '$(OS)' == 'Windows_NT' AND '$(TargetPlatform)'=='x86' AND '$(TargetFramework)' == 'net462' "
+    <Exec Condition=" '$(OS)' == 'Windows_NT' AND '$(Platform)'=='x86' AND '$(TargetFramework)' == 'net462' "
           Command="del /F $(TargetDir)Avalonia.Win32.dll" />
-    <Exec Condition=" '$(OS)' == 'Windows_NT' AND '$(TargetPlatform)'=='x86' AND '$(TargetFramework)' == 'net462' "
+    <Exec Condition=" '$(OS)' == 'Windows_NT' AND '$(Platform)'=='x86' AND '$(TargetFramework)' == 'net462' "
           Command="ren $(TargetDir)Avalonia.Win32_net4.x_x86.dll Avalonia.Win32.dll" />
-  </Target>
-  <Target Name="PostBuild" AfterTargets="PostBuildEvent" Condition=" '$(OS)' == 'Windows_NT'">
-    <Exec Condition=" '$(OS)' == 'Windows_NT' AND '$(TargetFramework)' == 'net462'" Command="xcopy /Y $(SolutionDir)vendor\lib\TSLPatcherCLI.exe $(TargetDir)" />
-    <Exec Condition=" '$(IsLinux)' == 'true'" Command="cp -f $(SolutionDir)vendor\lib\TSLPatcherCLI.exe $(TargetDir)" />
+    <Exec Condition=" '$(IsLinux)' == 'true' AND '$(Platform)'=='x86' AND '$(TargetFramework)' == 'net462' "
+          Command="cp $(SolutionDir)vendor/lib/Avalonia.Linux_x86.dll $(TargetDir)" />
+    <Exec Condition=" '$(IsLinux)' == 'true' AND '$(Platform)'=='x86' AND '$(TargetFramework)' == 'net462' "
+          Command="rm -f $(TargetDir)Avalonia.dll" />
+    <Exec Condition=" '$(IsLinux)' == 'true' AND '$(Platform)'=='x86' AND '$(TargetFramework)' == 'net462' "
+          Command="mv $(TargetDir)Avalonia.Linux_x86.dll $(TargetDir)Avalonia.dll" />
 
-    <!-- WindowsDeleteString returntype changes from int to IntPtr HRESULT after net framework 4.x.x, replace with our patches. -->
-    <Exec Condition=" '$(OS)' == 'Windows_NT' AND '$(TargetFramework)' == 'net462'" Command="xcopy /Y $(SolutionDir)vendor\lib\Avalonia.Win32_net4.x_x86.dll $(TargetDir)" />
-    <Exec Condition=" '$(OS)' == 'Windows_NT' AND '$(TargetFramework)' == 'net462'" Command="del /F $(TargetDir)Avalonia.Win32.dll" />
-    <Exec Condition=" '$(OS)' == 'Windows_NT' AND '$(TargetFramework)' == 'net462'" Command="ren $(TargetDir)Avalonia.Win32_net4.x_x86.dll Avalonia.Win32.dll" />
   </Target>
 
     <!-- Delete KOTORModSync logs and other data -->

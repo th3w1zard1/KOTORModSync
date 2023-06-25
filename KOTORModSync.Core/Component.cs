@@ -1336,7 +1336,7 @@ namespace KOTORModSync.Core
 
                         //ensure tslpatcher.exe sourcePaths use the action 'tslpatcher'
                         if ( sourcePath.EndsWith( "tslpatcher.exe", StringComparison.OrdinalIgnoreCase )
-                            && !instruction.Action.Equals( "tslpatcher", StringComparison.OrdinalIgnoreCase ))
+                            && !instruction.Action.Equals( "tslpatcher", StringComparison.OrdinalIgnoreCase ) )
                         {
                             AddWarning( "'tslpatcher.exe' used in Source path without the action 'tslpatcher', was this intentional?", instruction );
                         }

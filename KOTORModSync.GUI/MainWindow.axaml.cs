@@ -646,7 +646,7 @@ namespace KOTORModSync
 
                 // Confirm the install order is correct.
                 (bool isCorrectOrder, List<Component> reorderedList) = Component.ConfirmComponentsInstallOrder( _components );
-                switch (isCorrectOrder)
+                switch ( isCorrectOrder )
                 {
                     case false when !MainConfig.AttemptFixes:
                         success = false;

@@ -40,6 +40,11 @@ namespace KOTORModSync.Core
             ComponentInstallationFailed
         }
 
+        public Component()
+        {
+            IsSelected = true;
+        }
+
         /*
         public DateTime SourceLastModified { get; internal set; }
         public event EventHandler<PropertyChangedEventArgs> PropertyChanged;
@@ -146,10 +151,9 @@ namespace KOTORModSync.Core
                 = Serializer.ConvertTomlTableToDictionary( componentTable );
 
             // reminder: ConvertTomlTableToDictionary lowercases all string keys automatically.
-            Serializer.DeserializePath( componentDict, "paths" );
-            Name = GetRequiredValue<string>( componentDict, "name" );
-            _ = Logger.LogAsync( $"{Environment.NewLine}== Deserialize next component '{Name}' ==" );
-            Guid = GetRequiredValue<Guid>( componentDict, "guid" );
+            _ = Logger.LogAsync($"{Environment.NewLine}== Deserialize next component '{Name}' ==");
+            this.Name = GetRequiredValue<string>( componentDict, "name" );
+            this.Guid = GetRequiredValue<Guid>( componentDict, "guid" );
             Description = GetValueOrDefault<string>( componentDict, "description" );
             Directions = GetValueOrDefault<string>( componentDict, "directions" );
             Category = GetValueOrDefault<string>( componentDict, "category" );
@@ -188,12 +192,12 @@ namespace KOTORModSync.Core
                 .ToList();
             ModLink = GetValueOrDefault<string>( componentDict, "modlink" );
 
-            Instructions = DeserializeInstructions(
+            this.Instructions = DeserializeInstructions(
                 GetValueOrDefault<TomlTableArray>( componentDict, "instructions" )
             );
-            Instructions.ForEach( instruction => instruction.SetParentComponent( this ) );
+            this.Instructions.ForEach( instruction => instruction.SetParentComponent( this ) );
 
-            Options = DeserializeOptions( GetValueOrDefault<TomlTableArray>( componentDict, "options" ) );
+            this.Options = DeserializeOptions( GetValueOrDefault<TomlTableArray>( componentDict, "options" ) );
 
             // can't validate anything if directories aren't set.
             if ( string.IsNullOrWhiteSpace( MainConfig.SourcePath?.FullName )
@@ -203,7 +207,7 @@ namespace KOTORModSync.Core
             }
 
             // Validate and log additional errors/warnings.
-            Validator = new ComponentValidation( this );
+            this.Validator = new ComponentValidation( this );
             _ = Logger.LogAsync( $"Successfully deserialized component '{this.Name}'" );
         }
 

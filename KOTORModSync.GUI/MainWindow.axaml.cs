@@ -60,7 +60,49 @@ namespace KOTORModSync
         }
 
         private MainConfig MainConfigInstance { get; set; }
-        public ICommand ItemClickCommand => _itemClickCommand ?? ( _itemClickCommand = new RelayCommand( ItemClick ) );
+
+        private void InitializeComponent()
+        {
+            AvaloniaXamlLoader.Load( this );
+
+            MainGrid = this.FindControl<Grid>( "MainGrid" );
+            // Column 0
+            LeftTreeView = this.FindControl<TreeView>( "LeftTreeView" );
+            ApplyEditorButton = this.FindControl<Button>( "ApplyEditorButton" );
+            // Column 1
+            TabControl = this.FindControl<TabControl>( "TabControl" );
+            InitialTab = this.FindControl<TabItem>( "InitialTab" );
+            GuiEditTabItem = this.FindControl<TabItem>( "GuiEditTabItem" );
+            RawEditTabItem = this.FindControl<TabItem>( "RawEditTabItem" );
+            RawEditTextBox = this.FindControl<TextBox>( "RawEditTextBox" );
+            RawEditTextBox.LostFocus
+                += RawEditTextBox_LostFocus; // Prevents RawEditTextBox from being cleared when clicking elsewhere(?)
+            RawEditTextBox.DataContext = new ObservableCollection<string>();
+            // Column 3
+            MainConfigInstance = new MainConfig();
+            MainConfigStackPanel = this.FindControl<StackPanel>( "MainConfigStackPanel" );
+            MainConfigStackPanel.DataContext = MainConfigInstance;
+        }
+
+        // handles clicks on TreeViewItems.
+        public ICommand ItemClickCommand => _itemClickCommand
+            ?? ( _itemClickCommand = new RelayCommand(
+                    ( object parameter ) =>
+                    {
+                        if ( !( parameter is Component component ) )
+                        {
+                            return;
+                        }
+
+                        if ( !_selectedComponents.Contains( component ) )
+                        {
+                            _selectedComponents.Add( component );
+                        }
+
+                        LoadComponentDetails( component );
+                    }
+                )
+            );
 
         // test the options dialog for use with the 'Options' TomlTable.
         public async void Testwindow()
@@ -85,29 +127,6 @@ namespace KOTORModSync
                 // No option selected or dialog closed
                 Console.WriteLine( "No option selected or dialog closed" );
             }
-        }
-
-        private void InitializeComponent()
-        {
-            AvaloniaXamlLoader.Load( this );
-
-            MainGrid = this.FindControl<Grid>( "MainGrid" );
-            // Column 0
-            LeftTreeView = this.FindControl<TreeView>( "LeftTreeView" );
-            ApplyEditorButton = this.FindControl<Button>( "ApplyEditorButton" );
-            // Column 1
-            TabControl = this.FindControl<TabControl>( "TabControl" );
-            InitialTab = this.FindControl<TabItem>( "InitialTab" );
-            GuiEditTabItem = this.FindControl<TabItem>( "GuiEditTabItem" );
-            RawEditTabItem = this.FindControl<TabItem>( "RawEditTabItem" );
-            RawEditTextBox = this.FindControl<TextBox>( "RawEditTextBox" );
-            RawEditTextBox.LostFocus
-                += RawEditTextBox_LostFocus; // Prevents RawEditTextBox from being cleared when clicking elsewhere(?)
-            RawEditTextBox.DataContext = new ObservableCollection<string>();
-            // Column 3
-            MainConfigInstance = new MainConfig();
-            MainConfigStackPanel = this.FindControl<StackPanel>( "MainConfigStackPanel" );
-            MainConfigStackPanel.DataContext = MainConfigInstance;
         }
 
         private async Task<string> OpenFile()
@@ -1016,7 +1035,17 @@ namespace KOTORModSync
         {
             try
             {
-                await new StreamWriter( filePath ).WriteAsync( documentation );
+                if ( !string.IsNullOrEmpty( documentation ) )
+                {
+                    using ( var writer = new StreamWriter( filePath ) )
+                    {
+                        await writer.WriteAsync( documentation );
+                        await writer.FlushAsync();
+                        // ReSharper disable once MethodHasAsyncOverload
+                        // not available in net462
+                        writer.Dispose();
+                    }
+                }
             }
             catch ( Exception e )
             {
@@ -1452,22 +1481,6 @@ namespace KOTORModSync
             {
                 WriteTreeViewItemToFile( childItem, writer, depth + 1, maxDepth );
             }
-        }
-
-        // used for leftTreeView double-click event.
-        private void ItemClick( object parameter )
-        {
-            if ( !( parameter is Component component ) )
-            {
-                return;
-            }
-
-            if ( !_selectedComponents.Contains( component ) )
-            {
-                _selectedComponents.Add( component );
-            }
-
-            LoadComponentDetails( component );
         }
 
         private async void AddNewInstruction_Click( object sender, RoutedEventArgs e )

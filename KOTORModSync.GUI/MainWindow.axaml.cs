@@ -1212,7 +1212,7 @@ namespace KOTORModSync
                     .OfType<TreeViewItem>()
                     .ToList()
                     .IndexOf( selectedTreeViewItem );
-                MoveComponentListItem( selectedTreeViewItem, - 1 );
+                MoveComponentListItem( selectedTreeViewItem, -1 );
             }
             catch ( Exception ex )
             {

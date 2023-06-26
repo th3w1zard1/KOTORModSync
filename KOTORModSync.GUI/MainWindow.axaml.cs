@@ -558,7 +558,7 @@ namespace KOTORModSync
                 bool isModDirectoryWritable = Utility.IsDirectoryWritable( MainConfig.SourcePath );
 
                 await Logger.LogAsync( "Validating the order of operations and install order of all components..." );
-                (bool isCorrectOrder, List<Component> reorderedList) = Component.ConfirmComponentsInstallOrder( _componentsList );
+                (bool isCorrectOrder, List<Component> reorderedList) = Component.GetComponentsInstallOrder( _componentsList );
                 if ( !isCorrectOrder && MainConfig.AttemptFixes )
                 {
                     await Logger.LogWarningAsync( "Incorrect order detected, but has been automatically reordered." );
@@ -1174,26 +1174,22 @@ namespace KOTORModSync
             }
         }
 
-        private void MoveTreeViewItem
-            ( ItemsControl parentItemsControl, TreeViewItem selectedTreeViewItem, int newIndex )
+        private void MoveComponentListItem
+            ( Control selectedTreeViewItem, int relativeIndex )
         {
             try
             {
-                List<Component> componentsList = _componentsList; // Use the original components list
-                int currentIndex = componentsList.IndexOf( (Component)selectedTreeViewItem.Tag );
+                var treeViewComponent = (Component)selectedTreeViewItem.Tag;
 
-                if ( currentIndex == -1 || newIndex < 0 || newIndex >= componentsList.Count )
+                int index = _componentsList.IndexOf( treeViewComponent );
+                if ( index == 0 && relativeIndex < 0 || index == _componentsList.Count && relativeIndex > 0 )
                 {
                     return;
                 }
 
-                componentsList.RemoveAt( currentIndex );
-                componentsList.Insert( newIndex, (Component)selectedTreeViewItem.Tag );
-                LeftTreeView.SelectedItem = selectedTreeViewItem;
-
-                // Update the visual tree directly to reflect the changes
-                var parentItemsCollection = (AvaloniaList<object>)parentItemsControl.Items;
-                parentItemsCollection.Move( currentIndex, newIndex );
+                _ = _componentsList.Remove( treeViewComponent );
+                _componentsList.Insert( index + relativeIndex, treeViewComponent );
+                ProcessComponents( _componentsList );
             }
             catch ( Exception ex )
             {
@@ -1211,9 +1207,11 @@ namespace KOTORModSync
                     return;
                 }
 
-                int currentIndex = parentItemsControl.Items.OfType<TreeViewItem>().ToList()
+                int currentIndex = parentItemsControl.Items
+                    .OfType<TreeViewItem>()
+                    .ToList()
                     .IndexOf( selectedTreeViewItem );
-                MoveTreeViewItem( parentItemsControl, selectedTreeViewItem, currentIndex - 1 );
+                MoveComponentListItem( selectedTreeViewItem, - 1 );
             }
             catch ( Exception ex )
             {
@@ -1231,9 +1229,11 @@ namespace KOTORModSync
                     return;
                 }
 
-                int currentIndex = parentItemsControl.Items.OfType<TreeViewItem>().ToList()
+                int currentIndex = parentItemsControl.Items
+                    .OfType<TreeViewItem>()
+                    .ToList()
                     .IndexOf( selectedTreeViewItem );
-                MoveTreeViewItem( parentItemsControl, selectedTreeViewItem, currentIndex + 1 );
+                MoveComponentListItem( selectedTreeViewItem, 1 );
             }
             catch ( Exception ex )
             {

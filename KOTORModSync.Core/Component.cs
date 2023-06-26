@@ -946,6 +946,35 @@ namespace KOTORModSync.Core
             return conflicts.Count == 0;
         }
 
+        public static (bool, List<Component>) GetComponentsInstallOrder( List<Component> componentsList )
+        {
+            var componentGuids = componentsList.Select( c => c.Guid ).ToList();
+            var installAfterDependencies = componentsList.Where( c => c.InstallAfter != null )
+                .ToDictionary( c => c.Guid, c => c.InstallAfter );
+            var installBeforeDependencies = componentsList.Where( c => c.InstallBefore != null )
+                .ToDictionary( c => c.Guid, c => c.InstallBefore );
+
+            var visited = new HashSet<Guid>();
+            var orderedComponents = new List<Component>();
+            var orderedGuids = orderedComponents.Select( c => c.Guid ).ToList();
+
+            foreach ( Guid componentGuid in componentGuids )
+            {
+                if ( visited.Contains( componentGuid ) )
+                {
+                    continue;
+                }
+
+                if ( !VisitComponent( componentGuid, visited, orderedGuids, installAfterDependencies, installBeforeDependencies ) )
+                {
+                    return (false, orderedComponents);
+                }
+            }
+
+            return (true, orderedComponents);
+        }
+
+
         public static (bool, IEnumerable<Guid>) ConfirmComponentsInstallOrder( List<Component> componentsList )
         {
             var componentGuids = componentsList.Select( c => c.Guid ).ToList();

@@ -19,9 +19,9 @@ namespace KOTORModSync.Tests
             // Arrange
             var componentsList = new List<Component>
             {
-                new Component { Guid = Guid.NewGuid(), InstallAfter = null, InstallBefore = null },
-                new Component { Guid = Guid.NewGuid(), InstallAfter = null, InstallBefore = null },
-                new Component { Guid = Guid.NewGuid(), InstallAfter = null, InstallBefore = null }
+                new() { Guid = Guid.NewGuid(), InstallAfter = null, InstallBefore = null },
+                new() { Guid = Guid.NewGuid(), InstallAfter = null, InstallBefore = null },
+                new() { Guid = Guid.NewGuid(), InstallAfter = null, InstallBefore = null }
             };
 
             // Act
@@ -61,10 +61,10 @@ namespace KOTORModSync.Tests
             var component2 = new Component { Guid = Guid.NewGuid(), InstallAfter = new List<Guid> { component1.Guid }, InstallBefore = null };
             var componentsList = new List<Component>
             {
-                new Component() { Guid = Guid.NewGuid(), InstallAfter = null, InstallBefore = null },
+                new() { Guid = Guid.NewGuid(), InstallAfter = null, InstallBefore = null },
                 component1,
                 component2,
-                new Component() { Guid = Guid.NewGuid(), InstallAfter = null, InstallBefore = null }
+                new() { Guid = Guid.NewGuid(), InstallAfter = null, InstallBefore = null }
             };
 
             // Act

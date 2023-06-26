@@ -1182,7 +1182,7 @@ namespace KOTORModSync
                 var treeViewComponent = (Component)selectedTreeViewItem.Tag;
 
                 int index = _componentsList.IndexOf( treeViewComponent );
-                if ( (index == 0 && relativeIndex < 0) || index == -1 || (index+relativeIndex == _componentsList.Count) )
+                if ( ( index == 0 && relativeIndex < 0 ) || index == -1 || ( index + relativeIndex == _componentsList.Count ) )
                 {
                     return;
                 }

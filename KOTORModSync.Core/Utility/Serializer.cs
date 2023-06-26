@@ -83,7 +83,7 @@ namespace KOTORModSync.Core.Utility
         }
 
         [CanBeNull]
-        private static string FixGuidString( string guidString )
+        public static string FixGuidString( string guidString )
         {
             // Remove any whitespace characters
             guidString = Regex.Replace( guidString, @"\s", "" );
@@ -382,31 +382,6 @@ namespace KOTORModSync.Core.Utility
 
             return isNonClassEnumerable;
         }*/
-
-        // A guid can't be dynamically converted by Nett and Tomlyn, so we convert to string instead.
-        private static bool TryParseGuidAsString( object obj, [CanBeNull] out string guidString )
-        {
-            Type objType = obj.GetType();
-            if ( obj is Guid guidValue )
-            {
-                guidString = guidValue.ToString();
-                return true;
-            }
-
-            if (
-                objType == typeof( string )
-                && ( (string)obj ).Length <= 38 // A guid in string form is always less than or eq to 38 chars.
-                && Guid.TryParse( obj.ToString(), out Guid guidConvertedValue ) )
-            {
-                guidString = guidConvertedValue.ToString();
-                return true;
-            }
-
-            guidString = null;
-            return false;
-        }
-
-        private static bool IsEnumerable( object obj ) => obj is IEnumerable enumerable && !( enumerable is string );
     }
 
     [SuppressMessage( "ReSharper", "UnusedMember.Local" )]

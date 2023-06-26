@@ -13,6 +13,7 @@ using System.Windows.Input;
 using Avalonia;
 using Avalonia.Collections;
 using Avalonia.Controls;
+using Avalonia.Controls.Generators;
 using Avalonia.Controls.Primitives;
 using Avalonia.Data;
 using Avalonia.Interactivity;
@@ -63,10 +64,13 @@ namespace KOTORModSync
             AvaloniaXamlLoader.Load( this );
 
             MainGrid = this.FindControl<Grid>( "MainGrid" );
+            MainGrid.ColumnDefinitions[0].Width = new GridLength( 250 );
+            MainGrid.ColumnDefinitions[2].Width = new GridLength( 250 );
             // Column 0
             LeftTreeView = this.FindControl<TreeView>( "LeftTreeView" );
             ApplyEditorButton = this.FindControl<Button>( "ApplyEditorButton" );
             // Column 1
+            ComponentsItemsControl = this.FindControl<ItemsControl>( "ComponentsItemsControl" );
             TabControl = this.FindControl<TabControl>( "TabControl" );
             InitialTab = this.FindControl<TabItem>( "InitialTab" );
             GuiEditTabItem = this.FindControl<TabItem>( "GuiEditTabItem" );
@@ -531,21 +535,36 @@ namespace KOTORModSync
             }
         }
 
-        private async void ValidateButton_Click( [NotNull] object sender, [NotNull] RoutedEventArgs e )
+        private async Task<(bool success, string informationMessage)> PreinstallValidation()
         {
             try
             {
-                if ( MainConfigInstance == null || MainConfig.DestinationPath == null )
+                if ( MainConfigInstance == null || MainConfig.DestinationPath == null || MainConfig.SourcePath == null )
                 {
-                    await InformationDialog.ShowInformationDialog(
-                        this,
-                        "Please set your directories first"
-                    );
-                    return;
+                    return (false, "Please set your directories first");
+                }
+
+                if ( _componentsList.Count == 0 )
+                {
+                    return (false, "No instructions loaded! Press 'Load Instructions File' or create some instructions first.");
                 }
 
                 await Logger.LogAsync( "Checking for duplicate components..." );
                 bool noDuplicateComponents = await FindDuplicateComponents( _componentsList );
+
+                // Ensure necessary directories are writable.
+                await Logger.LogAsync( "Ensuring both the mod directory and the install directory are writable..." );
+                bool isInstallDirectoryWritable = Utility.IsDirectoryWritable( MainConfig.DestinationPath );
+                bool isModDirectoryWritable = Utility.IsDirectoryWritable( MainConfig.SourcePath );
+
+                await Logger.LogAsync( "Validating the order of operations and install order of all components..." );
+                (bool isCorrectOrder, List<Component> reorderedList) = Component.GetComponentsInstallOrder( _componentsList );
+                if ( !isCorrectOrder && MainConfig.AttemptFixes )
+                {
+                    await Logger.LogWarningAsync( "Incorrect order detected, but has been automatically reordered." );
+                    _componentsList = reorderedList;
+                    isCorrectOrder = true;
+                }
 
                 await Logger.LogAsync( "Validating individual components, this might take a while..." );
                 bool individuallyValidated = true;
@@ -556,42 +575,63 @@ namespace KOTORModSync
                     individuallyValidated &= validator.Run();
                 }
 
-                // Ensure necessary directories are writable.
-                bool isInstallDirectoryWritable = Utility.IsDirectoryWritable( MainConfig.DestinationPath );
-                bool isModDirectoryWritable = Utility.IsDirectoryWritable( MainConfig.SourcePath );
-
                 string informationMessage = string.Empty;
+                if ( !isCorrectOrder )
+                {
+                    informationMessage = "Your components are not in the correct order."
+                        + " There are specific mods found that need to be installed either before or after another or more mods."
+                        + " Please rerun the validator with 'Attempt Fixes' enabled.";
+                    await Logger.LogErrorAsync( informationMessage );
+                }
+
                 if ( !isInstallDirectoryWritable )
                 {
                     informationMessage = "The Install directory is not writable!"
                         + " Please ensure administrative privileges or reinstall KOTOR"
                         + " to a directory with write access.";
+                    await Logger.LogErrorAsync( informationMessage );
                 }
 
                 if ( !isModDirectoryWritable )
                 {
                     informationMessage = "The Mod directory is not writable!"
                         + " Please ensure administrative privileges or choose a new mod directory.";
+                    await Logger.LogErrorAsync( informationMessage );
                 }
 
                 if ( !noDuplicateComponents )
                 {
                     informationMessage = "There were several duplicate components found."
                         + " Please ensure all components are unique and none have conflicting GUIDs.";
+                    await Logger.LogErrorAsync( informationMessage );
                 }
 
                 if ( !individuallyValidated )
                 {
-                    informationMessage = "Some components failed to individually validate."
-                        + " Please check the output window for more details.";
+                    informationMessage = "Some components failed to individually validate.";
+                    await Logger.LogErrorAsync( informationMessage );
                 }
 
                 if ( informationMessage.Equals( string.Empty ) )
                 {
-                    informationMessage = "No issues found."
-                        + " If you encounter any problems during the installation, please contact the developer.";
+                    return (true, "No issues found."
+                        + " If you encounter any problems during the installation, please contact the developer.");
                 }
 
+                return (false, informationMessage);
+            }
+            catch ( Exception e )
+            {
+                await Logger.LogExceptionAsync( e );
+                return (false, "Unknown error, check the output window for more information.");
+            }
+        }
+
+        private async void ValidateButton_Click( [NotNull] object sender, [NotNull] RoutedEventArgs e )
+        {
+            try
+            {
+                (bool success, string informationMessage) = await PreinstallValidation();
                 await InformationDialog.ShowInformationDialog( this, informationMessage );
             }
             catch ( Exception ex )
@@ -721,7 +761,7 @@ namespace KOTORModSync
                     this,
                     _currentComponent.Directions + Environment.NewLine
                     + Environment.NewLine
-                    + "Press Yes to execute the provided directions now."
+                    + "Please confirm you've installed the required dependencies. Press Yes to execute the provided directions now."
                 );
                 if ( confirm != true )
                 {
@@ -737,6 +777,8 @@ namespace KOTORModSync
                             _componentsList
                         )
                     );
+                    _installRunning = false;
+
                     if ( exitCode != 0 )
                     {
                         await InformationDialog.ShowInformationDialog(
@@ -753,8 +795,6 @@ namespace KOTORModSync
                     {
                         await Logger.LogAsync( $"Successfully installed '{_currentComponent.Name}'" );
                     }
-
-                    _installRunning = false;
                 }
                 catch ( Exception )
                 {
@@ -783,18 +823,10 @@ namespace KOTORModSync
                     return;
                 }
 
-                if ( MainConfigInstance == null || MainConfig.DestinationPath == null )
+                (bool success, string informationMessage) = await PreinstallValidation();
+                if ( !success )
                 {
-                    await InformationDialog.ShowInformationDialog( this, "Please set your directories first" );
-                    return;
-                }
-
-                if ( _componentsList.Count == 0 )
-                {
-                    await InformationDialog.ShowInformationDialog(
-                        this,
-                        "No instructions loaded! Press 'Load Instructions File' or create some instructions first."
-                    );
+                    await InformationDialog.ShowInformationDialog( this, informationMessage );
                     return;
                 }
 
@@ -802,37 +834,6 @@ namespace KOTORModSync
                 {
                     _ = Logger.LogAsync( "Start installing all mods..." );
                     _installRunning = true;
-
-                    await Logger.LogAsync( "Running validation of all components, this might take a while..." );
-
-                    bool valSuccess = true;
-                    foreach ( Component component in _componentsList )
-                    {
-                        var validator = new ComponentValidation( component );
-                        await Logger.LogVerboseAsync( $" == Validating '{component.Name}' == " );
-                        valSuccess &= validator.Run();
-                    }
-
-                    // Ensure necessary directories are writable.
-                    bool isWritable = Utility.IsDirectoryWritable( MainConfig.DestinationPath )
-                        && Utility.IsDirectoryWritable( MainConfig.SourcePath );
-
-                    string informationMessage = "There were issues with your instructions file."
-                        + " Please review the output window for more information."
-                        + " Absolutely no files were modified during this process.";
-
-                    if ( !isWritable )
-                    {
-                        informationMessage = "The Mod directory and/or the KOTOR directory are not writable."
-                            + " Please ensure administrative privileges or reinstall KOTOR"
-                            + " to a directory of which you have write access.";
-                    }
-
-                    if ( !valSuccess || !isWritable )
-                    {
-                        await InformationDialog.ShowInformationDialog( this, informationMessage );
-                        return;
-                    }
 
                     if ( await ConfirmationDialog.ShowConfirmationDialog( this, "Really install all mods?" ) != true )
                     {
@@ -1173,26 +1174,23 @@ namespace KOTORModSync
             }
         }
 
-        private void MoveTreeViewItem
-            ( ItemsControl parentItemsControl, TreeViewItem selectedTreeViewItem, int newIndex )
+        private void MoveComponentListItem
+            ( Control selectedTreeViewItem, int relativeIndex )
         {
             try
             {
-                List<Component> componentsList = _componentsList; // Use the original components list
-                int currentIndex = componentsList.IndexOf( (Component)selectedTreeViewItem.Tag );
+                var treeViewComponent = (Component)selectedTreeViewItem.Tag;
 
-                if ( currentIndex == -1 || newIndex < 0 || newIndex >= componentsList.Count )
+                int index = _componentsList.IndexOf( treeViewComponent );
+                if ( ( index == 0 && relativeIndex < 0 ) || index == -1 || ( index + relativeIndex == _componentsList.Count ) )
                 {
                     return;
                 }
 
-                componentsList.RemoveAt( currentIndex );
-                componentsList.Insert( newIndex, (Component)selectedTreeViewItem.Tag );
+                _ = _componentsList.Remove( treeViewComponent );
+                _componentsList.Insert( index + relativeIndex, treeViewComponent );
+                ProcessComponents( _componentsList );
                 LeftTreeView.SelectedItem = selectedTreeViewItem;
-
-                // Update the visual tree directly to reflect the changes
-                var parentItemsCollection = (AvaloniaList<object>)parentItemsControl.Items;
-                parentItemsCollection.Move( currentIndex, newIndex );
             }
             catch ( Exception ex )
             {
@@ -1210,9 +1208,7 @@ namespace KOTORModSync
                     return;
                 }
 
-                int currentIndex = parentItemsControl.Items.OfType<TreeViewItem>().ToList()
-                    .IndexOf( selectedTreeViewItem );
-                MoveTreeViewItem( parentItemsControl, selectedTreeViewItem, currentIndex - 1 );
+                MoveComponentListItem( selectedTreeViewItem, -1 );
             }
             catch ( Exception ex )
             {
@@ -1230,9 +1226,7 @@ namespace KOTORModSync
                     return;
                 }
 
-                int currentIndex = parentItemsControl.Items.OfType<TreeViewItem>().ToList()
-                    .IndexOf( selectedTreeViewItem );
-                MoveTreeViewItem( parentItemsControl, selectedTreeViewItem, currentIndex + 1 );
+                MoveComponentListItem( selectedTreeViewItem, 1 );
             }
             catch ( Exception ex )
             {
@@ -1262,9 +1256,86 @@ namespace KOTORModSync
             }
         }
 
-        public void ComponentCheckboxModified( Component component )
+        public void ComponentCheckboxModified( Component component, bool newCheckboxBool, HashSet<Component> visitedComponents, bool suppressErrors = false )
         {
-            //RefreshTreeView();
+            // Check if the component has already been visited
+            if ( visitedComponents.Contains( component ) )
+            {
+                // Conflicting component that cannot be resolved automatically
+                if ( !suppressErrors )
+                {
+                    Logger.LogError( $"Component '{component.Name}' has dependencies/restrictions that cannot be resolved automatically!" );
+                }
+            }
+
+            if ( !newCheckboxBool )
+            {
+                TreeViewItem rootItem = LeftTreeView.Items.OfType<TreeViewItem>().FirstOrDefault();
+                if ( rootItem != null )
+                {
+                    DockPanel headerPanel = rootItem.Header as DockPanel;
+                    CheckBox checkBox = headerPanel?.Children.OfType<CheckBox>().FirstOrDefault();
+
+                    if ( checkBox != null && !suppressErrors )
+                    {
+                        checkBox.IsChecked = null;
+                    }
+                }
+            }
+
+            // Add the component to the visited set
+            visitedComponents.Add( component );
+
+            Dictionary<string, List<Component>> conflicts = Component.GetConflictingComponents( component.Dependencies, component.Restrictions, _componentsList );
+
+            if ( newCheckboxBool )
+            {
+                // Handling conflicts based on what's defined for THIS component
+                if ( conflicts.TryGetValue( "Dependency", out List<Component> dependencyConflicts ) )
+                {
+                    foreach ( Component conflictComponent in dependencyConflicts )
+                    {
+                        if ( conflictComponent.IsSelected == false )
+                        {
+                            conflictComponent.IsSelected = true;
+                            ComponentCheckboxModified( conflictComponent, true, visitedComponents );
+                        }
+                    }
+                }
+
+                if ( conflicts.TryGetValue( "Restriction", out List<Component> restrictionConflicts ) )
+                {
+                    foreach ( Component conflictComponent in restrictionConflicts )
+                    {
+                        if ( conflictComponent.IsSelected )
+                        {
+                            conflictComponent.IsSelected = false;
+                            ComponentCheckboxModified( conflictComponent, false, visitedComponents );
+                        }
+                    }
+                }
+
+                // Handling OTHER component's defined restrictions based on the change to THIS component.
+                foreach ( Component c in _componentsList )
+                {
+                    if ( c.IsSelected && c.Restrictions?.Contains( component.Guid ) == true )
+                    {
+                        c.IsSelected = false;
+                        ComponentCheckboxModified( c, false, visitedComponents );
+                    }
+                }
+            }
+
+            // Handling OTHER component's defined dependencies based on the change to THIS component.
+            List<Component> theirDependentComponents = new List<Component>();
+            foreach ( Component c in _componentsList )
+            {
+                if ( c.IsSelected == true && newCheckboxBool == false && c.Dependencies?.Contains( component.Guid ) == true )
+                {
+                    c.IsSelected = false;
+                    ComponentCheckboxModified( c, false, visitedComponents );
+                }
+            }
         }
 
         private CheckBox CreateComponentCheckbox( Component component )
@@ -1273,8 +1344,8 @@ namespace KOTORModSync
             var binding = new Binding( "IsSelected" ) { Source = component, Mode = BindingMode.TwoWay };
 
             // Set up the event handler for the checkbox
-            checkBox.Checked += ( sender, e ) => ComponentCheckboxModified( component );
-            checkBox.Unchecked += ( sender, e ) => ComponentCheckboxModified( component );
+            checkBox.Checked += ( sender, e ) => ComponentCheckboxModified( component, true, new HashSet<Component>() );
+            checkBox.Unchecked += ( sender, e ) => ComponentCheckboxModified( component, false, new HashSet<Component>() );
 
             if ( ToggleButton.IsCheckedProperty != null )
             {
@@ -1316,6 +1387,7 @@ namespace KOTORModSync
             componentItem.Tapped += ( sender, e ) =>
             {
                 ItemClickCommand.Execute( component );
+                e.Handled = true; // Prevent event bubbling
             };
 
             return componentItem;
@@ -1340,20 +1412,6 @@ namespace KOTORModSync
             return null;
         }
 
-        private static Component GetComponentFromGuid( List<Component> componentsList, string guidString )
-        {
-            try
-            {
-                return componentsList.Find( c => c.Guid == new Guid( guidString ) );
-            }
-            catch ( FormatException ex )
-            {
-                Logger.LogException( ex );
-            }
-
-            return null;
-        }
-
         private static Component GetComponentFromGuid( List<Component> componentsList, Guid guid ) =>
             componentsList.Find( c => c.Guid == guid );
 
@@ -1364,7 +1422,7 @@ namespace KOTORModSync
                 return;
             }
 
-            foreach ( string dependencyGuid in component.Dependencies )
+            foreach ( Guid dependencyGuid in component.Dependencies )
             {
                 Component dependency = GetComponentFromGuid( _componentsList, dependencyGuid );
                 if ( dependency == null )
@@ -1404,6 +1462,18 @@ namespace KOTORModSync
                     return;
                 }
 
+                // Remove the second-to-top-level TreeViewItem, if present.
+                if ( parentItem.Parent is ItemsControl secondToTopLevelParent )
+                {
+                    AvaloniaList<object> secondToTopLevelItems = (AvaloniaList<object>)secondToTopLevelParent.Items;
+                    TreeViewItem topLevelItem = FindExistingItem( secondToTopLevelParent, component );
+
+                    if ( topLevelItem != null )
+                    {
+                        secondToTopLevelItems.Remove( topLevelItem );
+                    }
+                }
+
                 TreeViewItem componentItem = CreateComponentItem( component );
                 parentItemItems.Add( componentItem );
 
@@ -1413,6 +1483,72 @@ namespace KOTORModSync
             {
                 Logger.LogException( ex, "Unexpected exception while creating tree view item" );
             }
+        }
+
+        private TreeViewItem CreateRootTreeViewItem( List<Component> componentsList )
+        {
+            var rootItem = new TreeViewItem
+            {
+                Tag = componentsList,
+                IsExpanded = true
+            };
+
+            var checkBox = new CheckBox { Name = "IsSelected", IsChecked = true };
+            var binding = new Binding( "IsSelected" );
+
+            // Set up the event handler for the checkbox
+            bool manualSet = false;
+            checkBox.Checked += ( sender, e ) =>
+            {
+                if ( manualSet )
+                    return;
+
+                bool allChecked = true;
+
+                var finishedComponents = new HashSet<Component>();
+                foreach ( Component component in _componentsList )
+                {
+                    component.IsSelected = true;
+                    ComponentCheckboxModified( component, true, finishedComponents, suppressErrors: true );
+                }
+
+                foreach ( Component component in _componentsList )
+                {
+                    if ( !component.IsSelected )
+                    {
+                        allChecked = false;
+                        break;
+                    }
+                }
+
+                if ( !allChecked )
+                {
+                    manualSet = true;
+                    checkBox.IsChecked = null;
+                    manualSet = false;
+                }
+            };
+            checkBox.Unchecked += ( sender, e ) =>
+            {
+                var finishedComponents = new HashSet<Component>();
+                foreach ( Component component in _componentsList )
+                {
+                    component.IsSelected = false;
+                    ComponentCheckboxModified( component, false, finishedComponents, suppressErrors: true );
+                }
+            };
+
+            var header = new DockPanel();
+            header.Children.Add( checkBox );
+            header.Children.Add( new TextBlock { Text = "Components" } );
+            rootItem.Header = header;
+
+            if ( ToggleButton.IsCheckedProperty != null )
+            {
+                _ = checkBox.Bind( ToggleButton.IsCheckedProperty, binding );
+            }
+
+            return rootItem;
         }
 
         private void ProcessComponents( [CanBeNull] List<Component> componentsList )
@@ -1426,12 +1562,7 @@ namespace KOTORModSync
                 }
 
                 // Create the root item for the tree view
-                var rootItem = new TreeViewItem
-                {
-                    Header = "Components",
-                    Tag = componentsList,
-                    IsExpanded = true
-                };
+                TreeViewItem rootItem = CreateRootTreeViewItem( componentsList );
 
                 // Iterate over the components and create tree view items
                 foreach ( Component component in componentsList )

@@ -63,8 +63,8 @@ namespace KOTORModSync.Core
             [Description( "Use TSLPatcherCLI" )]
             TSLPatcherCLI = 1, // not tested
 
-            [Description( "Use HoloPatcher" )]
-            HoloPatcher = 2
+            //[Description( "Use HoloPatcher" )]
+            //HoloPatcher = 2
         }
 
         public IEnumerable<AvailablePatchers> AllAvailablePatchers
@@ -152,12 +152,12 @@ namespace KOTORModSync.Core
 
         public event PropertyChangedEventHandler PropertyChanged;
 
+
         // used for the ui.
-        protected virtual void OnPropertyChanged
-            ( [CallerMemberName][CanBeNull] string propertyName = null ) => PropertyChanged?.Invoke(
-            this,
-            new PropertyChangedEventArgs( propertyName )
-        );
+        protected virtual void OnPropertyChanged( [CallerMemberName][CanBeNull] string propertyName = null )
+        {
+            PropertyChanged?.Invoke( this, new PropertyChangedEventArgs( propertyName ) );
+        }
     }
 
     public static class ModDirectory

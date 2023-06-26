@@ -8,12 +8,24 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
+using Avalonia.Data;
 using Avalonia.Data.Converters;
+using KOTORModSync.Core.Utility;
 
 namespace KOTORModSync.Converters
 {
     public class ListToStringConverter : IValueConverter
     {
+        public static string RemoveSpacesExceptNewLine( string input )
+        {
+            string pattern = $@"(?:(?!{Environment.NewLine})[^\S{Environment.NewLine}])+";
+            string result = Regex.Replace( input, pattern, "" );
+
+            return result;
+        }
+
+
         public object Convert( object value, Type targetType, object parameter, CultureInfo culture )
         {
             if ( !( value is IEnumerable list ) )
@@ -34,13 +46,43 @@ namespace KOTORModSync.Converters
 
         public object ConvertBack( object value, Type targetType, object parameter, CultureInfo culture )
         {
-            if ( !( value is string text ) )
-                return new List<string>();
+            try
+            {
+                if ( !( value is string text ) )
+                    return null;
 
-            string[] lines = text.Split( new[] { "\r\n", "\n", Environment.NewLine.ToString() }, StringSplitOptions.RemoveEmptyEntries );
-            return targetType != typeof( List<Guid> )
-                ? lines.ToList()
-                : (object)lines.Select( line => Guid.TryParse( line, out Guid guid ) ? guid : Guid.Empty ).ToList();
+                if ( targetType != typeof( List<Guid> ) )
+                {
+                    return text.Split( new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries ).ToList();
+                }
+
+                string[] lines = RemoveSpacesExceptNewLine( text ).Split( new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries );
+
+                var guids = new List<Guid>();
+                foreach ( string line in lines )
+                {
+                    try
+                    {
+                        guids.Add( Guid.Parse( Serializer.FixGuidString( (string)line ) ?? string.Empty ) );
+                    }
+                    catch ( FormatException e )
+                    {
+                        return new BindingNotification(
+                            new FormatException( e.Message ),
+                            BindingErrorType.DataValidationError
+                        );
+                    }
+                }
+
+                return guids;
+            }
+            catch ( Exception ex )
+            {
+                return new BindingNotification(
+                    new FormatException( ex.Message ),
+                    BindingErrorType.Error
+                );
+            }
         }
     }
 }

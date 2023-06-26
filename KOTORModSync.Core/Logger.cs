@@ -90,8 +90,8 @@ namespace KOTORModSync.Core
         }
 
         public static Task LogAsync( string message ) => LogInternalAsync( message );
-        public static void LogVerbose( string message ) => Log( "[Verbose] " + message, fileOnly: true );
-        public static Task LogVerboseAsync( string message ) => LogInternalAsync( "[Verbose] " + message, fileOnly: true );
+        public static void LogVerbose( string message ) => Log( "[Verbose] " + message, fileOnly: !MainConfig.DebugLogging );
+        public static Task LogVerboseAsync( string message ) => LogInternalAsync( "[Verbose] " + message, fileOnly: !MainConfig.DebugLogging );
         public static void LogWarning( string message ) => Log( "[Warning] " + message );
         public static Task LogWarningAsync( string message ) => LogInternalAsync( "[Warning] " + message );
         public static void LogError( string message ) => Log( "[Error] " + message );
@@ -108,7 +108,7 @@ namespace KOTORModSync.Core
         public static void LogException( Exception ex )
         {
             Log( $"Exception: {ex.GetType().Name} - {ex.Message}" );
-            LogVerbose( $"Stack trace: {ex.StackTrace}" );
+            Log( $"Stack trace: {ex.StackTrace}" );
 
             ExceptionLogged.Invoke( ex ); // Raise the ExceptionLogged event
         }

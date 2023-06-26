@@ -63,8 +63,8 @@ namespace KOTORModSync.Core
             [Description( "Use TSLPatcherCLI" )]
             TSLPatcherCLI = 1, // not tested
 
-            [Description( "Use HoloPatcher" )]
-            HoloPatcher = 2
+            //[Description( "Use HoloPatcher" )]
+            //HoloPatcher = 2
         }
 
         public IEnumerable<AvailablePatchers> AllAvailablePatchers

@@ -761,7 +761,7 @@ namespace KOTORModSync
                     this,
                     _currentComponent.Directions + Environment.NewLine
                     + Environment.NewLine
-                    + "Press Yes to execute the provided directions now."
+                    + "Please confirm you've installed the required dependencies. Press Yes to execute the provided directions now."
                 );
                 if ( confirm != true )
                 {
@@ -1208,10 +1208,6 @@ namespace KOTORModSync
                     return;
                 }
 
-                int currentIndex = parentItemsControl.Items
-                    .OfType<TreeViewItem>()
-                    .ToList()
-                    .IndexOf( selectedTreeViewItem );
                 MoveComponentListItem( selectedTreeViewItem, -1 );
             }
             catch ( Exception ex )
@@ -1230,10 +1226,6 @@ namespace KOTORModSync
                     return;
                 }
 
-                int currentIndex = parentItemsControl.Items
-                    .OfType<TreeViewItem>()
-                    .ToList()
-                    .IndexOf( selectedTreeViewItem );
                 MoveComponentListItem( selectedTreeViewItem, 1 );
             }
             catch ( Exception ex )

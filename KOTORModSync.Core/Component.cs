@@ -716,8 +716,8 @@ namespace KOTORModSync.Core
                             case MainConfig.AvailablePatchers.TSLPatcherCLI:
                                 exitCode = await instruction.ExecuteTSLPatcherAsync();
                                 break;
-                            case MainConfig.AvailablePatchers.HoloPatcher:
-                                throw new NotImplementedException();
+                            /*case MainConfig.AvailablePatchers.HoloPatcher:
+                                throw new NotImplementedException();*/
                             default:
                                 throw new InvalidOperationException();
                         }

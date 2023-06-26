@@ -61,7 +61,7 @@
 						<ItemsControl x:Name="ComponentsItemsControl" Items="{Binding Components}">
                             <ItemsControl.ItemTemplate>
 								<DataTemplate DataType="core:Component">
-									<Grid x:Name="GuiEditGrid" ColumnDefinitions="Auto,Auto" RowDefinitions="10*,10*,10*,10*,10*,10*,10*,10*,10*,10*,10*,10*,10*,10*,10*,10*,10*,10*,*,*">
+									<Grid x:Name="GuiEditGrid" ColumnDefinitions="Auto,Auto" RowDefinitions="*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*">
                                         <TextBlock Grid.Row="0" Grid.Column="0" Text="Information" FontSize="22" HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="0,10,0,40"/>
                                         <TextBlock Grid.Row="1" Grid.Column="0" Text="Name:" />
 										<TextBox Grid.Row="2" Grid.Column="0" Text="{Binding Name}"
@@ -102,8 +102,34 @@
                                                  Focusable="True" HorizontalAlignment="Stretch" AcceptsReturn="True"
                                                  Text="{Binding ModLink}"/>
 
-                                        <TextBlock Grid.Row="17" Grid.Column="0" Grid.ColumnSpan="2" Text="Instructions" FontSize="22" HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="0,40,0,0"/>
-                                        <ItemsRepeater Grid.Row="18" Grid.Column="0" Grid.ColumnSpan="2" x:Name="instructionsRepeater" Items="{Binding Instructions}">
+
+                                        <TextBlock Grid.Row="17" Grid.Column="0" Text="Dependencies:" />
+                                        <TextBox Grid.Row="18" Grid.Column="0" MaxWidth="600"
+                                                 Focusable="True" AcceptsReturn="True" TextWrapping="Wrap"
+                                                 x:Name="DependenciesTextBox"
+                                                 Text="{Binding Dependencies, Converter={StaticResource ListToStringConverter}}"/>
+
+                                        <TextBlock Grid.Row="19" Grid.Column="0" Text="Restrictions:" />
+                                        <TextBox Grid.Row="20" Grid.Column="0" MaxWidth="600"
+                                                 AcceptsReturn="True" TextWrapping="Wrap" Focusable="True"
+                                                 x:Name="RestrictionsTextBox"
+                                                 Text="{Binding Restrictions, Converter={StaticResource ListToStringConverter}}"/>
+
+
+                                        <TextBlock Grid.Row="21" Grid.Column="0" Text="InstallBefore:" />
+                                        <TextBox Grid.Row="22" Grid.Column="0" MaxWidth="600"
+                                                 Focusable="True" AcceptsReturn="True" TextWrapping="Wrap"
+                                                 x:Name="InstallBeforeTextBox"
+                                                 Text="{Binding InstallBefore, Converter={StaticResource ListToStringConverter}}"/>
+
+                                        <TextBlock Grid.Row="23" Grid.Column="0" Text="InstallAfter:" />
+                                        <TextBox Grid.Row="24" Grid.Column="0" MaxWidth="600"
+                                                 AcceptsReturn="True" TextWrapping="Wrap" Focusable="True"
+                                                 x:Name="InstallAfterTextBox"
+                                                 Text="{Binding InstallAfter, Converter={StaticResource ListToStringConverter}}"/>
+
+                                        <TextBlock Grid.Row="25" Grid.Column="0" Grid.ColumnSpan="2" Text="Instructions" FontSize="22" HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="0,40,0,0"/>
+                                        <ItemsRepeater Grid.Row="26" Grid.Column="0" Grid.ColumnSpan="2" x:Name="instructionsRepeater" Items="{Binding Instructions}">
 											<ItemsRepeater.ItemTemplate>
 												<DataTemplate DataType="core:Instruction">
                                                     <StackPanel>
@@ -178,7 +204,7 @@
 												</DataTemplate>
 											</ItemsRepeater.ItemTemplate>
 										</ItemsRepeater>
-                                        <Button Grid.Row="19" Grid.Column="0" Grid.ColumnSpan="2" Content="Create Instructions"
+                                        <Button Grid.Row="27" Grid.Column="0" Grid.ColumnSpan="2" Content="Create Instructions"
                                                 Click="AddNewInstruction_Click" Tag="{Binding}"/>
 									</Grid>
 								</DataTemplate>

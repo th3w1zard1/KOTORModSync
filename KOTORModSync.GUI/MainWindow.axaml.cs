@@ -1182,7 +1182,7 @@ namespace KOTORModSync
                 var treeViewComponent = (Component)selectedTreeViewItem.Tag;
 
                 int index = _componentsList.IndexOf( treeViewComponent );
-                if ( index == 0 && relativeIndex < 0 || index == _componentsList.Count && relativeIndex > 0 )
+                if ( (index == 0 && relativeIndex < 0) || index == -1 || (index+relativeIndex == _componentsList.Count) )
                 {
                     return;
                 }
@@ -1190,6 +1190,7 @@ namespace KOTORModSync
                 _ = _componentsList.Remove( treeViewComponent );
                 _componentsList.Insert( index + relativeIndex, treeViewComponent );
                 ProcessComponents( _componentsList );
+                LeftTreeView.SelectedItem = selectedTreeViewItem;
             }
             catch ( Exception ex )
             {

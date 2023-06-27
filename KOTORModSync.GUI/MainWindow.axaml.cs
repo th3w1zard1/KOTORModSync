@@ -740,7 +740,7 @@ namespace KOTORModSync
                 _currentComponent = null;
 
                 // Refresh the TreeView to reflect the changes
-                await ProcessComponentsAsync(_componentsList);
+                await ProcessComponentsAsync( _componentsList );
             }
             catch ( Exception ex )
             {

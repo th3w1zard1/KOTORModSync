@@ -15,10 +15,21 @@ Other mod managers I've tried were either too difficult to configure, require si
 
 ## Features
 - Can install the r/KOTOR mod builds in about 20 minutes from a vanilla install.
+- Select the individual mods you want for an install - the dependencies and incompatibilities will automatically be sorted.
 - This program has a built-in GUI editor and an installer packed into one. Modbuild creators can create instructions with little to no knowledge of the format and easily share them with end users. End users can install everything from the instruction file with a simple click of a button. Edit any instructions and verify the configuration with built-in tools. There's also some support to dry run an install.
 
 - A flexible configuration editor and parser utilizing TOML syntax. This is very user-friendly and similar to INI which TSLPatcher already uses and most modders are used to.
 - Create instructions files with complex dependency structures for multiple mods, and have end users install everything exactly according to the instructions created. No more manually copying/deleting files: KOTORModSync handles all of that for your end user.
+
+## Usage
+This section is entirely a WIP but I'll post basic info on some things that are not obvious in the app.
+First and foremost the installer does NOT download all required mods, it requires that all mods are downloaded, unextracted, to the same folder. (known as the `<<modDirectory>>`)
+You'll need to click 'set directories' and browse to your `<<kotorDirectory>>` and your `<<modDirectory>>`.
+Once you do this, load an instructions file (or create one), then select the mods to be installed and press 'install all'.
+
+## Creating instructions.
+The installer parses the fields `InstallBefore`, `InstallAfter`, `Dependencies` and `Restrictions` to define dependencies and incompatibilities.
+See https://pastebin.com/7gML3zCJ for a quick explanation on those fields. See the examples for the `Ultimate Character Overhaul` and the `Handmaiden/Disciple Same-Gender Romance Mod` for the more complex examples.
 
 ## Supported Platforms
 KOTORModSync is a cross-platform 32-bit and 64-bit .NET application. It is compatible with the following operating systems:

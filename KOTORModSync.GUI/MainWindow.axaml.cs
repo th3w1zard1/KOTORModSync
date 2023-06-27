@@ -352,7 +352,7 @@ namespace KOTORModSync
 
                 // Load components dynamically
                 _componentsList = Component.ReadComponentsFromFile( filePath );
-                ProcessComponents( _componentsList );
+                await ProcessComponentsAsync( _componentsList );
             }
             catch ( Exception ex )
             {
@@ -379,7 +379,7 @@ namespace KOTORModSync
                     }
 
                     _componentsList = ModParser.ParseMods( string.Join( Environment.NewLine, fileContents ) );
-                    ProcessComponents( _componentsList );
+                    await ProcessComponentsAsync( _componentsList );
                 }
             }
             catch ( Exception exception )
@@ -521,13 +521,13 @@ namespace KOTORModSync
                     return;
                 }
 
-                (bool success, string output) = SaveChanges();
+                (bool success, string output) = await SaveChanges();
                 if ( !success )
                 {
                     await InformationDialog.ShowInformationDialog( this, output );
                 }
 
-                ProcessComponents( _componentsList );
+                await ProcessComponentsAsync( _componentsList );
             }
             catch ( Exception ex )
             {
@@ -640,7 +640,7 @@ namespace KOTORModSync
             }
         }
 
-        private void AddComponentButton_Click( [NotNull] object sender, [NotNull] RoutedEventArgs e )
+        private async void AddComponentButton_Click( [NotNull] object sender, [NotNull] RoutedEventArgs e )
         {
             // Create a new default component with a new GUID
             try
@@ -661,7 +661,7 @@ namespace KOTORModSync
                 LoadComponentDetails( newComponent );
 
                 // Refresh the TreeView to reflect the changes
-                ProcessComponents( _componentsList );
+                await ProcessComponentsAsync( _componentsList );
             }
             catch ( Exception ex )
             {
@@ -669,7 +669,7 @@ namespace KOTORModSync
             }
         }
 
-        private void RefreshComponents_Click( [NotNull] object sender, [NotNull] RoutedEventArgs e ) => ProcessComponents( _componentsList );
+        private async void RefreshComponents_Click( [NotNull] object sender, [NotNull] RoutedEventArgs e ) => await ProcessComponentsAsync( _componentsList );
 
         private async void RemoveComponentButton_Click( [NotNull] object sender, [NotNull] RoutedEventArgs e )
         {
@@ -697,7 +697,7 @@ namespace KOTORModSync
                 _currentComponent = null;
 
                 // Refresh the TreeView to reflect the changes
-                ProcessComponents( _componentsList );
+                await ProcessComponentsAsync(_componentsList);
             }
             catch ( Exception ex )
             {
@@ -1161,7 +1161,7 @@ namespace KOTORModSync
             return !string.Equals( currentContent, _originalContent );
         }
 
-        private (bool, string Message) SaveChanges()
+        private async Task<(bool, string Message)> SaveChanges()
         {
             try
             {
@@ -1201,7 +1201,7 @@ namespace KOTORModSync
                         "Could not deserialize raw text into a Component instance in memory."
                     );
 
-                ProcessComponents( _componentsList ); // Refresh the tree view to reflect the changes
+                await ProcessComponentsAsync( _componentsList ); // Refresh the tree view to reflect the changes
                 return (true,
                     $"Saved {newComponent.Name} successfully. Refer to the output window for more information.");
             }
@@ -1223,7 +1223,7 @@ namespace KOTORModSync
             }
         }
 
-        private void MoveComponentListItem
+        private async void MoveComponentListItem
             ( Control selectedTreeViewItem, int relativeIndex )
         {
             try
@@ -1238,12 +1238,11 @@ namespace KOTORModSync
 
                 _ = _componentsList.Remove( treeViewComponent );
                 _componentsList.Insert( index + relativeIndex, treeViewComponent );
-                ProcessComponents( _componentsList );
-                LeftTreeView.SelectedItem = selectedTreeViewItem;
+                await ProcessComponentsAsync( _componentsList );
             }
             catch ( Exception ex )
             {
-                Logger.LogException( ex );
+                await Logger.LogExceptionAsync( ex );
             }
         }
 
@@ -1626,13 +1625,33 @@ namespace KOTORModSync
             return rootItem;
         }
 
-        private void ProcessComponents( [CanBeNull] List<Component> componentsList )
+        private async Task ProcessComponentsAsync( [CanBeNull] List<Component> componentsList )
         {
             try
             {
-                // todo: one or the other
+                // todo: one or the other, null or count > 0
                 if ( !( componentsList?.Count > 0 ) )
                 {
+                    return;
+                }
+
+                try
+                {
+                    (bool isReordered, List<Component> reorderedList) = Component.ConfirmComponentsInstallOrder( _componentsList );
+                    if ( isReordered )
+                    {
+                        await Logger.LogVerboseAsync( "Reordered list to match dependency structure." );
+                        _componentsList = reorderedList;
+                    }
+                }
+                catch ( ArgumentOutOfRangeException e )
+                {
+                    await InformationDialog.ShowInformationDialog(
+                        this,
+                        "Cannot process order of components."
+                        + " There are circular dependency conflicts that cannot be automatically resolved."
+                        + " Please resolve these before attempting an installation."
+                    );
                     return;
                 }
 

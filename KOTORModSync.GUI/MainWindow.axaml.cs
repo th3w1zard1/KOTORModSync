@@ -950,6 +950,7 @@ namespace KOTORModSync
                     progressWindow.Closed += ProgressWindowClosed;
                     progressWindow.ProgressBar.Value = 0;
                     progressWindow.Show();
+                    _progressWindowClosed = false;
 
                     for ( int index = 0; index < _componentsList.Count; index++ )
                     {

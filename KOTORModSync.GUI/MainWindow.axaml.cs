@@ -726,7 +726,7 @@ namespace KOTORModSync
                 }
 
                 // todo:
-                if ( _componentsList.Any(c => c.Dependencies?.Any(g => g == _currentComponent.Guid) == true) )
+                if ( _componentsList.Any( c => c.Dependencies?.Any( g => g == _currentComponent.Guid ) == true ) )
                 {
                     await InformationDialog.ShowInformationDialog(
                         this,

@@ -946,123 +946,96 @@ namespace KOTORModSync.Core
             return conflicts.Count == 0;
         }
 
-        public static (bool, List<Component>) GetComponentsInstallOrder( List<Component> componentsList )
+        public static Component FindComponentFromGuid( Guid guidToFind, List<Component> componentsList )
         {
-            var componentGuids = componentsList.Select( c => c.Guid ).ToList();
-            var installAfterDependencies = componentsList.Where( c => c.InstallAfter != null )
-                .ToDictionary( c => c.Guid, c => c.InstallAfter );
-            var installBeforeDependencies = componentsList.Where( c => c.InstallBefore != null )
-                .ToDictionary( c => c.Guid, c => c.InstallBefore );
-
-            var visited = new HashSet<Guid>();
-            var orderedComponents = new List<Component>();
-            var orderedGuids = orderedComponents.Select( c => c.Guid ).ToList();
-
-            foreach ( Guid componentGuid in componentGuids )
+            Component foundComponent = null;
+            foreach ( Component component in componentsList )
             {
-                if ( visited.Contains( componentGuid ) )
+                if ( component.Guid != guidToFind )
                 {
                     continue;
                 }
 
-                if ( !VisitComponent( componentGuid, visited, orderedGuids, installAfterDependencies, installBeforeDependencies ) )
-                {
-                    return (false, orderedComponents);
-                }
+                foundComponent = component;
+                break;
             }
 
-            return (true, orderedComponents);
+            return foundComponent;
         }
 
-
-        public static (bool, IEnumerable<Guid>) ConfirmComponentsInstallOrder( List<Component> componentsList )
+        public static List<Component> FindComponentsFromGuidList( List<Guid> guidsToFind, List<Component> componentsList )
         {
-            var componentGuids = componentsList.Select( c => c.Guid ).ToList();
-            var installAfterDependencies = componentsList.Where( c => c.InstallAfter != null )
-                .ToDictionary( c => c.Guid, c => c.InstallAfter );
-            var installBeforeDependencies = componentsList.Where( c => c.InstallBefore != null )
-                .ToDictionary( c => c.Guid, c => c.InstallBefore );
-
-            var visited = new HashSet<Guid>();
-            var orderedComponents = new List<Guid>();
-
-            foreach ( Guid componentGuid in componentGuids )
+            List<Component> foundComponents = new List<Component>();
+            foreach ( Guid guidToFind in guidsToFind )
             {
-                if ( visited.Contains( componentGuid ) )
+                Component foundComponent = FindComponentFromGuid(guidToFind, componentsList);
+                if ( foundComponent == null )
                 {
                     continue;
                 }
 
-                if ( !VisitComponent( componentGuid, visited, orderedComponents, installAfterDependencies, installBeforeDependencies ) )
-                {
-                    return (false, orderedComponents);
-                }
+                foundComponents.Add( foundComponent );
             }
 
-            return (true, orderedComponents);
+            return foundComponents;
         }
 
-        private static bool VisitComponent( Guid componentGuid, ISet<Guid> visited, List<Guid> orderedComponents,
-            IReadOnlyDictionary<Guid, List<Guid>> installAfterDependencies, IReadOnlyDictionary<Guid, List<Guid>> installBeforeDependencies )
+        public static (bool isCorrectOrder, List<Component> reorderedComponents) ConfirmComponentsInstallOrder( List<Component> components )
         {
-            _ = visited.Add( componentGuid );
+            List<Component> orderedComponents = new List<Component>( components );
 
-            if ( installAfterDependencies.TryGetValue( componentGuid, out List<Guid> afterDependency ) )
+            bool hasChanged;
+            do
             {
-                foreach ( Guid dependencyGuid in afterDependency )
+                hasChanged = false;
+
+                for ( int i = 0; i < orderedComponents.Count; i++ )
                 {
-                    if ( !visited.Contains( dependencyGuid ) )
+                    Component currentComponent = orderedComponents[i];
+
+                    if ( currentComponent.InstallAfter != null )
                     {
-                        if ( !VisitComponent(
-                                dependencyGuid,
-                                visited,
-                                orderedComponents,
-                                installAfterDependencies,
-                                installBeforeDependencies
-                            ) )
+                        foreach ( Guid dependencyGuid in currentComponent.InstallAfter )
                         {
-                            return false;
+                            int dependencyIndex = orderedComponents.FindIndex( c => c.Guid == dependencyGuid );
+
+                            if ( dependencyIndex > i )
+                            {
+                                Component dependencyComponent = orderedComponents[dependencyIndex];
+
+                                orderedComponents.RemoveAt( dependencyIndex );
+                                orderedComponents.Insert( i, dependencyComponent );
+
+                                hasChanged = true;
+                            }
                         }
                     }
-                    else if ( !orderedComponents.Contains( dependencyGuid ) )
+
+                    if ( currentComponent.InstallBefore != null )
                     {
-                        return false; // Circular dependency detected
-                    }
-                }
-            }
-
-            orderedComponents.Add( componentGuid );
-
-            if ( !installBeforeDependencies.TryGetValue( componentGuid, out List<Guid> beforeDependency ) )
-            {
-                return true;
-            }
-
-            {
-                foreach ( Guid dependencyGuid in beforeDependency )
-                {
-                    if ( !visited.Contains( dependencyGuid ) )
-                    {
-                        if ( !VisitComponent(
-                                dependencyGuid,
-                                visited,
-                                orderedComponents,
-                                installAfterDependencies,
-                                installBeforeDependencies
-                            ) )
+                        foreach ( Guid dependentGuid in currentComponent.InstallBefore )
                         {
-                            return false;
+                            int dependentIndex = orderedComponents.FindIndex( c => c.Guid == dependentGuid );
+
+                            if ( dependentIndex < i )
+                            {
+                                Component dependentComponent = orderedComponents[dependentIndex];
+
+                                orderedComponents.RemoveAt( dependentIndex );
+                                orderedComponents.Insert( i, dependentComponent );
+
+                                hasChanged = true;
+                            }
                         }
                     }
-                    else if ( orderedComponents.Contains( dependencyGuid ) )
-                    {
-                        return false; // Circular dependency detected
-                    }
                 }
-            }
+            } while ( hasChanged );
 
-            return true;
+            bool isCorrectOrder = orderedComponents.SequenceEqual( components );
+
+            return (isCorrectOrder, orderedComponents);
         }
+
 
         private List<Option> ChooseOptions( Instruction instruction )
         {

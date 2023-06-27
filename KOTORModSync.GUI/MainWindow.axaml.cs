@@ -558,7 +558,7 @@ namespace KOTORModSync
                 bool isModDirectoryWritable = Utility.IsDirectoryWritable( MainConfig.SourcePath );
 
                 await Logger.LogAsync( "Validating the order of operations and install order of all components..." );
-                (bool isCorrectOrder, List<Component> reorderedList) = Component.GetComponentsInstallOrder( _componentsList );
+                (bool isCorrectOrder, List<Component> reorderedList) = Component.ConfirmComponentsInstallOrder( _componentsList );
                 if ( !isCorrectOrder && MainConfig.AttemptFixes )
                 {
                     await Logger.LogWarningAsync( "Incorrect order detected, but has been automatically reordered." );
@@ -671,7 +671,7 @@ namespace KOTORModSync
 
         private void RefreshComponents_Click( [NotNull] object sender, [NotNull] RoutedEventArgs e ) => ProcessComponents( _componentsList );
 
-        private void RemoveComponentButton_Click( [NotNull] object sender, [NotNull] RoutedEventArgs e )
+        private async void RemoveComponentButton_Click( [NotNull] object sender, [NotNull] RoutedEventArgs e )
         {
             // Get the selected component from the TreeView
             try
@@ -679,6 +679,16 @@ namespace KOTORModSync
                 if ( _currentComponent == null )
                 {
                     Logger.Log( "No component loaded into editor - nothing to remove." );
+                    return;
+                }
+
+                // todo:
+                if ( _currentComponent.Dependencies.Count > 0 )
+                {
+                    await InformationDialog.ShowInformationDialog(
+                        this,
+                        $"Cannot remove '{_currentComponent.Name}', there are several components that rely on it. Please address this problem first."
+                    );
                     return;
                 }
 
@@ -691,7 +701,7 @@ namespace KOTORModSync
             }
             catch ( Exception ex )
             {
-                Logger.LogException( ex );
+                await Logger.LogExceptionAsync( ex );
             }
         }
 
@@ -712,18 +722,25 @@ namespace KOTORModSync
 
                 await InformationDialog.ShowInformationDialog(
                     this,
-                    "Please select your mod directory (where the archives live)."
+                    "Please select your mod directory (where ALL your mods are downloaded)."
                 );
                 chosenFolder = await OpenFolder();
-                if ( chosenFolder != null )
+                if ( chosenFolder == null )
                 {
-                    var modDirectory = new DirectoryInfo( chosenFolder );
-                    MainConfigInstance.sourcePath = modDirectory;
+                    _ = Logger.LogVerboseAsync( "User cancelled selecting folder" );
+                    return;
                 }
+
+                var modDirectory = new DirectoryInfo( chosenFolder );
+                MainConfigInstance.sourcePath = modDirectory;
             }
             catch ( ArgumentNullException )
             {
-                _ = Logger.LogAsync( "User cancelled selecting folder" );
+                await Logger.LogVerboseAsync( "User cancelled selecting folder" );
+            }
+            catch ( Exception ex )
+            {
+                await Logger.LogExceptionAsync( ex, "Unknown error - please report to a developer" );
             }
         }
 
@@ -761,7 +778,7 @@ namespace KOTORModSync
                     this,
                     _currentComponent.Directions + Environment.NewLine
                     + Environment.NewLine
-                    + "Please confirm you've installed the required dependencies. Press Yes to execute the provided directions now."
+                    + "Press Yes to execute the provided directions now."
                 );
                 if ( confirm != true )
                 {
@@ -772,6 +789,38 @@ namespace KOTORModSync
                 try
                 {
                     _installRunning = true;
+
+
+                    bool? installDependencies = await ConfirmationDialog.ShowConfirmationDialog(
+                        this,
+                        $"Would you like to install {_currentComponent.Name}'s dependencies first?"
+                    );
+                    if ( installDependencies == true)
+                    {
+                        List<Component> dependencyComponents = Component.FindComponentsFromGuidList(_currentComponent.Dependencies, _componentsList);
+                        foreach ( Component dependencyComponent in dependencyComponents )
+                        {
+                            Component.InstallExitCode dependencyExitCode = await dependencyComponent.InstallAsync( dependencyComponents );
+
+                            if ( dependencyExitCode != 0 )
+                            {
+                                await InformationDialog.ShowInformationDialog(
+                                    this,
+                                    $"There was a problem installing '{_currentComponent.Name}':"
+                                    + Environment.NewLine
+                                    + Utility.GetEnumDescription( dependencyExitCode )
+                                    + Environment.NewLine
+                                    + Environment.NewLine
+                                    + " Check the output window for details."
+                                );
+                            }
+                            else
+                            {
+                                await Logger.LogAsync( $"Successfully installed '{_currentComponent.Name}'" );
+                            }
+                        }
+                    }
+
                     Component.InstallExitCode exitCode = await Task.Run(
                         () => _currentComponent.InstallAsync(
                             _componentsList
@@ -899,13 +948,13 @@ namespace KOTORModSync
 
                         if ( !component.IsSelected )
                         {
-                            await Logger.LogVerboseAsync( $"Skipping install of '{component.Name}' (unchecked)" );
+                            await Logger.LogAsync( $"Skipping install of '{component.Name}' (unchecked)" );
                             continue;
                         }
 
                         await Logger.LogAsync( $"Start Install of '{component.Name}'..." );
                         Component.InstallExitCode exitCode = await component.InstallAsync( _componentsList );
-                        await Logger.LogVerboseAsync( $"Install of '{component.Name}' finished with exit code {exitCode}" );
+                        await Logger.LogAsync( $"Install of '{component.Name}' finished with exit code {exitCode}" );
 
                         if ( exitCode != 0 )
                         {
@@ -1256,40 +1305,25 @@ namespace KOTORModSync
             }
         }
 
-        public void ComponentCheckboxModified( Component component, bool newCheckboxBool, HashSet<Component> visitedComponents, bool suppressErrors = false )
+        public void ComponentCheckboxChecked( Component component, HashSet<Component> visitedComponents, bool suppressErrors = false )
         {
-            // Check if the component has already been visited
-            if ( visitedComponents.Contains( component ) )
+            try
             {
-                // Conflicting component that cannot be resolved automatically
-                if ( !suppressErrors )
+                // Check if the component has already been visited
+                if ( visitedComponents.Contains( component ) )
                 {
-                    Logger.LogError( $"Component '{component.Name}' has dependencies/restrictions that cannot be resolved automatically!" );
-                }
-            }
-
-            if ( !newCheckboxBool )
-            {
-                TreeViewItem rootItem = LeftTreeView.Items.OfType<TreeViewItem>().FirstOrDefault();
-                if ( rootItem != null )
-                {
-                    DockPanel headerPanel = rootItem.Header as DockPanel;
-                    CheckBox checkBox = headerPanel?.Children.OfType<CheckBox>().FirstOrDefault();
-
-                    if ( checkBox != null && !suppressErrors )
+                    // Conflicting component that cannot be resolved automatically
+                    if ( !suppressErrors )
                     {
-                        checkBox.IsChecked = null;
+                        Logger.LogError( $"Component '{component.Name}' has dependencies/restrictions that cannot be resolved automatically!" );
                     }
                 }
-            }
 
-            // Add the component to the visited set
-            visitedComponents.Add( component );
+                // Add the component to the visited set
+                _ = visitedComponents.Add( component );
 
-            Dictionary<string, List<Component>> conflicts = Component.GetConflictingComponents( component.Dependencies, component.Restrictions, _componentsList );
+                Dictionary<string, List<Component>> conflicts = Component.GetConflictingComponents( component.Dependencies, component.Restrictions, _componentsList );
 
-            if ( newCheckboxBool )
-            {
                 // Handling conflicts based on what's defined for THIS component
                 if ( conflicts.TryGetValue( "Dependency", out List<Component> dependencyConflicts ) )
                 {
@@ -1298,7 +1332,7 @@ namespace KOTORModSync
                         if ( conflictComponent.IsSelected == false )
                         {
                             conflictComponent.IsSelected = true;
-                            ComponentCheckboxModified( conflictComponent, true, visitedComponents );
+                            ComponentCheckboxChecked( conflictComponent, visitedComponents );
                         }
                     }
                 }
@@ -1310,7 +1344,7 @@ namespace KOTORModSync
                         if ( conflictComponent.IsSelected )
                         {
                             conflictComponent.IsSelected = false;
-                            ComponentCheckboxModified( conflictComponent, false, visitedComponents );
+                            ComponentCheckboxUnchecked( conflictComponent, visitedComponents );
                         }
                     }
                 }
@@ -1321,20 +1355,61 @@ namespace KOTORModSync
                     if ( c.IsSelected && c.Restrictions?.Contains( component.Guid ) == true )
                     {
                         c.IsSelected = false;
-                        ComponentCheckboxModified( c, false, visitedComponents );
+                        ComponentCheckboxUnchecked( c, visitedComponents );
                     }
                 }
             }
-
-            // Handling OTHER component's defined dependencies based on the change to THIS component.
-            List<Component> theirDependentComponents = new List<Component>();
-            foreach ( Component c in _componentsList )
+            catch ( Exception e )
             {
-                if ( c.IsSelected == true && newCheckboxBool == false && c.Dependencies?.Contains( component.Guid ) == true )
+                Logger.LogException( e );
+            }
+        }
+
+        public void ComponentCheckboxUnchecked( Component component, HashSet<Component> visitedComponents, bool suppressErrors = false )
+        {
+            try
+            {
+                // Check if the component has already been visited
+                if ( visitedComponents.Contains( component ) )
                 {
-                    c.IsSelected = false;
-                    ComponentCheckboxModified( c, false, visitedComponents );
+                    // Conflicting component that cannot be resolved automatically
+                    if ( !suppressErrors )
+                    {
+                        Logger.LogError( $"Component '{component.Name}' has dependencies/restrictions that cannot be resolved automatically!" );
+                    }
                 }
+
+                // handle root item's checkbox
+                TreeViewItem rootItem = LeftTreeView.Items.OfType<TreeViewItem>().FirstOrDefault();
+                if ( rootItem != null )
+                {
+                    DockPanel headerPanel = rootItem.Header as DockPanel;
+                    CheckBox checkBox = headerPanel?.Children.OfType<CheckBox>().FirstOrDefault();
+
+                    if ( checkBox != null && !suppressErrors )
+                    {
+                        checkBox.IsChecked = null;
+                    }
+                }
+
+                // Add the component to the visited set
+                _ = visitedComponents.Add( component );
+
+                Dictionary<string, List<Component>> conflicts = Component.GetConflictingComponents( component.Dependencies, component.Restrictions, _componentsList );
+
+                // Handling OTHER component's defined dependencies based on the change to THIS component.
+                foreach ( Component c in _componentsList )
+                {
+                    if ( c.IsSelected && c.Dependencies?.Contains( component.Guid ) == true )
+                    {
+                        c.IsSelected = false;
+                        ComponentCheckboxUnchecked( c, visitedComponents );
+                    }
+                }
+            }
+            catch ( Exception e )
+            {
+                Logger.LogException( e );
             }
         }
 
@@ -1344,8 +1419,8 @@ namespace KOTORModSync
             var binding = new Binding( "IsSelected" ) { Source = component, Mode = BindingMode.TwoWay };
 
             // Set up the event handler for the checkbox
-            checkBox.Checked += ( sender, e ) => ComponentCheckboxModified( component, true, new HashSet<Component>() );
-            checkBox.Unchecked += ( sender, e ) => ComponentCheckboxModified( component, false, new HashSet<Component>() );
+            checkBox.Checked += ( sender, e ) => ComponentCheckboxChecked( component, new HashSet<Component>() );
+            checkBox.Unchecked += ( sender, e ) => ComponentCheckboxUnchecked( component, new HashSet<Component>() );
 
             if ( ToggleButton.IsCheckedProperty != null )
             {
@@ -1451,7 +1526,7 @@ namespace KOTORModSync
 
                 if ( !( parentItem.Items is AvaloniaList<object> parentItemItems ) )
                 {
-                    throw new NullReferenceException( "parentItem must have a non-nullable Items property and be of type AvaloniaList<object>." );
+                    throw new InvalidCastException( "parentItem must have a non-nullable Items property and be of type AvaloniaList<object>." );
                 }
 
                 TreeViewItem existingItem = FindExistingItem( parentItem, component );
@@ -1462,15 +1537,15 @@ namespace KOTORModSync
                     return;
                 }
 
-                // Remove the second-to-top-level TreeViewItem, if present.
-                if ( parentItem.Parent is ItemsControl secondToTopLevelParent )
+                // Remove the TreeViewItem from the top level LeftTreeView if it needs to be nested as a dependency.
+                if ( parentItem.Parent is ItemsControl parentParentItem )
                 {
-                    AvaloniaList<object> secondToTopLevelItems = (AvaloniaList<object>)secondToTopLevelParent.Items;
-                    TreeViewItem topLevelItem = FindExistingItem( secondToTopLevelParent, component );
+                    AvaloniaList<object> parentParentItems = (AvaloniaList<object>)parentParentItem.Items;
+                    TreeViewItem secondToTopLevelItem = FindExistingItem( parentParentItem, component );
 
-                    if ( topLevelItem != null )
+                    if ( secondToTopLevelItem != null )
                     {
-                        secondToTopLevelItems.Remove( topLevelItem );
+                        _ = parentParentItems.Remove( secondToTopLevelItem );
                     }
                 }
 
@@ -1509,7 +1584,7 @@ namespace KOTORModSync
                 foreach ( Component component in _componentsList )
                 {
                     component.IsSelected = true;
-                    ComponentCheckboxModified( component, true, finishedComponents, suppressErrors: true );
+                    ComponentCheckboxChecked( component, finishedComponents, suppressErrors: true );
                 }
 
                 foreach ( Component component in _componentsList )
@@ -1534,7 +1609,7 @@ namespace KOTORModSync
                 foreach ( Component component in _componentsList )
                 {
                     component.IsSelected = false;
-                    ComponentCheckboxModified( component, false, finishedComponents, suppressErrors: true );
+                    ComponentCheckboxUnchecked( component, finishedComponents, suppressErrors: true );
                 }
             };
 

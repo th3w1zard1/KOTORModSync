@@ -404,7 +404,7 @@ namespace KOTORModSync.Core
             if ( value is string guidStr && typeof( T ) == typeof( Guid ) )
             {
                 guidStr = Serializer.FixGuidString( guidStr );
-                if ( !string.IsNullOrEmpty(guidStr) && Guid.TryParse( guidStr, out Guid guid ))
+                if ( !string.IsNullOrEmpty( guidStr ) && Guid.TryParse( guidStr, out Guid guid ) )
                     return (T)(object)guid;
 
                 if ( required )
@@ -430,7 +430,7 @@ namespace KOTORModSync.Core
                         if ( elementType == typeof( Guid ) && item is string guidString )
                         {
                             guidString = Serializer.FixGuidString( guidString );
-                            if ( !string.IsNullOrEmpty(guidString) )
+                            if ( !string.IsNullOrEmpty( guidString ) )
                                 dynamicList.Add( Guid.Parse( guidString ) );
                             else if ( !required )
                             {

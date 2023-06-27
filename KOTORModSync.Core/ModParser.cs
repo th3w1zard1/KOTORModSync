@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
+using KOTORModSync.Core.Utility;
 
 namespace KOTORModSync.Core
 {
@@ -14,7 +15,7 @@ namespace KOTORModSync.Core
         private const string Separator = "__";
 
         public static List<Component> ParseMods
-            ( string source ) => source.Split( new[] { Separator }, StringSplitOptions.RemoveEmptyEntries )
+            ( string source ) => (List<Component>)source.Split( new[] { Separator }, StringSplitOptions.RemoveEmptyEntries )
             .Select( ParseMod ).ToList();
 
         private static Component ParseMod( string modText )

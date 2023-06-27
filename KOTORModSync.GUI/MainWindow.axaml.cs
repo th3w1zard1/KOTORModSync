@@ -6,6 +6,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -570,6 +571,48 @@ namespace KOTORModSync
                 bool individuallyValidated = true;
                 foreach ( Component component in _componentsList )
                 {
+                    // Confirm that dependencies are all found in InstallBefore and InstallAfter keys:
+                    bool installOrderKeysDefined = component.Dependencies?.All(
+                        item => component.InstallBefore?.Contains( item ) == true
+                            || component.InstallAfter?.Contains( item ) == true
+                    ) == true || component.Dependencies == null;
+
+                    if ( component.Restrictions?.Count > 0 && component.IsSelected )
+                    {
+                        List<Component> restrictedComponentsList = Component.FindComponentsFromGuidList( component.Restrictions, _componentsList );
+                        foreach ( Component restrictedComponent in restrictedComponentsList )
+                        {
+                            if ( restrictedComponent.IsSelected )
+                            {
+                                await Logger.LogErrorAsync(
+                                    $"Cannot install '{component.Name}' due to '{restrictedComponent.Name}' being selected for install."
+                                );
+                                individuallyValidated = false;
+                            }
+                        }
+                    }
+
+                    if ( component.Dependencies?.Count > 0 && component.IsSelected )
+                    {
+                        List<Component> dependencyComponentsList = Component.FindComponentsFromGuidList( component.Restrictions, _componentsList );
+                        foreach ( Component dependencyComponent in dependencyComponentsList )
+                        {
+                            if ( !dependencyComponent.IsSelected )
+                            {
+                                await Logger.LogErrorAsync(
+                                    $"Cannot install '{component.Name}' due to '{dependencyComponent.Name}' not being selected for install."
+                                );
+                                individuallyValidated = false;
+                            }
+                        }
+                    }
+
+                    if ( !installOrderKeysDefined )
+                    {
+                        await Logger.LogErrorAsync( $"'{component.Name}' 'InstallBefore' and 'InstallAfter' keys must be defined for all dependencies." );
+                        individuallyValidated = false;
+                    }
+
                     var validator = new ComponentValidation( component );
                     await Logger.LogVerboseAsync( $" == Validating '{component.Name}' == " );
                     individuallyValidated &= validator.Run();
@@ -683,7 +726,7 @@ namespace KOTORModSync
                 }
 
                 // todo:
-                if ( _currentComponent.Dependencies.Count > 0 )
+                if ( _componentsList.Any(c => c.Dependencies?.Any(g => g == _currentComponent.Guid) == true) )
                 {
                     await InformationDialog.ShowInformationDialog(
                         this,
@@ -1231,7 +1274,10 @@ namespace KOTORModSync
                 var treeViewComponent = (Component)selectedTreeViewItem.Tag;
 
                 int index = _componentsList.IndexOf( treeViewComponent );
-                if ( ( index == 0 && relativeIndex < 0 ) || index == -1 || ( index + relativeIndex == _componentsList.Count ) )
+                if ( treeViewComponent == null
+                    || ( index == 0 && relativeIndex < 0 )
+                    || index == -1
+                    || index + relativeIndex == _componentsList.Count )
                 {
                     return;
                 }
@@ -1239,6 +1285,9 @@ namespace KOTORModSync
                 _ = _componentsList.Remove( treeViewComponent );
                 _componentsList.Insert( index + relativeIndex, treeViewComponent );
                 await ProcessComponentsAsync( _componentsList );
+                await Logger.LogVerboseAsync(
+                    $"Moved '{treeViewComponent.Name}' to index #{_componentsList.IndexOf( treeViewComponent ) + 1}"
+                );
             }
             catch ( Exception ex )
             {
@@ -1293,9 +1342,21 @@ namespace KOTORModSync
                 }
 
                 TreeViewItem rootItem = LeftTreeView.Items.OfType<TreeViewItem>().FirstOrDefault();
-                if ( rootItem != null )
+                if ( rootItem == null )
                 {
-                    WriteTreeViewItemsToFile( new List<TreeViewItem> { rootItem }, filePath );
+                    return;
+                }
+
+                string randomFileName = Path.GetFileNameWithoutExtension( Path.GetRandomFileName() );
+                Logger.Log( $"Creating backup mod config at {filePath}" );
+
+                using ( var writer = new StreamWriter( filePath ) )
+                {
+                    foreach ( Component c in _componentsList )
+                    {
+                        string tomlContents = c.SerializeComponent();
+                        await writer.WriteLineAsync( tomlContents );
+                    }
                 }
             }
             catch ( Exception ex )
@@ -1563,7 +1624,6 @@ namespace KOTORModSync
         {
             var rootItem = new TreeViewItem
             {
-                Tag = componentsList,
                 IsExpanded = true
             };
 
@@ -1595,12 +1655,14 @@ namespace KOTORModSync
                     }
                 }
 
-                if ( !allChecked )
+                if ( allChecked )
                 {
-                    manualSet = true;
-                    checkBox.IsChecked = null;
-                    manualSet = false;
+                    return;
                 }
+
+                manualSet = true;
+                checkBox.IsChecked = null;
+                manualSet = false;
             };
             checkBox.Unchecked += ( sender, e ) =>
             {
@@ -1637,14 +1699,14 @@ namespace KOTORModSync
 
                 try
                 {
-                    (bool isReordered, List<Component> reorderedList) = Component.ConfirmComponentsInstallOrder( _componentsList );
-                    if ( isReordered )
+                    (bool isCorrectOrder, List<Component> reorderedList) = Component.ConfirmComponentsInstallOrder( _componentsList );
+                    if ( !isCorrectOrder )
                     {
                         await Logger.LogVerboseAsync( "Reordered list to match dependency structure." );
                         _componentsList = reorderedList;
                     }
                 }
-                catch ( ArgumentOutOfRangeException e )
+                catch ( KeyNotFoundException )
                 {
                     await InformationDialog.ShowInformationDialog(
                         this,
@@ -1683,41 +1745,7 @@ namespace KOTORModSync
             }
             catch ( Exception ex )
             {
-                Logger.LogException( ex );
-            }
-        }
-
-        private static void WriteTreeViewItemsToFile( List<TreeViewItem> items, string filePath )
-        {
-            string randomFileName = Path.GetFileNameWithoutExtension( Path.GetRandomFileName() );
-            filePath = filePath ?? $"modconfig_{randomFileName}.toml";
-            Logger.Log( $"Creating backup mod config at {filePath}" );
-
-            using ( var writer = new StreamWriter( filePath ) )
-            {
-                foreach ( TreeViewItem item in items )
-                {
-                    WriteTreeViewItemToFile( item, writer, maxDepth: 1 );
-                }
-            }
-        }
-
-        private static void WriteTreeViewItemToFile( ItemsControl item, TextWriter writer, int depth = 0, int maxDepth = int.MaxValue )
-        {
-            if ( item.Tag is Component component )
-            {
-                string tomlContents = component.SerializeComponent();
-                writer.WriteLine( tomlContents );
-            }
-
-            if ( depth >= maxDepth || item.Items == null )
-            {
-                return;
-            }
-
-            foreach ( TreeViewItem childItem in item.Items.OfType<TreeViewItem>() )
-            {
-                WriteTreeViewItemToFile( childItem, writer, depth + 1, maxDepth );
+                await Logger.LogExceptionAsync( ex );
             }
         }
 

@@ -405,8 +405,17 @@ namespace KOTORModSync.Core
 
             Type targetType = value.GetType();
 
-            if ( value is string valueStr && typeof( T ) == typeof( Guid ) && Guid.TryParse( valueStr, out Guid guid ) )
-                return (T)(object)guid;
+            if ( value is string guidStr && typeof( T ) == typeof( Guid ) )
+            {
+                guidStr = Serializer.FixGuidString( guidStr );
+                if ( !string.IsNullOrEmpty(guidStr) && Guid.TryParse( guidStr, out Guid guid ))
+                    return (T)(object)guid;
+
+                if ( required )
+                    throw new ArgumentException( $"'{key}' field is not a valid Guid!" );
+
+                return (T)(object)System.Guid.Empty;
+            }
 
             var valueTomlArray = value as Tomlyn.Model.TomlArray;
             var valueList = value as IList;
@@ -424,7 +433,17 @@ namespace KOTORModSync.Core
                     {
                         if ( elementType == typeof( Guid ) && item is string guidString )
                         {
-                            dynamicList.Add( guidString.Equals( "{}" ) ? System.Guid.Empty : Guid.Parse( guidString ) );
+                            guidString = Serializer.FixGuidString( guidString );
+                            if ( !string.IsNullOrEmpty(guidString) )
+                                dynamicList.Add( Guid.Parse( guidString ) );
+                            else if ( !required )
+                            {
+                                dynamicList.Add( System.Guid.Empty );
+                            }
+                            else
+                            {
+                                throw new ArgumentException( $"'{key}' field is not a list of valid Guids!" );
+                            }
                         }
                         else
                         {
@@ -982,59 +1001,89 @@ namespace KOTORModSync.Core
 
         public static (bool isCorrectOrder, List<Component> reorderedComponents) ConfirmComponentsInstallOrder( List<Component> components )
         {
-            List<Component> orderedComponents = new List<Component>( components );
+            Dictionary<Guid, GraphNode> nodeMap = CreateDependencyGraph( components );
 
-            bool hasChanged;
-            do
+            var visitedNodes = new HashSet<GraphNode>();
+            var orderedComponents = new List<Component>();
+
+            foreach ( GraphNode node in nodeMap.Values )
             {
-                hasChanged = false;
-
-                for ( int i = 0; i < orderedComponents.Count; i++ )
+                if ( !visitedNodes.Contains( node ) )
                 {
-                    Component currentComponent = orderedComponents[i];
-
-                    if ( currentComponent.InstallAfter != null )
-                    {
-                        foreach ( Guid dependencyGuid in currentComponent.InstallAfter )
-                        {
-                            int dependencyIndex = orderedComponents.FindIndex( c => c.Guid == dependencyGuid );
-
-                            if ( dependencyIndex > i )
-                            {
-                                Component dependencyComponent = orderedComponents[dependencyIndex];
-
-                                orderedComponents.RemoveAt( dependencyIndex );
-                                orderedComponents.Insert( i, dependencyComponent );
-
-                                hasChanged = true;
-                            }
-                        }
-                    }
-
-                    if ( currentComponent.InstallBefore != null )
-                    {
-                        foreach ( Guid dependentGuid in currentComponent.InstallBefore )
-                        {
-                            int dependentIndex = orderedComponents.FindIndex( c => c.Guid == dependentGuid );
-
-                            if ( dependentIndex < i )
-                            {
-                                Component dependentComponent = orderedComponents[dependentIndex];
-
-                                orderedComponents.RemoveAt( dependentIndex );
-                                orderedComponents.Insert( i, dependentComponent );
-
-                                hasChanged = true;
-                            }
-                        }
-                    }
+                    DepthFirstSearch( node, visitedNodes, orderedComponents );
                 }
-            } while ( hasChanged );
+            }
 
             bool isCorrectOrder = orderedComponents.SequenceEqual( components );
 
             return (isCorrectOrder, orderedComponents);
         }
+
+        // use a graph traversal algorithm
+        private static void DepthFirstSearch( GraphNode node, HashSet<GraphNode> visitedNodes, List<Component> orderedComponents )
+        {
+            _ = visitedNodes.Add( node );
+
+            foreach ( GraphNode dependency in node.Dependencies )
+            {
+                if ( !visitedNodes.Contains( dependency ) )
+                {
+                    DepthFirstSearch( dependency, visitedNodes, orderedComponents );
+                }
+            }
+
+            orderedComponents.Add( node.Component );
+        }
+
+        private static Dictionary<Guid, GraphNode> CreateDependencyGraph( List<Component> components )
+        {
+            var nodeMap = new Dictionary<Guid, GraphNode>();
+
+            foreach ( Component component in components )
+            {
+                var node = new GraphNode( component );
+                nodeMap[component.Guid] = node;
+            }
+
+            foreach ( Component component in components )
+            {
+                GraphNode node = nodeMap[component.Guid];
+
+                if ( component.InstallAfter != null )
+                {
+                    foreach ( Guid dependencyGuid in component.InstallAfter )
+                    {
+                        GraphNode dependencyNode = nodeMap[dependencyGuid];
+                        _ = node.Dependencies.Add( dependencyNode );
+                    }
+                }
+
+                if ( component.InstallBefore != null )
+                {
+                    foreach ( Guid dependentGuid in component.InstallBefore )
+                    {
+                        GraphNode dependentNode = nodeMap[dependentGuid];
+                        _ = dependentNode.Dependencies.Add( node );
+                    }
+                }
+            }
+
+            return nodeMap;
+        }
+
+        public class GraphNode
+        {
+            public Component Component { get; }
+            public HashSet<GraphNode> Dependencies { get; }
+
+            public GraphNode( Component component )
+            {
+                Component = component;
+                Dependencies = new HashSet<GraphNode>();
+            }
+        }
+
+
 
 
         private List<Option> ChooseOptions( Instruction instruction )
@@ -1250,6 +1299,8 @@ namespace KOTORModSync.Core
             try
             {
                 bool success = true;
+
+                // Confirm that all Dependencies are found in either InstallBefore and InstallAfter:
                 List<string> allArchives = GetAllArchivesFromInstructions( component );
 
                 // probably something wrong if there's no archives found.

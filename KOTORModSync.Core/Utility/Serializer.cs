@@ -88,6 +88,16 @@ namespace KOTORModSync.Core.Utility
             // Remove any whitespace characters
             guidString = Regex.Replace( guidString, @"\s", "" );
 
+            // Remove all non-base16 characters.
+            guidString = Regex.Replace( guidString, @"[^0-9A-Fa-f]", "" );
+
+            // not even close to a guid.
+            if ( guidString.Length != 32 )
+                return string.Empty;
+
+            // Insert necessary dashes between the GUID sections
+            guidString = Regex.Replace( guidString, @"(\w{8})(\w{4})(\w{4})(\w{4})(\w{12})", "$1-$2-$3-$4-$5" );
+
             // Attempt to fix common issues with GUID strings
             if ( !guidString.StartsWith( "{", StringComparison.Ordinal ) )
             {
@@ -96,14 +106,6 @@ namespace KOTORModSync.Core.Utility
 
             if ( !guidString.EndsWith( "}", StringComparison.Ordinal ) ) guidString += "}";
 
-            if ( guidString.IndexOf( '-' ) < 0 )
-            {
-                guidString = Regex.Replace(
-                    guidString,
-                    @"(\w{8})(\w{4})(\w{4})(\w{4})(\w{12})",
-                    "$1-$2-$3-$4-$5"
-                );
-            }
 
             return guidString;
         }

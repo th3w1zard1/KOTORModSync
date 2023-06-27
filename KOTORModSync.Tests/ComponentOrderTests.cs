@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using KOTORModSync.Core;
+using KOTORModSync.Core.Utility;
 
 namespace KOTORModSync.Tests
 {
@@ -194,7 +195,7 @@ namespace KOTORModSync.Tests
             var componentF = new Component { Name = "F", Guid = componentFGuid, InstallAfter = new List<Guid> { componentE.Guid, componentB.Guid }, InstallBefore = null };
             var componentG = new Component { Name = "G", Guid = Guid.NewGuid(), InstallAfter = new List<Guid> { componentD.Guid, componentF.Guid }, InstallBefore = null };
             var componentH = new Component { Name = "H", Guid = Guid.NewGuid(), InstallAfter = null, InstallBefore = new List<Guid> { componentG.Guid } };
-            var componentI = new Component { Name = "I", Guid = Guid.NewGuid(), InstallAfter = null, InstallBefore = new List<Guid> { componentG.Guid } };
+            var componentI = new Component { Name = "I", Guid = Guid.NewGuid(), InstallAfter = new List<Guid> { componentH.Guid }, InstallBefore = new List<Guid> { componentG.Guid } };
             var componentJ = new Component { Name = "J", Guid = Guid.NewGuid(), InstallAfter = new List<Guid> { componentH.Guid, componentI.Guid }, InstallBefore = null };
 
             var unorderedComponentsList = new List<Component>
@@ -239,10 +240,10 @@ namespace KOTORModSync.Tests
             // Act
             try
             {
-                (bool isCorrectOrder, List<Component> reorderedComponents) = Component.ConfirmComponentsInstallOrder( componentsList );
+                Component.ConfirmComponentsInstallOrder( componentsList );
             }
             // Assert
-            catch ( ArgumentOutOfRangeException )
+            catch ( KeyNotFoundException )
             {
                 return;
             }

@@ -41,11 +41,6 @@ namespace KOTORModSync.Core
             ComponentInstallationFailed
         }
 
-        public Component()
-        {
-            IsSelected = true;
-        }
-
         /*
         public DateTime SourceLastModified { get; internal set; }
         public event EventHandler<PropertyChangedEventArgs> PropertyChanged;
@@ -182,6 +177,7 @@ namespace KOTORModSync.Core
             InstallBefore = GetValueOrDefault<List<Guid>>( componentDict, "installbefore" );
             InstallAfter = GetValueOrDefault<List<Guid>>( componentDict, "installafter" );
             ModLink = GetValueOrDefault<string>( componentDict, "modlink" );
+            IsSelected = GetValueOrDefault<bool>( componentDict, "isselected" );
 
             this.Instructions = DeserializeInstructions(
                 GetValueOrDefault<TomlTableArray>( componentDict, "instructions" )
@@ -752,6 +748,7 @@ namespace KOTORModSync.Core
                         }
                         catch ( FileNotFoundException )
                         {
+                            await Logger.LogAsync( "No TSLPatcher log file found!" );
                             exitCode = Instruction.ActionExitCode.TSLPatcherError;
                         }
 

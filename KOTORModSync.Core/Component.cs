@@ -968,7 +968,7 @@ namespace KOTORModSync.Core
             List<Component> foundComponents = new List<Component>();
             foreach ( Guid guidToFind in guidsToFind )
             {
-                Component foundComponent = FindComponentFromGuid(guidToFind, componentsList);
+                Component foundComponent = FindComponentFromGuid( guidToFind, componentsList );
                 if ( foundComponent == null )
                 {
                     continue;

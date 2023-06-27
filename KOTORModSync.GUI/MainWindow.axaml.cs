@@ -795,9 +795,9 @@ namespace KOTORModSync
                         this,
                         $"Would you like to install {_currentComponent.Name}'s dependencies first?"
                     );
-                    if ( installDependencies == true)
+                    if ( installDependencies == true )
                     {
-                        List<Component> dependencyComponents = Component.FindComponentsFromGuidList(_currentComponent.Dependencies, _componentsList);
+                        List<Component> dependencyComponents = Component.FindComponentsFromGuidList( _currentComponent.Dependencies, _componentsList );
                         foreach ( Component dependencyComponent in dependencyComponents )
                         {
                             Component.InstallExitCode dependencyExitCode = await dependencyComponent.InstallAsync( dependencyComponents );

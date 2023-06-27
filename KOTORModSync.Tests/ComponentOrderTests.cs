@@ -91,7 +91,7 @@ namespace KOTORModSync.Tests
 
             // Act
             (bool isCorrectOrder, List<Component> reorderedComponents) = Component.ConfirmComponentsInstallOrder( componentsListExpectedOrder );
-            
+
             // Assert
             foreach ( Component component in reorderedComponents )
             {

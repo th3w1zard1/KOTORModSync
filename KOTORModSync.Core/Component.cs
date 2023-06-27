@@ -258,7 +258,7 @@ namespace KOTORModSync.Core
                 if ( component.Instructions == null ) continue;
 
                 _ = sb.AppendLine();
-                _ = sb.AppendLine( "**Installation Instructions:" );
+                _ = sb.AppendLine( "**Installation Instructions:**" );
                 foreach ( Instruction instruction in component.Instructions.Where(
                              instruction => instruction.Action != "extract"
                          ) )

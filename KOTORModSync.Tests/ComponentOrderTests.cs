@@ -237,21 +237,17 @@ namespace KOTORModSync.Tests
             var componentsList = new List<Component> { componentA, componentB, componentC };
 
             // Act
-            (bool isCorrectOrder, List<Component> reorderedComponents) = Component.ConfirmComponentsInstallOrder( componentsList );
-
-            // Assert
-            foreach ( Component component in reorderedComponents )
+            try
             {
-                int actualIndex = reorderedComponents.FindIndex( c => c.Guid == component.Guid );
-                int expectedIndex = componentsList.FindIndex( c => c.Guid == component.Guid );
-                Assert.That( actualIndex, Is.EqualTo( expectedIndex ), $"Component {component.Name} is out of order." );
+                (bool isCorrectOrder, List<Component> reorderedComponents) = Component.ConfirmComponentsInstallOrder( componentsList );
+            }
+            // Assert
+            catch ( ArgumentOutOfRangeException )
+            {
+                return;
             }
 
-            Assert.Multiple( () =>
-            {
-                Assert.That( isCorrectOrder, Is.False );
-                Assert.That( reorderedComponents, Is.Not.Empty );
-            } );
+            Assert.That( false, Is.True, "ConfirmComponentsInstallOrder should have raised an ArgumentOutOfRangeException" );
         }
 
 

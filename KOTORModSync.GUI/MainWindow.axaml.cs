@@ -974,7 +974,7 @@ namespace KOTORModSync
                                 double percentComplete = (double)index / _componentsList.Count;
                                 progressWindow.ProgressBar.Value = percentComplete;
                                 progressWindow.InstalledRemaining.Text = $"{index}/{_componentsList.Count + 1} Components Installed";
-                                progressWindow.PercentCompleted.Text = $"{Math.Round(percentComplete*100)}%";
+                                progressWindow.PercentCompleted.Text = $"{Math.Round( percentComplete * 100 )}%";
 
 
                                 // Additional fallback options

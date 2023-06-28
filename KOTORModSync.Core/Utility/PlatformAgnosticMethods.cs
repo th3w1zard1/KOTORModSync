@@ -24,7 +24,7 @@ namespace KOTORModSync.Core.Utility
         {
             if ( path == null )
             {
-                throw new ArgumentNullException( nameof(path) );
+                throw new ArgumentNullException( nameof( path ) );
             }
 
             string directoryName = Path.GetDirectoryName( path );
@@ -37,7 +37,7 @@ namespace KOTORModSync.Core.Utility
 
             if ( directoryName == null )
             {
-                return ( null, duplicatePaths );
+                return (null, duplicatePaths);
             }
 
             var directory = new DirectoryInfo( directoryName );
@@ -73,12 +73,12 @@ namespace KOTORModSync.Core.Utility
         {
             if ( str1 == null )
             {
-                throw new ArgumentNullException( nameof(str1) );
+                throw new ArgumentNullException( nameof( str1 ) );
             }
 
             if ( str2 == null )
             {
-                throw new ArgumentNullException( nameof(str2) );
+                throw new ArgumentNullException( nameof( str2 ) );
             }
 
             int matchingCount = 0;

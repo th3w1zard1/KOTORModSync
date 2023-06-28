@@ -236,7 +236,7 @@ namespace KOTORModSync.Tests
         {
             // Arrange
             string filePath = Path.Combine( _testDirectory, "Checksums.json" );
-            var checksums = new Dictionary<string?, string>();
+            var checksums = new Dictionary<string, string>();
             checksums.Add( _testDirectory, FileChecksumValidator.Sha1ToString( SHA1.Create() ) );
 
             // Convert the directory paths to DirectoryInfo objects

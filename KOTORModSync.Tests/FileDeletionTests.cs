@@ -80,17 +80,15 @@ namespace KOTORModSync.Tests
         }
 
         [Test]
-        public void DeleteDuplicateFile_DuplicateFilesWithSameExtension_AllDuplicatesDeleted()
+        public void DeleteDuplicateFile_CaseInsensitiveFileNames_DuplicatesDeleted()
         {
             // Arrange
             string directory = Path.Combine( _testDirectory, "Duplicates" );
             _ = Directory.CreateDirectory( directory );
-            string file1 = Path.Combine( directory, "file.txt" );
-            string file2 = Path.Combine( directory, "file (1).txt" );
-            string file3 = Path.Combine( directory, "file (2).txt" );
+            string file1 = Path.Combine( directory, "FILE.Txt" );
+            string file2 = Path.Combine( directory, "fIle.tPc" );
             File.WriteAllText( file1, "Content 1" );
             File.WriteAllText( file2, "Content 2" );
-            File.WriteAllText( file3, "Content 3" );
             string fileExtension = ".txt";
 
             // Act
@@ -102,7 +100,6 @@ namespace KOTORModSync.Tests
                 {
                     Assert.That( !File.Exists( file1 ) );
                     Assert.That( File.Exists( file2 ) );
-                    Assert.That( File.Exists( file3 ) );
                 }
             );
         }

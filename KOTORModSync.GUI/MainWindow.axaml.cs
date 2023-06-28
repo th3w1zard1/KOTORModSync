@@ -623,7 +623,7 @@ namespace KOTORModSync
                 {
                     informationMessage = "Your components are not in the correct order."
                         + " There are specific mods found that need to be installed either before or after another or more mods."
-                        + " Please rerun the validator with 'Attempt Fixes' enabled.";
+                        + " Please ensure the correct order, or rerun the validator with 'Attempt Fixes' enabled.";
                     await Logger.LogErrorAsync( informationMessage );
                 }
 
@@ -657,8 +657,10 @@ namespace KOTORModSync
 
                 if ( informationMessage.Equals( string.Empty ) )
                 {
-                    return (true, "No issues found."
-                        + " If you encounter any problems during the installation, please contact the developer.");
+                    return (
+                        true,
+                        "No issues found. If you encounter any problems during the installation, please contact the developer."
+                    );
                 }
 
                 return (false, informationMessage);

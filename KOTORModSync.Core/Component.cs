@@ -1605,7 +1605,7 @@ namespace KOTORModSync.Core
                 // Check if the archive name matches the first portion of the sourcePath
                 string archiveName = Path.GetFileNameWithoutExtension( archivePath );
                 string[] pathParts = sourcePath.Split( Path.DirectorySeparatorChar );
-                archiveNameFound = FileHelper.WildcardMatch( archiveName, pathParts[0] );
+                archiveNameFound = FileHelper.WildcardPathMatch( archiveName, pathParts[0] );
 
                 ArchivePathCode code = IsPathInArchive( sourcePath, archivePath );
 
@@ -1651,6 +1651,10 @@ namespace KOTORModSync.Core
                 return ArchivePathCode.NotAnArchive;
             }
 
+            // todo: self-extracting 7z executables
+            if ( Path.GetExtension( archivePath ) == ".exe" )
+                return ArchivePathCode.FoundSuccessfully;
+
             using ( FileStream stream = File.OpenRead( archivePath ) )
             {
                 IArchive archive = null;
@@ -1674,10 +1678,10 @@ namespace KOTORModSync.Core
                 }
 
                 // everything is extracted to a new directory named after the archive.
-                string archiveNameAppend = Path.GetFileNameWithoutExtension( archivePath ) + Path.DirectorySeparatorChar;
+                string archiveNameAppend = Path.GetFileNameWithoutExtension( archivePath );
 
                 // if the Source key represents the top level extraction directory, check that first.
-                if ( FileHelper.WildcardMatch( archiveNameAppend, relativePath ) )
+                if ( FileHelper.WildcardPathMatch( archiveNameAppend, relativePath ) )
                 {
                     return ArchivePathCode.FoundSuccessfully;
                 }
@@ -1687,7 +1691,10 @@ namespace KOTORModSync.Core
                 foreach ( IArchiveEntry entry in archive.Entries )
                 {
                     // Append extracted directory and ensure every slash is a backslash.
-                    string itemInArchivePath = archiveNameAppend + entry.Key.Replace( Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar );
+                    string itemInArchivePath = archiveNameAppend
+                        + Path.DirectorySeparatorChar
+                        + entry.Key
+                            .Replace( Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar );
 
                     // Some archives loop through folders while others don't.
                     // Check if itemInArchivePath has an extension to determine folderName.
@@ -1700,7 +1707,7 @@ namespace KOTORModSync.Core
                     }
 
                     // Check if itemInArchivePath matches relativePath using wildcard matching.
-                    if ( FileHelper.WildcardMatch( itemInArchivePath, relativePath ) )
+                    if ( FileHelper.WildcardPathMatch( itemInArchivePath, relativePath ) )
                     {
                         return ArchivePathCode.FoundSuccessfully;
                     }
@@ -1709,7 +1716,7 @@ namespace KOTORModSync.Core
                 // check if instruction.Source matches a folder.
                 foreach ( string folderPath in folderPaths )
                 {
-                    if ( FileHelper.WildcardMatch( folderPath, relativePath ) )
+                    if ( FileHelper.WildcardPathMatch( folderPath, relativePath ) )
                     {
                         return ArchivePathCode.FoundSuccessfully;
                     }

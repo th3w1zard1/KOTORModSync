@@ -594,7 +594,7 @@ namespace KOTORModSync
 
                     if ( component.Dependencies?.Count > 0 && component.IsSelected )
                     {
-                        List<Component> dependencyComponentsList = Component.FindComponentsFromGuidList( component.Restrictions, _componentsList );
+                        List<Component> dependencyComponentsList = Component.FindComponentsFromGuidList( component.Dependencies, _componentsList );
                         foreach ( Component dependencyComponent in dependencyComponentsList )
                         {
                             if ( !dependencyComponent.IsSelected )

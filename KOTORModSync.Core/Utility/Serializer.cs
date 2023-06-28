@@ -547,7 +547,7 @@ namespace KOTORModSync.Core.Utility
                             : SearchOption.AllDirectories
                     );
 
-                    result.AddRange( checkFiles.Where( thisFile => WildcardMatch( thisFile, formattedPath ) ) );
+                    result.AddRange( checkFiles.Where( thisFile => WildcardPathMatch( thisFile, formattedPath ) ) );
                 }
                 catch ( Exception ex )
                 {
@@ -561,7 +561,7 @@ namespace KOTORModSync.Core.Utility
 
         private static bool ContainsWildcards( string path ) => path.Contains( '*' ) || path.Contains( '?' );
 
-        public static bool WildcardMatch( string input, string patternInput )
+        public static bool WildcardPathMatch( string input, string patternInput )
         {
             // Fix path formatting
             input = Serializer.FixPathFormatting( input );
@@ -590,7 +590,7 @@ namespace KOTORModSync.Core.Utility
                 }
 
                 // Check if the current level matches the pattern
-                if ( !WildcardMatchLevel( inputLevel, patternLevel ) )
+                if ( !WildcardMatch( inputLevel, patternLevel ) )
                 {
                     return false;
                 }
@@ -599,15 +599,16 @@ namespace KOTORModSync.Core.Utility
             return true;
         }
 
-        private static bool WildcardMatchLevel( string input, string pattern )
+        // Most end users don't know Regex, this function will convert basic wildcards to regex patterns.
+        private static bool WildcardMatch( string input, string pattern )
         {
             // Escape special characters in the pattern
             pattern = Regex.Escape( pattern );
 
             // Replace * with .* and ? with . in the pattern
             pattern = pattern
-                .Replace( $"{Path.DirectorySeparatorChar}*", ".*" )
-                .Replace( $"{Path.DirectorySeparatorChar}?", "." );
+                .Replace( @"\*", ".*" )
+                .Replace( @"\?", "." );
 
             // Use regex to perform the wildcard matching
             return Regex.IsMatch( input, $"^{pattern}$" );

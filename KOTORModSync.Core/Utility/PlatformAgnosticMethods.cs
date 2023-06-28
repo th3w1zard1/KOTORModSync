@@ -19,6 +19,85 @@ namespace KOTORModSync.Core.Utility
 {
     public static class PlatformAgnosticMethods
     {
+        public static (FileSystemInfo, List<string>) GetClosestMatchingEntry(
+            [NotNull] string path )
+        {
+            if ( path == null )
+            {
+                throw new ArgumentNullException( nameof(path) );
+            }
+
+            string directoryName = Path.GetDirectoryName( path );
+            string searchPattern = Path.GetFileName( path );
+
+            FileSystemInfo closestMatch = null;
+            int maxMatchingCharacters = -1;
+            List<string> duplicatePaths = new List<string>();
+
+
+            if ( directoryName == null )
+            {
+                return ( null, duplicatePaths );
+            }
+
+            var directory = new DirectoryInfo( directoryName );
+            foreach ( FileSystemInfo entry in directory.EnumerateFileSystemInfos( searchPattern ) )
+            {
+                if ( string.IsNullOrWhiteSpace( entry?.FullName ) )
+                {
+                    continue;
+                }
+
+                int matchingCharacters = GetMatchingCharactersCount( entry.FullName, path );
+                if ( matchingCharacters == path.Length )
+                {
+                    // Exact match found
+                    closestMatch = entry;
+                }
+                else if ( matchingCharacters > maxMatchingCharacters )
+                {
+                    closestMatch = entry;
+                    maxMatchingCharacters = matchingCharacters;
+                    duplicatePaths.Clear();
+                }
+                else if ( matchingCharacters == maxMatchingCharacters )
+                {
+                    duplicatePaths.Add( entry.FullName );
+                }
+            }
+
+            return (closestMatch, duplicatePaths);
+        }
+
+        private static int GetMatchingCharactersCount( [NotNull] string str1, [NotNull] string str2 )
+        {
+            if ( str1 == null )
+            {
+                throw new ArgumentNullException( nameof(str1) );
+            }
+
+            if ( str2 == null )
+            {
+                throw new ArgumentNullException( nameof(str2) );
+            }
+
+            int matchingCount = 0;
+
+            for ( int i = 0; i < str1.Length && i < str2.Length; i++ )
+            {
+                if ( str1[i] == str2[i] )
+                {
+                    matchingCount++;
+                }
+                else
+                {
+                    break;
+                }
+            }
+
+            return matchingCount;
+        }
+
         public static async Task<int> CalculateMaxDegreeOfParallelismAsync( DirectoryInfo thisDir )
         {
             int maxParallelism = Environment.ProcessorCount; // Start with the number of available processors

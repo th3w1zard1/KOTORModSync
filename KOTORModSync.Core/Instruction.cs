@@ -122,32 +122,32 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
         // This method will replace custom variables such as <<modDirectory>> and <<kotorDirectory>> with their actual paths.
         // This method should not be ran before an instruction is executed.
         // Otherwise we risk deserializing a full path early, which can lead to unsafe config injections. (e.g. malicious config file targeting sys files)
-        // ^ perhaps the above is user error though? Either way, we attempt to baby them here.
+        // ^ perhaps the above is user error though? User should check what they are running in advance perhaps? Either way, we attempt to baby them here.
         public void SetRealPaths( bool noValidate = false )
         {
-            RealSourcePaths
-                = Source.ConvertAll( Utility.Utility.ReplaceCustomVariables );
-            // Enumerate the files/folders with wildcards and add them to the list
+            // Get real path then enumerate the files/folders with wildcards and add them to the list
+            RealSourcePaths = Source.ConvertAll( Utility.Utility.ReplaceCustomVariables );
             RealSourcePaths = FileHelper.EnumerateFilesWithWildcards( RealSourcePaths );
 
-            if ( Destination == null )
+            if ( Destination != null )
             {
-                if ( !noValidate && RealSourcePaths.Count == 0 )
+                var destinationPath = new DirectoryInfo(
+                    Utility.Utility.ReplaceCustomVariables( Destination )
+                );
+                if ( !destinationPath.Exists )
                 {
-                    throw new Exception( $"Could not find any files! Source: [{string.Join( ", ", Source )}]" );
+                    (FileSystemInfo caseSensitiveDestination, List<string> isMultiple) = PlatformAgnosticMethods.GetClosestMatchingEntry( destinationPath.FullName );
+
+                    destinationPath = (DirectoryInfo)caseSensitiveDestination
+                        ?? throw new DirectoryNotFoundException( "Could not find the 'Destination' path!" );
                 }
 
-                return;
+                RealDestinationPath = destinationPath;
             }
-
-            RealDestinationPath = new DirectoryInfo(
-                Utility.Utility.ReplaceCustomVariables( Destination )
-                ?? throw new InvalidOperationException( "No destination set!" )
-            );
 
             if ( !noValidate && RealSourcePaths.Count == 0 )
             {
-                throw new Exception( $"Could not find any files! Source: [{string.Join( ", ", Source )}]" );
+                throw new FileNotFoundException( $"Could not find any files in the 'Source' path! Got [{string.Join( ", ", Source )}]" );
             }
         }
 

@@ -327,7 +327,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
             }
 
             string[] files = Directory.GetFiles( directoryPath.FullName );
-            var fileNameCounts = new Dictionary<string, int>();
+            var fileNameCounts = new Dictionary<string, int>( StringComparer.OrdinalIgnoreCase ); ;
 
             foreach ( string filePath in files )
             {

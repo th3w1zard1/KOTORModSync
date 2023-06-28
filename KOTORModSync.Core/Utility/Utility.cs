@@ -44,13 +44,14 @@ namespace KOTORModSync.Core.Utility
 
             try
             {
-                using ( FileStream fs = File.Create(
-                           Path.Combine( dirPath.FullName, Path.GetRandomFileName() ),
-                           1,
-                           FileOptions.DeleteOnClose
-                       ) )
-                {
-                }
+                using (
+                    File.Create(
+                        Path.Combine( dirPath.FullName, Path.GetRandomFileName() ),
+                        1,
+                        FileOptions.DeleteOnClose
+                    )
+                )
+                { }
 
                 return true;
             }
@@ -63,8 +64,8 @@ namespace KOTORModSync.Core.Utility
                 Logger.LogException( ex );
                 Logger.Log( $"The pathname is too long: '{dirPath.FullName}'" );
                 Logger.Log(
-                    "Please utilize the registry patch that increases the Windows legacy path limit of 260 characters"
-                    + " or move your KOTOR2 installation to a shorter directory path."
+                    "Please utilize the registry patch that increases the Windows legacy path limit higher than 260 characters"
+                    + " or move your folder/file above to a shorter directory path."
                 );
             }
             catch ( IOException ex )

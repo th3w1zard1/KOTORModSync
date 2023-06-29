@@ -571,6 +571,10 @@ namespace KOTORModSync
                 bool individuallyValidated = true;
                 foreach ( Component component in _componentsList )
                 {
+                    if ( !component.IsSelected )
+                        continue;
+
+
                     // Confirm that dependencies are all found in InstallBefore and InstallAfter keys:
                     bool installOrderKeysDefined = component.Dependencies?.All(
                         item => component.InstallBefore?.Contains( item ) == true
@@ -1614,7 +1618,7 @@ namespace KOTORModSync
             }
         }
 
-        private TreeViewItem CreateRootTreeViewItem( List<Component> componentsList )
+        private TreeViewItem CreateRootTreeViewItem()
         {
             var rootItem = new TreeViewItem
             {
@@ -1712,7 +1716,7 @@ namespace KOTORModSync
                 }
 
                 // Create the root item for the tree view
-                TreeViewItem rootItem = CreateRootTreeViewItem( componentsList );
+                TreeViewItem rootItem = CreateRootTreeViewItem();
 
                 // Iterate over the components and create tree view items
                 foreach ( Component component in componentsList )

@@ -823,6 +823,8 @@ namespace KOTORModSync
                     return;
                 }
 
+                string name = _currentComponent.Name; // use correct name even if user clicks another component.
+
                 bool? confirm = await ConfirmationDialog.ShowConfirmationDialog(
                     this,
                     _currentComponent.Directions + Environment.NewLine
@@ -831,9 +833,19 @@ namespace KOTORModSync
                 );
                 if ( confirm != true )
                 {
-                    await Logger.LogAsync( $"User cancelled install of '{_currentComponent.Name}'" );
+                    await Logger.LogAsync( $"User cancelled install of '{name}'" );
                     return;
                 }
+
+
+
+                var validator = new ComponentValidation( _currentComponent );
+                await Logger.LogVerboseAsync( $" == Validating '{name}' == " );
+                if ( !validator.Run() )
+                    await InformationDialog.ShowInformationDialog(
+                        this,
+                        "This component could not be validated, please check the output window."
+                    );
 
                 try
                 {
@@ -850,7 +862,7 @@ namespace KOTORModSync
                     {
                         await InformationDialog.ShowInformationDialog(
                             this,
-                            $"There was a problem installing '{_currentComponent.Name}':"
+                            $"There was a problem installing '{name}':"
                             + Environment.NewLine
                             + Utility.GetEnumDescription( exitCode )
                             + Environment.NewLine
@@ -860,7 +872,7 @@ namespace KOTORModSync
                     }
                     else
                     {
-                        await Logger.LogAsync( $"Successfully installed '{_currentComponent.Name}'" );
+                        await Logger.LogAsync( $"Successfully installed '{name}'" );
                     }
                 }
                 catch ( Exception )

@@ -547,7 +547,8 @@ namespace KOTORModSync.Core.Utility
                         using ( AutoResetEvent outputWaitHandle = new AutoResetEvent( false ) )
                         using ( AutoResetEvent errorWaitHandle = new AutoResetEvent( false ) )
                         {
-                            process.OutputDataReceived += ( sender, e ) => {
+                            process.OutputDataReceived += ( sender, e ) =>
+                            {
                                 if ( e.Data == null )
                                 {
                                     _ = outputWaitHandle.Set();
@@ -574,7 +575,7 @@ namespace KOTORModSync.Core.Utility
                                 throw new InvalidOperationException( "Failed to start the process." );
                             }
 
-                            if ( process.StartInfo.RedirectStandardOutput)
+                            if ( process.StartInfo.RedirectStandardOutput )
                                 process.BeginOutputReadLine();
                             if ( process.StartInfo.RedirectStandardError )
                                 process.BeginErrorReadLine();

@@ -839,37 +839,6 @@ namespace KOTORModSync
                 {
                     _installRunning = true;
 
-
-                    bool? installDependencies = await ConfirmationDialog.ShowConfirmationDialog(
-                        this,
-                        $"Would you like to install {_currentComponent.Name}'s dependencies first?"
-                    );
-                    if ( installDependencies == true )
-                    {
-                        List<Component> dependencyComponents = Component.FindComponentsFromGuidList( _currentComponent.Dependencies, _componentsList );
-                        foreach ( Component dependencyComponent in dependencyComponents )
-                        {
-                            Component.InstallExitCode dependencyExitCode = await dependencyComponent.InstallAsync( dependencyComponents );
-
-                            if ( dependencyExitCode != 0 )
-                            {
-                                await InformationDialog.ShowInformationDialog(
-                                    this,
-                                    $"There was a problem installing '{_currentComponent.Name}':"
-                                    + Environment.NewLine
-                                    + Utility.GetEnumDescription( dependencyExitCode )
-                                    + Environment.NewLine
-                                    + Environment.NewLine
-                                    + " Check the output window for details."
-                                );
-                            }
-                            else
-                            {
-                                await Logger.LogAsync( $"Successfully installed '{_currentComponent.Name}'" );
-                            }
-                        }
-                    }
-
                     Component.InstallExitCode exitCode = await Task.Run(
                         () => _currentComponent.InstallAsync(
                             _componentsList
@@ -928,29 +897,30 @@ namespace KOTORModSync
                     return;
                 }
 
+                if ( await ConfirmationDialog.ShowConfirmationDialog(
+                        this,
+                        "WARNING! While there is code in place to prevent incorrect instructions from running,"
+                        + $" the program cannot predict every possible mistake a user could make in a config file.{Environment.NewLine}"
+                        + " Additionally, the modbuild can be 20GB or larger! As a result, we cannot create any backups."
+                        + " Please ensure you've backed up your Install directory"
+                        + $" and you've ensured you're running a Vanilla installation.{Environment.NewLine}{Environment.NewLine}"
+                        + " Are you sure you're ready to continue?"
+                    )
+                    != true )
+                {
+                    return;
+                }
+
+                if ( await ConfirmationDialog.ShowConfirmationDialog( this, "Really install all mods?" ) != true )
+                {
+                    return;
+                }
+
+
                 try
                 {
                     _ = Logger.LogAsync( "Start installing all mods..." );
                     _installRunning = true;
-
-                    if ( await ConfirmationDialog.ShowConfirmationDialog( this, "Really install all mods?" ) != true )
-                    {
-                        return;
-                    }
-
-                    if ( await ConfirmationDialog.ShowConfirmationDialog(
-                            this,
-                            "WARNING! While there is code in place to prevent incorrect instructions from running,"
-                            + $" the program cannot predict every possible mistake a user could make in a config file.{Environment.NewLine}"
-                            + " Additionally, the modbuild can be 20GB or larger! As a result, we cannot create any backups."
-                            + " Please ensure you've backed up your Install directory"
-                            + $" and you've ensured you're running a Vanilla installation.{Environment.NewLine}{Environment.NewLine}"
-                            + " Are you sure you're ready to continue?"
-                        )
-                        != true )
-                    {
-                        return;
-                    }
 
                     var progressWindow = new ProgressWindow();
                     progressWindow.Closed += ProgressWindowClosed;

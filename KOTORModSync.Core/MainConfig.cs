@@ -59,12 +59,11 @@ namespace KOTORModSync.Core
             [Description( "Use TSLPatcher" )]
             TSLPatcher = 0,
 
-            [Category( "Not Tested - use as own risk" )]
-            [Description( "Use TSLPatcherCLI" )]
-            TSLPatcherCLI = 1, // not tested
+            [Description( "Use TSLPatcherCLI (not tested)" )]
+            TSLPatcherCLI = 1,
 
-            //[Description( "Use HoloPatcher" )]
-            //HoloPatcher = 2
+            [Description( "Use PyKotorCLI" )]
+            PyKotorCLI = 2,
         }
 
         public IEnumerable<AvailablePatchers> AllAvailablePatchers
@@ -109,13 +108,21 @@ namespace KOTORModSync.Core
         public AvailablePatchers patcherOption
         {
             get => PatcherOption;
-            set => PatcherOption = value;
+            set
+            {
+                PatcherOption = value;
+                OnPropertyChanged();
+            }
         }
 
         public CompatibilityLevel currentCompatibilityLevel
         {
             get => CurrentCompatibilityLevel;
-            set => CurrentCompatibilityLevel = value;
+            set
+            {
+                CurrentCompatibilityLevel = value;
+                OnPropertyChanged();
+            }
         }
 
         public bool debugLogging

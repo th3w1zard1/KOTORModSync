@@ -389,15 +389,6 @@ namespace KOTORModSync.Core.Utility
     [SuppressMessage( "ReSharper", "UnusedMember.Local" )]
     public static class FileHelper
     {
-        public static string ResourcesDirectory
-        {
-            get
-            {
-                string outputDirectory = Path.GetDirectoryName( Assembly.GetExecutingAssembly().Location );
-                return outputDirectory ?? throw new ArgumentNullException( nameof( outputDirectory ) );
-            }
-        }
-
         [CanBeNull]
         public static string GetFolderName( string itemInArchivePath )
             => Path.HasExtension( itemInArchivePath )
@@ -426,6 +417,8 @@ namespace KOTORModSync.Core.Utility
                 {
                     continue;
                 }
+
+                Logger.Log( "Found" );
 
                 // Use Regex.Replace to replace the pattern with "LookupGameFolder=0" (ignoring whitespace)
                 fileContents = Regex.Replace( fileContents, pattern, "LookupGameFolder=0" );

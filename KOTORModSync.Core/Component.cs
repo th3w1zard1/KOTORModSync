@@ -716,42 +716,13 @@ namespace KOTORModSync.Core
                         exitCode = instruction.MoveFile();
                         break;
                     case "rename":
-                        instruction.SetRealPaths();
                         exitCode = instruction.RenameFile();
                         break;
                     case "patch":
                     case "holopatcher":
                     case "tslpatcher":
                         instruction.SetRealPaths();
-                        switch ( MainConfig.PatcherOption )
-                        {
-                            case MainConfig.AvailablePatchers.TSLPatcher:
-                                exitCode = await instruction.ExecuteProgramAsync();
-                                break;
-                            case MainConfig.AvailablePatchers.TSLPatcherCLI:
-                                exitCode = await instruction.ExecuteTSLPatcherAsync();
-                                break;
-                            /*case MainConfig.AvailablePatchers.HoloPatcher:
-                                throw new NotImplementedException();*/
-                            default:
-                                throw new InvalidOperationException();
-                        }
-
-                        try
-                        {
-                            List<string> installErrors = instruction.VerifyInstall();
-                            if ( installErrors.Count > 0 )
-                            {
-                                await Logger.LogAsync( string.Join( Environment.NewLine, installErrors ) );
-                                exitCode = Instruction.ActionExitCode.TSLPatcherError;
-                            }
-                        }
-                        catch ( FileNotFoundException )
-                        {
-                            await Logger.LogAsync( "No TSLPatcher log file found!" );
-                            exitCode = Instruction.ActionExitCode.TSLPatcherError;
-                        }
-
+                        exitCode = await instruction.ExecuteTSLPatcherAsync();
                         break;
                     case "execute":
                     case "run":
@@ -896,7 +867,7 @@ namespace KOTORModSync.Core
                 }
 
 
-                if ( isInstall )
+                if ( isInstall && dependencyConflicts.Count > 0 )
                 {
                     Logger.LogWarning(
                         $"Skipping, required components not selected for install: [{string.Join( ",", dependencyConflicts.Select( component => component.Name ).ToList() )}]"
@@ -923,7 +894,7 @@ namespace KOTORModSync.Core
                     }
                 }
 
-                if ( isInstall )
+                if ( isInstall && restrictionConflicts.Count > 0)
                 {
                     Logger.LogWarning(
                         $"Skipping due to restricted components in install queue: [{string.Join( ",", restrictionConflicts.Select( component => component.Name ).ToList() )}]"

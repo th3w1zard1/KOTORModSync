@@ -239,7 +239,6 @@
 				<ComboBox
                     Items="{Binding AllAvailablePatchers}"
                     SelectedItem="{Binding patcherOption, Mode=TwoWay, Converter={StaticResource EnumConverter}}"
-                    ToolTip.Tip="TSLPatcherCLI is NOT tested - use at own risk"
                     Margin="0"
                     IsTabStop="True"/>
                 <TextBlock Text="Compatibility Enforcement Level:" ToolTip.Tip="Determines which mods will be skipped."/>

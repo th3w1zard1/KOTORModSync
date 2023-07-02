@@ -468,34 +468,7 @@ namespace KOTORModSync.Core.Utility
                     ? await process.StandardError.ReadToEndAsync()
                     : null;
 
-                if ( process.ExitCode == 0 && string.IsNullOrEmpty( error ) )
-                {
-                    tcs.SetResult( (process.ExitCode, output, error) );
-                    return;
-                }
-
-                string logMessage = string.Empty;
-                if ( process.ExitCode != 0 )
-                {
-                    logMessage += $"Process failed with exit code {process.ExitCode}. ";
-                }
-
-                var logBuilder = new StringBuilder( logMessage );
-
-                if ( output != null )
-                {
-                    _ = logBuilder.Append( "Output: " ).AppendLine( output );
-                }
-
-                if ( error != null )
-                {
-                    _ = logBuilder.Append( "Error: " ).AppendLine( error );
-                }
-
-                await Logger.LogAsync( logBuilder.ToString() );
-
-                // Process had an error of some sort even though ExitCode is 0?
-                tcs.SetResult( (-3, output, error) );
+                tcs.SetResult( (process.ExitCode, output, error) );
             }
             catch ( Exception e )
             {
@@ -529,7 +502,6 @@ namespace KOTORModSync.Core.Utility
                 ProcessStartInfo startInfo = processStartInfosWithFallbacks[index];
                 try
                 {
-                    // K1CP can take ages to install, set the timeout time to an hour.
                     using ( var cancellationTokenSource = new CancellationTokenSource( timeout ) )
                     using ( var process = new Process() )
                     {
@@ -539,11 +511,6 @@ namespace KOTORModSync.Core.Utility
                         }
 
                         process.StartInfo = startInfo;
-
-                        var tcs = new TaskCompletionSource<(int, string, string)>();
-
-                        process.Exited += async
-                            ( sender, args ) => await HandleProcessExitedAsync( (Process)sender, tcs );
 
                         // Handle cancellation using CancellationToken
                         if ( timeout > 0 )
@@ -563,8 +530,6 @@ namespace KOTORModSync.Core.Utility
                                     {
                                         localProcess.Kill();
                                     }
-
-                                    _ = tcs.TrySetCanceled();
                                 }
                                 catch ( Exception cancellationException )
                                 {
@@ -575,23 +540,54 @@ namespace KOTORModSync.Core.Utility
                             _ = cancellationTokenSource.Token.Register( Callback );
                         }
 
-                        process.EnableRaisingEvents = true;
-
                         // Start the process
-                        startedProcess = process.Start();
-                        if ( !startedProcess )
-                        {
-                            throw new InvalidOperationException( "Failed to start the process." );
-                        }
+                        StringBuilder output = new StringBuilder();
+                        StringBuilder error = new StringBuilder();
 
-                        _ = await tcs.Task;
+                        using ( AutoResetEvent outputWaitHandle = new AutoResetEvent( false ) )
+                        using ( AutoResetEvent errorWaitHandle = new AutoResetEvent( false ) )
+                        {
+                            process.OutputDataReceived += ( sender, e ) => {
+                                if ( e.Data == null )
+                                {
+                                    _ = outputWaitHandle.Set();
+                                }
+                                else
+                                {
+                                    _ = output.AppendLine( e.Data );
+                                }
+                            };
+                            process.ErrorDataReceived += ( sender, e ) =>
+                            {
+                                if ( e.Data == null )
+                                {
+                                    _ = errorWaitHandle.Set();
+                                }
+                                else
+                                {
+                                    _ = error.AppendLine( e.Data );
+                                }
+                            };
+
+                            if ( !process.Start() )
+                            {
+                                throw new InvalidOperationException( "Failed to start the process." );
+                            }
+
+                            if ( process.StartInfo.RedirectStandardOutput)
+                                process.BeginOutputReadLine();
+                            if ( process.StartInfo.RedirectStandardError )
+                                process.BeginErrorReadLine();
+
+                            process.WaitForExit();
+                        }
 
                         if ( timeout > 0 && cancellationTokenSource.Token.IsCancellationRequested )
                         {
                             throw new TimeoutException( "Process timed out" );
                         }
 
-                        return tcs.Task.Result;
+                        return (process.ExitCode, output.ToString(), error.ToString());
                     }
                 }
                 catch ( Win32Exception localException )

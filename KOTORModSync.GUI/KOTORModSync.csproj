@@ -101,8 +101,14 @@
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent" Condition=" '$(OS)' == 'Windows_NT'">
 
-    <Exec Condition=" '$(OS)' == 'Windows_NT'" Command="xcopy /Y $(SolutionDir)vendor\lib\TSLPatcherCLI.exe $(TargetDir)" />
-    <Exec Condition=" '$(IsLinux)' == 'true'" Command="cp -f $(SolutionDir)vendor\lib\TSLPatcherCLI.exe $(TargetDir)" />
+    <Exec Condition=" '$(OS)' == 'Windows_NT'" Command="xcopy /Y $(SolutionDir)vendor\bin\TSLPatcherCLI.exe $(TargetDir)" />
+    <Exec Condition=" '$(IsLinux)' == 'true'" Command="cp -f $(SolutionDir)vendor/bin/TSLPatcherCLI.exe $(TargetDir)" />
+
+    <Exec Condition=" '$(OS)' == 'Windows_NT'" Command="xcopy /Y $(SolutionDir)vendor\bin\pykotorcli.exe $(TargetDir)" />
+    <Exec Condition=" '$(IsLinux)' == 'true'" Command="cp -f $(SolutionDir)vendor/bin/pykotorcli.exe $(TargetDir)" />
+
+    <Exec Condition=" '$(OS)' == 'Windows_NT'" Command="xcopy /Y $(SolutionDir)vendor\bin\pykotorcli $(TargetDir)" />
+    <Exec Condition=" '$(IsLinux)' == 'true'" Command="cp -f $(SolutionDir)vendor/bin/pykotorcli $(TargetDir)" />
 
     <!-- WindowsDeleteString returntype changes from int to IntPtr HRESULT after net framework 4.x.x, replace with our patches. -->
     <Exec Condition=" '$(OS)' == 'Windows_NT' AND '$(Platform)'=='x86' AND '$(TargetFramework)' == 'net462' "
@@ -134,7 +140,7 @@
     <Exec Condition=" '$(IsLinux)' == 'true'" Command="mv $(TargetDir)\*.log $(SolutionDir)\logs_and_data_saved_from_dotnet_clean" />
   </Target>
 
-  <!-- Zip everything up for a release -->
+  <!-- Zip everything up for a release. Doesn't work yet. -->
   <Target Name="Zip" AfterTargets="Publish">
     <PropertyGroup>
       <TargetFolders>$(TargetDir)</TargetFolders>

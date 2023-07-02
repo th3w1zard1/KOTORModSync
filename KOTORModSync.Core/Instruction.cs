@@ -6,7 +6,9 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
+using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
@@ -107,6 +109,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
             UnknownInnerError,
             TSLPatcherError,
             UnknownInstruction,
+            TSLPatcherLogNotFound
         }
 
         public void SetParentComponent( Component parentComponent ) =>
@@ -286,7 +289,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                                         _ = Logger.LogWarningAsync(
                                             $"Skipping file '{reader.Entry.Key}' due to lack of permissions."
                                         );
-                                        exitCode = ActionExitCode.UnauthorizedAccessException;
+                                        //exitCode = ActionExitCode.UnauthorizedAccessException;
                                     }
                                 }
                             }
@@ -578,57 +581,102 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
             {
                 foreach ( string t in RealSourcePaths )
                 {
-                    string tslPatcherPath = t;
-                    DirectoryInfo tslPatcherDirectory;
+                    DirectoryInfo tslPatcherDirectory = Path.HasExtension( t )
+                        ? new FileInfo( t ).Directory // It's a file, get the parent folder.
+                        : new DirectoryInfo( t ); // It's a folder, create a DirectoryInfo instance
 
-                    if ( Path.HasExtension( tslPatcherPath ) )
+                    if ( tslPatcherDirectory == null || !tslPatcherDirectory.Exists )
                     {
-                        // It's a file, get the parent folder.
-                        tslPatcherDirectory = new FileInfo( tslPatcherPath ).Directory;
+                        throw new DirectoryNotFoundException(
+                            $"The directory '{t}' could not be located on the disk."
+                        );
+                    }
 
-                        if ( tslPatcherDirectory == null || !tslPatcherDirectory.Exists )
+                    //PlaintextLog=0
+                    string fullInstallLogFile = Path.Combine(
+                        tslPatcherDirectory.FullName,
+                        "installlog.rtf"
+                    );
+                    if ( File.Exists( fullInstallLogFile ) )
+                    {
+                        if ( File.Exists( fullInstallLogFile ) )
                         {
-                            throw new DirectoryNotFoundException(
-                                $"The parent directory of the file '{tslPatcherPath}' could not be located on the disk."
-                            );
+                            File.Delete( fullInstallLogFile );
                         }
                     }
-                    else
-                    {
-                        // It's a folder, create a DirectoryInfo instance
-                        tslPatcherDirectory = new DirectoryInfo( tslPatcherPath );
 
-                        if ( !tslPatcherDirectory.Exists )
-                        {
-                            throw new DirectoryNotFoundException(
-                                $"The directory '{tslPatcherPath}' could not be located on the disk."
-                            );
-                        }
+                    //PlaintextLog=1
+                    fullInstallLogFile = Path.Combine(
+                        tslPatcherDirectory.FullName,
+                        "installlog.txt"
+                    );
+                    if ( File.Exists( fullInstallLogFile ) )
+                    {
+                        File.Delete( fullInstallLogFile );
                     }
 
                     await Logger.LogAsync( "Installing TSLPatcher LookUpGameFolder hook..." );
                     FileHelper.ReplaceLookupGameFolder( tslPatcherDirectory );
 
                     string args = $@"""{MainConfig.DestinationPath}""" // arg1 = swkotor directory
-                        + $@" ""{MainConfig.SourcePath}""" // arg2 = mod directory (where tslpatchdata folder is)
+                        + $@" ""{tslPatcherDirectory}""" // arg2 = mod directory (where tslpatchdata folder is)
                         + ( string.IsNullOrEmpty( Arguments )
                             ? ""
                             : $" {Arguments}" ); // arg3 = (optional) install option integer index from namespaces.ini
 
-                    var tslPatcherCliPath = new FileInfo(
-                        Path.Combine(
-                            FileHelper.ResourcesDirectory,
-                            "TSLPatcherCLI.exe"
-                        )
-                    );
+                    string thisExe = null;
+                    FileInfo tslPatcherCliPath = null;
+                    switch ( MainConfig.PatcherOption )
+                    {
+                        case MainConfig.AvailablePatchers.PyKotorCLI:
+                            thisExe = RuntimeInformation.IsOSPlatform( OSPlatform.Windows )
+                                ? "pykotorcli.exe" // windows
+                                : "pykotorcli";    // linux/mac
+                            break;
+                        case MainConfig.AvailablePatchers.TSLPatcherCLI:
+                            thisExe = "TSLPatcherCLI.exe";
+                            break;
+                        case MainConfig.AvailablePatchers.TSLPatcher:
+                        default:
+                            tslPatcherCliPath = new FileInfo( t );
+                            break;
+                    }
 
-                    await Logger.LogAsync( "Run TSLPatcher..." );
-                    (int exitCode, string output, string error)
+                    if ( tslPatcherCliPath == null )
+                        tslPatcherCliPath = new FileInfo(
+                            Path.Combine(
+                                Path.GetDirectoryName( Assembly.GetExecutingAssembly().Location ) ?? throw new InvalidOperationException(),
+                                thisExe
+                            )
+                        );
+
+                    await Logger.LogAsync( "Run TSLPatcher instructions..." );
+                    if ( MainConfig.PatcherOption != MainConfig.AvailablePatchers.TSLPatcher)
+                        await Logger.LogVerboseAsync( $"Using CLI to run command: '{tslPatcherCliPath} {args}'" );
+
+                    ( int exitCode, string output, string error)
                         = await PlatformAgnosticMethods.ExecuteProcessAsync( tslPatcherCliPath, args, noAdmin: MainConfig.NoAdmin );
                     await Logger.LogVerboseAsync( $"'{tslPatcherCliPath.Name}' exited with exit code {exitCode}" );
 
-                    await Logger.LogAsync( !string.IsNullOrEmpty( output ) ? output : null );
-                    await Logger.LogAsync( !string.IsNullOrEmpty( error ) ? error : null );
+                    await Logger.LogAsync( output );
+                    await Logger.LogAsync( error );
+
+
+                    try
+                    {
+                        List<string> installErrors = VerifyInstall();
+                        if ( installErrors.Count > 0 )
+                        {
+                            await Logger.LogAsync( string.Join( Environment.NewLine, installErrors ) );
+                            return ActionExitCode.TSLPatcherError;
+                        }
+                    }
+                    catch ( FileNotFoundException )
+                    {
+                        await Logger.LogAsync( "No TSLPatcher log file found!" );
+                        return ActionExitCode.TSLPatcherLogNotFound;
+                    }
+
 
                     return exitCode == 0 ? ActionExitCode.Success : ActionExitCode.TSLPatcherCLIError;
                 }
@@ -656,13 +704,6 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                 {
                     try
                     {
-                        if ( Action == "TSLPatcher" )
-                        {
-                            FileHelper.ReplaceLookupGameFolder(
-                                new DirectoryInfo( Path.GetDirectoryName( sourcePath ) ?? string.Empty )
-                            );
-                        }
-
                         var thisProgram = new FileInfo( sourcePath );
                         if ( !thisProgram.Exists )
                         {

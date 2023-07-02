@@ -118,11 +118,11 @@
     <Exec Condition=" '$(OS)' == 'Windows_NT' AND '$(Platform)'=='x86' AND '$(TargetFramework)' == 'net462' "
           Command="ren $(TargetDir)Avalonia.Win32_net4.x_x86.dll Avalonia.Win32.dll" />
     <Exec Condition=" '$(IsUnix)' == 'true' AND '$(Platform)'=='x86' AND '$(TargetFramework)' == 'net462' "
-          Command="cp $(SolutionDir)vendor/lib/Avalonia.Linux_x86.dll $(TargetDir)" />
+          Command="cp $(SolutionDir)vendor\lib\Avalonia.Win32_net4.x_x86.dll $(TargetDir)" />
     <Exec Condition=" '$(IsUnix)' == 'true' AND '$(Platform)'=='x86' AND '$(TargetFramework)' == 'net462' "
-          Command="rm -f $(TargetDir)Avalonia.dll" />
+          Command="rm -f $(TargetDir)Avalonia.Win32.dll" />
     <Exec Condition=" '$(IsUnix)' == 'true' AND '$(Platform)'=='x86' AND '$(TargetFramework)' == 'net462' "
-          Command="mv $(TargetDir)Avalonia.Linux_x86.dll $(TargetDir)Avalonia.dll" />
+          Command="mv $(TargetDir)Avalonia.Win32_net4.x_x86.dll $(TargetDir)Avalonia.Win32.dll" />
 
   </Target>
 

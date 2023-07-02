@@ -651,10 +651,10 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                         );
 
                     await Logger.LogAsync( "Run TSLPatcher instructions..." );
-                    if ( MainConfig.PatcherOption != MainConfig.AvailablePatchers.TSLPatcher)
+                    if ( MainConfig.PatcherOption != MainConfig.AvailablePatchers.TSLPatcher )
                         await Logger.LogVerboseAsync( $"Using CLI to run command: '{tslPatcherCliPath} {args}'" );
 
-                    ( int exitCode, string output, string error)
+                    (int exitCode, string output, string error)
                         = await PlatformAgnosticMethods.ExecuteProcessAsync( tslPatcherCliPath, args, noAdmin: MainConfig.NoAdmin );
                     await Logger.LogVerboseAsync( $"'{tslPatcherCliPath.Name}' exited with exit code {exitCode}" );
 

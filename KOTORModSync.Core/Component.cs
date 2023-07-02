@@ -894,7 +894,7 @@ namespace KOTORModSync.Core
                     }
                 }
 
-                if ( isInstall && restrictionConflicts.Count > 0)
+                if ( isInstall && restrictionConflicts.Count > 0 )
                 {
                     Logger.LogWarning(
                         $"Skipping due to restricted components in install queue: [{string.Join( ",", restrictionConflicts.Select( component => component.Name ).ToList() )}]"

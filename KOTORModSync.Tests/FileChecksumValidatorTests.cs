@@ -215,7 +215,7 @@ namespace KOTORModSync.Tests
         // Custom converter for DirectoryInfo
         public class DirectoryInfoConverter : JsonConverter<DirectoryInfo>
         {
-            public override DirectoryInfo? ReadJson( JsonReader reader, Type objectType, DirectoryInfo existingValue, bool hasExistingValue, JsonSerializer serializer )
+            public override DirectoryInfo? ReadJson( JsonReader reader, Type objectType, DirectoryInfo? existingValue, bool hasExistingValue, JsonSerializer serializer )
             {
                 if ( reader.Value is string path )
                     return new DirectoryInfo( path );
@@ -223,15 +223,15 @@ namespace KOTORModSync.Tests
                 return null;
             }
 
-            public override void WriteJson( JsonWriter writer, DirectoryInfo value, JsonSerializer serializer )
+            public override void WriteJson( JsonWriter writer, DirectoryInfo? value, JsonSerializer serializer )
             {
-                writer.WriteValue( value.FullName );
+                writer.WriteValue( value!.FullName );
             }
         }
 
         // Test method
         [Test]
-        [Ignore( "NotFinished" )]
+        [Ignore( "TestNotFinished" )]
         public async Task SaveChecksumsToFileAsync_ValidData_SavesChecksumsToFile()
         {
             // Arrange
@@ -252,10 +252,10 @@ namespace KOTORModSync.Tests
             Assert.That( File.Exists( filePath ) );
 
             string json = await File.ReadAllTextAsync( filePath );
-            Dictionary<DirectoryInfo, SHA1> loadedChecksums = JsonConvert.DeserializeObject<Dictionary<DirectoryInfo, SHA1>>( json );
+            Dictionary<DirectoryInfo, SHA1> loadedChecksums = JsonConvert.DeserializeObject<Dictionary<DirectoryInfo, SHA1>>( json )!;
 
-            Assert.That( loadedChecksums.Count, Is.EqualTo( directoryChecksums.Count ) );
-            CollectionAssert.AreEquivalent( directoryChecksums.Keys, loadedChecksums.Keys );
+            Assert.That( loadedChecksums, Has.Count.EqualTo( directoryChecksums.Count ) );
+            CollectionAssert.AreEquivalent( directoryChecksums.Keys, loadedChecksums!.Keys );
             CollectionAssert.AreEquivalent( directoryChecksums.Values, loadedChecksums.Values );
 
             // Clean up

@@ -335,8 +335,14 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
             foreach ( string filePath in files )
             {
                 string fileNameWithoutExtension = Path.GetFileNameWithoutExtension( filePath );
-
                 if ( string.IsNullOrEmpty( fileNameWithoutExtension ) ) continue;
+
+                string extension = Path.GetExtension( filePath );
+                if ( !extension.Equals( ".tga", StringComparison.OrdinalIgnoreCase )
+                    && !extension.Equals( ".tpc", StringComparison.OrdinalIgnoreCase ) )
+                {
+                    continue;
+                }
 
                 if ( fileNameCounts.TryGetValue( fileNameWithoutExtension, out int count ) )
                 {

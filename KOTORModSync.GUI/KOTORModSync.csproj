@@ -96,19 +96,19 @@
   </ItemGroup>
 
   <PropertyGroup Condition=" '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))' OR '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::OSX)))' ">
-    <IsLinux>true</IsLinux>
+    <IsUnix>true</IsUnix>
   </PropertyGroup>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent" Condition=" '$(OS)' == 'Windows_NT'">
 
     <Exec Condition=" '$(OS)' == 'Windows_NT'" Command="xcopy /Y $(SolutionDir)vendor\bin\TSLPatcherCLI.exe $(TargetDir)" />
-    <Exec Condition=" '$(IsLinux)' == 'true'" Command="cp -f $(SolutionDir)vendor/bin/TSLPatcherCLI.exe $(TargetDir)" />
+    <Exec Condition=" '$(IsUnix)' == 'true'" Command="cp -f $(SolutionDir)vendor/bin/TSLPatcherCLI.exe $(TargetDir)" />
 
     <Exec Condition=" '$(OS)' == 'Windows_NT'" Command="xcopy /Y $(SolutionDir)vendor\bin\pykotorcli.exe $(TargetDir)" />
-    <Exec Condition=" '$(IsLinux)' == 'true'" Command="cp -f $(SolutionDir)vendor/bin/pykotorcli.exe $(TargetDir)" />
+    <Exec Condition=" '$(IsUnix)' == 'true'" Command="cp -f $(SolutionDir)vendor/bin/pykotorcli.exe $(TargetDir)" />
 
     <Exec Condition=" '$(OS)' == 'Windows_NT'" Command="xcopy /Y $(SolutionDir)vendor\bin\pykotorcli $(TargetDir)" />
-    <Exec Condition=" '$(IsLinux)' == 'true'" Command="cp -f $(SolutionDir)vendor/bin/pykotorcli $(TargetDir)" />
+    <Exec Condition=" '$(IsUnix)' == 'true'" Command="cp -f $(SolutionDir)vendor/bin/pykotorcli $(TargetDir)" />
 
     <!-- WindowsDeleteString returntype changes from int to IntPtr HRESULT after net framework 4.x.x, replace with our patches. -->
     <Exec Condition=" '$(OS)' == 'Windows_NT' AND '$(Platform)'=='x86' AND '$(TargetFramework)' == 'net462' "
@@ -117,11 +117,11 @@
           Command="del /F $(TargetDir)Avalonia.Win32.dll" />
     <Exec Condition=" '$(OS)' == 'Windows_NT' AND '$(Platform)'=='x86' AND '$(TargetFramework)' == 'net462' "
           Command="ren $(TargetDir)Avalonia.Win32_net4.x_x86.dll Avalonia.Win32.dll" />
-    <Exec Condition=" '$(IsLinux)' == 'true' AND '$(Platform)'=='x86' AND '$(TargetFramework)' == 'net462' "
+    <Exec Condition=" '$(IsUnix)' == 'true' AND '$(Platform)'=='x86' AND '$(TargetFramework)' == 'net462' "
           Command="cp $(SolutionDir)vendor/lib/Avalonia.Linux_x86.dll $(TargetDir)" />
-    <Exec Condition=" '$(IsLinux)' == 'true' AND '$(Platform)'=='x86' AND '$(TargetFramework)' == 'net462' "
+    <Exec Condition=" '$(IsUnix)' == 'true' AND '$(Platform)'=='x86' AND '$(TargetFramework)' == 'net462' "
           Command="rm -f $(TargetDir)Avalonia.dll" />
-    <Exec Condition=" '$(IsLinux)' == 'true' AND '$(Platform)'=='x86' AND '$(TargetFramework)' == 'net462' "
+    <Exec Condition=" '$(IsUnix)' == 'true' AND '$(Platform)'=='x86' AND '$(TargetFramework)' == 'net462' "
           Command="mv $(TargetDir)Avalonia.Linux_x86.dll $(TargetDir)Avalonia.dll" />
 
   </Target>
@@ -134,10 +134,10 @@
     <Exec Condition=" '$(OS)' == 'Windows_NT'" Command="for %%F in ($(TargetDir)*.txt) do move /Y &quot;%%F&quot; &quot;$(SolutionDir)\logs_and_data_saved_from_dotnet_clean&quot;" />
     <Exec Condition=" '$(OS)' == 'Windows_NT'" Command="for %%F in ($(TargetDir)*.log) do move /Y &quot;%%F&quot; &quot;$(SolutionDir)\logs_and_data_saved_from_dotnet_clean&quot;" />
     <Exec Condition=" '$(OS)' == 'Windows_NT'" Command="for %%F in ($(TargetDir)*.toml) do move /Y &quot;%%F&quot; &quot;$(SolutionDir)\logs_and_data_saved_from_dotnet_clean&quot;" />
-    <Exec Condition=" '$(IsLinux)' == 'true'" Command="mv $(TargetDir)\*.tml $(SolutionDir)\logs_and_data_saved_from_dotnet_clean" />
-    <Exec Condition=" '$(IsLinux)' == 'true'" Command="mv $(TargetDir)\*.toml $(SolutionDir)\logs_and_data_saved_from_dotnet_clean" />
-    <Exec Condition=" '$(IsLinux)' == 'true'" Command="mv $(TargetDir)\*.txt $(SolutionDir)\logs_and_data_saved_from_dotnet_clean" />
-    <Exec Condition=" '$(IsLinux)' == 'true'" Command="mv $(TargetDir)\*.log $(SolutionDir)\logs_and_data_saved_from_dotnet_clean" />
+    <Exec Condition=" '$(IsUnix)' == 'true'" Command="mv $(TargetDir)\*.tml $(SolutionDir)\logs_and_data_saved_from_dotnet_clean" />
+    <Exec Condition=" '$(IsUnix)' == 'true'" Command="mv $(TargetDir)\*.toml $(SolutionDir)\logs_and_data_saved_from_dotnet_clean" />
+    <Exec Condition=" '$(IsUnix)' == 'true'" Command="mv $(TargetDir)\*.txt $(SolutionDir)\logs_and_data_saved_from_dotnet_clean" />
+    <Exec Condition=" '$(IsUnix)' == 'true'" Command="mv $(TargetDir)\*.log $(SolutionDir)\logs_and_data_saved_from_dotnet_clean" />
   </Target>
 
   <!-- Zip everything up for a release. Doesn't work yet. -->

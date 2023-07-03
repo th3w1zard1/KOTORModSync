@@ -10,7 +10,6 @@ using Avalonia;
 using Avalonia.Data;
 using Avalonia.Data.Converters;
 using Avalonia.Utilities;
-using JetBrains.Annotations;
 
 namespace KOTORModSync.Converters
 {

@@ -3,14 +3,9 @@
 // See LICENSE.txt file in the project root for full license information.
 
 using System;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Globalization;
-using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
-using Avalonia.Controls;
 using Avalonia.Data.Converters;
 using JetBrains.Annotations;
 using KOTORModSync.Core;

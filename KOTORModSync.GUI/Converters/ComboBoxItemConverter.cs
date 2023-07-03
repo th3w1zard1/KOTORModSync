@@ -6,7 +6,6 @@ using System;
 using System.Globalization;
 using Avalonia.Controls;
 using Avalonia.Data.Converters;
-using JetBrains.Annotations;
 
 namespace KOTORModSync.Converters
 {

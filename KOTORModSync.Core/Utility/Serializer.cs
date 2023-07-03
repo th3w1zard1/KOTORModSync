@@ -9,7 +9,6 @@ using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
@@ -19,9 +18,7 @@ using SharpCompress.Archives;
 using SharpCompress.Archives.Rar;
 using SharpCompress.Archives.SevenZip;
 using SharpCompress.Common;
-using Tomlyn;
 using Tomlyn.Model;
-using Tomlyn.Syntax;
 
 // ReSharper disable UnusedMember.Global
 #pragma warning disable RCS1213, IDE0051, IDE0079

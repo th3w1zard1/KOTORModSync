@@ -672,12 +672,27 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                     }
 
                     if ( tslPatcherCliPath == null )
+                    {
+                        string executingAssemblyLocation = Assembly.GetEntryAssembly()?.Location;
+                        if ( string.IsNullOrEmpty( executingAssemblyLocation ) )
+                        {
+                            executingAssemblyLocation = Assembly.GetExecutingAssembly().Location;
+                        }
+
+                        if ( string.IsNullOrEmpty( executingAssemblyLocation ) )
+                        {
+                            executingAssemblyLocation = AppDomain.CurrentDomain.BaseDirectory;
+                        }
+
                         tslPatcherCliPath = new FileInfo(
                             Path.Combine(
-                                Path.GetDirectoryName( Assembly.GetExecutingAssembly().Location ) ?? throw new InvalidOperationException(),
+                                Path.GetDirectoryName( executingAssemblyLocation ) ?? throw new InvalidOperationException(),
                                 thisExe
                             )
                         );
+                    }
+
+
 
                     await Logger.LogAsync( "Run TSLPatcher instructions..." );
                     if ( MainConfig.PatcherOption != MainConfig.AvailablePatchers.TSLPatcher )

@@ -91,6 +91,9 @@
     <Compile Update="ComponentViewModel.cs">
       <DependentUpon>SelectInstallComponents.axaml_unfinished</DependentUpon>
     </Compile>
+    <Compile Update="Controls\DependencyControl.axaml.cs">
+      <DependentUpon>DependencyControl.axaml</DependentUpon>
+    </Compile>
     <None Remove="SelectInstallComponents.axaml_unfinished" />
     <AvaloniaXaml Include="SelectInstallComponents.axaml_unfinished" />
   </ItemGroup>
@@ -111,18 +114,12 @@
     <Exec Condition=" '$(IsUnix)' == 'true'" Command="cp -f $(SolutionDir)vendor/bin/pykotorcli $(TargetDir)" />
 
     <!-- WindowsDeleteString returntype changes from int to IntPtr HRESULT after net framework 4.x.x, replace with our patches. -->
-    <Exec Condition=" '$(OS)' == 'Windows_NT' AND '$(Platform)'=='x86' AND '$(TargetFramework)' == 'net462' "
-          Command="xcopy /Y $(SolutionDir)vendor\lib\Avalonia.Win32_net4.x_x86.dll $(TargetDir)" />
-    <Exec Condition=" '$(OS)' == 'Windows_NT' AND '$(Platform)'=='x86' AND '$(TargetFramework)' == 'net462' "
-          Command="del /F $(TargetDir)Avalonia.Win32.dll" />
-    <Exec Condition=" '$(OS)' == 'Windows_NT' AND '$(Platform)'=='x86' AND '$(TargetFramework)' == 'net462' "
-          Command="ren $(TargetDir)Avalonia.Win32_net4.x_x86.dll Avalonia.Win32.dll" />
-    <Exec Condition=" '$(IsUnix)' == 'true' AND '$(Platform)'=='x86' AND '$(TargetFramework)' == 'net462' "
-          Command="cp $(SolutionDir)vendor\lib\Avalonia.Win32_net4.x_x86.dll $(TargetDir)" />
-    <Exec Condition=" '$(IsUnix)' == 'true' AND '$(Platform)'=='x86' AND '$(TargetFramework)' == 'net462' "
-          Command="rm -f $(TargetDir)Avalonia.Win32.dll" />
-    <Exec Condition=" '$(IsUnix)' == 'true' AND '$(Platform)'=='x86' AND '$(TargetFramework)' == 'net462' "
-          Command="mv $(TargetDir)Avalonia.Win32_net4.x_x86.dll $(TargetDir)Avalonia.Win32.dll" />
+    <Exec Condition=" '$(OS)' == 'Windows_NT' AND '$(Platform)'=='x86' AND '$(TargetFramework)' == 'net462' " Command="xcopy /Y $(SolutionDir)vendor\lib\Avalonia.Win32_net4.x_x86.dll $(TargetDir)" />
+    <Exec Condition=" '$(OS)' == 'Windows_NT' AND '$(Platform)'=='x86' AND '$(TargetFramework)' == 'net462' " Command="del /F $(TargetDir)Avalonia.Win32.dll" />
+    <Exec Condition=" '$(OS)' == 'Windows_NT' AND '$(Platform)'=='x86' AND '$(TargetFramework)' == 'net462' " Command="ren $(TargetDir)Avalonia.Win32_net4.x_x86.dll Avalonia.Win32.dll" />
+    <Exec Condition=" '$(IsUnix)' == 'true' AND '$(Platform)'=='x86' AND '$(TargetFramework)' == 'net462' " Command="cp $(SolutionDir)vendor\lib\Avalonia.Win32_net4.x_x86.dll $(TargetDir)" />
+    <Exec Condition=" '$(IsUnix)' == 'true' AND '$(Platform)'=='x86' AND '$(TargetFramework)' == 'net462' " Command="rm -f $(TargetDir)Avalonia.Win32.dll" />
+    <Exec Condition=" '$(IsUnix)' == 'true' AND '$(Platform)'=='x86' AND '$(TargetFramework)' == 'net462' " Command="mv $(TargetDir)Avalonia.Win32_net4.x_x86.dll $(TargetDir)Avalonia.Win32.dll" />
 
   </Target>
 

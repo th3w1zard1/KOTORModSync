@@ -85,8 +85,31 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
             }
         }
 
-        public List<Guid> Dependencies { get; set; }
-        public List<Guid> Restrictions { get; set; }
+        private List<Guid> _dependencies;
+
+        public List<Guid> Dependencies
+        {
+            get => _dependencies;
+            set
+            {
+                _dependencies = value;
+                OnPropertyChanged();
+            }
+        }
+
+
+        private List<Guid> _restrictions;
+
+        public List<Guid> Restrictions
+        {
+            get => _restrictions;
+            set
+            {
+                _restrictions = value;
+                OnPropertyChanged();
+            }
+        }
+
         public bool Overwrite { get; set; }
         public string Arguments { get; set; }
         private Component ParentComponent { get; set; }

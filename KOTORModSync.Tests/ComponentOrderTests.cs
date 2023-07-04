@@ -234,7 +234,7 @@ namespace KOTORModSync.Tests
             // Act
             try
             {
-                Component.ConfirmComponentsInstallOrder( componentsList );
+                _ = Component.ConfirmComponentsInstallOrder( componentsList );
             }
             // Assert
             catch ( KeyNotFoundException )

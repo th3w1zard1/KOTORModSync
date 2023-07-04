@@ -32,7 +32,7 @@ namespace KOTORModSync.Core.Utility
 
             FileSystemInfo closestMatch = null;
             int maxMatchingCharacters = -1;
-            List<string> duplicatePaths = new List<string>();
+            var duplicatePaths = new List<string>();
 
 
             if ( directoryName == null )
@@ -329,8 +329,8 @@ namespace KOTORModSync.Core.Utility
             if ( RuntimeInformation.IsOSPlatform( OSPlatform.Windows ) )
             {
                 // Check for administrator privileges on Windows
-                WindowsIdentity windowsIdentity = WindowsIdentity.GetCurrent();
-                WindowsPrincipal windowsPrincipal = new WindowsPrincipal( windowsIdentity );
+                var windowsIdentity = WindowsIdentity.GetCurrent();
+                var windowsPrincipal = new WindowsPrincipal( windowsIdentity );
                 return windowsPrincipal.IsInRole( WindowsBuiltInRole.Administrator );
             }
 
@@ -351,7 +351,7 @@ namespace KOTORModSync.Core.Utility
             catch ( DllNotFoundException )
             {
                 // Fallback logic when the libc library is not found
-                Process process = new Process
+                var process = new Process
                 {
                     StartInfo =
                     {
@@ -541,11 +541,11 @@ namespace KOTORModSync.Core.Utility
                         }
 
                         // Start the process
-                        StringBuilder output = new StringBuilder();
-                        StringBuilder error = new StringBuilder();
+                        var output = new StringBuilder();
+                        var error = new StringBuilder();
 
-                        using ( AutoResetEvent outputWaitHandle = new AutoResetEvent( false ) )
-                        using ( AutoResetEvent errorWaitHandle = new AutoResetEvent( false ) )
+                        using ( var outputWaitHandle = new AutoResetEvent( false ) )
+                        using ( var errorWaitHandle = new AutoResetEvent( false ) )
                         {
                             process.OutputDataReceived += ( sender, e ) =>
                             {

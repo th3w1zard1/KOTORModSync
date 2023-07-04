@@ -47,6 +47,7 @@ namespace KOTORModSync.Core
             Incompatible = 3
         }
 
+        [UsedImplicitly]
         public IEnumerable<CompatibilityLevel> AllCompatibilityLevels
         {
             get { return Enum.GetValues( typeof( CompatibilityLevel ) ).Cast<CompatibilityLevel>(); }
@@ -66,6 +67,7 @@ namespace KOTORModSync.Core
             PyKotorCLI = 2,
         }
 
+        [UsedImplicitly]
         public IEnumerable<AvailablePatchers> AllAvailablePatchers
         {
             get { return Enum.GetValues( typeof( AvailablePatchers ) ).Cast<AvailablePatchers>(); }
@@ -164,23 +166,6 @@ namespace KOTORModSync.Core
         protected virtual void OnPropertyChanged( [CallerMemberName][CanBeNull] string propertyName = null )
         {
             PropertyChanged?.Invoke( this, new PropertyChangedEventArgs( propertyName ) );
-        }
-    }
-
-    public static class ModDirectory
-    {
-        public class ArchiveEntry
-        {
-            public string Name { get; set; }
-            public string Path { get; set; }
-        }
-
-        public class ZipTree
-        {
-            public string Filename { get; set; }
-            public string Name { get; set; }
-            public bool IsFile { get; set; }
-            public List<ZipTree> Children { get; set; } = new List<ZipTree>();
         }
     }
 }

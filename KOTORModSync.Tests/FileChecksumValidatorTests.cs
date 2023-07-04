@@ -109,7 +109,7 @@ namespace KOTORModSync.Tests
                 await File.WriteAllTextAsync( filePath, "test content" );
 
                 // Calculate expected checksum
-                SHA1 expectedSha1 = SHA1.Create();
+                var expectedSha1 = SHA1.Create();
                 await using ( FileStream stream = File.OpenRead( filePath ) )
                 {
                     byte[] buffer = new byte[81920];
@@ -174,7 +174,7 @@ namespace KOTORModSync.Tests
             // Calculate expected checksum
             for ( int i = 0; i < 100; i++ )
             {
-                SHA1 expectedSha1 = SHA1.Create();
+                var expectedSha1 = SHA1.Create();
                 await using ( FileStream stream = File.OpenRead( filePath ) )
                 {
                     byte[] buffer = new byte[81920];
@@ -234,11 +234,13 @@ namespace KOTORModSync.Tests
         {
             // Arrange
             string filePath = Path.Combine( _testDirectory, "Checksums.json" );
-            var checksums = new Dictionary<string, string>();
-            checksums.Add( _testDirectory, FileChecksumValidator.Sha1ToString( SHA1.Create() ) );
+            var checksums = new Dictionary<string, string>
+            {
+                { _testDirectory, FileChecksumValidator.Sha1ToString( SHA1.Create() ) }
+            };
 
             // Convert the directory paths to DirectoryInfo objects
-            Dictionary<DirectoryInfo, SHA1> directoryChecksums = checksums.ToDictionary(
+            var directoryChecksums = checksums.ToDictionary(
                 static kvp => new DirectoryInfo( kvp.Key ),
                 static kvp => SHA1.Create()
             );
@@ -332,45 +334,6 @@ namespace KOTORModSync.Tests
             // Assert
             Assert.That( loadedChecksums, Is.Not.Null );
             Assert.That( loadedChecksums, Is.Empty );
-        }
-    }
-
-    public class DirectoryInfoConverter : JsonConverter
-    {
-        public override bool CanConvert( Type objectType ) => objectType == typeof( DirectoryInfo );
-
-        public override object? ReadJson( JsonReader reader, Type objectType, object? existingValue, JsonSerializer serializer )
-        {
-            string? path = reader.Value as string;
-            return new DirectoryInfo( path ?? throw new NullReferenceException() );
-        }
-
-        public override void WriteJson( JsonWriter writer, object? value, JsonSerializer serializer )
-        {
-            if ( value == null )
-                return;
-
-            writer.WriteValue( ( (DirectoryInfo)value ).FullName );
-        }
-    }
-
-
-    public class FileInfoConverter : JsonConverter
-    {
-        public override bool CanConvert( Type objectType ) => objectType == typeof( FileInfo );
-
-        public override object? ReadJson
-            ( JsonReader reader, Type objectType, object? existingValue, JsonSerializer serializer ) =>
-            reader.Value is not string filePath ? default : (object)new FileInfo( filePath );
-
-        public override void WriteJson( JsonWriter writer, object? value, JsonSerializer serializer )
-        {
-            if ( value is not FileInfo fileInfo )
-            {
-                return;
-            }
-
-            writer.WriteValue( fileInfo.FullName );
         }
     }
 }

@@ -2,8 +2,10 @@
 // Licensed under the GNU General Public License v3.0 (GPLv3).
 // See LICENSE.txt file in the project root for full license information.
 
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using JetBrains.Annotations;
 
 namespace KOTORModSync.Core.Utility
 {
@@ -14,12 +16,12 @@ namespace KOTORModSync.Core.Utility
 
         public static void SetCallbackObjects
         (
-            IConfirmationDialogCallback confirmDialog,
-            IOptionsDialogCallback optionsDialog
+            [NotNull] IConfirmationDialogCallback confirmDialog,
+            [NotNull] IOptionsDialogCallback optionsDialog
         )
         {
-            ConfirmCallback = confirmDialog;
-            OptionsCallback = optionsDialog;
+            ConfirmCallback = confirmDialog ?? throw new ArgumentNullException( nameof( confirmDialog ) );
+            OptionsCallback = optionsDialog ?? throw new ArgumentNullException( nameof( optionsDialog ) );
         }
 
         public interface IConfirmationDialogCallback

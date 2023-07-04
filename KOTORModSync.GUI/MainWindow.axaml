@@ -2,7 +2,9 @@
 		xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:core="clr-namespace:KOTORModSync.Core;assembly=KOTORModSync.Core"
         xmlns:converters="clr-namespace:KOTORModSync.Converters"
+        xmlns:local="clr-namespace:KOTORModSync"
         x:Class="KOTORModSync.MainWindow"
+        xmlns:control="clr-namespace:KOTORModSync.Controls"
 		Title="KOTORModSync v0.6.2"
 		Width="1280" Height="720" MinWidth="600" MinHeight="400">
 
@@ -18,6 +20,8 @@
         <converters:ComboBoxItemConverter x:Key="ComboBoxItemConverter"/>
         <converters:EnumDescriptionConverter x:Key="EnumConverter" />
         <converters:StringToGuidConverter x:Key="GuidConverter" />
+        <converters:GuidListToComponentNames x:Key="GuidListToComponentNames" />
+        <converters:ComponentToGuidConverter x:Key="ComponentToGuidConverter" />
 	</Window.Resources>
 	<Grid x:Name="MainGrid" MinWidth="200" RowDefinitions="Auto,*">
 		<Grid.ColumnDefinitions>
@@ -61,7 +65,7 @@
 						<ItemsControl x:Name="ComponentsItemsControl" Items="{Binding Components}">
                             <ItemsControl.ItemTemplate>
 								<DataTemplate DataType="core:Component">
-									<Grid x:Name="GuiEditGrid" ColumnDefinitions="Auto,Auto" RowDefinitions="*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*">
+									<Grid x:Name="GuiEditGrid" ColumnDefinitions="Auto,Auto" RowDefinitions="*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*">
                                         <TextBlock Grid.Row="0" Grid.Column="0" Text="Information" FontSize="22" HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="0,10,0,40"/>
                                         <TextBlock Grid.Row="1" Grid.Column="0" Text="Name:" />
 										<TextBox Grid.Row="2" Grid.Column="0" Text="{Binding Name}"
@@ -102,31 +106,29 @@
                                                  Focusable="True" HorizontalAlignment="Stretch" AcceptsReturn="True"
                                                  Text="{Binding ModLink}"/>
 
+                                        <TextBlock Grid.Row="17" Grid.Column="0" Text="Dependencies:"
+                                                   Margin="0, 15, 0, 5"/>
+                                        <control:DependencyControl Grid.Row="18" Grid.Column="0"
+                                            ThisGuidList="{Binding Dependencies}"
+                                            ThisComponentList="{Binding RelativeSource={RelativeSource AncestorType={x:Type local:MainWindow}}, Path=ComponentsList}" />
 
-                                        <TextBlock Grid.Row="17" Grid.Column="0" Text="Dependencies:" />
-                                        <TextBox Grid.Row="18" Grid.Column="0" MaxWidth="600"
-                                                 Focusable="True" AcceptsReturn="True" TextWrapping="Wrap"
-                                                 x:Name="DependenciesTextBox"
-                                                 Text="{Binding Dependencies, Converter={StaticResource ListToStringConverter}}"/>
+                                        <TextBlock Grid.Row="19" Grid.Column="0" Text="Restrictions:"
+                                                   Margin="0, 15, 0, 5"/>
+                                        <control:DependencyControl Grid.Row="20" Grid.Column="0"
+                                            ThisGuidList="{Binding Restrictions}"
+                                            ThisComponentList="{Binding RelativeSource={RelativeSource AncestorType={x:Type local:MainWindow}}, Path=ComponentsList}" />
 
-                                        <TextBlock Grid.Row="19" Grid.Column="0" Text="Restrictions:" />
-                                        <TextBox Grid.Row="20" Grid.Column="0" MaxWidth="600"
-                                                 AcceptsReturn="True" TextWrapping="Wrap" Focusable="True"
-                                                 x:Name="RestrictionsTextBox"
-                                                 Text="{Binding Restrictions, Converter={StaticResource ListToStringConverter}}"/>
+                                        <TextBlock Grid.Row="21" Grid.Column="0" Text="InstallBefore:"
+                                                   Margin="0, 15, 0, 5"/>
+                                        <control:DependencyControl Grid.Row="22" Grid.Column="0"
+                                            ThisGuidList="{Binding InstallBefore}"
+                                            ThisComponentList="{Binding RelativeSource={RelativeSource AncestorType={x:Type local:MainWindow}}, Path=ComponentsList}" />
 
-
-                                        <TextBlock Grid.Row="21" Grid.Column="0" Text="InstallBefore:" />
-                                        <TextBox Grid.Row="22" Grid.Column="0" MaxWidth="600"
-                                                 Focusable="True" AcceptsReturn="True" TextWrapping="Wrap"
-                                                 x:Name="InstallBeforeTextBox"
-                                                 Text="{Binding InstallBefore, Converter={StaticResource ListToStringConverter}}"/>
-
-                                        <TextBlock Grid.Row="23" Grid.Column="0" Text="InstallAfter:" />
-                                        <TextBox Grid.Row="24" Grid.Column="0" MaxWidth="600"
-                                                 AcceptsReturn="True" TextWrapping="Wrap" Focusable="True"
-                                                 x:Name="InstallAfterTextBox"
-                                                 Text="{Binding InstallAfter, Converter={StaticResource ListToStringConverter}}"/>
+                                        <TextBlock Grid.Row="23" Grid.Column="0" Text="InstallAfter:"
+                                                   Margin="0, 15, 0, 5"/>
+                                        <control:DependencyControl Grid.Row="24" Grid.Column="0"
+                                            ThisGuidList="{Binding InstallAfter}"
+                                            ThisComponentList="{Binding RelativeSource={RelativeSource AncestorType={x:Type local:MainWindow}}, Path=ComponentsList}" />
 
                                         <TextBlock Grid.Row="25" Grid.Column="0" Grid.ColumnSpan="2" Text="Instructions" FontSize="22" HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="0,40,0,0"/>
                                         <ItemsRepeater Grid.Row="26" Grid.Column="0" Grid.ColumnSpan="2" x:Name="instructionsRepeater" Items="{Binding Instructions}">
@@ -177,17 +179,16 @@
                                                                     Content="Browse Destination" Click="BrowseDestination_Click"
                                                                     Tag="{Binding ElementName=DestinationTextBox}"/>
 
+
                                                                 <TextBlock Grid.Row="8" Grid.Column="0" Text="Dependencies:" />
-                                                                <TextBox Grid.Row="9" Grid.Column="0" MaxWidth="600"
-                                                                         Focusable="True" AcceptsReturn="True" TextWrapping="Wrap"
-																	     x:Name="DependenciesTextBox"
-																	     Text="{Binding Dependencies, Converter={StaticResource ListToStringConverter}}"/>
+                                                                <control:DependencyControl Grid.Row="9" Grid.Column="0"
+                                                                    ThisGuidList="{Binding Dependencies}"
+                                                                    ThisComponentList="{Binding RelativeSource={RelativeSource AncestorType={x:Type local:MainWindow}}, Path=ComponentsList}" />
 
                                                                 <TextBlock Grid.Row="10" Grid.Column="0" Text="Restrictions:" />
-                                                                <TextBox Grid.Row="11" Grid.Column="0" MaxWidth="600"
-																	     AcceptsReturn="True" TextWrapping="Wrap" Focusable="True"
-                                                                         x:Name="RestrictionsTextBox"
-																	     Text="{Binding Restrictions, Converter={StaticResource ListToStringConverter}}"/>
+                                                                <control:DependencyControl Grid.Row="11" Grid.Column="0"
+                                                                    ThisGuidList="{Binding Restrictions}"
+                                                                    ThisComponentList="{Binding RelativeSource={RelativeSource AncestorType={x:Type local:MainWindow}}, Path=ComponentsList}" />
 
                                                                 <TextBlock Grid.Row="12" Grid.Column="0" Text="Overwrite:" />
                                                                 <TextBox Grid.Row="13" Grid.Column="0" MaxWidth="600"
@@ -234,8 +235,8 @@
 				<CheckBox Content="Default Install" IsChecked="{Binding defaultInstall}"/>
 				<CheckBox Content="Verbose Logging" IsChecked="{Binding debugLogging}"/>
 				<CheckBox Content="Auto-Fix Config Errors" IsChecked="{Binding attemptFixes}"/>
-                <CheckBox Content="No Admin" IsChecked="{Binding noAdmin}" ToolTip.Tip="(NOT RECOMMENDED) Do not prompt for admin on any instruction. It's recommended you run KOTORModSync as admin instead. Does nothing on Linux"/>
-                <TextBlock Text="Patcher Option" ToolTip.Tip="Mods are packaged with 'TSLPatcher' by default. Try another patcher if you run into problems."/>
+                <CheckBox Content="No Admin" IsChecked="{Binding noAdmin}" ToolTip.Tip="Do not prompt for admin on any instruction. It's recommended you run KOTORModSync as admin instead (NOT RECOMMENDED). Does nothing on Linux"/>
+                <TextBlock Text="Patcher Option" ToolTip.Tip="Mods are packaged with 'TSLPatcher' by default. Try another patcher if you run into problems. PyKotorCLI is not tested - use at your own risk"/>
 				<ComboBox
                     Items="{Binding AllAvailablePatchers}"
                     SelectedItem="{Binding patcherOption, Mode=TwoWay, Converter={StaticResource EnumConverter}}"

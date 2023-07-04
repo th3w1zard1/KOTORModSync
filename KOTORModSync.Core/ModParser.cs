@@ -14,7 +14,7 @@ namespace KOTORModSync.Core
         private const string Separator = "__";
 
         public static List<Component> ParseMods
-            ( string source ) => (List<Component>)source.Split( new[] { Separator }, StringSplitOptions.RemoveEmptyEntries )
+            ( string source ) => source.Split( new[] { Separator }, StringSplitOptions.RemoveEmptyEntries )
             .Select( ParseMod ).ToList();
 
         private static Component ParseMod( string modText )

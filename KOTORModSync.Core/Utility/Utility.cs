@@ -56,20 +56,20 @@ namespace KOTORModSync.Core.Utility
             }
             catch ( UnauthorizedAccessException ex )
             {
-                Logger.Log( $"Failed to access files in the destination directory: {ex.Message}" );
+                Logger.LogError( $"Failed to access files in the destination directory: {ex.Message}" );
             }
             catch ( PathTooLongException ex )
             {
                 Logger.LogException( ex );
-                Logger.Log( $"The pathname is too long: '{dirPath.FullName}'" );
-                Logger.Log(
+                Logger.LogError( $"The pathname is too long: '{dirPath.FullName}'" );
+                Logger.LogError(
                     "Please utilize the registry patch that increases the Windows legacy path limit higher than 260 characters"
                     + " or move your folder/file above to a shorter directory path."
                 );
             }
             catch ( IOException ex )
             {
-                Logger.Log( $"Failed to access files in the destination directory: {ex.Message}" );
+                Logger.LogError( $"Failed to access files in the destination directory: {ex.Message}" );
             }
 
             return false;

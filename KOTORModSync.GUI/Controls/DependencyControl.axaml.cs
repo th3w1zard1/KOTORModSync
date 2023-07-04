@@ -1,6 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using Avalonia;
+/* Unmerged change from project 'KOTORModSync (net462)'
+Before:
+using System;
+After:
+using Avalonia;
+*/
 using Avalonia.Collections;
 using Avalonia.Controls;
 using Avalonia.Interactivity;

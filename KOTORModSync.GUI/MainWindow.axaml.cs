@@ -1952,7 +1952,7 @@ namespace KOTORModSync
         {
             if ( control == null )
             {
-                throw new ArgumentNullException( nameof(control) );
+                throw new ArgumentNullException( nameof( control ) );
             }
 
             if ( control == styleControlComboBox )

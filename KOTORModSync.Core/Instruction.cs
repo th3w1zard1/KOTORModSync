@@ -822,10 +822,8 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
 
                 string installLogContent = File.ReadAllText( fullInstallLogFile );
                 var installErrors = new List<string>();
-                Logger.Log( "tslpatcher 'installlog.txt' file:" );
                 foreach ( string thisLine in installLogContent.Split( '\n' ) )
                 {
-                    Logger.Log( thisLine );
                     if ( !thisLine.Contains( "Error: " ) )
                     {
                         continue;

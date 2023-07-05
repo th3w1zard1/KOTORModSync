@@ -33,7 +33,7 @@
     <DebugType>portable</DebugType>
   </PropertyGroup>
 
-  <!-- Debug Configuration: No error handling/optimizations, this provides a way to find more problems before release. -->
+  <!-- Debug Configuration: No error handling/optimizations, this provides the means to find more problems before release. -->
   <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
     <Optimize>false</Optimize>
     <AllowOptimize>false</AllowOptimize>

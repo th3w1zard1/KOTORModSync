@@ -4,6 +4,9 @@ $publishProfilesDir = "KOTORModSync.GUI\Properties\PublishProfiles"
 $sevenZipPath = "C:\Program Files\7-Zip\7z.exe"  # Path to 7zip executable
 $publishProfileFiles = Get-ChildItem -Path $publishProfilesDir -Filter "*.pubxml"
 
+# Remove old builds if they exist.
+Remove-Item "bin" -Recurse -ErrorAction SilentlyContinue
+
 foreach ($file in $publishProfileFiles) {
     Write-Host "Publishing configuration for '$file'"
     $fileName = [System.IO.Path]::GetFileNameWithoutExtension($file.Name)
@@ -24,8 +27,6 @@ foreach ($file in $publishProfileFiles) {
     $publishCommand = "dotnet publish $projectFile --framework $framework /p:PublishProfile=$file"
     
     try {
-        # Remove old builds if they exist.
-        Remove-Item "bin\publish" -Recurse -ErrorAction SilentlyContinue
         
         # Execute the publish command
         Invoke-Expression $publishCommand

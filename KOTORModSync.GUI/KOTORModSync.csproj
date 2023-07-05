@@ -17,6 +17,7 @@
   <!-- Target Platforms/Frameworks -->
   <PropertyGroup>
     <TargetFrameworks>net6.0;net462</TargetFrameworks>
+    <RuntimeIdentifiers>win7-x86;win7-x64;win10-x86;win10-x64;linux-x64;osx-x64</RuntimeIdentifiers>
     <Platforms>x86;x64</Platforms>
   </PropertyGroup>
 
@@ -98,43 +99,73 @@
     <AvaloniaXaml Include="SelectInstallComponents.axaml_unfinished" />
   </ItemGroup>
 
-  <PropertyGroup Condition=" '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))' OR '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::OSX)))' ">
+  <PropertyGroup Condition=" '$(OS)' == 'Windows_NT' ">
+    <IsUnix>false</IsUnix>
+    <DirectorySeparatorChar>\</DirectorySeparatorChar>
+    <CopyCommand>xcopy /Y</CopyCommand>
+    <DeleteCommand>del /F</DeleteCommand>
+    <RenameCommand>ren</RenameCommand>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(OS)' != 'Windows_NT' ">
     <IsUnix>true</IsUnix>
+    <DirectorySeparatorChar>/</DirectorySeparatorChar>
+    <CopyCommand>cp -f</CopyCommand>
+    <DeleteCommand>rm -f</DeleteCommand>
+    <RenameCommand>mv</RenameCommand>
   </PropertyGroup>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent" Condition=" '$(OS)' == 'Windows_NT'">
+    <!-- <Exec Condition=" '$(RuntimeIdentifier)' == 'linux-x64' OR '$(RuntimeIdentifier)' == 'osx-x64' "
+          Command="$(CopyCommand) $(SolutionDir)vendor\bin\TSLPatcherCLI $(TargetDir)" /> TODO-->
+    <Exec Condition=" '$(RuntimeIdentifier)' == 'linux-x64' OR '$(RuntimeIdentifier)' == 'osx-x64' "
+          Command="$(CopyCommand) $(SolutionDir)vendor\bin\pykotorcli $(TargetDir)" />
+    <Exec Condition=" '$(RuntimeIdentifier)' == 'linux-x64' OR '$(RuntimeIdentifier)' == 'osx-x64' "
+          Command="$(CopyCommand) $(SolutionDir)vendor\bin\pykotorcli $(PublishDir)" />
 
-    <Exec Condition=" '$(OS)' == 'Windows_NT'" Command="xcopy /Y $(SolutionDir)vendor\bin\TSLPatcherCLI.exe $(TargetDir)" />
-    <Exec Condition=" '$(IsUnix)' == 'true'" Command="cp -f $(SolutionDir)vendor/bin/TSLPatcherCLI.exe $(TargetDir)" />
+    <Exec Condition=" '$(RuntimeIdentifier)' != 'linux-x64' AND '$(RuntimeIdentifier)' != 'osx-x64' "
+          Command="$(CopyCommand) $(SolutionDir)vendor\bin\TSLPatcherCLI.exe $(TargetDir)" />
+    <Exec Condition=" '$(RuntimeIdentifier)' != 'linux-x64' AND '$(RuntimeIdentifier)' != 'osx-x64' "
+          Command="$(CopyCommand) $(SolutionDir)vendor\bin\TSLPatcherCLI.exe $(PublishDir)" />
 
-    <Exec Condition=" '$(OS)' == 'Windows_NT'" Command="xcopy /Y $(SolutionDir)vendor\bin\pykotorcli.exe $(TargetDir)" />
-    <Exec Condition=" '$(IsUnix)' == 'true'" Command="cp -f $(SolutionDir)vendor/bin/pykotorcli.exe $(TargetDir)" />
+    <Exec Condition=" '$(RuntimeIdentifier)' != 'linux-x64' AND '$(RuntimeIdentifier)' != 'osx-x64' "
+          Command="$(CopyCommand) $(SolutionDir)vendor\bin\pykotorcli.exe $(TargetDir)" />
+    <Exec Condition=" '$(RuntimeIdentifier)' != 'linux-x64' AND '$(RuntimeIdentifier)' != 'osx-x64' "
+          Command="$(CopyCommand) $(SolutionDir)vendor\bin\pykotorcli.exe $(PublishDir)" />
 
-    <Exec Condition=" '$(OS)' == 'Windows_NT'" Command="xcopy /Y $(SolutionDir)vendor\bin\pykotorcli $(TargetDir)" />
-    <Exec Condition=" '$(IsUnix)' == 'true'" Command="cp -f $(SolutionDir)vendor/bin/pykotorcli $(TargetDir)" />
 
     <!-- WindowsDeleteString returntype changes from int to IntPtr HRESULT after net framework 4.x.x, replace with our patches. -->
-    <Exec Condition=" '$(OS)' == 'Windows_NT' AND '$(Platform)'=='x86' AND '$(TargetFramework)' == 'net462' " Command="xcopy /Y $(SolutionDir)vendor\lib\Avalonia.Win32_net4.x_x86.dll $(TargetDir)" />
-    <Exec Condition=" '$(OS)' == 'Windows_NT' AND '$(Platform)'=='x86' AND '$(TargetFramework)' == 'net462' " Command="del /F $(TargetDir)Avalonia.Win32.dll" />
-    <Exec Condition=" '$(OS)' == 'Windows_NT' AND '$(Platform)'=='x86' AND '$(TargetFramework)' == 'net462' " Command="ren $(TargetDir)Avalonia.Win32_net4.x_x86.dll Avalonia.Win32.dll" />
-    <Exec Condition=" '$(IsUnix)' == 'true' AND '$(Platform)'=='x86' AND '$(TargetFramework)' == 'net462' " Command="cp $(SolutionDir)vendor\lib\Avalonia.Win32_net4.x_x86.dll $(TargetDir)" />
-    <Exec Condition=" '$(IsUnix)' == 'true' AND '$(Platform)'=='x86' AND '$(TargetFramework)' == 'net462' " Command="rm -f $(TargetDir)Avalonia.Win32.dll" />
-    <Exec Condition=" '$(IsUnix)' == 'true' AND '$(Platform)'=='x86' AND '$(TargetFramework)' == 'net462' " Command="mv $(TargetDir)Avalonia.Win32_net4.x_x86.dll $(TargetDir)Avalonia.Win32.dll" />
+    <Exec Condition=" '$(Platform)'=='x86' AND '$(TargetFramework)' == 'net462' "
+          Command="$(CopyCommand) $(SolutionDir)vendor$(DirectorySeparatorChar)lib$(DirectorySeparatorChar)Avalonia.Win32_net4.x_x86.dll $(TargetDir)" />
+    <Exec Condition=" '$(Platform)'=='x86' AND '$(TargetFramework)' == 'net462' "
+          Command="$(CopyCommand) $(SolutionDir)vendor$(DirectorySeparatorChar)lib$(DirectorySeparatorChar)Avalonia.Win32_net4.x_x86.dll $(PublishDir)" />
 
+    <Exec Condition=" '$(Platform)'=='x86' AND '$(TargetFramework)' == 'net462' "
+          Command="$(DeleteCommand) $(TargetDir)Avalonia.Win32.dll" />
+    <Exec Condition=" '$(Platform)'=='x86' AND '$(TargetFramework)' == 'net462' "
+          Command="$(DeleteCommand) $(PublishDir)Avalonia.Win32.dll" />
+
+    <Exec Condition=" '$(Platform)'=='x86' AND '$(TargetFramework)' == 'net462' "
+          Command="$(RenameCommand) $(TargetDir)Avalonia.Win32_net4.x_x86.dll Avalonia.Win32.dll" />
+    <Exec Condition=" '$(Platform)'=='x86' AND '$(TargetFramework)' == 'net462' "
+          Command="$(RenameCommand) $(PublishDir)Avalonia.Win32_net4.x_x86.dll Avalonia.Win32.dll" />
   </Target>
 
-    <!-- Delete KOTORModSync logs and other data -->
+  <!-- Delete logs and other temp output -->
+  <ItemGroup>
+    <TextFiles Include="$(TargetDir)*.txt"/>
+    <TmlFiles Include="$(TargetDir)*.tml"/>
+    <TomlFiles Include="$(TargetDir)*.toml"/>
+    <LogFiles Include="$(TargetDir)*.log"/>
+    <BackupFolder Include="$(SolutionDir)/logs_and_data_saved_from_dotnet_clean"/>
+  </ItemGroup>
   <Target Name="MyDistClean" AfterTargets="Clean">
     <Message Importance="High" Text=" ## Running custom Clean target..." />
-    <Exec Condition=" '$(OS)' == 'Windows_NT'" Command="if not exist &quot;$(SolutionDir)\logs_and_data_saved_from_dotnet_clean&quot; mkdir &quot;$(SolutionDir)\logs_and_data_saved_from_dotnet_clean&quot;" />
-    <Exec Condition=" '$(OS)' == 'Windows_NT'" Command="for %%F in ($(TargetDir)*.tml) do move /Y &quot;%%F&quot; &quot;$(SolutionDir)\logs_and_data_saved_from_dotnet_clean&quot;" />
-    <Exec Condition=" '$(OS)' == 'Windows_NT'" Command="for %%F in ($(TargetDir)*.txt) do move /Y &quot;%%F&quot; &quot;$(SolutionDir)\logs_and_data_saved_from_dotnet_clean&quot;" />
-    <Exec Condition=" '$(OS)' == 'Windows_NT'" Command="for %%F in ($(TargetDir)*.log) do move /Y &quot;%%F&quot; &quot;$(SolutionDir)\logs_and_data_saved_from_dotnet_clean&quot;" />
-    <Exec Condition=" '$(OS)' == 'Windows_NT'" Command="for %%F in ($(TargetDir)*.toml) do move /Y &quot;%%F&quot; &quot;$(SolutionDir)\logs_and_data_saved_from_dotnet_clean&quot;" />
-    <Exec Condition=" '$(IsUnix)' == 'true'" Command="mv $(TargetDir)\*.tml $(SolutionDir)\logs_and_data_saved_from_dotnet_clean" />
-    <Exec Condition=" '$(IsUnix)' == 'true'" Command="mv $(TargetDir)\*.toml $(SolutionDir)\logs_and_data_saved_from_dotnet_clean" />
-    <Exec Condition=" '$(IsUnix)' == 'true'" Command="mv $(TargetDir)\*.txt $(SolutionDir)\logs_and_data_saved_from_dotnet_clean" />
-    <Exec Condition=" '$(IsUnix)' == 'true'" Command="mv $(TargetDir)\*.log $(SolutionDir)\logs_and_data_saved_from_dotnet_clean" />
+    <Exec Condition=" '$(OS)' == 'Windows_NT' " Command="if not exist &quot;$(SolutionDir)logs_and_data_saved_from_dotnet_clean&quot; mkdir &quot;$(SolutionDir)logs_and_data_saved_from_dotnet_clean&quot;" />
+    <Move SourceFiles="@(TextFiles)" DestinationFolder="@(BackupFolder)"/>
+    <Move SourceFiles="@(TmlFiles)" DestinationFolder="@(BackupFolder)"/>
+    <Move SourceFiles="@(TomlFiles)" DestinationFolder="@(BackupFolder)"/>
+    <Move SourceFiles="@(LogFiles)" DestinationFolder="@(BackupFolder)"/>
   </Target>
 
   <!-- Zip everything up for a release. Doesn't work yet. -->
@@ -172,4 +203,3 @@
   </PropertyGroup>
 
 </Project>
-

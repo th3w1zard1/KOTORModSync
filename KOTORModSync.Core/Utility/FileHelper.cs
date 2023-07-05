@@ -19,6 +19,7 @@ namespace KOTORModSync.Core.Utility
                 : itemInArchivePath;
 
         // Stop TSLPatcher from automatically assuming the KOTOR directory.
+        // use PlaintextLog=1
         public static void ReplaceLookupGameFolder( DirectoryInfo directory )
         {
             FileInfo[] iniFiles = directory.GetFiles( "*.ini", SearchOption.AllDirectories );
@@ -41,10 +42,42 @@ namespace KOTORModSync.Core.Utility
                     continue;
                 }
 
-                Logger.Log( "Found" );
-
-                // Use Regex.Replace to replace the pattern with "LookupGameFolder=0" (ignoring whitespace)
+                Logger.Log( $"Preventing tslpatcher automatic game lookups '{file.Name}'" );
+                Logger.LogVerbose( $"change 'LookupGameFolder' from 1 to 0 in '{file.Name}'" );
                 fileContents = Regex.Replace( fileContents, pattern, "LookupGameFolder=0" );
+
+                // Write the modified file contents back to the file
+                File.WriteAllText( filePath, fileContents );
+            }
+        }
+
+        // Stop TSLPatcher from automatically assuming the KOTOR directory.
+        // use PlaintextLog=1
+        public static void ReplacePlaintextLog( DirectoryInfo directory )
+        {
+            FileInfo[] iniFiles = directory.GetFiles( "*.ini", SearchOption.AllDirectories );
+            if ( iniFiles.Length == 0 )
+            {
+                throw new InvalidOperationException( "No .ini files found!" );
+            }
+
+            foreach ( FileInfo file in iniFiles )
+            {
+                string filePath = file.FullName;
+                string fileContents = File.ReadAllText( filePath );
+
+                // Create a regular expression pattern to match "PlaintextLog=0" with optional whitespace
+                const string pattern = @"PlaintextLog\s*=\s*0";
+
+                // Use Regex.IsMatch to check if the pattern exists in the file contents
+                if ( !Regex.IsMatch( fileContents, pattern, RegexOptions.IgnoreCase ) )
+                {
+                    continue;
+                }
+
+                Logger.Log( $"Redirecting TSLPatcher logging from '{file.Name}' to 'installlog.txt'" );
+                Logger.LogVerbose( $"change 'PlaintextLog' from 0 to 1 in '{file.Name}'" );
+                fileContents = Regex.Replace( fileContents, pattern, "PlaintextLog=1" );
 
                 // Write the modified file contents back to the file
                 File.WriteAllText( filePath, fileContents );

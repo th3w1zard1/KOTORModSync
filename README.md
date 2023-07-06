@@ -34,6 +34,7 @@ See https://pastebin.com/7gML3zCJ for a quick explanation of those fields. See t
 ## Known bugs
 - The patcher option [PyKotorCLI](https://github.com/NickHugi/PyKotor/pull/7) has not been fully tested. However, this is the only option supported on Linux/Mac. Because of this, unless you're interested in testing, OR you are running Linux/mac, please refrain from using this option until more tests have been done.
 - (Windows) Left-clicking on the console output window causes the whole program to pause. This is a Windows feature I believe, it allows the user to quickly select/copy/paste console output while it's being generated. While this isn't inherently a problem, if a user happens to do this while KOTORModSync is running async code, you may experience timeout events during an install. Please refrain from left-clicking the console window during an installation.
+- (Linux/Mac) Most mods require TSLRCM to be installed, however TSLRCM is released as a Windows-only installer. You will need to find a method to install this elsewhere and add those instructions to the KOTORModSync program before starting an install.
 
 ## Supported Platforms
 KOTORModSync is a cross-platform 32-bit and 64-bit .NET application. It is compatible with the following operating systems:

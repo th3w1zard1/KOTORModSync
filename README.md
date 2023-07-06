@@ -28,8 +28,12 @@ You'll need to click 'set directories' and browse to your `<<kotorDirectory>>` a
 Once you do this, load an instructions file (or create one), then select the mods to be installed and press 'install all'.
 
 ## Creating instructions.
-The installer parses the fields `InstallBefore`, `InstallAfter`, `Dependencies` and `Restrictions` to define dependencies and incompatibilities.
-See https://pastebin.com/7gML3zCJ for a quick explanation on those fields. See the examples for the `Ultimate Character Overhaul` and the `Handmaiden/Disciple Same-Gender Romance Mod` for the more complex examples.
+The installer parses the fields `InstallBefore`, `InstallAfter`, `Dependencies`, and `Restrictions` to define dependencies and incompatibilities.
+See https://pastebin.com/7gML3zCJ for a quick explanation of those fields. See the examples for the `Ultimate Character Overhaul` and the `Handmaiden/Disciple Same-Gender Romance Mod` for the more complex examples.
+
+## Known bugs
+- The patcher option [PyKotorCLI](https://github.com/NickHugi/PyKotor/pull/7) has not been fully tested. However, this is the only option supported on Linux/Mac. Because of this, unless you're interested in testing, OR you are running Linux/mac, please refrain from using this option until more tests have been done.
+- (Windows) Left-clicking on the console output window causes the whole program to pause. This is a Windows feature I believe, it allows the user to quickly select/copy/paste console output while it's being generated. While this isn't inherently a problem, if a user happens to do this while KOTORModSync is running async code, you may experience timeout events during an install. Please refrain from left-clicking the console window during an installation.
 
 ## Supported Platforms
 KOTORModSync is a cross-platform 32-bit and 64-bit .NET application. It is compatible with the following operating systems:
@@ -83,7 +87,7 @@ Thank you for helping test that obnoxious UAC elevation problem legacy Windows a
 Created *TSLPatcherCLI* used in the project.
 
 #### Fair-Strides
-Made *TSLPatcher* open-source on GitHub
+Released source code of *TSLPatcher* on GitHub, and coded in a few updates to the program.
 
 #### *Stoffe*
 The original creator of *TSLPatcher*

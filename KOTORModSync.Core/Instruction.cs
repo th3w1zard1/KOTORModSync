@@ -160,7 +160,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                 var destinationPath = new DirectoryInfo( Utility.Utility.ReplaceCustomVariables( Destination ) );
                 if ( !destinationPath.Exists )
                 {
-                    ( FileSystemInfo caseSensitiveDestination, List<string> isMultiple )
+                    (FileSystemInfo caseSensitiveDestination, List<string> isMultiple)
                         = PlatformAgnosticMethods.GetClosestMatchingEntry( destinationPath.FullName );
 
                     destinationPath = (DirectoryInfo)caseSensitiveDestination
@@ -690,7 +690,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                         await Logger.LogVerboseAsync( $"Using CLI to run command: '{tslPatcherCliPath} {args}'" );
                     }
 
-                    ( int exitCode, string output, string error ) = await PlatformAgnosticMethods.ExecuteProcessAsync(
+                    (int exitCode, string output, string error) = await PlatformAgnosticMethods.ExecuteProcessAsync(
                         tslPatcherCliPath,
                         args,
                         noAdmin: MainConfig.NoAdmin
@@ -753,7 +753,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                             );
                         }
 
-                        ( int childExitCode, string output, string error )
+                        (int childExitCode, string output, string error)
                             = await PlatformAgnosticMethods.ExecuteProcessAsync(
                                 thisProgram,
                                 noAdmin: MainConfig.NoAdmin

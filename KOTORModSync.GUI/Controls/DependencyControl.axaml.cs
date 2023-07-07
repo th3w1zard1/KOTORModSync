@@ -20,7 +20,8 @@ namespace KOTORModSync.Controls
     {
         public DependencyControl() => InitializeComponent();
 
-        [NotNull] public static readonly StyledProperty<List<Guid>> ThisGuidListProperty
+        [NotNull]
+        public static readonly StyledProperty<List<Guid>> ThisGuidListProperty
             = AvaloniaProperty.Register<DependencyControl, List<Guid>>( nameof( ThisGuidList ) );
 
         [NotNull]
@@ -30,7 +31,8 @@ namespace KOTORModSync.Controls
             set => SetValue( ThisGuidListProperty, value );
         }
 
-        [NotNull] public static readonly StyledProperty<List<Component>> ThisComponentListProperty
+        [NotNull]
+        public static readonly StyledProperty<List<Component>> ThisComponentListProperty
             = AvaloniaProperty.Register<DependencyControl, List<Component>>( nameof( ThisGuidList ) );
 
         [NotNull]

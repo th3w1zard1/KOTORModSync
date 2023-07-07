@@ -592,11 +592,11 @@ namespace KOTORModSync.Core
                 var componentTables = tomlTable["thisMod"] as TomlTableArray;
 
                 var components = new List<Component>( 65535 );
-                foreach ( ( TomlObject tomlComponent, Component component ) in
+                foreach ( (TomlObject tomlComponent, Component component) in
                          // Deserialize each TomlTable into a Component object
                          from TomlObject tomlComponent in componentTables
                          let component = new Component()
-                         select ( tomlComponent, component ) )
+                         select (tomlComponent, component) )
                 {
                     component.DeserializeComponent( tomlComponent );
                     components.Add( component );
@@ -677,7 +677,7 @@ namespace KOTORModSync.Core
         {
             if ( !ShouldInstallComponent( componentsList ) )
             {
-                return ( InstallExitCode.DependencyViolation, null );
+                return (InstallExitCode.DependencyViolation, null);
             }
 
             for ( int instructionIndex = 1; instructionIndex <= Instructions.Count; instructionIndex++ )
@@ -841,7 +841,7 @@ namespace KOTORModSync.Core
 
                         // case null: cancel installing this mod (user closed confirmation dialog)
                         default:
-                            return ( InstallExitCode.UserCancelledInstall, null );
+                            return (InstallExitCode.UserCancelledInstall, null);
                     }
                 }
 
@@ -894,7 +894,7 @@ namespace KOTORModSync.Core
                 }
             }
 
-            return ( InstallExitCode.Success, new Dictionary<SHA1, FileInfo>() );
+            return (InstallExitCode.Success, new Dictionary<SHA1, FileInfo>());
         }
 
         public static Dictionary<string, List<Component>> GetConflictingComponents
@@ -1052,7 +1052,7 @@ namespace KOTORModSync.Core
 
             bool isCorrectOrder = orderedComponents.SequenceEqual( components );
 
-            return ( isCorrectOrder, orderedComponents );
+            return (isCorrectOrder, orderedComponents);
         }
 
         // use a graph traversal algorithm
@@ -1210,7 +1210,7 @@ namespace KOTORModSync.Core
         public event PropertyChangedEventHandler PropertyChanged;
 
         protected virtual void OnPropertyChanged
-            ( [CallerMemberName] [CanBeNull] string propertyName = null ) => PropertyChanged?.Invoke(
+            ( [CallerMemberName][CanBeNull] string propertyName = null ) => PropertyChanged?.Invoke(
             this,
             new PropertyChangedEventArgs( propertyName )
         );

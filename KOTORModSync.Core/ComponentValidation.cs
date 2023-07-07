@@ -402,22 +402,22 @@ namespace KOTORModSync.Core
             if ( hasError )
             {
                 AddError( $"Invalid source path '{sourcePath}'. Reason: {errorDescription}", instruction );
-                return ( false, archiveNameFound );
+                return (false, archiveNameFound);
             }
 
             if ( foundInAnyArchive )
             {
-                return ( true, true );
+                return (true, true);
             }
 
             // todo, stop displaying errors for self extracting executables. This is the only mod using one that I've seen out of 200-some.
             if ( Component.Name.Equals( "Improved AI", StringComparison.OrdinalIgnoreCase ) )
             {
-                return ( true, true );
+                return (true, true);
             }
 
             AddError( $"Failed to find '{sourcePath}' in any archives!", instruction );
-            return ( false, archiveNameFound );
+            return (false, archiveNameFound);
         }
 
         private static ArchivePathCode IsPathInArchive( string relativePath, string archivePath )

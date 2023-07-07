@@ -50,7 +50,8 @@ namespace KOTORModSync.Core
 
         public enum AvailablePatchers
         {
-            [DefaultValue( true )] [Description( "Use TSLPatcher" )]
+            [DefaultValue( true )]
+            [Description( "Use TSLPatcher" )]
             TSLPatcher = 0,
 
             [Description( "Use TSLPatcherCLI (not tested)" )]
@@ -154,7 +155,7 @@ namespace KOTORModSync.Core
 
         // used for the ui.
         protected virtual void OnPropertyChanged
-            ( [CallerMemberName] [CanBeNull] string propertyName = null ) => PropertyChanged?.Invoke(
+            ( [CallerMemberName][CanBeNull] string propertyName = null ) => PropertyChanged?.Invoke(
             this,
             new PropertyChangedEventArgs( propertyName )
         );

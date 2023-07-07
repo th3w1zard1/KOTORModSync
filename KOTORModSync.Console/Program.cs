@@ -29,7 +29,7 @@ namespace KOTORModSync.ConsoleApp
                     if ( index == 0 )
                         Console.WriteLine( $"KOTORModSync CLI called with {args.Length} arguments." );
                     string arg = args[index];
-                    Console.WriteLine( $"Argument #{index+1}: {arg}" );
+                    Console.WriteLine( $"Argument #{index + 1}: {arg}" );
                 }
 
                 bool exit = false;

@@ -9,8 +9,8 @@ namespace KOTORModSync.Controls
 {
     public class TooltipProperties
     {
-        public static readonly AttachedProperty<string> TooltipProperty =
-            AvaloniaProperty.RegisterAttached<TooltipProperties, Control, string>( "Tooltip" );
+        public static readonly AttachedProperty<string> TooltipProperty
+            = AvaloniaProperty.RegisterAttached<TooltipProperties, Control, string>( "Tooltip" );
 
         public static string GetTooltip( Control element ) => element.GetValue( TooltipProperty );
 

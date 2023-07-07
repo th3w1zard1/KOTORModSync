@@ -157,12 +157,11 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
 
             if ( Destination != null )
             {
-                var destinationPath = new DirectoryInfo(
-                    Utility.Utility.ReplaceCustomVariables( Destination )
-                );
+                var destinationPath = new DirectoryInfo( Utility.Utility.ReplaceCustomVariables( Destination ) );
                 if ( !destinationPath.Exists )
                 {
-                    (FileSystemInfo caseSensitiveDestination, List<string> isMultiple) = PlatformAgnosticMethods.GetClosestMatchingEntry( destinationPath.FullName );
+                    ( FileSystemInfo caseSensitiveDestination, List<string> isMultiple )
+                        = PlatformAgnosticMethods.GetClosestMatchingEntry( destinationPath.FullName );
 
                     destinationPath = (DirectoryInfo)caseSensitiveDestination
                         ?? throw new DirectoryNotFoundException( "Could not find the 'Destination' path!" );
@@ -171,9 +170,12 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                 RealDestinationPath = destinationPath;
             }
 
-            if ( !noValidate && RealSourcePaths.Count == 0 )
+            if ( !noValidate
+                && RealSourcePaths.Count == 0 )
             {
-                throw new FileNotFoundException( $"Could not find any files in the 'Source' path! Got [{string.Join( ", ", Source )}]" );
+                throw new FileNotFoundException(
+                    $"Could not find any files in the 'Source' path! Got [{string.Join( ", ", Source )}]"
+                );
             }
         }
 
@@ -353,7 +355,8 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
             }
 
             string[] files = Directory.GetFiles( directoryPath.FullName );
-            var fileNameCounts = new Dictionary<string, int>( StringComparer.OrdinalIgnoreCase ); ;
+            var fileNameCounts = new Dictionary<string, int>( StringComparer.OrdinalIgnoreCase );
+            ;
 
             foreach ( string filePath in files )
             {
@@ -385,12 +388,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                 if ( string.IsNullOrEmpty( fileNameWithoutExtension )
                     || !fileNameCounts.ContainsKey( fileNameWithoutExtension )
                     || fileNameCounts[fileNameWithoutExtension] <= 1
-                    || !string.Equals(
-                        fileExtensionFromFile,
-                        fileExtension,
-                        StringComparison.OrdinalIgnoreCase
-                    )
-                   )
+                    || !string.Equals( fileExtensionFromFile, fileExtension, StringComparison.OrdinalIgnoreCase ) )
                 {
                     continue;
                 }
@@ -415,7 +413,8 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                 {
                     var thisFile = new FileInfo( thisFilePath );
 
-                    if ( !Path.IsPathRooted( thisFilePath ) || !thisFile.Exists )
+                    if ( !Path.IsPathRooted( thisFilePath )
+                        || !thisFile.Exists )
                     {
                         var ex = new ArgumentNullException(
                             $"Invalid wildcards or file does not exist: '{thisFilePath}'"
@@ -451,9 +450,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
             try
             {
                 ActionExitCode exitCode = ActionExitCode.Success;
-                foreach ( string sourcePath
-                         in Source.ConvertAll( Utility.Utility.ReplaceCustomVariables )
-                        )
+                foreach ( string sourcePath in Source.ConvertAll( Utility.Utility.ReplaceCustomVariables ) )
                 {
                     // Check if the source file already exists
                     string fileName = Path.GetFileName( sourcePath );
@@ -521,13 +518,11 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                 foreach ( string sourcePath in RealSourcePaths )
                 {
                     string fileName = Path.GetFileName( sourcePath );
-                    string destinationFilePath = Path.Combine(
-                        RealDestinationPath.FullName,
-                        fileName
-                    );
+                    string destinationFilePath = Path.Combine( RealDestinationPath.FullName, fileName );
 
                     // Check if the destination file already exists
-                    if ( !Overwrite && File.Exists( destinationFilePath ) )
+                    if ( !Overwrite
+                        && File.Exists( destinationFilePath ) )
                     {
                         Logger.Log(
                             $"Skipping file '{Path.GetFileName( destinationFilePath )}' ( Overwrite set to False )"
@@ -565,13 +560,11 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                 foreach ( string sourcePath in RealSourcePaths )
                 {
                     string fileName = Path.GetFileName( sourcePath );
-                    string destinationFilePath = Path.Combine(
-                        RealDestinationPath.FullName,
-                        fileName
-                    );
+                    string destinationFilePath = Path.Combine( RealDestinationPath.FullName, fileName );
 
                     // Check if the destination file already exists
-                    if ( !Overwrite && File.Exists( destinationFilePath ) )
+                    if ( !Overwrite
+                        && File.Exists( destinationFilePath ) )
                     {
                         Logger.Log(
                             $"Skipping file '{Path.GetFileName( destinationFilePath )}' ( Overwrite set to False )"
@@ -614,7 +607,8 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                         ? new FileInfo( t ).Directory // It's a file, get the parent folder.
                         : new DirectoryInfo( t ); // It's a folder, create a DirectoryInfo instance
 
-                    if ( tslPatcherDirectory == null || !tslPatcherDirectory.Exists )
+                    if ( tslPatcherDirectory == null
+                        || !tslPatcherDirectory.Exists )
                     {
                         throw new DirectoryNotFoundException(
                             $"The directory '{t}' could not be located on the disk."
@@ -622,10 +616,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                     }
 
                     //PlaintextLog=0
-                    string fullInstallLogFile = Path.Combine(
-                        tslPatcherDirectory.FullName,
-                        "installlog.rtf"
-                    );
+                    string fullInstallLogFile = Path.Combine( tslPatcherDirectory.FullName, "installlog.rtf" );
                     if ( File.Exists( fullInstallLogFile ) )
                     {
                         if ( File.Exists( fullInstallLogFile ) )
@@ -635,10 +626,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                     }
 
                     //PlaintextLog=1
-                    fullInstallLogFile = Path.Combine(
-                        tslPatcherDirectory.FullName,
-                        "installlog.txt"
-                    );
+                    fullInstallLogFile = Path.Combine( tslPatcherDirectory.FullName, "installlog.txt" );
                     if ( File.Exists( fullInstallLogFile ) )
                     {
                         File.Delete( fullInstallLogFile );
@@ -661,7 +649,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                         case MainConfig.AvailablePatchers.PyKotorCLI:
                             thisExe = RuntimeInformation.IsOSPlatform( OSPlatform.Windows )
                                 ? "pykotorcli.exe" // windows
-                                : "pykotorcli";    // linux/mac
+                                : "pykotorcli"; // linux/mac
                             break;
                         case MainConfig.AvailablePatchers.TSLPatcherCLI:
                             thisExe = "TSLPatcherCLI.exe";
@@ -687,7 +675,8 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
 
                         tslPatcherCliPath = new FileInfo(
                             Path.Combine(
-                                Path.GetDirectoryName( executingAssemblyLocation ) ?? throw new InvalidOperationException(),
+                                Path.GetDirectoryName( executingAssemblyLocation )
+                                ?? throw new InvalidOperationException(),
                                 thisExe
                             )
                         );
@@ -697,10 +686,15 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
 
                     await Logger.LogAsync( "Run TSLPatcher instructions..." );
                     if ( MainConfig.PatcherOption != MainConfig.AvailablePatchers.TSLPatcher )
+                    {
                         await Logger.LogVerboseAsync( $"Using CLI to run command: '{tslPatcherCliPath} {args}'" );
+                    }
 
-                    (int exitCode, string output, string error)
-                        = await PlatformAgnosticMethods.ExecuteProcessAsync( tslPatcherCliPath, args, noAdmin: MainConfig.NoAdmin );
+                    ( int exitCode, string output, string error ) = await PlatformAgnosticMethods.ExecuteProcessAsync(
+                        tslPatcherCliPath,
+                        args,
+                        noAdmin: MainConfig.NoAdmin
+                    );
                     await Logger.LogVerboseAsync( $"'{tslPatcherCliPath.Name}' exited with exit code {exitCode}" );
 
                     await Logger.LogAsync( output );
@@ -723,7 +717,9 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                     }
 
 
-                    return exitCode == 0 ? ActionExitCode.Success : ActionExitCode.TSLPatcherCLIError;
+                    return exitCode == 0
+                        ? ActionExitCode.Success
+                        : ActionExitCode.TSLPatcherCLIError;
                 }
 
                 return ActionExitCode.Success;
@@ -757,8 +753,11 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                             );
                         }
 
-                        (int childExitCode, string output, string error)
-                            = await PlatformAgnosticMethods.ExecuteProcessAsync( thisProgram, noAdmin: MainConfig.NoAdmin );
+                        ( int childExitCode, string output, string error )
+                            = await PlatformAgnosticMethods.ExecuteProcessAsync(
+                                thisProgram,
+                                noAdmin: MainConfig.NoAdmin
+                            );
 
                         _ = Logger.LogVerboseAsync( output + Environment.NewLine + error );
                         if ( childExitCode == 0 )
@@ -800,15 +799,13 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                     continue;
                 }
 
-                string tslPatcherDirPath
-                    = Path.GetDirectoryName( sourcePath )
-                    ?? throw new DirectoryNotFoundException( $"Could not retrieve parent directory of '{sourcePath}'." );
+                string tslPatcherDirPath = Path.GetDirectoryName( sourcePath )
+                    ?? throw new DirectoryNotFoundException(
+                        $"Could not retrieve parent directory of '{sourcePath}'."
+                    );
 
                 //PlaintextLog=0
-                string fullInstallLogFile = Path.Combine(
-                    tslPatcherDirPath,
-                    "installlog.rtf"
-                );
+                string fullInstallLogFile = Path.Combine( tslPatcherDirPath, "installlog.rtf" );
 
                 if ( !File.Exists( fullInstallLogFile ) )
                 {
@@ -822,9 +819,13 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
 
                 string installLogContent = File.ReadAllText( fullInstallLogFile );
                 var installErrors = new List<string>();
-                foreach ( string thisLine in installLogContent.Split( '\n' ) )
+                foreach ( string thisLine in installLogContent.Split(
+                             Path.DirectorySeparatorChar,
+                             Path.AltDirectorySeparatorChar
+                         ) )
                 {
-                    if ( !thisLine.Contains( "Error: " ) )
+                    if ( !thisLine.Contains( "Error: " )
+                        && !thisLine.Contains( "[Error]" ) )
                     {
                         continue;
                     }
@@ -844,22 +845,20 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
         public void CleanupTSLPatcherInstall()
         {
             Logger.LogVerbose( "Preparing TSLPatcher install..." );
-            foreach ( string sourcePath in this.RealSourcePaths )
+            foreach ( string sourcePath in RealSourcePaths )
             {
                 if ( sourcePath == null )
                 {
                     continue;
                 }
 
-                string tslPatcherDirPath
-                    = Path.GetDirectoryName( sourcePath )
-                    ?? throw new DirectoryNotFoundException( $"Could not retrieve parent directory of '{sourcePath}'." );
+                string tslPatcherDirPath = Path.GetDirectoryName( sourcePath )
+                    ?? throw new DirectoryNotFoundException(
+                        $"Could not retrieve parent directory of '{sourcePath}'."
+                    );
 
                 //PlaintextLog=0
-                string fullInstallLogFile = Path.Combine(
-                    tslPatcherDirPath,
-                    "installlog.rtf"
-                );
+                string fullInstallLogFile = Path.Combine( tslPatcherDirPath, "installlog.rtf" );
 
                 if ( !File.Exists( fullInstallLogFile ) )
                 {
@@ -881,15 +880,19 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
 
         public event PropertyChangedEventHandler PropertyChanged;
 
-        protected virtual void OnPropertyChanged( [CallerMemberName] string propertyName = null )
-        {
-            PropertyChanged?.Invoke( this, new PropertyChangedEventArgs( propertyName ) );
-        }
+        protected virtual void OnPropertyChanged
+            ( [CallerMemberName] string propertyName = null ) => PropertyChanged?.Invoke(
+            this,
+            new PropertyChangedEventArgs( propertyName )
+        );
 
         protected bool SetField<T>( ref T field, T value, [CallerMemberName] string propertyName = null )
         {
             if ( EqualityComparer<T>.Default.Equals( field, value ) )
+            {
                 return false;
+            }
+
             field = value;
             OnPropertyChanged( propertyName );
             return true;

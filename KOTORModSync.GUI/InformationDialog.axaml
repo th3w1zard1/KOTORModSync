@@ -9,16 +9,17 @@
                    FontSize="16"
                    Text="{Binding Title}"
                    Margin="10"
-                   Grid.Row="0"/>
+                   Grid.Row="0" />
         <TextBlock x:Name="InfoTextBlock"
                    HorizontalAlignment="Center"
                    VerticalAlignment="Center"
                    FontSize="16"
                    TextWrapping="Wrap"
                    Margin="10"
-                   Grid.Row="1"/>
-        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="10">
-            <Button Content="OK" Click="OKButton_Click" MinWidth="80" Margin="5"/>
+                   Grid.Row="1" />
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Bottom"
+                    Margin="10">
+            <Button Content="OK" Click="OKButton_Click" MinWidth="80" Margin="5" />
         </StackPanel>
     </Grid>
 </Window>

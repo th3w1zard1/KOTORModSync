@@ -13,7 +13,8 @@ namespace KOTORModSync.Converters
     public class GuidListToComponentNames : IMultiValueConverter
     {
         [CanBeNull]
-        public object Convert(
+        public object Convert
+        (
             [NotNull] IList<object> values,
             [NotNull] Type targetType,
             [CanBeNull] object parameter,
@@ -22,10 +23,8 @@ namespace KOTORModSync.Converters
         {
             try
             {
-                if (
-                    !( values[0] is List<Guid> guids )
-                    || !( values[1] is List<Component> componentsList )
-                )
+                if ( !( values[0] is List<Guid> guids )
+                    || !( values[1] is List<Component> componentsList ) )
                 {
                     return null;
                 }
@@ -40,7 +39,9 @@ namespace KOTORModSync.Converters
                 }
 
                 if ( selectedComponentNames.Count == 0 )
+                {
                     return new List<string> { "None Selected" };
+                }
 
                 return selectedComponentNames;
             }
@@ -51,5 +52,4 @@ namespace KOTORModSync.Converters
             }
         }
     }
-
 }

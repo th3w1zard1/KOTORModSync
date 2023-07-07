@@ -42,8 +42,9 @@ namespace KOTORModSync
             // Subscribe to the Logger.ExceptionLogged event to capture exceptions
             Logger.ExceptionLogged += ex =>
             {
-                _ = _logBuilder
-                    .Append( "Exception: " ).Append( ex.GetType().Name ).Append( ": " )
+                _ = _logBuilder.Append( "Exception: " )
+                    .Append( ex.GetType().Name )
+                    .Append( ": " )
                     .AppendLine( ex.Message )
                     .Append( "Stack trace: " )
                     .AppendLine( ex.StackTrace );

@@ -2,8 +2,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:local="clr-namespace:KOTORModSync" 
-             xmlns:converters="clr-namespace:KOTORModSync.Converters" 
+             xmlns:converters="clr-namespace:KOTORModSync.Converters"
              xmlns:controls="clr-namespace:KOTORModSync.Controls"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="KOTORModSync.Controls.DependencyControl">
@@ -15,8 +14,10 @@
         <ListBox x:Name="DependenciesListBox" SelectionMode="Multiple">
             <ListBox.Items>
                 <MultiBinding Converter="{StaticResource GuidListToComponentNames}">
-                    <Binding Path="ThisGuidList" RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType={x:Type controls:DependencyControl}}" />
-                    <Binding Path="ThisComponentList" RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType={x:Type controls:DependencyControl}}" />
+                    <Binding Path="ThisGuidList"
+                             RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType={x:Type controls:DependencyControl}}" />
+                    <Binding Path="ThisComponentList"
+                             RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType={x:Type controls:DependencyControl}}" />
                 </MultiBinding>
             </ListBox.Items>
             <ListBox.ItemTemplate>
@@ -30,7 +31,8 @@
                       Tag="{Binding ElementName=DependenciesListBox}"
                       HorizontalAlignment="Stretch">
                 <ComboBox.Items>
-                    <Binding Path="ThisComponentList" RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType={x:Type controls:DependencyControl}}" />
+                    <Binding Path="ThisComponentList"
+                             RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType={x:Type controls:DependencyControl}}" />
                 </ComboBox.Items>
                 <ComboBox.ItemTemplate>
                     <DataTemplate>
@@ -41,10 +43,10 @@
             <StackPanel>
                 <Button Content="Add to List" Click="AddToList_Click"
                         Tag="{Binding ElementName=DependenciesComboBox}"
-                        HorizontalAlignment="Left" HorizontalContentAlignment="Center"/>
+                        HorizontalAlignment="Left" HorizontalContentAlignment="Center" />
                 <Button Content="Remove from List" Click="RemoveFromList_Click"
                         Tag="{Binding ElementName=DependenciesListBox}"
-                        HorizontalAlignment="Left" HorizontalContentAlignment="Center"/>
+                        HorizontalAlignment="Left" HorizontalContentAlignment="Center" />
             </StackPanel>
         </StackPanel>
     </DockPanel>

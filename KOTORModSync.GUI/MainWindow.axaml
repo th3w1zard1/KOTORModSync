@@ -1,265 +1,312 @@
 <Window xmlns="https://github.com/avaloniaui"
-		xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:core="clr-namespace:KOTORModSync.Core;assembly=KOTORModSync.Core"
         xmlns:converters="clr-namespace:KOTORModSync.Converters"
         xmlns:local="clr-namespace:KOTORModSync"
         x:Class="KOTORModSync.MainWindow"
         xmlns:control="clr-namespace:KOTORModSync.Controls"
-		Title="KOTORModSync v0.6.2"
-		Width="1280" Height="720" MinWidth="600" MinHeight="400">
+        Title="KOTORModSync v0.6.2"
+        Width="1280" Height="720" MinWidth="600" MinHeight="400">
 
-	<Window.Styles>
-		<StyleInclude Source="/Styles/Kotor2Style.axaml" />
-	</Window.Styles>
+    <Window.Styles>
+        <StyleInclude Source="/Styles/Kotor2Style.axaml" />
+    </Window.Styles>
 
-	<Window.Resources>
-		<converters:BooleanToArrowConverter x:Key="BooleanToArrowConverter" />
-		<converters:ListToStringConverter x:Key="ListToStringConverter" />
-        <converters:IndexConverter x:Key="IndexConverter"/>
-        <converters:ActionConverter x:Key="ActionConverter"/>
-        <converters:ComboBoxItemConverter x:Key="ComboBoxItemConverter"/>
+    <Window.Resources>
+        <converters:ListToStringConverter x:Key="ListToStringConverter" />
+        <converters:IndexConverter x:Key="IndexConverter" />
+        <converters:ActionConverter x:Key="ActionConverter" />
         <converters:EnumDescriptionConverter x:Key="EnumConverter" />
         <converters:StringToGuidConverter x:Key="GuidConverter" />
-        <converters:GuidListToComponentNames x:Key="GuidListToComponentNames" />
-        <converters:ComponentToGuidConverter x:Key="ComponentToGuidConverter" />
-	</Window.Resources>
-	<Grid x:Name="MainGrid" MinWidth="200" RowDefinitions="Auto,*">
-		<Grid.ColumnDefinitions>
-			<ColumnDefinition Width="*" MinWidth="250" />
-			<ColumnDefinition Width="*"/>
-			<ColumnDefinition Width="*" MinWidth="250" />
-		</Grid.ColumnDefinitions>
+    </Window.Resources>
+    <Grid x:Name="MainGrid" MinWidth="200" RowDefinitions="Auto,*">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" MinWidth="250" />
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="*" MinWidth="250" />
+        </Grid.ColumnDefinitions>
 
-		<TextBlock Grid.Column="0" Grid.Row="0" Grid.ColumnSpan="3" Text="KOTORModSync v0.7.1" FontSize="24" FontWeight="Bold" HorizontalAlignment="Center" Margin="0,10" />
-		<Grid Grid.Row="1" Grid.Column="0" RowDefinitions="*,Auto,Auto,Auto,Auto" >
-			<ScrollViewer Grid.Row="0" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
-				<TreeView x:Name="LeftTreeView" />
-			</ScrollViewer>
-			<Grid Grid.Row="1" Grid.Column="0" HorizontalAlignment="Stretch" Margin="3,1"
-				  RowDefinitions="Auto,Auto,Auto,Auto,Auto" ColumnDefinitions="*,*">
-				<Button Grid.Row="0" Grid.Column="0" Content="Add Mod" Click="AddComponentButton_Click"
-						HorizontalContentAlignment="Center" HorizontalAlignment="Stretch" VerticalContentAlignment="Center" />
-				<Button Grid.Row="0" Grid.Column="1" Content="Del Mod" Click="RemoveComponentButton_Click"
-						HorizontalContentAlignment="Center" HorizontalAlignment="Stretch" VerticalContentAlignment="Center" />
-				<Button Grid.Row="1" Grid.Column="0" Content="▲  Up  ▲" Click="MoveUpButton_Click"
-						HorizontalContentAlignment="Center" HorizontalAlignment="Stretch" VerticalContentAlignment="Center" />
-				<Button Grid.Row="1" Grid.Column="1" Content="▼ Down ▼" Click="MoveDownButton_Click"
-						HorizontalContentAlignment="Center" HorizontalAlignment="Stretch" VerticalContentAlignment="Center" />
-				<Button Grid.Row="2" Grid.Column="0" HorizontalContentAlignment="Center" HorizontalAlignment="Stretch" Content="Save Config" Click="SaveModFile_Click" />
-				<Button Grid.Row="2" Grid.Column="1" HorizontalContentAlignment="Center" HorizontalAlignment="Stretch" Content="Refresh List" Click="RefreshComponents_Click" />
+        <TextBlock Grid.Column="0" Grid.Row="0" Grid.ColumnSpan="3" Text="KOTORModSync v0.7.1" FontSize="24"
+                   FontWeight="Bold" HorizontalAlignment="Center" Margin="0,10" />
+        <Grid Grid.Row="1" Grid.Column="0" RowDefinitions="*,Auto,Auto,Auto,Auto">
+            <ScrollViewer Grid.Row="0" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
+                <TreeView x:Name="LeftTreeView" />
+            </ScrollViewer>
+            <Grid Grid.Row="1" Grid.Column="0" HorizontalAlignment="Stretch" Margin="3,1"
+                  RowDefinitions="Auto,Auto,Auto,Auto,Auto" ColumnDefinitions="*,*">
+                <Button Grid.Row="0" Grid.Column="0" Content="Add Mod" Click="AddComponentButton_Click"
+                        HorizontalContentAlignment="Center" HorizontalAlignment="Stretch"
+                        VerticalContentAlignment="Center" />
+                <Button Grid.Row="0" Grid.Column="1" Content="Del Mod" Click="RemoveComponentButton_Click"
+                        HorizontalContentAlignment="Center" HorizontalAlignment="Stretch"
+                        VerticalContentAlignment="Center" />
+                <Button Grid.Row="1" Grid.Column="0" Content="▲  Up  ▲" Click="MoveUpButton_Click"
+                        HorizontalContentAlignment="Center" HorizontalAlignment="Stretch"
+                        VerticalContentAlignment="Center" />
+                <Button Grid.Row="1" Grid.Column="1" Content="▼ Down ▼" Click="MoveDownButton_Click"
+                        HorizontalContentAlignment="Center" HorizontalAlignment="Stretch"
+                        VerticalContentAlignment="Center" />
+                <Button Grid.Row="2" Grid.Column="0" HorizontalContentAlignment="Center" HorizontalAlignment="Stretch"
+                        Content="Save Config" Click="SaveModFile_Click" />
+                <Button Grid.Row="2" Grid.Column="1" HorizontalContentAlignment="Center" HorizontalAlignment="Stretch"
+                        Content="Refresh List" Click="RefreshComponents_Click" />
 
-				<Button Grid.Row="3" Grid.Column="0" HorizontalContentAlignment="Center" HorizontalAlignment="Stretch" Grid.ColumnSpan="2" x:Name="ApplyEditorButton" Content="Apply Editor Changes" Click="SaveButton_Click" />
-				<Button Grid.Row="4" Grid.Column="0" HorizontalContentAlignment="Center" HorizontalAlignment="Stretch" Grid.ColumnSpan="2" Content="Install Selected Mod" Click="InstallModSingle_Click" />
-			</Grid>
-		</Grid>
+                <Button Grid.Row="3" Grid.Column="0" HorizontalContentAlignment="Center" HorizontalAlignment="Stretch"
+                        Grid.ColumnSpan="2" x:Name="ApplyEditorButton" Content="Apply Editor Changes"
+                        Click="SaveButton_Click" />
+                <Button Grid.Row="4" Grid.Column="0" HorizontalContentAlignment="Center" HorizontalAlignment="Stretch"
+                        Grid.ColumnSpan="2" Content="Install Selected Mod" Click="InstallModSingle_Click" />
+            </Grid>
+        </Grid>
         <GridSplitter Grid.Column="0" Grid.Row="1" Width="5" HorizontalAlignment="Right" />
-		<TabControl Grid.Row="1" Grid.Column="1" x:Name="TabControl" SelectionChanged="TabControl_SelectionChanged" HorizontalAlignment="Left">
-			<TabItem x:Name="InitialTab" IsVisible="False">
-				<TabItem.Content>
-					<TextBlock>Please load an instructions file or create a new instructions file by using the controls on the left.</TextBlock>
-				</TabItem.Content>
-			</TabItem>
-			<TabItem x:Name="GuiEditTabItem" Header="GUI Edit">
-				<TabItem.Content>
-					<ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" >
-						<ItemsControl x:Name="ComponentsItemsControl" Items="{Binding Components}">
+        <TabControl Grid.Row="1" Grid.Column="1" x:Name="TabControl" SelectionChanged="TabControl_SelectionChanged"
+                    HorizontalAlignment="Left">
+            <TabItem x:Name="InitialTab" IsVisible="False">
+                <TabItem.Content>
+                    <TextBlock>Please load an instructions file or create a new instructions file by using the controls on the left.</TextBlock>
+                </TabItem.Content>
+            </TabItem>
+            <TabItem x:Name="GuiEditTabItem" Header="GUI Edit">
+                <TabItem.Content>
+                    <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
+                        <ItemsControl x:Name="ComponentsItemsControl" Items="{Binding Components}">
                             <ItemsControl.ItemTemplate>
-								<DataTemplate DataType="core:Component">
-									<Grid x:Name="GuiEditGrid" ColumnDefinitions="Auto,Auto" RowDefinitions="*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*">
-                                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Information" FontSize="22" HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="0,10,0,40"/>
+                                <DataTemplate DataType="core:Component">
+                                    <Grid x:Name="GuiEditGrid" ColumnDefinitions="Auto,Auto"
+                                          RowDefinitions="*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*">
+                                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Information" FontSize="22"
+                                                   HorizontalAlignment="Left" VerticalAlignment="Bottom"
+                                                   Margin="0,10,0,40" />
                                         <TextBlock Grid.Row="1" Grid.Column="0" Text="Name:" />
-										<TextBox Grid.Row="2" Grid.Column="0" Text="{Binding Name}"
-                                                 Focusable="True" HorizontalAlignment="Stretch" TextWrapping="Wrap"/>
+                                        <TextBox Grid.Row="2" Grid.Column="0" Text="{Binding Name}"
+                                                 Focusable="True" HorizontalAlignment="Stretch" TextWrapping="Wrap" />
 
                                         <TextBlock Grid.Row="3" Grid.Column="0" Text="Guid:" />
-                                        <TextBox Grid.Row="4" Grid.Column="0" Text="{Binding Guid, Converter={StaticResource GuidConverter}}"
+                                        <TextBox Grid.Row="4" Grid.Column="0"
+                                                 Text="{Binding Guid, Converter={StaticResource GuidConverter}}"
                                                  Focusable="True" HorizontalAlignment="Stretch" />
-										<Button Grid.Row="4" Grid.Column="1" Content="Generate GUID" Click="GenerateGuidButton_Click"/>
+                                        <Button Grid.Row="4" Grid.Column="1" Content="Generate GUID"
+                                                Click="GenerateGuidButton_Click" />
 
                                         <TextBlock Grid.Row="5" Grid.Column="0" Text="Description:" />
-										<TextBox Grid.Row="6" Grid.Column="0" MaxWidth="600" Margin="5,0"
-                                                 Focusable="True" HorizontalAlignment="Stretch" TextWrapping="Wrap" AcceptsTab="True" AcceptsReturn="True"
-                                                 Text="{Binding Description}"/>
+                                        <TextBox Grid.Row="6" Grid.Column="0" MaxWidth="600" Margin="5,0"
+                                                 Focusable="True" HorizontalAlignment="Stretch" TextWrapping="Wrap"
+                                                 AcceptsTab="True" AcceptsReturn="True"
+                                                 Text="{Binding Description}" />
 
-										<TextBlock Grid.Row="7" Grid.Column="0" Text="Directions:" />
-										<TextBox Grid.Row="8" Grid.Column="0" MaxWidth="600" Margin="5,0"
-                                                 Focusable="True" HorizontalAlignment="Stretch" TextWrapping="Wrap" AcceptsTab="True" AcceptsReturn="True"
-                                                 Text="{Binding Directions}"/>
+                                        <TextBlock Grid.Row="7" Grid.Column="0" Text="Directions:" />
+                                        <TextBox Grid.Row="8" Grid.Column="0" MaxWidth="600" Margin="5,0"
+                                                 Focusable="True" HorizontalAlignment="Stretch" TextWrapping="Wrap"
+                                                 AcceptsTab="True" AcceptsReturn="True"
+                                                 Text="{Binding Directions}" />
 
-										<TextBlock Grid.Row="9" Grid.Column="0" Text="Author:"/>
-										<TextBox Grid.Row="10" Grid.Column="0" MaxWidth="600"
+                                        <TextBlock Grid.Row="9" Grid.Column="0" Text="Author:" />
+                                        <TextBox Grid.Row="10" Grid.Column="0" MaxWidth="600"
                                                  Focusable="True" HorizontalAlignment="Stretch" AcceptsReturn="True"
-                                                 Text="{Binding Author}"/>
+                                                 Text="{Binding Author}" />
 
-										<TextBlock Grid.Row="11" Grid.Column="0" Text="Category:" />
-										<TextBox Grid.Row="12" Grid.Column="0"
-                                                 Focusable="True" HorizontalAlignment="Stretch" AcceptsTab="True" AcceptsReturn="True"
-                                                 Text="{Binding Category}"/>
+                                        <TextBlock Grid.Row="11" Grid.Column="0" Text="Category:" />
+                                        <TextBox Grid.Row="12" Grid.Column="0"
+                                                 Focusable="True" HorizontalAlignment="Stretch" AcceptsTab="True"
+                                                 AcceptsReturn="True"
+                                                 Text="{Binding Category}" />
 
-										<TextBlock Grid.Row="13" Grid.Column="0" Text="Tier:" />
-										<TextBox Grid.Row="14" Grid.Column="0"
+                                        <TextBlock Grid.Row="13" Grid.Column="0" Text="Tier:" />
+                                        <TextBox Grid.Row="14" Grid.Column="0"
                                                  Focusable="True" HorizontalAlignment="Stretch"
-                                                 Text="{Binding Tier}"/>
+                                                 Text="{Binding Tier}" />
 
-										<TextBlock Grid.Row="15" Grid.Column="0" Text="Mod Website:" />
-										<TextBox Grid.Row="16" Grid.Column="0" MaxWidth="600"
+                                        <TextBlock Grid.Row="15" Grid.Column="0" Text="Mod Website:" />
+                                        <TextBox Grid.Row="16" Grid.Column="0" MaxWidth="600"
                                                  Focusable="True" HorizontalAlignment="Stretch" AcceptsReturn="True"
-                                                 Text="{Binding ModLink}"/>
+                                                 Text="{Binding ModLink}" />
 
                                         <TextBlock Grid.Row="17" Grid.Column="0" Text="Dependencies:"
-                                                   Margin="0, 15, 0, 5"/>
+                                                   Margin="0, 15, 0, 5" />
                                         <control:DependencyControl Grid.Row="18" Grid.Column="0"
-                                            ThisGuidList="{Binding Dependencies}"
-                                            ThisComponentList="{Binding RelativeSource={RelativeSource AncestorType={x:Type local:MainWindow}}, Path=ComponentsList}" />
+                                                                   ThisGuidList="{Binding Dependencies}"
+                                                                   ThisComponentList="{Binding RelativeSource={RelativeSource AncestorType={x:Type local:MainWindow}}, Path=ComponentsList}" />
 
                                         <TextBlock Grid.Row="19" Grid.Column="0" Text="Restrictions:"
-                                                   Margin="0, 15, 0, 5"/>
+                                                   Margin="0, 15, 0, 5" />
                                         <control:DependencyControl Grid.Row="20" Grid.Column="0"
-                                            ThisGuidList="{Binding Restrictions}"
-                                            ThisComponentList="{Binding RelativeSource={RelativeSource AncestorType={x:Type local:MainWindow}}, Path=ComponentsList}" />
+                                                                   ThisGuidList="{Binding Restrictions}"
+                                                                   ThisComponentList="{Binding RelativeSource={RelativeSource AncestorType={x:Type local:MainWindow}}, Path=ComponentsList}" />
 
                                         <TextBlock Grid.Row="21" Grid.Column="0" Text="InstallBefore:"
-                                                   Margin="0, 15, 0, 5"/>
+                                                   Margin="0, 15, 0, 5" />
                                         <control:DependencyControl Grid.Row="22" Grid.Column="0"
-                                            ThisGuidList="{Binding InstallBefore}"
-                                            ThisComponentList="{Binding RelativeSource={RelativeSource AncestorType={x:Type local:MainWindow}}, Path=ComponentsList}" />
+                                                                   ThisGuidList="{Binding InstallBefore}"
+                                                                   ThisComponentList="{Binding RelativeSource={RelativeSource AncestorType={x:Type local:MainWindow}}, Path=ComponentsList}" />
 
                                         <TextBlock Grid.Row="23" Grid.Column="0" Text="InstallAfter:"
-                                                   Margin="0, 15, 0, 5"/>
+                                                   Margin="0, 15, 0, 5" />
                                         <control:DependencyControl Grid.Row="24" Grid.Column="0"
-                                            ThisGuidList="{Binding InstallAfter}"
-                                            ThisComponentList="{Binding RelativeSource={RelativeSource AncestorType={x:Type local:MainWindow}}, Path=ComponentsList}" />
+                                                                   ThisGuidList="{Binding InstallAfter}"
+                                                                   ThisComponentList="{Binding RelativeSource={RelativeSource AncestorType={x:Type local:MainWindow}}, Path=ComponentsList}" />
 
-                                        <TextBlock Grid.Row="25" Grid.Column="0" Grid.ColumnSpan="2" Text="Instructions" FontSize="22" HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="0,40,0,0"/>
-                                        <ItemsRepeater Grid.Row="26" Grid.Column="0" Grid.ColumnSpan="2" x:Name="instructionsRepeater" Items="{Binding Instructions}">
-											<ItemsRepeater.ItemTemplate>
-												<DataTemplate DataType="core:Instruction">
+                                        <TextBlock Grid.Row="25" Grid.Column="0" Grid.ColumnSpan="2"
+                                                   Text="Instructions" FontSize="22" HorizontalAlignment="Left"
+                                                   VerticalAlignment="Bottom" Margin="0,40,0,0" />
+                                        <ItemsRepeater Grid.Row="26" Grid.Column="0" Grid.ColumnSpan="2"
+                                                       x:Name="instructionsRepeater" Items="{Binding Instructions}">
+                                            <ItemsRepeater.ItemTemplate>
+                                                <DataTemplate DataType="core:Instruction">
                                                     <StackPanel>
                                                         <Button Content="New Instruction Here"
-                                                                Click="AddNewInstruction_Click" Tag="{Binding}"/>
-                                                        <Border BorderThickness="2" BorderBrush="LightGray" Margin="10" >
+                                                                Click="AddNewInstruction_Click" Tag="{Binding}" />
+                                                        <Border BorderThickness="2" BorderBrush="LightGray" Margin="10">
                                                             <Grid
-															    RowDefinitions="*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*"
+                                                                RowDefinitions="*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*"
                                                                 ColumnDefinitions="*,Auto"
                                                                 Margin="10">
-                                                                
-                                                                <DockPanel Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2"
+
+                                                                <DockPanel Grid.Row="1" Grid.Column="0"
+                                                                           Grid.ColumnSpan="2"
                                                                            HorizontalAlignment="Left">
-                                                                    <TextBlock Text="{Binding Converter={StaticResource IndexConverter}, ConverterParameter={Binding Instructions, ElementName=instructionsRepeater}}" />
-                                                                    <TextBlock Text="Action:" VerticalAlignment="Center" Margin="0,0,20,0"/>
+                                                                    <TextBlock
+                                                                        Text="{Binding Converter={StaticResource IndexConverter}, ConverterParameter={Binding Instructions, ElementName=instructionsRepeater}}" />
+                                                                    <TextBlock Text="Action:"
+                                                                               VerticalAlignment="Center"
+                                                                               Margin="0,0,20,0" />
                                                                     <Button Content="Delete This Instruction"
-                                                                            Click="DeleteInstruction_Click" Tag="{Binding}"/>
+                                                                            Click="DeleteInstruction_Click"
+                                                                            Tag="{Binding}" />
                                                                     <Button Content="▲  Up  ▲"
-                                                                            Click="MoveInstructionUp_Click" Tag="{Binding}"
-                                                                            HorizontalContentAlignment="Center"/>
+                                                                            Click="MoveInstructionUp_Click"
+                                                                            Tag="{Binding}"
+                                                                            HorizontalContentAlignment="Center" />
                                                                     <Button Content="▼ Down ▼"
-                                                                            Click="MoveInstructionDown_Click" Tag="{Binding}"
-                                                                            HorizontalContentAlignment="Center"/>
+                                                                            Click="MoveInstructionDown_Click"
+                                                                            Tag="{Binding}"
+                                                                            HorizontalContentAlignment="Center" />
                                                                 </DockPanel>
                                                                 <TextBox Grid.Row="3" Grid.Column="0"
-																    Text="{Binding Action, Converter={StaticResource ActionConverter}}"
-																    Focusable="True"/>
+                                                                         Text="{Binding Action, Converter={StaticResource ActionConverter}}"
+                                                                         Focusable="True" />
 
                                                                 <TextBlock Grid.Row="4" Grid.Column="0" Text="Source:" />
                                                                 <TextBox Grid.Row="5" Grid.Column="0" MaxWidth="600"
-                                                                    AcceptsReturn="True" TextWrapping="Wrap" Focusable="True"
-																    x:Name="SourceTextBox"
-																    Text="{Binding Source, Converter={StaticResource ListToStringConverter}}"/>
+                                                                         AcceptsReturn="True" TextWrapping="Wrap"
+                                                                         Focusable="True"
+                                                                         x:Name="SourceTextBox"
+                                                                         Text="{Binding Source, Converter={StaticResource ListToStringConverter}}" />
 
                                                                 <Button Grid.Row="5" Grid.Column="1"
-                                                                    HorizontalAlignment="Stretch"
-																    Content="Browse Files" Click="BrowseSourceFiles_Click"
-																    Tag="{Binding ElementName=SourceTextBox}" />
+                                                                        HorizontalAlignment="Stretch"
+                                                                        Content="Browse Files"
+                                                                        Click="BrowseSourceFiles_Click"
+                                                                        Tag="{Binding ElementName=SourceTextBox}" />
 
-                                                                <TextBlock Grid.Row="6" Grid.Column="0" Text="Destination:" />
-                                                                <TextBox Grid.Row="7" Grid.Column="0" Focusable="True" TextWrapping="Wrap"
-																    x:Name="DestinationTextBox"
-                                                                    Text="{Binding Destination}"/>
-                                                                <Button Grid.Row="7" Grid.Column="1" HorizontalAlignment="Stretch" MaxWidth="600"
-                                                                    Content="Browse Destination" Click="BrowseDestination_Click"
-                                                                    Tag="{Binding ElementName=DestinationTextBox}"/>
+                                                                <TextBlock Grid.Row="6" Grid.Column="0"
+                                                                           Text="Destination:" />
+                                                                <TextBox Grid.Row="7" Grid.Column="0" Focusable="True"
+                                                                         TextWrapping="Wrap"
+                                                                         x:Name="DestinationTextBox"
+                                                                         Text="{Binding Destination}" />
+                                                                <Button Grid.Row="7" Grid.Column="1"
+                                                                        HorizontalAlignment="Stretch" MaxWidth="600"
+                                                                        Content="Browse Destination"
+                                                                        Click="BrowseDestination_Click"
+                                                                        Tag="{Binding ElementName=DestinationTextBox}" />
 
 
-                                                                <TextBlock Grid.Row="8" Grid.Column="0" Text="Dependencies:" />
+                                                                <TextBlock Grid.Row="8" Grid.Column="0"
+                                                                           Text="Dependencies:" />
                                                                 <control:DependencyControl Grid.Row="9" Grid.Column="0"
                                                                     ThisGuidList="{Binding Dependencies}"
                                                                     ThisComponentList="{Binding RelativeSource={RelativeSource AncestorType={x:Type local:MainWindow}}, Path=ComponentsList}" />
 
-                                                                <TextBlock Grid.Row="10" Grid.Column="0" Text="Restrictions:" />
-                                                                <control:DependencyControl Grid.Row="11" Grid.Column="0"
+                                                                <TextBlock Grid.Row="10" Grid.Column="0"
+                                                                           Text="Restrictions:" />
+                                                                <control:DependencyControl Grid.Row="11"
+                                                                    Grid.Column="0"
                                                                     ThisGuidList="{Binding Restrictions}"
                                                                     ThisComponentList="{Binding RelativeSource={RelativeSource AncestorType={x:Type local:MainWindow}}, Path=ComponentsList}" />
 
-                                                                <TextBlock Grid.Row="12" Grid.Column="0" Text="Overwrite:" />
+                                                                <TextBlock Grid.Row="12" Grid.Column="0"
+                                                                           Text="Overwrite:" />
                                                                 <TextBox Grid.Row="13" Grid.Column="0" MaxWidth="600"
-                                                                    Focusable="True"
-																    Text="{Binding Overwrite}"/>
+                                                                         Focusable="True"
+                                                                         Text="{Binding Overwrite}" />
 
-                                                                <TextBlock Grid.Row="14" Grid.Column="0" Text="Arguments:" />
+                                                                <TextBlock Grid.Row="14" Grid.Column="0"
+                                                                           Text="Arguments:" />
                                                                 <TextBox Grid.Row="15" Grid.Column="0" MaxWidth="600"
-                                                                    Focusable="True"
-																    Text="{Binding Arguments}"/>
+                                                                         Focusable="True"
+                                                                         Text="{Binding Arguments}" />
                                                             </Grid>
                                                         </Border>
                                                     </StackPanel>
-												</DataTemplate>
-											</ItemsRepeater.ItemTemplate>
-										</ItemsRepeater>
-                                        <Button Grid.Row="27" Grid.Column="0" Grid.ColumnSpan="2" Content="Create Instructions"
-                                                Click="AddNewInstruction_Click" Tag="{Binding}"/>
-									</Grid>
-								</DataTemplate>
-							</ItemsControl.ItemTemplate>
-						</ItemsControl>
-					</ScrollViewer>
-				</TabItem.Content>
-			</TabItem>
-			<TabItem x:Name="RawEditTabItem" Header="Raw Edit" ToolTip.Tip="Click 'Apply Editor Config' to save raw changes!">
-				<TextBox x:Name="RawEditTextBox" Margin="10" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="400" />
-			</TabItem>
-		</TabControl>
+                                                </DataTemplate>
+                                            </ItemsRepeater.ItemTemplate>
+                                        </ItemsRepeater>
+                                        <Button Grid.Row="27" Grid.Column="0" Grid.ColumnSpan="2"
+                                                Content="Create Instructions"
+                                                Click="AddNewInstruction_Click" Tag="{Binding}" />
+                                    </Grid>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </TabItem.Content>
+            </TabItem>
+            <TabItem x:Name="RawEditTabItem" Header="Raw Edit"
+                     ToolTip.Tip="Click 'Apply Editor Config' to save raw changes!">
+                <TextBox x:Name="RawEditTextBox" Margin="10" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="400" />
+            </TabItem>
+        </TabControl>
         <GridSplitter Grid.Column="1" Grid.Row="1" Width="5" HorizontalAlignment="Right" />
-		<StackPanel Grid.Row="1" Grid.Column="2">
-			<Grid Margin="0 5" RowDefinitions="*,*,*,*,*,*,*">
-				<Button Content="Load Installation File" HorizontalContentAlignment="Center" Click="LoadInstallFile_Click" Grid.Row="0" HorizontalAlignment="Stretch" />
-				<Button Content="Generate Docs from Config" HorizontalContentAlignment="Center" Click="DocsButton_Click" Grid.Row="1" HorizontalAlignment="Stretch" />
-				<Button Content="Set Directories" HorizontalContentAlignment="Center" Click="SetDirectories_Click" Grid.Row="2" HorizontalAlignment="Stretch" />
-				<Button Content="Validate Config" HorizontalContentAlignment="Center" Click="ValidateButton_Click" Grid.Row="3" HorizontalAlignment="Stretch" />
-				<Button Content="Deserialize Markdown File" HorizontalContentAlignment="Center" Click="LoadMarkdown_Click" Grid.Row="4" HorizontalAlignment="Stretch" />
-				<Button Content="Install All" HorizontalContentAlignment="Center" Click="StartInstall_Click" Grid.Row="5" HorizontalAlignment="Stretch" />
-                <Button Content="Open Output Window" HorizontalContentAlignment="Center" Click="OpenOutputWindow_Click" Grid.Row="6" HorizontalAlignment="Stretch" />
-			</Grid>
+        <StackPanel Grid.Row="1" Grid.Column="2">
+            <Grid Margin="0 5" RowDefinitions="*,*,*,*,*,*,*">
+                <Button Content="Load Installation File" HorizontalContentAlignment="Center"
+                        Click="LoadInstallFile_Click" Grid.Row="0" HorizontalAlignment="Stretch" />
+                <Button Content="Generate Docs from Config" HorizontalContentAlignment="Center"
+                        Click="DocsButton_Click" Grid.Row="1" HorizontalAlignment="Stretch" />
+                <Button Content="Set Directories" HorizontalContentAlignment="Center" Click="SetDirectories_Click"
+                        Grid.Row="2" HorizontalAlignment="Stretch" />
+                <Button Content="Validate Config" HorizontalContentAlignment="Center" Click="ValidateButton_Click"
+                        Grid.Row="3" HorizontalAlignment="Stretch" />
+                <Button Content="Deserialize Markdown File" HorizontalContentAlignment="Center"
+                        Click="LoadMarkdown_Click" Grid.Row="4" HorizontalAlignment="Stretch" />
+                <Button Content="Install All" HorizontalContentAlignment="Center" Click="StartInstall_Click"
+                        Grid.Row="5" HorizontalAlignment="Stretch" />
+                <Button Content="Open Output Window" HorizontalContentAlignment="Center" Click="OpenOutputWindow_Click"
+                        Grid.Row="6" HorizontalAlignment="Stretch" />
+            </Grid>
 
 
-			<StackPanel x:Name="MainConfigStackPanel" DataContext="{Binding MainConfigInstance}">
-				<CheckBox Content="Default Install" IsChecked="{Binding defaultInstall}"/>
-				<CheckBox Content="Verbose Logging" IsChecked="{Binding debugLogging}"/>
-				<CheckBox Content="Auto-Fix Config Errors" IsChecked="{Binding attemptFixes}"/>
-                <CheckBox Content="No Admin" IsChecked="{Binding noAdmin}" ToolTip.Tip="Do not prompt for admin on any instruction. It's recommended you run KOTORModSync as admin instead (NOT RECOMMENDED). Does nothing on Linux"/>
-                <TextBlock Text="Patcher Option" ToolTip.Tip="Mods are packaged with 'TSLPatcher' by default. Try another patcher if you run into problems. PyKotorCLI is not tested - use at your own risk"/>
-				<ComboBox
+            <StackPanel x:Name="MainConfigStackPanel" DataContext="{Binding MainConfigInstance}">
+                <CheckBox Content="Default Install" IsChecked="{Binding defaultInstall}" />
+                <CheckBox Content="Verbose Logging" IsChecked="{Binding debugLogging}" />
+                <CheckBox Content="Auto-Fix Config Errors" IsChecked="{Binding attemptFixes}" />
+                <CheckBox Content="No Admin" IsChecked="{Binding noAdmin}"
+                          ToolTip.Tip="Do not prompt for admin on any instruction. It's recommended you run KOTORModSync as admin instead (NOT RECOMMENDED). Does nothing on Linux" />
+                <TextBlock Text="Patcher Option"
+                           ToolTip.Tip="Mods are packaged with 'TSLPatcher' by default. Try another patcher if you run into problems. PyKotorCLI is not tested - use at your own risk" />
+                <ComboBox
                     Items="{Binding AllAvailablePatchers}"
                     SelectedItem="{Binding patcherOption, Mode=TwoWay, Converter={StaticResource EnumConverter}}"
                     Margin="0"
-                    IsTabStop="True"/>
-                <TextBlock Text="Compatibility Enforcement Level:" ToolTip.Tip="Determines which mods will be skipped."/>
+                    IsTabStop="True" />
+                <TextBlock Text="Compatibility Enforcement Level:" ToolTip.Tip="Determines which mods will be skipped." />
                 <ComboBox
                     Items="{Binding AllCompatibilityLevels}"
                     SelectedItem="{Binding currentCompatibilityLevel, Mode=TwoWay, Converter={StaticResource EnumConverter}}"
                     Margin="0"
-                    IsTabStop="True"/>
-                <TextBlock Text="Theme"/>
+                    IsTabStop="True" />
+                <TextBlock Text="Theme" />
                 <ComboBox x:Name="StyleComboBox" SelectedIndex="0"
                           SelectionChanged="StyleComboBox_SelectionChanged">
                     <ComboBoxItem Content="TSL Style" Tag="/Styles/Kotor2Style.axaml" />
                     <ComboBoxItem Content="K1 Style" Tag="/Styles/KotorStyle.axaml" />
                     <ComboBoxItem Content="Default Style" Tag="default" />
                 </ComboBox>
-				<TextBlock Text="Mod Location:" />
-				<TextBlock Text="{Binding sourcePathFullName}"/>
-				<TextBlock Text="Kotor Directory:" />
-				<TextBlock Text="{Binding destinationPathFullName}"/>
-			</StackPanel>
-		</StackPanel>
-	</Grid>
+                <TextBlock Text="Mod Location:" />
+                <TextBlock Text="{Binding sourcePathFullName}" />
+                <TextBlock Text="Kotor Directory:" />
+                <TextBlock Text="{Binding destinationPathFullName}" />
+            </StackPanel>
+        </StackPanel>
+    </Grid>
 </Window>

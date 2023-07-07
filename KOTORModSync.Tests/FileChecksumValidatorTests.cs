@@ -75,7 +75,8 @@ namespace KOTORModSync.Tests
             }
 
             // Calculate the SHA1 hash for the test files
-            foreach ( FileInfo? fileInfo in expectedChecksums.Select( static expectedChecksum => expectedChecksum.Key ) )
+            foreach ( FileInfo? fileInfo in
+                     expectedChecksums.Select( static expectedChecksum => expectedChecksum.Key ) )
             {
                 SHA1 sha1 = await FileChecksumValidator.CalculateSha1Async( fileInfo );
                 actualChecksums[fileInfo] = sha1;
@@ -150,8 +151,7 @@ namespace KOTORModSync.Tests
                 Assert.That( sha1, Is.Null );
             }
             catch ( FileNotFoundException ) // success
-            {
-            }
+            { }
             catch ( Exception e )
             {
                 Debug.WriteLine( e );
@@ -183,8 +183,7 @@ namespace KOTORModSync.Tests
                     {
                         bytesRead = await stream.ReadAsync( buffer );
                         _ = expectedSha1.TransformBlock( buffer, 0, bytesRead, null, 0 );
-                    }
-                    while ( bytesRead > 0 );
+                    } while ( bytesRead > 0 );
                 }
 
                 _ = expectedSha1.TransformFinalBlock( Array.Empty<byte>(), 0, 0 );
@@ -196,7 +195,11 @@ namespace KOTORModSync.Tests
                 }
                 else
                 {
-                    Assert.That( currentChecksum, Is.EqualTo( expectedChecksum ), "Checksum consistency check failed." );
+                    Assert.That(
+                        currentChecksum,
+                        Is.EqualTo( expectedChecksum ),
+                        "Checksum consistency check failed."
+                    );
                 }
             }
 
@@ -213,18 +216,25 @@ namespace KOTORModSync.Tests
         // Custom converter for DirectoryInfo
         public class DirectoryInfoConverter : JsonConverter<DirectoryInfo>
         {
-            public override DirectoryInfo? ReadJson( JsonReader reader, Type objectType, DirectoryInfo? existingValue, bool hasExistingValue, JsonSerializer serializer )
+            public override DirectoryInfo? ReadJson
+            (
+                JsonReader reader,
+                Type objectType,
+                DirectoryInfo? existingValue,
+                bool hasExistingValue,
+                JsonSerializer serializer
+            )
             {
                 if ( reader.Value is string path )
+                {
                     return new DirectoryInfo( path );
+                }
 
                 return null;
             }
 
-            public override void WriteJson( JsonWriter writer, DirectoryInfo? value, JsonSerializer serializer )
-            {
+            public override void WriteJson( JsonWriter writer, DirectoryInfo? value, JsonSerializer serializer ) =>
                 writer.WriteValue( value!.FullName );
-            }
         }
 
         // Test method
@@ -240,7 +250,7 @@ namespace KOTORModSync.Tests
             };
 
             // Convert the directory paths to DirectoryInfo objects
-            var directoryChecksums = checksums.ToDictionary(
+            Dictionary<DirectoryInfo, SHA1>? directoryChecksums = checksums.ToDictionary(
                 static kvp => new DirectoryInfo( kvp.Key ),
                 static kvp => SHA1.Create()
             );
@@ -252,7 +262,8 @@ namespace KOTORModSync.Tests
             Assert.That( File.Exists( filePath ) );
 
             string json = await File.ReadAllTextAsync( filePath );
-            Dictionary<DirectoryInfo, SHA1> loadedChecksums = JsonConvert.DeserializeObject<Dictionary<DirectoryInfo, SHA1>>( json )!;
+            Dictionary<DirectoryInfo, SHA1> loadedChecksums
+                = JsonConvert.DeserializeObject<Dictionary<DirectoryInfo, SHA1>>( json )!;
 
             Assert.That( loadedChecksums, Has.Count.EqualTo( directoryChecksums.Count ) );
             CollectionAssert.AreEquivalent( directoryChecksums.Keys, loadedChecksums!.Keys );

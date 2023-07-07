@@ -11,12 +11,24 @@ namespace KOTORModSync.Converters
 {
     public class ComboBoxItemConverter : IValueConverter
     {
-        public object Convert( object value, Type targetType, object parameter, CultureInfo culture ) =>
+        public object Convert
+        (
+            object value,
+            Type targetType,
+            object parameter,
+            CultureInfo culture
+        ) =>
             value is string action
                 ? new ComboBoxItem { Content = action }
                 : (object)null;
 
-        public object ConvertBack( object value, Type targetType, object parameter, CultureInfo culture ) =>
+        public object ConvertBack
+        (
+            object value,
+            Type targetType,
+            object parameter,
+            CultureInfo culture
+        ) =>
             value is ComboBoxItem comboBoxItem
                 ? comboBoxItem.Content?.ToString()
                 : (object)null;

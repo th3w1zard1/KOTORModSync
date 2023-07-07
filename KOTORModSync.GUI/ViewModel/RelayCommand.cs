@@ -10,10 +10,7 @@ namespace KOTORModSync.ViewModel
         private readonly List<WeakReference<EventHandler>> _canExecuteChangedHandlers;
         private readonly Action _execute;
 
-        public RelayCommand( Action execute )
-            : this( execute, null )
-        {
-        }
+        public RelayCommand( Action execute ) : this( execute, null ) { }
 
         public RelayCommand( Action execute, Func<bool> canExecute )
         {
@@ -42,8 +39,11 @@ namespace KOTORModSync.ViewModel
             _ = _canExecuteChangedHandlers?.RemoveAll(
                 h =>
                 {
-                    if ( !h.TryGetTarget( out EventHandler target ) || target != handler )
+                    if ( !h.TryGetTarget( out EventHandler target )
+                        || target != handler )
+                    {
                         return false;
+                    }
 
                     h.SetTarget( null );
                     return true;
@@ -56,7 +56,9 @@ namespace KOTORModSync.ViewModel
             foreach ( WeakReference<EventHandler> weakRef in _canExecuteChangedHandlers )
             {
                 if ( !weakRef.TryGetTarget( out EventHandler handler ) )
+                {
                     continue;
+                }
 
                 handler.Invoke( this, EventArgs.Empty );
             }

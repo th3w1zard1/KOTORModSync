@@ -22,7 +22,8 @@ namespace KOTORModSync.Core.Utility
 
         public FileChecksumValidator
         (
-            string destinationPath, Dictionary<FileInfo, SHA1> expectedChecksums,
+            string destinationPath,
+            Dictionary<FileInfo, SHA1> expectedChecksums,
             Dictionary<FileInfo, SHA1> originalChecksums
         )
         {
@@ -33,42 +34,38 @@ namespace KOTORModSync.Core.Utility
 
         public static string Sha1ToString( SHA1 sha1 ) => string.Concat( sha1.Hash.Select( b => b.ToString( "x2" ) ) );
 
-        public static string StringToSha1( string s )
-            => string.Concat(
-                SHA1.Create().ComputeHash(
+        public static string StringToSha1( string s ) => string.Concat(
+            SHA1.Create()
+                .ComputeHash(
                     Enumerable.Range( 0, s.Length )
                         .Where( x => x % 2 == 0 )
                         .Select( x => Convert.ToByte( s.Substring( x, 2 ), 16 ) )
                         .ToArray()
-                ).Select( b => b.ToString( "x2" ) )
-            );
+                )
+                .Select( b => b.ToString( "x2" ) )
+        );
 
         public async Task<bool> ValidateChecksumsAsync()
         {
             var actualChecksums = new Dictionary<string, string>();
 
-            foreach ( FileInfo fileInfo in _expectedChecksums
-                         .Select( expectedChecksum => expectedChecksum.Key )
-                         .Where( fileInfo => fileInfo.Exists )
-                    )
+            foreach ( FileInfo fileInfo in _expectedChecksums.Select( expectedChecksum => expectedChecksum.Key )
+                         .Where( fileInfo => fileInfo.Exists ) )
             {
                 SHA1 sha1 = await CalculateSha1Async( fileInfo );
                 actualChecksums[fileInfo.Name] = BitConverter.ToString( sha1.Hash ).Replace( "-", "" );
             }
 
             bool allChecksumsMatch = actualChecksums.Count == _expectedChecksums.Count
-                && actualChecksums
-                    .All(
-                        x =>
-                            _expectedChecksums.TryGetValue(
-                                new FileInfo( Path.Combine( _destinationPath, x.Key ) ),
-                                out SHA1 expectedSha1
-                            )
-                            && BitConverter.ToString( expectedSha1.Hash ).Replace( "-", "" ).Equals(
-                                x.Value,
-                                StringComparison.OrdinalIgnoreCase
-                            )
-                    );
+                && actualChecksums.All(
+                    x => _expectedChecksums.TryGetValue(
+                            new FileInfo( Path.Combine( _destinationPath, x.Key ) ),
+                            out SHA1 expectedSha1
+                        )
+                        && BitConverter.ToString( expectedSha1.Hash )
+                            .Replace( "-", "" )
+                            .Equals( x.Value, StringComparison.OrdinalIgnoreCase )
+                );
 
             if ( allChecksumsMatch ) return allChecksumsMatch;
 
@@ -117,13 +114,12 @@ namespace KOTORModSync.Core.Utility
 
                     int read = bytesRead;
 
-                    tasks.Add( Task.Run( () =>
-                    {
-                        _ = sha1.TransformBlock( data, 0, read, null, 0 );
-                    } ) );
+                    tasks.Add( Task.Run( () => { _ = sha1.TransformBlock( data, 0, read, null, 0 ); } ) );
 
                     if ( tasks.Count < Environment.ProcessorCount * 2 )
+                    {
                         continue;
+                    }
 
                     await Task.WhenAll( tasks );
                     tasks.Clear();
@@ -138,7 +134,6 @@ namespace KOTORModSync.Core.Utility
         }
 
 
-
         public static async Task SaveChecksumsToFileAsync( string filePath, Dictionary<DirectoryInfo, SHA1> checksums )
         {
             string json = JsonConvert.SerializeObject( checksums );
@@ -148,9 +143,7 @@ namespace KOTORModSync.Core.Utility
             }
         }
 
-        public static async Task<
-            Dictionary<FileInfo, SHA1>
-        > LoadChecksumsFromFileAsync( FileInfo filePath )
+        public static async Task<Dictionary<FileInfo, SHA1>> LoadChecksumsFromFileAsync( FileInfo filePath )
         {
             if ( !File.Exists( filePath.FullName ) )
             {
@@ -221,12 +214,7 @@ namespace KOTORModSync.Core.Utility
             bytes = new byte[numberChars / 2];
             for ( int i = 0; i < numberChars; i += 2 )
             {
-                if ( byte.TryParse(
-                        hexString.Substring( i, 2 ),
-                        NumberStyles.HexNumber,
-                        null,
-                        out bytes[i / 2]
-                    ) )
+                if ( byte.TryParse( hexString.Substring( i, 2 ), NumberStyles.HexNumber, null, out bytes[i / 2] ) )
                 {
                     continue;
                 }

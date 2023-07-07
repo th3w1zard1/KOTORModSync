@@ -44,7 +44,8 @@ namespace KOTORModSync.Tests
             _sourcePaths = new List<string> { archivePath };
 
             // Act
-            Instruction.ActionExitCode extractionResult = await new Instruction().ExtractFileAsync( _destinationPath, _sourcePaths );
+            Instruction.ActionExitCode extractionResult
+                = await new Instruction().ExtractFileAsync( _destinationPath, _sourcePaths );
 
             // Assert
             Assert.Multiple(
@@ -66,7 +67,8 @@ namespace KOTORModSync.Tests
             _sourcePaths = new List<string> { archivePath };
 
             // Act
-            Instruction.ActionExitCode extractionResult = await new Instruction().ExtractFileAsync( _destinationPath, _sourcePaths );
+            Instruction.ActionExitCode extractionResult
+                = await new Instruction().ExtractFileAsync( _destinationPath, _sourcePaths );
 
             // Assert
             Assert.Multiple(
@@ -89,7 +91,8 @@ namespace KOTORModSync.Tests
             //_sourcePaths = new List<string> { archivePath };
 
             // Act
-            Instruction.ActionExitCode extractionResult = await new Instruction().ExtractFileAsync( _destinationPath, _sourcePaths );
+            Instruction.ActionExitCode extractionResult
+                = await new Instruction().ExtractFileAsync( _destinationPath, _sourcePaths );
 
             // Assert
             Assert.Multiple(
@@ -111,7 +114,8 @@ namespace KOTORModSync.Tests
             _sourcePaths = new List<string> { archivePath };
 
             // Act
-            Instruction.ActionExitCode extractionResult = await new Instruction().ExtractFileAsync( _destinationPath, _sourcePaths );
+            Instruction.ActionExitCode extractionResult
+                = await new Instruction().ExtractFileAsync( _destinationPath, _sourcePaths );
 
             // Assert
             Assert.Multiple(

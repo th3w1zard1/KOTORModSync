@@ -15,17 +15,17 @@ namespace KOTORModSync
 {
     public partial class ConfirmationDialog : Window
     {
-        public static readonly AvaloniaProperty s_confirmTextProperty =
-            AvaloniaProperty.Register<ConfirmationDialog, string>( nameof( ConfirmText ) );
+        public static readonly AvaloniaProperty s_confirmTextProperty
+            = AvaloniaProperty.Register<ConfirmationDialog, string>( nameof( ConfirmText ) );
 
-        private static readonly RoutedEvent<RoutedEventArgs> s_yesButtonClickedEvent =
-            RoutedEvent.Register<ConfirmationDialog, RoutedEventArgs>(
+        private static readonly RoutedEvent<RoutedEventArgs> s_yesButtonClickedEvent
+            = RoutedEvent.Register<ConfirmationDialog, RoutedEventArgs>(
                 nameof( YesButtonClicked ),
                 RoutingStrategies.Bubble
             );
 
-        private static readonly RoutedEvent<RoutedEventArgs> s_noButtonClickedEvent =
-            RoutedEvent.Register<ConfirmationDialog, RoutedEventArgs>(
+        private static readonly RoutedEvent<RoutedEventArgs> s_noButtonClickedEvent
+            = RoutedEvent.Register<ConfirmationDialog, RoutedEventArgs>(
                 nameof( NoButtonClicked ),
                 RoutingStrategies.Bubble
             );
@@ -43,7 +43,7 @@ namespace KOTORModSync
 
         private void OnOpened( object sender, EventArgs e )
         {
-            TextBlock confirmTextBlock = this.FindControl<TextBlock>( "ConfirmTextBlock" );
+            var confirmTextBlock = this.FindControl<TextBlock>( "ConfirmTextBlock" );
             confirmTextBlock.Text = ConfirmText;
         }
 

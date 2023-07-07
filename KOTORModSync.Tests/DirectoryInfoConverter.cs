@@ -6,7 +6,13 @@ namespace KOTORModSync.Tests
     {
         public override bool CanConvert( Type objectType ) => objectType == typeof( DirectoryInfo );
 
-        public override object? ReadJson( JsonReader reader, Type objectType, object? existingValue, JsonSerializer serializer )
+        public override object? ReadJson
+        (
+            JsonReader reader,
+            Type objectType,
+            object? existingValue,
+            JsonSerializer serializer
+        )
         {
             string? path = reader.Value as string;
             return new DirectoryInfo( path ?? throw new NullReferenceException() );
@@ -15,7 +21,9 @@ namespace KOTORModSync.Tests
         public override void WriteJson( JsonWriter writer, object? value, JsonSerializer serializer )
         {
             if ( value == null )
+            {
                 return;
+            }
 
             writer.WriteValue( ( (DirectoryInfo)value ).FullName );
         }

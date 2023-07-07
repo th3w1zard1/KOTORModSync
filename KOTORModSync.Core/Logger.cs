@@ -88,14 +88,19 @@ namespace KOTORModSync.Core
         }
 
         public static Task LogAsync( string message ) => LogInternalAsync( message );
-        public static void LogVerbose( string message ) => Log( "[Verbose] " + message, fileOnly: !MainConfig.DebugLogging );
-        public static Task LogVerboseAsync( string message ) => LogInternalAsync( "[Verbose] " + message, fileOnly: !MainConfig.DebugLogging );
+        public static void LogVerbose( string message ) => Log( "[Verbose] " + message, !MainConfig.DebugLogging );
+
+        public static Task LogVerboseAsync
+            ( string message ) => LogInternalAsync( "[Verbose] " + message, !MainConfig.DebugLogging );
+
         public static void LogWarning( string message ) => Log( "[Warning] " + message );
         public static Task LogWarningAsync( string message ) => LogInternalAsync( "[Warning] " + message );
         public static void LogError( string message ) => Log( "[Error] " + message );
         public static Task LogErrorAsync( string message ) => LogInternalAsync( "[Error] " + message );
         public static async Task LogExceptionAsync( Exception ex ) => await Task.Run( () => LogException( ex ) );
-        public static async Task LogExceptionAsync( Exception ex, string customMessage ) => await Task.Run( () => LogException( ex, customMessage ) );
+
+        public static async Task LogExceptionAsync
+            ( Exception ex, string customMessage ) => await Task.Run( () => LogException( ex, customMessage ) );
 
         public static void LogException( Exception exception, string customMessage )
         {

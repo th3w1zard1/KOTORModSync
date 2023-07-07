@@ -13,7 +13,9 @@ namespace KOTORModSync.ViewModel
             set
             {
                 if ( _isSelected == value )
+                {
                     return;
+                }
 
                 _isSelected = value;
                 OnPropertyChanged( nameof( IsSelected ) );

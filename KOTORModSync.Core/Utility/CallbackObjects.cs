@@ -15,10 +15,7 @@ namespace KOTORModSync.Core.Utility
         public static IOptionsDialogCallback OptionsCallback { get; private set; }
 
         public static void SetCallbackObjects
-        (
-            [NotNull] IConfirmationDialogCallback confirmDialog,
-            [NotNull] IOptionsDialogCallback optionsDialog
-        )
+            ( [NotNull] IConfirmationDialogCallback confirmDialog, [NotNull] IOptionsDialogCallback optionsDialog )
         {
             ConfirmCallback = confirmDialog ?? throw new ArgumentNullException( nameof( confirmDialog ) );
             OptionsCallback = optionsDialog ?? throw new ArgumentNullException( nameof( optionsDialog ) );

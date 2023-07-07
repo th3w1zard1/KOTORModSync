@@ -18,7 +18,8 @@ namespace KOTORModSync.Core.Utility
         {
             Type type = typeof( T );
 
-            if ( type.IsGenericType && type.GetGenericTypeDefinition().GetConstructor( Type.EmptyTypes ) != null )
+            if ( type.IsGenericType
+                && type.GetGenericTypeDefinition().GetConstructor( Type.EmptyTypes ) != null )
             {
                 Type[] genericArguments = type.GetGenericArguments();
                 Type genericTypeDefinition = type.GetGenericTypeDefinition();
@@ -66,7 +67,8 @@ namespace KOTORModSync.Core.Utility
                     continue;
                 }
 
-                if ( parameter.HasDefaultValue && constructorParameter == null )
+                if ( parameter.HasDefaultValue
+                    && constructorParameter == null )
                 {
                     continue;
                 }

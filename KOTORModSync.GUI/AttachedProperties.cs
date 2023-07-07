@@ -10,11 +10,11 @@ namespace KOTORModSync
 {
     public class AttachedProperties
     {
-        public static readonly AttachedProperty<ICommand> ItemClickCommandProperty =
-            AvaloniaProperty.RegisterAttached<AttachedProperties, Control, ICommand>( "ItemClickCommand" );
+        public static readonly AttachedProperty<ICommand> ItemClickCommandProperty
+            = AvaloniaProperty.RegisterAttached<AttachedProperties, Control, ICommand>( "ItemClickCommand" );
 
-        public static readonly AttachedProperty<object> ItemClickCommandParameterProperty =
-            AvaloniaProperty.RegisterAttached<AttachedProperties, Control, object>( "ItemClickCommandParameter" );
+        public static readonly AttachedProperty<object> ItemClickCommandParameterProperty
+            = AvaloniaProperty.RegisterAttached<AttachedProperties, Control, object>( "ItemClickCommandParameter" );
 
         public static ICommand GetItemClickCommand( Control control ) => control.GetValue( ItemClickCommandProperty );
 

@@ -13,10 +13,9 @@ namespace KOTORModSync.Core.Utility
     public static class FileHelper
     {
         [CanBeNull]
-        public static string GetFolderName( string itemInArchivePath )
-            => Path.HasExtension( itemInArchivePath )
-                ? Path.GetDirectoryName( itemInArchivePath )
-                : itemInArchivePath;
+        public static string GetFolderName( string itemInArchivePath ) => Path.HasExtension( itemInArchivePath )
+            ? Path.GetDirectoryName( itemInArchivePath )
+            : itemInArchivePath;
 
         // Stop TSLPatcher from automatically assuming the KOTOR directory.
         // use PlaintextLog=1
@@ -175,7 +174,8 @@ namespace KOTORModSync.Core.Utility
                     while ( ContainsWildcards( currentDirectory ) )
                     {
                         string parentDirectory = Path.GetDirectoryName( currentDirectory );
-                        if ( string.IsNullOrEmpty( parentDirectory ) || parentDirectory == currentDirectory )
+                        if ( string.IsNullOrEmpty( parentDirectory )
+                            || parentDirectory == currentDirectory )
                         {
                             break; // Exit the loop if no parent directory is found or if the parent directory is the same as the current directory
                         }
@@ -183,7 +183,8 @@ namespace KOTORModSync.Core.Utility
                         currentDirectory = parentDirectory;
                     }
 
-                    if ( string.IsNullOrEmpty( currentDirectory ) || !Directory.Exists( currentDirectory ) )
+                    if ( string.IsNullOrEmpty( currentDirectory )
+                        || !Directory.Exists( currentDirectory ) )
                     {
                         continue;
                     }
@@ -233,7 +234,8 @@ namespace KOTORModSync.Core.Utility
                 string patternLevel = patternLevels[i];
 
                 // Check if the current level is a wildcard
-                if ( patternLevel == "*" || patternLevel == "?" )
+                if ( patternLevel == "*"
+                    || patternLevel == "?" )
                 {
                     continue;
                 }
@@ -255,24 +257,29 @@ namespace KOTORModSync.Core.Utility
             pattern = Regex.Escape( pattern );
 
             // Replace * with .* and ? with . in the pattern
-            pattern = pattern
-                .Replace( @"\*", ".*" )
-                .Replace( @"\?", "." );
+            pattern = pattern.Replace( @"\*", ".*" ).Replace( @"\?", "." );
 
             // Use regex to perform the wildcard matching
             return Regex.IsMatch( input, $"^{pattern}$" );
         }
 
-        public static bool IsDirectoryWithName( object directory, string name )
-            => directory is Dictionary<string, object> dict
-                && dict.ContainsKey( "Name" )
-                && dict["Name"] is string directoryName
-                && directoryName.Equals( name, StringComparison.OrdinalIgnoreCase );
+        public static bool IsDirectoryWithName
+            ( [NotNull] object directory, [NotNull] string name ) => directory is Dictionary<string, object> dict
+            && dict.ContainsKey( "Name" )
+            && dict["Name"] is string directoryName
+            && directoryName.Equals( name, StringComparison.OrdinalIgnoreCase );
 
+        [NotNull]
         private static Dictionary<string, object> CreateNewDirectory
-            ( string name, bool isDirectory ) => new Dictionary<string, object>
+            ( [CanBeNull] string name, bool isDirectory ) => new Dictionary<string, object>
         {
-            { "Name", name }, { "Type", isDirectory ? "directory" : "file" }, { "Contents", new List<object>() }
+            { "Name", name },
+            {
+                "Type", isDirectory
+                    ? "directory"
+                    : "file"
+            },
+            { "Contents", new List<object>() }
         };
     }
 }

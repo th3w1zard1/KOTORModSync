@@ -24,6 +24,14 @@ namespace KOTORModSync.ConsoleApp
                     throw new ArgumentNullException( nameof( args ) );
                 }
 
+                for ( int index = 0; index < args.Length; index++ )
+                {
+                    if ( index == 0 )
+                        Console.WriteLine( $"KOTORModSync CLI called with {args.Length} arguments." );
+                    string arg = args[index];
+                    Console.WriteLine( $"Argument #{index+1}: {arg}" );
+                }
+
                 bool exit = false;
                 MainConfigInstance = new MainConfig();
 
@@ -113,7 +121,8 @@ namespace KOTORModSync.ConsoleApp
                             break;
 
                         case "4":
-                            if ( MainConfig.DestinationPath == null || MainConfig.SourcePath == null )
+                            if ( MainConfig.DestinationPath == null
+                                || MainConfig.SourcePath == null )
                             {
                                 Console.WriteLine( "Please select your directories first" );
                                 break;
@@ -167,10 +176,7 @@ namespace KOTORModSync.ConsoleApp
                                 MainConfigInstance.lastOutputDirectory = Utility.ChooseDirectory();
                             }
 
-                            _ = Path.Combine(
-                                MainConfig.LastOutputDirectory.FullName,
-                                "kotor_checksums.json"
-                            );
+                            _ = Path.Combine( MainConfig.LastOutputDirectory.FullName, "kotor_checksums.json" );
                             break;
 
                         case "6":
@@ -198,7 +204,10 @@ namespace KOTORModSync.ConsoleApp
                                 Console.WriteLine( "Enter the output directory for parsed_reddit.toml file" );
 
                                 string outPath = Console.ReadLine();
-                                Component.OutputConfigFile( components, outPath + Path.DirectorySeparatorChar + "parsed_reddit.toml" );
+                                Component.OutputConfigFile(
+                                    components,
+                                    outPath + Path.DirectorySeparatorChar + "parsed_reddit.toml"
+                                );
                                 Console.WriteLine( $"File saved as 'parsed_reddit.toml' in directory {outPath}" );
                             }
                             else

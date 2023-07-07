@@ -23,55 +23,45 @@ namespace KOTORModSync.Core
     {
         public MainConfig()
         {
-            this.currentCompatibilityLevel = CompatibilityLevel.Compatible;
-            this.debugLogging = true;
-            this.patcherOption = AvailablePatchers.TSLPatcher;
-            this.attemptFixes = true;
-            this.defaultInstall = true;
-            this.noAdmin = false;
+            currentCompatibilityLevel = CompatibilityLevel.Compatible;
+            debugLogging = true;
+            patcherOption = AvailablePatchers.TSLPatcher;
+            attemptFixes = true;
+            defaultInstall = true;
+            noAdmin = false;
         }
 
         [Description( "Only components with the selected compatibility level will be installed" )]
         public enum CompatibilityLevel
         {
-            [Description( "Fully Compatibile" )]
-            Compatible = 0,
+            [Description( "Fully Compatibile" )] Compatible = 0,
 
-            [Description( "Mostly Compatible" )]
-            MostlyCompatible = 1,
+            [Description( "Mostly Compatible" )] MostlyCompatible = 1,
 
-            [Description( "Not Tested" )]
-            Untested = 2,
+            [Description( "Not Tested" )] Untested = 2,
 
-            [Description( "INCOMPATIBLE" )]
-            Incompatible = 3
+            [Description( "INCOMPATIBLE" )] Incompatible = 3
         }
 
         [UsedImplicitly]
-        public IEnumerable<CompatibilityLevel> AllCompatibilityLevels
-        {
-            get { return Enum.GetValues( typeof( CompatibilityLevel ) ).Cast<CompatibilityLevel>(); }
-        }
+        public IEnumerable<CompatibilityLevel> AllCompatibilityLevels =>
+            Enum.GetValues( typeof( CompatibilityLevel ) ).Cast<CompatibilityLevel>();
 
 
         public enum AvailablePatchers
         {
-            [DefaultValue( true )]
-            [Description( "Use TSLPatcher" )]
+            [DefaultValue( true )] [Description( "Use TSLPatcher" )]
             TSLPatcher = 0,
 
             [Description( "Use TSLPatcherCLI (not tested)" )]
             TSLPatcherCLI = 1,
 
-            [Description( "Use PyKotorCLI" )]
-            PyKotorCLI = 2,
+            [Description( "Use PyKotorCLI" )] PyKotorCLI = 2
         }
 
         [UsedImplicitly]
-        public IEnumerable<AvailablePatchers> AllAvailablePatchers
-        {
-            get { return Enum.GetValues( typeof( AvailablePatchers ) ).Cast<AvailablePatchers>(); }
-        }
+        public IEnumerable<AvailablePatchers> AllAvailablePatchers =>
+            Enum.GetValues( typeof( AvailablePatchers ) ).Cast<AvailablePatchers>();
 
 
         public static DirectoryInfo SourcePath { get; private set; }
@@ -163,9 +153,10 @@ namespace KOTORModSync.Core
 
 
         // used for the ui.
-        protected virtual void OnPropertyChanged( [CallerMemberName][CanBeNull] string propertyName = null )
-        {
-            PropertyChanged?.Invoke( this, new PropertyChangedEventArgs( propertyName ) );
-        }
+        protected virtual void OnPropertyChanged
+            ( [CallerMemberName] [CanBeNull] string propertyName = null ) => PropertyChanged?.Invoke(
+            this,
+            new PropertyChangedEventArgs( propertyName )
+        );
     }
 }

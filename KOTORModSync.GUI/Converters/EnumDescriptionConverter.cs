@@ -28,30 +28,48 @@ namespace KOTORModSync.Converters
             object[] attribArray = fieldInfo.GetCustomAttributes( false );
 
             if ( attribArray.Length == 0 )
+            {
                 return enumObj.ToString();
+            }
 
             DescriptionAttribute attrib = null;
 
             foreach ( object att in attribArray )
             {
                 if ( att is DescriptionAttribute attribute )
+                {
                     attrib = attribute;
+                }
             }
 
             if ( attrib != null )
+            {
                 return attrib.Description;
+            }
 
             return enumObj.ToString();
         }
 
         [CanBeNull]
-        object IValueConverter.Convert( object value, Type targetType, object parameter, CultureInfo culture )
+        object IValueConverter.Convert
+        (
+            object value,
+            Type targetType,
+            object parameter,
+            CultureInfo culture
+        )
         {
             var myEnum = (Enum)value;
             string description = GetEnumDescription( myEnum );
             return description;
         }
 
-        object IValueConverter.ConvertBack( object value, Type targetType, object parameter, CultureInfo culture ) => value;
+        object IValueConverter.ConvertBack
+        (
+            object value,
+            Type targetType,
+            object parameter,
+            CultureInfo culture
+        ) => value;
     }
 }

@@ -4,7 +4,5 @@
 
 namespace KOTORModSync.Core.Data
 {
-    public class Game
-    {
-    }
+    public class Game { }
 }

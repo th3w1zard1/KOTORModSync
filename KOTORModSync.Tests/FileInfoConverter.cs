@@ -7,8 +7,15 @@ namespace KOTORModSync.Tests
         public override bool CanConvert( Type objectType ) => objectType == typeof( FileInfo );
 
         public override object? ReadJson
-            ( JsonReader reader, Type objectType, object? existingValue, JsonSerializer serializer ) =>
-            reader.Value is not string filePath ? default : (object)new FileInfo( filePath );
+        (
+            JsonReader reader,
+            Type objectType,
+            object? existingValue,
+            JsonSerializer serializer
+        ) =>
+            reader.Value is not string filePath
+                ? default
+                : (object)new FileInfo( filePath );
 
         public override void WriteJson( JsonWriter writer, object? value, JsonSerializer serializer )
         {

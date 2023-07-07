@@ -26,13 +26,17 @@ namespace KOTORModSync.Core.Utility
             Type type = value.GetType();
             string name = Enum.GetName( type, value );
             if ( name == null )
+            {
                 return null;
+            }
 
             FieldInfo field = type.GetField( name );
             if ( field == null )
+            {
                 return null;
+            }
 
-            DescriptionAttribute attribute = field.GetCustomAttribute<DescriptionAttribute>();
+            var attribute = field.GetCustomAttribute<DescriptionAttribute>();
             return attribute?.Description;
         }
 
@@ -43,14 +47,11 @@ namespace KOTORModSync.Core.Utility
 
             try
             {
-                using (
-                    File.Create(
-                        Path.Combine( dirPath.FullName, Path.GetRandomFileName() ),
-                        1,
-                        FileOptions.DeleteOnClose
-                    )
-                )
-                { }
+                using ( File.Create(
+                           Path.Combine( dirPath.FullName, Path.GetRandomFileName() ),
+                           1,
+                           FileOptions.DeleteOnClose
+                       ) ) { }
 
                 return true;
             }

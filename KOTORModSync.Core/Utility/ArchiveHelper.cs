@@ -16,9 +16,7 @@ namespace KOTORModSync.Core.Utility
     {
         public static readonly ExtractionOptions DefaultExtractionOptions = new ExtractionOptions
         {
-            ExtractFullPath = false,
-            Overwrite = true,
-            PreserveFileTime = true
+            ExtractFullPath = false, Overwrite = true, PreserveFileTime = true
         };
 
         public static bool IsArchive( string filePath ) => IsArchive( new FileInfo( filePath ) );
@@ -202,7 +200,11 @@ namespace KOTORModSync.Core.Utility
                     var child = new Dictionary<string, object>( 65535 )
                     {
                         { "Name", name },
-                        { "Type", isFile ? "file" : "directory" },
+                        {
+                            "Type", isFile
+                                ? "file"
+                                : "directory"
+                        },
                         { "Contents", new List<object>() }
                     };
                     existingDirectory.Add( child );

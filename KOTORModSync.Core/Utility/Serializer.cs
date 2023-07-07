@@ -33,7 +33,9 @@ namespace KOTORModSync.Core.Utility
 
             // not even close to a guid.
             if ( guidString.Length != 32 )
+            {
                 return Guid.Empty.ToString();
+            }
 
             // Insert necessary dashes between the GUID sections
             guidString = Regex.Replace( guidString, @"(\w{8})(\w{4})(\w{4})(\w{4})(\w{12})", "$1-$2-$3-$4-$5" );
@@ -53,7 +55,9 @@ namespace KOTORModSync.Core.Utility
         public static void DeserializePathInDictionary( Dictionary<string, object> dict, string key )
         {
             if ( !dict.TryGetValue( key, out object pathValue ) )
+            {
                 return;
+            }
 
             switch ( pathValue )
             {
@@ -65,9 +69,7 @@ namespace KOTORModSync.Core.Utility
                     }
                 case IList<string> paths:
                     {
-                        for ( int index = 0;
-                             index < paths.Count;
-                             index++ )
+                        for ( int index = 0; index < paths.Count; index++ )
                         {
                             string currentPath = paths[index];
                             string formattedPath = FixPathFormatting( currentPath );
@@ -82,7 +84,9 @@ namespace KOTORModSync.Core.Utility
         public static void DeserializeGuidDictionary( [NotNull] Dictionary<string, object> dict, [NotNull] string key )
         {
             if ( !dict.TryGetValue( key, out object value ) )
+            {
                 return;
+            }
 
             switch ( value )
             {
@@ -95,12 +99,12 @@ namespace KOTORModSync.Core.Utility
                         dict[key] = stringList;
 
                         // Fix GUID strings in each list item
-                        for ( int i = 0;
-                             i < stringList.Count;
-                             i++ )
+                        for ( int i = 0; i < stringList.Count; i++ )
                         {
                             if ( Guid.TryParse( stringList[i], out Guid guid ) )
+                            {
                                 continue;
+                            }
 
                             // Attempt to fix common issues with GUID strings
                             string fixedGuid = FixGuidString( guid.ToString() );
@@ -114,12 +118,12 @@ namespace KOTORModSync.Core.Utility
                 case List<string> stringList:
                     {
                         // Fix GUID strings in each list item
-                        for ( int i = 0;
-                             i < stringList.Count;
-                             i++ )
+                        for ( int i = 0; i < stringList.Count; i++ )
                         {
                             if ( Guid.TryParse( stringList[i], out Guid guid ) )
+                            {
                                 continue;
+                            }
 
                             // Attempt to fix common issues with GUID strings
                             string fixedGuid = FixGuidString( guid.ToString() );
@@ -134,20 +138,16 @@ namespace KOTORModSync.Core.Utility
         }
 
         [NotNull]
-        public static string PrefixPath(
-            [NotNull] string path )
-        {
-            return !path.StartsWith( "<<modDirectory>>" ) && !path.StartsWith( "<<kotorDirectory>>" )
+        public static string PrefixPath( [NotNull] string path ) =>
+            !path.StartsWith( "<<modDirectory>>" ) && !path.StartsWith( "<<kotorDirectory>>" )
                 ? FixPathFormatting( "<<modDirectory>>" + Environment.NewLine + path )
                 : path;
-        }
 
         [NotNull]
         public static string FixPathFormatting( [NotNull] string path )
         {
             // Replace backslashes with forward slashes
-            string formattedPath = path
-                .Replace( Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar )
+            string formattedPath = path.Replace( Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar )
                 .Replace( '\\', Path.DirectorySeparatorChar )
                 .Replace( '/', Path.DirectorySeparatorChar );
 
@@ -190,8 +190,7 @@ namespace KOTORModSync.Core.Utility
         [NotNull]
         public static string FixWhitespaceIssues( [NotNull] string strContents )
         {
-            strContents = strContents
-                .Replace( "\r\n", "\n" )
+            strContents = strContents.Replace( "\r\n", "\n" )
                 .Replace( "\r", Environment.NewLine )
                 .Replace( "\n", Environment.NewLine );
 
@@ -261,9 +260,7 @@ namespace KOTORModSync.Core.Utility
                 // class instance types
                 default:
                     members = type.GetMembers(
-                        BindingFlags.Public
-                        | BindingFlags.Instance
-                        | BindingFlags.DeclaredOnly
+                        BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly
                     );
                     break;
             }
@@ -279,8 +276,7 @@ namespace KOTORModSync.Core.Utility
                         memberName = dictionaryEntry.Key.ToString();
                         value = dictionaryEntry.Value;
                         break;
-                    case PropertyInfo property
-                        when property.CanRead
+                    case PropertyInfo property when property.CanRead
                         && !property.GetMethod.IsStatic
                         && !Attribute.IsDefined( property, typeof( JsonIgnoreAttribute ) )
                         && property.DeclaringType == obj.GetType():
@@ -290,8 +286,7 @@ namespace KOTORModSync.Core.Utility
                             break;
                         }
                     case FieldInfo field
-                        when !field.IsStatic
-                        && !Attribute.IsDefined( field, typeof( JsonIgnoreAttribute ) ):
+                        when !field.IsStatic && !Attribute.IsDefined( field, typeof( JsonIgnoreAttribute ) ):
                         {
                             value = field.GetValue( obj );
                             memberName = field.Name;
@@ -342,12 +337,14 @@ namespace KOTORModSync.Core.Utility
                 }
             }
 
-            return serializedProperties.Count > 0 ? serializedProperties : (object)obj.ToString();
+            return serializedProperties.Count > 0
+                ? serializedProperties
+                : (object)obj.ToString();
         }
 
         // ReSharper disable once SuggestBaseTypeForParameter
         [CanBeNull]
-        private static TomlArray SerializeList( [CanBeNull][ItemCanBeNull] IList list )
+        private static TomlArray SerializeList( [CanBeNull] [ItemCanBeNull] IList list )
         {
             var serializedList = new TomlArray();
 
@@ -363,7 +360,8 @@ namespace KOTORModSync.Core.Utility
                     continue;
                 }
 
-                if ( item.GetType().IsPrimitive || item is string )
+                if ( item.GetType().IsPrimitive
+                    || item is string )
                 {
                     serializedList.Add( item.ToString() );
                     continue;

@@ -18,14 +18,10 @@ namespace KOTORModSync.Controls
 {
     public partial class DependencyControl : UserControl
     {
-        public DependencyControl()
-        {
-            InitializeComponent();
-        }
+        public DependencyControl() => InitializeComponent();
 
-        [NotNull]
-        public static readonly StyledProperty<List<Guid>> ThisGuidListProperty =
-            AvaloniaProperty.Register<DependencyControl, List<Guid>>( nameof( ThisGuidList ) );
+        [NotNull] public static readonly StyledProperty<List<Guid>> ThisGuidListProperty
+            = AvaloniaProperty.Register<DependencyControl, List<Guid>>( nameof( ThisGuidList ) );
 
         [NotNull]
         public List<Guid> ThisGuidList
@@ -34,9 +30,8 @@ namespace KOTORModSync.Controls
             set => SetValue( ThisGuidListProperty, value );
         }
 
-        [NotNull]
-        public static readonly StyledProperty<List<Component>> ThisComponentListProperty =
-            AvaloniaProperty.Register<DependencyControl, List<Component>>( nameof( ThisGuidList ) );
+        [NotNull] public static readonly StyledProperty<List<Component>> ThisComponentListProperty
+            = AvaloniaProperty.Register<DependencyControl, List<Component>>( nameof( ThisGuidList ) );
 
         [NotNull]
         public List<Component> ThisComponentList
@@ -50,16 +45,24 @@ namespace KOTORModSync.Controls
             try
             {
                 if ( !( sender is Button addButton ) )
+                {
                     throw new ArgumentException( "Sender is not a Button." );
+                }
 
                 if ( !( addButton.Tag is ComboBox comboBox ) )
+                {
                     throw new ArgumentException( "Button doesn't have a proper ComboBox tag." );
+                }
 
                 if ( !( comboBox.SelectedItem is Component selectedComponent ) )
+                {
                     return; // no selection
+                }
 
                 if ( !( comboBox.Tag is ListBox listBox ) )
+                {
                     throw new ArgumentException( "ComboBox does not have a ListBox Tag." );
+                }
 
                 ThisGuidList.Add( selectedComponent.Guid );
 
@@ -84,15 +87,22 @@ namespace KOTORModSync.Controls
             try
             {
                 if ( !( sender is Button removeButton ) )
+                {
                     throw new ArgumentException( "Sender is not a Button." );
+                }
 
                 if ( !( removeButton.Tag is ListBox listBox ) )
+                {
                     throw new ArgumentException( "Button doesn't have a proper ListBox tag." );
+                }
 
                 int index = listBox.SelectedIndex;
 
-                if ( index < 0 || index >= ThisGuidList.Count )
+                if ( index < 0
+                    || index >= ThisGuidList.Count )
+                {
                     return; // no selection
+                }
 
                 ThisGuidList.RemoveAt( index );
 

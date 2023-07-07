@@ -120,7 +120,8 @@ namespace KOTORModSync.Tests
         {
             // Deserialize default component
             Component newComponent
-                = Component.DeserializeTomlComponent( Component.DefaultComponent + Instruction.DefaultInstructions ) ?? throw new InvalidOperationException();
+                = Component.DeserializeTomlComponent( Component.DefaultComponent + Instruction.DefaultInstructions )
+                ?? throw new InvalidOperationException();
             newComponent.Guid = Guid.NewGuid();
             newComponent.Name = "new mod_" + Path.GetRandomFileName();
 
@@ -128,7 +129,8 @@ namespace KOTORModSync.Tests
             string tomlString = newComponent.SerializeComponent();
 
             // Deserialize into new instance
-            Component duplicateComponent = Component.DeserializeTomlComponent( tomlString ) ?? throw new InvalidOperationException();
+            Component duplicateComponent = Component.DeserializeTomlComponent( tomlString )
+                ?? throw new InvalidOperationException();
 
             // Compare
             AssertComponentEquality( newComponent, duplicateComponent );
@@ -162,10 +164,7 @@ namespace KOTORModSync.Tests
                 Component originalComponent = originalComponents[i];
                 Component loadedComponent = loadedComponents[i];
 
-                AssertComponentEquality(
-                    originalComponent,
-                    loadedComponent
-                );
+                AssertComponentEquality( originalComponent, loadedComponent );
             }
         }
 
@@ -217,7 +216,9 @@ namespace KOTORModSync.Tests
                     if ( char.IsLetter( c ) )
                     {
                         // Convert field name character to mixed case
-                        convertedChar = random.Next( 2 ) == 0 ? char.ToUpper( c ) : char.ToLower( c );
+                        convertedChar = random.Next( 2 ) == 0
+                            ? char.ToUpper( c )
+                            : char.ToLower( c );
                     }
                     else if ( c == ']' )
                     {
@@ -229,7 +230,9 @@ namespace KOTORModSync.Tests
                     if ( char.IsLetter( c ) )
                     {
                         // Convert field value character to mixed case
-                        convertedChar = random.Next( 2 ) == 0 ? char.ToUpper( c ) : char.ToLower( c );
+                        convertedChar = random.Next( 2 ) == 0
+                            ? char.ToUpper( c )
+                            : char.ToLower( c );
                     }
                     else if ( c == '[' )
                     {
@@ -392,8 +395,9 @@ namespace KOTORModSync.Tests
             Assert.Multiple(
                 () =>
                 {
-                    IComparer comparer
-                        = caseSensitiveKeys ? StringComparer.Ordinal : StringComparer.OrdinalIgnoreCase;
+                    IComparer comparer = caseSensitiveKeys
+                        ? StringComparer.Ordinal
+                        : StringComparer.OrdinalIgnoreCase;
 
                     Assert.That( actual.Name, Is.EqualTo( expected.Name ).Using( comparer ) );
                     Assert.That( actual.Guid, Is.EqualTo( expected.Guid ).Using( comparer ) );

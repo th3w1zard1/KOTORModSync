@@ -153,19 +153,20 @@
 
   <!-- Delete logs and other temp output -->
   <ItemGroup>
-    <TextFiles Include="$(TargetDir)*.txt"/>
-    <TmlFiles Include="$(TargetDir)*.tml"/>
-    <TomlFiles Include="$(TargetDir)*.toml"/>
-    <LogFiles Include="$(TargetDir)*.log"/>
-    <BackupFolder Include="$(SolutionDir)/logs_and_data_saved_from_dotnet_clean"/>
+    <TextFiles Include="$(TargetDir)*.txt" />
+    <TmlFiles Include="$(TargetDir)*.tml" />
+    <TomlFiles Include="$(TargetDir)*.toml" />
+    <LogFiles Include="$(TargetDir)*.log" />
+    <BackupFolder Include="$(SolutionDir)/logs_and_data_saved_from_dotnet_clean" />
   </ItemGroup>
   <Target Name="MyDistClean" AfterTargets="Clean">
     <Message Importance="High" Text=" ## Running custom Clean target..." />
-    <Exec Condition=" '$(OS)' == 'Windows_NT' " Command="if not exist &quot;$(SolutionDir)logs_and_data_saved_from_dotnet_clean&quot; mkdir &quot;$(SolutionDir)logs_and_data_saved_from_dotnet_clean&quot;" />
-    <Move SourceFiles="@(TextFiles)" DestinationFolder="@(BackupFolder)"/>
-    <Move SourceFiles="@(TmlFiles)" DestinationFolder="@(BackupFolder)"/>
-    <Move SourceFiles="@(TomlFiles)" DestinationFolder="@(BackupFolder)"/>
-    <Move SourceFiles="@(LogFiles)" DestinationFolder="@(BackupFolder)"/>
+    <Exec Condition=" '$(OS)' == 'Windows_NT' "
+          Command="if not exist &quot;$(SolutionDir)logs_and_data_saved_from_dotnet_clean&quot; mkdir &quot;$(SolutionDir)logs_and_data_saved_from_dotnet_clean&quot;" />
+    <Move SourceFiles="@(TextFiles)" DestinationFolder="@(BackupFolder)" />
+    <Move SourceFiles="@(TmlFiles)" DestinationFolder="@(BackupFolder)" />
+    <Move SourceFiles="@(TomlFiles)" DestinationFolder="@(BackupFolder)" />
+    <Move SourceFiles="@(LogFiles)" DestinationFolder="@(BackupFolder)" />
   </Target>
 
   <!-- Zip everything up for a release. Doesn't work yet. -->
@@ -182,13 +183,21 @@
     </ItemGroup>
     <MakeDir Directories="@(ZipArchiveItems->'%(RootDir)%(Directory)')" />
     <PropertyGroup>
-      <SevenZipExecuted Condition="'$(SevenZipExecuted)' != 'true' and '$(OS)' == 'Windows_NT' and !Exists('C:\Program Files\7-Zip\7z.exe')">true</SevenZipExecuted>
-      <SevenZipExecuted Condition="'$(SevenZipExecuted)' != 'true' and '$(OS)' != 'Windows_NT' and !Exists('/usr/bin/7z')">true</SevenZipExecuted>
+      <SevenZipExecuted
+        Condition="'$(SevenZipExecuted)' != 'true' and '$(OS)' == 'Windows_NT' and !Exists('C:\Program Files\7-Zip\7z.exe')">
+        true
+      </SevenZipExecuted>
+      <SevenZipExecuted
+        Condition="'$(SevenZipExecuted)' != 'true' and '$(OS)' != 'Windows_NT' and !Exists('/usr/bin/7z')">
+        true
+      </SevenZipExecuted>
     </PropertyGroup>
-    <Exec Command="7z a &quot;%(ZipArchiveItems.Identity)&quot; &quot;%(ZipFiles.FullPath)&quot;" IgnoreExitCode="true" Condition="'$(SevenZipExecuted)' == 'true'">
+    <Exec Command="7z a &quot;%(ZipArchiveItems.Identity)&quot; &quot;%(ZipFiles.FullPath)&quot;" IgnoreExitCode="true"
+          Condition="'$(SevenZipExecuted)' == 'true'">
       <Output TaskParameter="ExitCode" PropertyName="SevenZipExitCode" />
     </Exec>
-    <Message Text="7-Zip command not found. Skipping zip portion." Importance="High" Condition="'$(SevenZipExecuted)' == 'true' and '$(SevenZipExitCode)' != '0'" />
+    <Message Text="7-Zip command not found. Skipping zip portion." Importance="High"
+             Condition="'$(SevenZipExecuted)' == 'true' and '$(SevenZipExitCode)' != '0'" />
   </Target>
 
   <!-- Licensing -->

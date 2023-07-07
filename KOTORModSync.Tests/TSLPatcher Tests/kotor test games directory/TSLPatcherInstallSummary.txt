@@ -1,0 +1,24 @@
+11:25:18 AM on 7/6/3923
+Installing mod from: C:/Users/boden/Documents/GitHub/KOTOR2ModSync/KOTORModSync.Tests/TSLPatcher Tests/tslpatcher test 1 original thor110
+No install option selected
+Finished
+. Some changes may have been applied, but 2 errors and 1 warnings were encountered!
+
+11:28:55 AM on 7/6/3923
+Installing mod from: C:/Users/boden/Documents/GitHub/KOTOR2ModSync/KOTORModSync.Tests/TSLPatcher Tests/tslpatcher test 1 original thor110
+No install option selected
+Finished
+. Changes have been applied, but 2 warnings were encountered.
+
+11:30:12 AM on 7/6/3923
+Installing mod from: C:/Users/boden/Documents/GitHub/KOTOR2ModSync/KOTORModSync.Tests/TSLPatcher Tests/tslpatcher test 1 original thor110
+No install option selected
+Finished
+. Changes have been applied, but 1 warnings were encountered.
+
+11:35:05 AM on 7/6/3923
+Installing mod from: C:/Users/boden/Documents/GitHub/KOTOR2ModSync/KOTORModSync.Tests/TSLPatcher Tests/tslpatcher test 1 original thor110
+No install option selected
+Finished
+. Changes have been applied, but 1 warnings were encountered.
+

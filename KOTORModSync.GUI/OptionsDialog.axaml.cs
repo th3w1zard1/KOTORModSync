@@ -18,8 +18,8 @@ namespace KOTORModSync
 {
     public partial class OptionsDialog : Window
     {
-        public static readonly AvaloniaProperty OptionsListProperty =
-            AvaloniaProperty.Register<OptionsDialog, List<string>>( nameof( OptionsList ) );
+        public static readonly AvaloniaProperty OptionsListProperty
+            = AvaloniaProperty.Register<OptionsDialog, List<string>>( nameof( OptionsList ) );
 
         public OptionsDialog()
         {
@@ -41,9 +41,7 @@ namespace KOTORModSync
 
         private void OKButton_Click( object sender, RoutedEventArgs e )
         {
-            RadioButton selectedRadioButton = OptionStackPanel
-                .Children
-                .OfType<RadioButton>()
+            RadioButton selectedRadioButton = OptionStackPanel.Children.OfType<RadioButton>()
                 .SingleOrDefault( rb => rb.IsChecked == true );
 
             if ( selectedRadioButton != null )
@@ -59,7 +57,7 @@ namespace KOTORModSync
 
         private void OnOpened( object sender, EventArgs e )
         {
-            StackPanel optionStackPanel = this.FindControl<StackPanel>( "OptionStackPanel" );
+            var optionStackPanel = this.FindControl<StackPanel>( "OptionStackPanel" );
 
             foreach ( string option in OptionsList )
             {

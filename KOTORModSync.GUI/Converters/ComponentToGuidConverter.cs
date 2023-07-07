@@ -13,7 +13,8 @@ namespace KOTORModSync.Converters
     public class ComponentToGuidConverter : IValueConverter
     {
         [CanBeNull]
-        public object Convert(
+        public object Convert
+        (
             [CanBeNull] object value,
             [NotNull] Type targetType,
             [CanBeNull] object parameter,
@@ -21,13 +22,16 @@ namespace KOTORModSync.Converters
         )
         {
             if ( !( value is Component selectedComponent ) )
+            {
                 return null;
+            }
 
             return selectedComponent.Name;
         }
 
         [CanBeNull]
-        public object ConvertBack(
+        public object ConvertBack
+        (
             [CanBeNull] object value,
             [NotNull] Type targetType,
             [CanBeNull] object parameter,
@@ -35,10 +39,11 @@ namespace KOTORModSync.Converters
         )
         {
             if ( !( value is List<Component> ) )
+            {
                 return null;
+            }
 
             return new object();
         }
     }
-
 }

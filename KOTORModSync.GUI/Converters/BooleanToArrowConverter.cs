@@ -10,10 +10,26 @@ namespace KOTORModSync.Converters
 {
     public class BooleanToArrowConverter : IValueConverter
     {
-        public object Convert( object value, Type targetType, object parameter, CultureInfo culture ) =>
-            value is bool isExpanded && targetType == typeof( string ) ? isExpanded ? "▼" : "▶" : (object)string.Empty;
+        public object Convert
+        (
+            object value,
+            Type targetType,
+            object parameter,
+            CultureInfo culture
+        ) =>
+            value is bool isExpanded && targetType == typeof( string )
+                ? isExpanded
+                    ? "▼"
+                    : "▶"
+                : (object)string.Empty;
 
-        public object ConvertBack( object value, Type targetType, object parameter, CultureInfo culture ) =>
+        public object ConvertBack
+        (
+            object value,
+            Type targetType,
+            object parameter,
+            CultureInfo culture
+        ) =>
             throw new NotSupportedException();
     }
 }

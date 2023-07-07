@@ -78,14 +78,14 @@ namespace KOTORModSync.Tests
             instance1.NestedInstance = new MyNestedClass( instance1 );
             instance1.GuidNestedClassDict = new Dictionary<Guid, List<MyNestedClass>>
             {
-                { Guid.NewGuid(), new List<MyNestedClass> { new(instance1) } }
+                { Guid.NewGuid(), new List<MyNestedClass> { new( instance1 ) } }
             };
 
             var instance2 = new MyClass();
             instance2.NestedInstance = new MyNestedClass( instance2 );
             instance2.GuidNestedClassDict = new Dictionary<Guid, List<MyNestedClass>>
             {
-                { Guid.NewGuid(), new List<MyNestedClass> { new(instance2), new(instance2) } }
+                { Guid.NewGuid(), new List<MyNestedClass> { new( instance2 ), new( instance2 ) } }
             };
 
             // Act & Assert
@@ -118,14 +118,13 @@ namespace KOTORModSync.Tests
             try
             {
                 // Hook into the unhandled exception event to capture any unhandled exceptions
-                AppDomain.CurrentDomain.UnhandledException
-                    += ( sender, args ) =>
+                AppDomain.CurrentDomain.UnhandledException += ( sender, args ) =>
+                {
+                    if ( args.ExceptionObject is StackOverflowException )
                     {
-                        if ( args.ExceptionObject is StackOverflowException )
-                        {
-                            stackOverflow = true;
-                        }
-                    };
+                        stackOverflow = true;
+                    }
+                };
 
                 // Execute the action inside a separate thread
                 _ = ThreadPool.QueueUserWorkItem(

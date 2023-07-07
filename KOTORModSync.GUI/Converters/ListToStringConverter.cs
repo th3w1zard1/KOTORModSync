@@ -11,14 +11,21 @@ using System.Text;
 using System.Text.RegularExpressions;
 using Avalonia.Data;
 using Avalonia.Data.Converters;
+using JetBrains.Annotations;
 using KOTORModSync.Core.Utility;
 
 namespace KOTORModSync.Converters
 {
     public class ListToStringConverter : IValueConverter
     {
-        public static string RemoveSpacesExceptNewLine( string input )
+        [NotNull]
+        public static string RemoveSpacesExceptNewLine( [NotNull] string input )
         {
+            if ( input == null )
+            {
+                throw new ArgumentNullException( nameof( input ) );
+            }
+
             string pattern = $@"(?:(?!{Environment.NewLine})[^\S{Environment.NewLine}])+";
             string result = Regex.Replace( input, pattern, "" );
 
@@ -26,16 +33,26 @@ namespace KOTORModSync.Converters
         }
 
 
-        public object Convert( object value, Type targetType, object parameter, CultureInfo culture )
+        public object Convert
+        (
+            [CanBeNull] object value,
+            [NotNull] Type targetType,
+            [CanBeNull] object parameter,
+            [NotNull] CultureInfo culture
+        )
         {
             if ( !( value is IEnumerable list ) )
+            {
                 return string.Empty;
+            }
 
             var serializedList = new StringBuilder();
             foreach ( object item in list )
             {
                 if ( item == null )
+                {
                     continue;
+                }
 
                 _ = serializedList.AppendLine( item.ToString() );
             }
@@ -44,26 +61,36 @@ namespace KOTORModSync.Converters
         }
 
 
-        public object ConvertBack( object value, Type targetType, object parameter, CultureInfo culture )
+        [CanBeNull]
+        public object ConvertBack
+        (
+            [CanBeNull] object value,
+            [NotNull] Type targetType,
+            [CanBeNull] object parameter,
+            [NotNull] CultureInfo culture
+        )
         {
             try
             {
                 if ( !( value is string text ) )
+                {
                     return null;
+                }
 
                 if ( targetType != typeof( List<Guid> ) )
                 {
                     return text.Split( new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries ).ToList();
                 }
 
-                string[] lines = RemoveSpacesExceptNewLine( text ).Split( new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries );
+                string[] lines = RemoveSpacesExceptNewLine( text )
+                    .Split( new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries );
 
                 var guids = new List<Guid>();
                 foreach ( string line in lines )
                 {
                     try
                     {
-                        guids.Add( Guid.Parse( Serializer.FixGuidString( line ) ?? string.Empty ) );
+                        guids.Add( Guid.Parse( Serializer.FixGuidString( line ) ) );
                     }
                     catch ( FormatException e )
                     {
@@ -78,10 +105,7 @@ namespace KOTORModSync.Converters
             }
             catch ( Exception ex )
             {
-                return new BindingNotification(
-                    new FormatException( ex.Message ),
-                    BindingErrorType.Error
-                );
+                return new BindingNotification( new FormatException( ex.Message ), BindingErrorType.Error );
             }
         }
     }

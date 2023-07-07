@@ -15,10 +15,20 @@ namespace KOTORModSync.Converters
 {
     public class ActionConverter : IValueConverter
     {
-        public object Convert( object value, Type targetType, object parameter, CultureInfo culture )
+        public object Convert
+        (
+            object value,
+            Type targetType,
+            object parameter,
+            CultureInfo culture
+        )
         {
             if ( value == null )
-                return targetType.IsValueType ? AvaloniaProperty.UnsetValue : null;
+            {
+                return targetType.IsValueType
+                    ? AvaloniaProperty.UnsetValue
+                    : null;
+            }
 
             if ( TypeUtilities.TryConvert( targetType, value, culture, out object result ) )
             {
@@ -36,8 +46,12 @@ namespace KOTORModSync.Converters
                     "extract"
                 };
 
-                if ( validActions.Any( action => string.Equals( action, (string)result, StringComparison.OrdinalIgnoreCase ) ) )
+                if ( validActions.Any(
+                        action => string.Equals( action, (string)result, StringComparison.OrdinalIgnoreCase )
+                    ) )
+                {
                     return result;
+                }
 
                 string msg = $"Valid actions are [{string.Join( ", ", validActions )}]";
                 return new BindingNotification( new ArgumentException( msg ), BindingErrorType.Error );
@@ -50,7 +64,12 @@ namespace KOTORModSync.Converters
         }
 
         public object ConvertBack
-            ( object value, Type targetType, object parameter, CultureInfo culture ) =>
+        (
+            object value,
+            Type targetType,
+            object parameter,
+            CultureInfo culture
+        ) =>
             Convert( value, targetType, parameter, culture );
     }
 }

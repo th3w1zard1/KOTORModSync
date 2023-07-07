@@ -15,8 +15,8 @@ namespace KOTORModSync
 {
     public partial class InformationDialog : Window
     {
-        public static readonly AvaloniaProperty InfoTextProperty =
-            AvaloniaProperty.Register<InformationDialog, string>( "InfoText" );
+        public static readonly AvaloniaProperty InfoTextProperty
+            = AvaloniaProperty.Register<InformationDialog, string>( "InfoText" );
 
         public InformationDialog() => InitializeComponent();
 
@@ -47,7 +47,7 @@ namespace KOTORModSync
         private void UpdateInfoText() => Dispatcher.UIThread.InvokeAsync(
             () =>
             {
-                TextBlock textBlock = this.FindControl<TextBlock>( "InfoTextBlock" );
+                var textBlock = this.FindControl<TextBlock>( "InfoTextBlock" );
                 textBlock.Text = InfoText;
             }
         );

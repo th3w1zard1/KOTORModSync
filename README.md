@@ -34,6 +34,8 @@ See https://pastebin.com/7gML3zCJ for a quick explanation of those fields. See t
 ## FAQ:
 - Q: I've created my own mod, will you add it to the KOTORModSync project?
 - A: Yes! [Please submit your instructions here.](https://github.com/th3w1zard1/KOTORModSync/discussions/categories/share-your-instructions) As long as your mod is SFW, I'll most likely add it to the list. KOTORModSync is designed to support the Vanilla Plus mod build created and managed by Snigaroo and others. Users will still be able to manually select your mod for installation if they desire, as an optional component.
+- Q: A mod in the instructions file is out of date, where do I report this?
+- A: [Please notify us that your mod has updated here.](https://github.com/th3w1zard1/KOTORModSync/discussions/categories/mod-updates)
 
 ## Known bugs
 - The patcher option [PyKotorCLI](https://github.com/NickHugi/PyKotor/pull/7) has not been fully tested. However, this is the only option supported on Linux/Mac. Because of this, unless you're interested in testing, OR you are running Linux/mac, please refrain from using this option until more tests have been done.

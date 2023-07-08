@@ -31,6 +31,10 @@ Once you do this, load an instructions file (or create one), then select the mod
 The installer parses the fields `InstallBefore`, `InstallAfter`, `Dependencies`, and `Restrictions` to define dependencies and incompatibilities.
 See https://pastebin.com/7gML3zCJ for a quick explanation of those fields. See the examples for the `Ultimate Character Overhaul` and the `Handmaiden/Disciple Same-Gender Romance Mod` for the more complex examples.
 
+## FAQ:
+- Q: I've created my own mod, will you add it to the KOTORModSync project?
+- A: Yes! [Please submit your instructions here.](https://github.com/th3w1zard1/KOTORModSync/discussions/categories/share-your-instructions) As long as your mod is SFW, I'll most likely add it to the list. KOTORModSync is designed to support the Vanilla Plus mod build created and managed by Snigaroo and others. Users will still be able to manually select your mod for installation if they desire, as an optional component.
+
 ## Known bugs
 - The patcher option [PyKotorCLI](https://github.com/NickHugi/PyKotor/pull/7) has not been fully tested. However, this is the only option supported on Linux/Mac. Because of this, unless you're interested in testing, OR you are running Linux/mac, please refrain from using this option until more tests have been done.
 - (Windows) Left-clicking on the console output window causes the whole program to pause. This is a Windows feature I believe, it allows the user to quickly select/copy/paste console output while it's being generated. While this isn't inherently a problem, if a user happens to do this while KOTORModSync is running async code, you may experience timeout events during an install. Please refrain from left-clicking the console window during an installation.

@@ -146,7 +146,7 @@ namespace KOTORModSync.Core.Utility
         [NotNull]
         public static string FixPathFormatting( [NotNull] string path )
         {
-            // Replace backslashes with forward slashes
+            // Replace all slashes with a platform agnostic DirectorySeparatorChar.
             string formattedPath = path.Replace( Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar )
                 .Replace( '\\', Path.DirectorySeparatorChar )
                 .Replace( '/', Path.DirectorySeparatorChar );
@@ -171,8 +171,13 @@ namespace KOTORModSync.Core.Utility
 
             foreach ( KeyValuePair<string, object> kvp in tomlTable )
             {
-                string key = kvp.Key.ToLowerInvariant();
+                string key = kvp.Key?.ToLowerInvariant();
                 object value = kvp.Value;
+
+                if ( key == null )
+                {
+                    continue;
+                }
 
                 if ( value is TomlTable nestedTable )
                 {

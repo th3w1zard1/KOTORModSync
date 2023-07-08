@@ -41,8 +41,9 @@ foreach ($file in $publishProfileFiles) {
         
         $publishFolder = Get-Item (Join-Path -Path (Split-Path -Path $projectFile) -ChildPath "..\bin\publish\$lastSection\$framework\$topLevelFolder")
         
-        # Copy the license
+        # Copy the license and readme
         Copy-Item -Path "LICENSE.TXT" -Destination $publishFolder
+        Copy-Item -Path "usage guide.txt" -Destination $publishFolder
         
         # Define the archive file path
         $archiveFile = Join-Path -Path (Split-Path -Path "bin\publish") -ChildPath "$rid.zip"

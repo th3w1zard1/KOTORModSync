@@ -119,19 +119,19 @@
     <!-- <Exec Condition=" '$(RuntimeIdentifier)' == 'linux-x64' OR '$(RuntimeIdentifier)' == 'osx-x64' "
           Command="$(CopyCommand) $(SolutionDir)vendor\bin\TSLPatcherCLI $(TargetDir)" /> TODO-->
     <Exec Condition=" '$(RuntimeIdentifier)' == 'linux-x64' OR '$(RuntimeIdentifier)' == 'osx-x64' "
-          Command="$(CopyCommand) $(SolutionDir)vendor\bin\pykotorcli $(TargetDir)" />
+          Command="$(CopyCommand) $(SolutionDir)vendor\bin\pykotorcli $(TargetDir)Resources$(DirectorySeparatorChar)" />
     <Exec Condition=" '$(RuntimeIdentifier)' == 'linux-x64' OR '$(RuntimeIdentifier)' == 'osx-x64' "
-          Command="$(CopyCommand) $(SolutionDir)vendor\bin\pykotorcli $(PublishDir)" />
+          Command="$(CopyCommand) $(SolutionDir)vendor\bin\pykotorcli $(PublishDir)Resources$(DirectorySeparatorChar)" />
 
     <Exec Condition=" '$(RuntimeIdentifier)' != 'linux-x64' AND '$(RuntimeIdentifier)' != 'osx-x64' "
-          Command="$(CopyCommand) $(SolutionDir)vendor\bin\TSLPatcherCLI.exe $(TargetDir)" />
+          Command="$(CopyCommand) $(SolutionDir)vendor\bin\TSLPatcherCLI.exe $(TargetDir)Resources$(DirectorySeparatorChar)" />
     <Exec Condition=" '$(RuntimeIdentifier)' != 'linux-x64' AND '$(RuntimeIdentifier)' != 'osx-x64' "
-          Command="$(CopyCommand) $(SolutionDir)vendor\bin\TSLPatcherCLI.exe $(PublishDir)" />
+          Command="$(CopyCommand) $(SolutionDir)vendor\bin\TSLPatcherCLI.exe $(PublishDir)Resources$(DirectorySeparatorChar)" />
 
     <Exec Condition=" '$(RuntimeIdentifier)' != 'linux-x64' AND '$(RuntimeIdentifier)' != 'osx-x64' "
-          Command="$(CopyCommand) $(SolutionDir)vendor\bin\pykotorcli.exe $(TargetDir)" />
+          Command="$(CopyCommand) $(SolutionDir)vendor\bin\pykotorcli.exe $(TargetDir)Resources$(DirectorySeparatorChar)" />
     <Exec Condition=" '$(RuntimeIdentifier)' != 'linux-x64' AND '$(RuntimeIdentifier)' != 'osx-x64' "
-          Command="$(CopyCommand) $(SolutionDir)vendor\bin\pykotorcli.exe $(PublishDir)" />
+          Command="$(CopyCommand) $(SolutionDir)vendor\bin\pykotorcli.exe $(PublishDir)Resources$(DirectorySeparatorChar)" />
 
 
     <!-- WindowsDeleteString returntype changes from int to IntPtr HRESULT after net framework 4.x.x, replace with our patches. -->
@@ -173,10 +173,10 @@
   <Target Name="Zip" AfterTargets="Publish">
     <PropertyGroup>
       <TargetFolders>$(TargetDir)</TargetFolders>
-      <ZipOutputDir>$(TargetDir)..\</ZipOutputDir>
+      <ZipOutputDir>$(TargetDir)..$(DirectorySeparatorChar)</ZipOutputDir>
     </PropertyGroup>
     <ItemGroup>
-      <ZipFiles Include="$(TargetFolders)**\*.*" Exclude="$(TargetFolders)**\*.zip" />
+      <ZipFiles Include="$(TargetFolders)**$(DirectorySeparatorChar)*.*" Exclude="$(TargetFolders)**$(DirectorySeparatorChar)*.zip" />
       <ZipArchiveItems Include="@(ZipFiles)">
         <TargetPath>$([System.IO.Path]::GetFullPath("%(ZipFiles.RecursiveDir)%(ZipFiles.Filename).zip"))</TargetPath>
       </ZipArchiveItems>

@@ -654,7 +654,7 @@ namespace KOTORModSync
                         individuallyValidated = false;
                     }
 
-                    var validator = new ComponentValidation( component );
+                    var validator = new ComponentValidation( component, ComponentsList );
                     await Logger.LogVerboseAsync( $" == Validating '{component.Name}' == " );
                     individuallyValidated &= validator.Run();
                 }

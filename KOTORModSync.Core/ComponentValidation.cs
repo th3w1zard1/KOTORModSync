@@ -24,10 +24,12 @@ namespace KOTORModSync.Core
 
         private readonly List<ValidationResult> _validationResults;
         public readonly Component Component;
+        public readonly List<Component> ComponentsList;
 
-        public ComponentValidation( Component component )
+        public ComponentValidation( Component component, List<Component> componentsList )
         {
             Component = component;
+            ComponentsList = componentsList;
             _validationResults = new List<ValidationResult>();
         }
 
@@ -222,6 +224,29 @@ namespace KOTORModSync.Core
 
                     if ( !File.Exists( realSourcePath ) )
                     {
+                        // download isn't required if the dependency mod isn't selected for install.
+                        if ( instruction.Dependencies?.Count != 0
+                            && instruction.Dependencies != null )
+                        {
+                            bool selectedForInstall = false;
+                            foreach ( Guid dependencyGuid in instruction.Dependencies )
+                            {
+                                Component dependencyComponent = Component.FindComponentFromGuid( dependencyGuid, ComponentsList );
+                                if ( !dependencyComponent.IsSelected )
+                                {
+                                    continue;
+                                }
+
+                                selectedForInstall = true;
+                                break;
+                            }
+
+                            if ( selectedForInstall )
+                            {
+                                continue;
+                            }
+                        }
+
                         AddError(
                             "Missing required download:" + $" '{Path.GetFileNameWithoutExtension( realSourcePath )}'",
                             instruction

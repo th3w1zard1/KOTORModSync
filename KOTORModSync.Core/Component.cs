@@ -214,7 +214,6 @@ namespace KOTORModSync.Core
             }
 
             // Validate and log additional errors/warnings.
-            Validator = new ComponentValidation( this );
             _ = Logger.LogAsync( $"Successfully deserialized component '{Name}'" );
         }
 

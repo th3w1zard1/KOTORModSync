@@ -675,7 +675,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
 
                         tslPatcherCliPath = new FileInfo(
                             Path.Combine(
-                                Path.GetDirectoryName( Path.Combine("Resources", executingAssemblyLocation ))
+                                Path.GetDirectoryName( Path.Combine( "Resources", executingAssemblyLocation ) )
                                 ?? throw new InvalidOperationException(),
                                 thisExe
                             )

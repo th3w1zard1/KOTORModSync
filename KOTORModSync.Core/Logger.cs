@@ -93,23 +93,28 @@ namespace KOTORModSync.Core
         public static void LogVerbose( [CanBeNull] string message ) =>
             Log( $"[Verbose] {message}", !MainConfig.DebugLogging );
 
-        [NotNull] public static Task LogVerboseAsync( [CanBeNull] string message ) =>
+        [NotNull]
+        public static Task LogVerboseAsync( [CanBeNull] string message ) =>
             LogInternalAsync( $"[Verbose] {message}", !MainConfig.DebugLogging );
 
         public static void LogWarning( [NotNull] string message ) => Log( $"[Warning] {message}" );
 
-        [NotNull] public static Task LogWarningAsync( [NotNull] string message ) =>
+        [NotNull]
+        public static Task LogWarningAsync( [NotNull] string message ) =>
             LogInternalAsync( $"[Warning] {message}" );
 
         public static void LogError( [CanBeNull] string message ) => Log( $"[Error] {message}" );
 
-        [NotNull] public static Task LogErrorAsync( [CanBeNull] string message ) =>
+        [NotNull]
+        public static Task LogErrorAsync( [CanBeNull] string message ) =>
             LogInternalAsync( $"[Error] {message}" );
 
-        [NotNull] public static async Task LogExceptionAsync( [CanBeNull] Exception ex ) =>
+        [NotNull]
+        public static async Task LogExceptionAsync( [CanBeNull] Exception ex ) =>
             await Task.Run( () => LogException( ex ) );
 
-        [NotNull] public static async Task LogExceptionAsync(
+        [NotNull]
+        public static async Task LogExceptionAsync(
             [CanBeNull] Exception ex,
             [CanBeNull] string customMessage
         ) => await Task.Run( () => LogException( ex, customMessage ) );

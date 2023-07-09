@@ -31,9 +31,9 @@ namespace KOTORModSync.Core
 
         public ComponentValidation( [NotNull] Component component, [NotNull] List<Component> componentsList )
         {
-            Component = component ?? throw new ArgumentNullException( nameof(component) );
+            Component = component ?? throw new ArgumentNullException( nameof( component ) );
             ComponentsList = new List<Component>(
-                componentsList ?? throw new ArgumentNullException( nameof(componentsList) )
+                componentsList ?? throw new ArgumentNullException( nameof( componentsList ) )
             );
         }
 
@@ -453,7 +453,7 @@ namespace KOTORModSync.Core
             }
 
             AddError( $"Failed to find '{sourcePath}' in any archives!", instruction );
-            return ( false, archiveNameFound );
+            return (false, archiveNameFound);
         }
 
         private static ArchivePathCode IsPathInArchive( [NotNull] string relativePath, [NotNull] string archivePath )

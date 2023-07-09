@@ -19,7 +19,7 @@ namespace KOTORModSync
     public partial class OptionsDialog : Window
     {
         public static readonly AvaloniaProperty OptionsListProperty
-            = AvaloniaProperty.Register<OptionsDialog, List<string>>( nameof(OptionsList) );
+            = AvaloniaProperty.Register<OptionsDialog, List<string>>( nameof( OptionsList ) );
 
         public OptionsDialog()
         {

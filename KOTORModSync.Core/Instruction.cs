@@ -157,7 +157,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
         public void SetRealPaths( bool noValidate = false )
         {
             // Get real path then enumerate the files/folders with wildcards and add them to the list
-            if ( Source is null ) throw new NullReferenceException( nameof(Source) );
+            if ( Source is null ) throw new NullReferenceException( nameof( Source ) );
 
             RealSourcePaths = Source.ConvertAll( Utility.Utility.ReplaceCustomVariables );
             RealSourcePaths = FileHelper.EnumerateFilesWithWildcards( RealSourcePaths );
@@ -221,7 +221,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
 
                             if ( argDestinationPath is null )
                             {
-                                throw new ArgumentNullException( nameof(argDestinationPath) );
+                                throw new ArgumentNullException( nameof( argDestinationPath ) );
                             }
 
                             _ = Logger.LogAsync( $"File path: {thisFile.FullName}" );
@@ -354,7 +354,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
             }
             else if ( !directoryPath.Exists )
             {
-                throw new ArgumentException( "Invalid directory path.", nameof(directoryPath) );
+                throw new ArgumentException( "Invalid directory path.", nameof( directoryPath ) );
             }
 
             if ( string.IsNullOrEmpty( fileExtension ) )
@@ -693,7 +693,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                         await Logger.LogVerboseAsync( $"Using CLI to run command: '{tslPatcherCliPath} {args}'" );
                     }
 
-                    ( int exitCode, string output, string error ) = await PlatformAgnosticMethods.ExecuteProcessAsync(
+                    (int exitCode, string output, string error) = await PlatformAgnosticMethods.ExecuteProcessAsync(
                         tslPatcherCliPath,
                         args,
                         noAdmin: MainConfig.NoAdmin
@@ -756,7 +756,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                             );
                         }
 
-                        ( int childExitCode, string output, string error )
+                        (int childExitCode, string output, string error)
                             = await PlatformAgnosticMethods.ExecuteProcessAsync(
                                 thisProgram,
                                 noAdmin: MainConfig.NoAdmin
@@ -882,13 +882,13 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
 
         public event PropertyChangedEventHandler PropertyChanged;
 
-        protected virtual void OnPropertyChanged( [CallerMemberName] [CanBeNull] string propertyName = null ) =>
+        protected virtual void OnPropertyChanged( [CallerMemberName][CanBeNull] string propertyName = null ) =>
             PropertyChanged?.Invoke( this, new PropertyChangedEventArgs( propertyName ) );
 
         protected bool SetField<T>(
             [CanBeNull] ref T field,
             [CanBeNull] T value,
-            [CallerMemberName] [CanBeNull] string propertyName = null
+            [CallerMemberName][CanBeNull] string propertyName = null
         )
         {
             if ( EqualityComparer<T>.Default.Equals( field, value ) )

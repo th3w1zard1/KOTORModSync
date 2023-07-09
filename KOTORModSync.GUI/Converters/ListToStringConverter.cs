@@ -23,7 +23,7 @@ namespace KOTORModSync.Converters
         {
             if ( input is null )
             {
-                throw new ArgumentNullException( nameof(input) );
+                throw new ArgumentNullException( nameof( input ) );
             }
 
             string pattern = $@"(?:(?!{Environment.NewLine})[^\S{Environment.NewLine}])+";

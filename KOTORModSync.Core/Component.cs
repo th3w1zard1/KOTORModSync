@@ -284,7 +284,7 @@ namespace KOTORModSync.Core
                     in component.Instructions
                         .Where(
                             instruction =>
-                                !(instruction is null)
+                                !( instruction is null )
                                 && instruction.Action != "extract"
                         )
                 )

@@ -861,7 +861,7 @@ namespace KOTORModSync
                 string name = _currentComponent.Name; // use correct name even if user clicks another component.
                 if ( name == null )
                 {
-                    throw new ArgumentNullException( nameof( name ), "Component does not have a valid 'Name' field." );
+                    throw new NullReferenceException( "Component does not have a valid 'Name' field." );
                 }
 
                 bool? confirm = await ConfirmationDialog.ShowConfirmationDialog(

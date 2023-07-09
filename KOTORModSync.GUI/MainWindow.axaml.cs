@@ -628,8 +628,8 @@ namespace KOTORModSync
 
                     // Confirm that dependencies are all found in InstallBefore and InstallAfter keys:
                     bool installOrderKeysDefined = component.Dependencies?.All(
-                            item => component.InstallBefore?.Contains(item) == true
-                                || component.InstallAfter?.Contains(item) == true
+                            item => component.InstallBefore?.Contains( item ) == true
+                                || component.InstallAfter?.Contains( item ) == true
                         )
                         == true;
 
@@ -1170,7 +1170,7 @@ namespace KOTORModSync
 
         private void TabControl_SelectionChanged( [CanBeNull] object sender, [CanBeNull] SelectionChangedEventArgs e )
         {
-            if ( !( (sender as TabControl)?.SelectedItem is TabItem selectedItem ) )
+            if ( !( ( sender as TabControl )?.SelectedItem is TabItem selectedItem ) )
             {
                 return;
             }

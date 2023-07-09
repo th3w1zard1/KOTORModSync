@@ -414,7 +414,7 @@ namespace KOTORModSync.Core
                 return (false, archiveNameFound);
             }
 
-            if ( foundInAnyArchive || !Component.ShouldRunInstruction( instruction, ComponentsList ))
+            if ( foundInAnyArchive || !Component.ShouldRunInstruction( instruction, ComponentsList ) )
             {
                 return (true, true);
             }

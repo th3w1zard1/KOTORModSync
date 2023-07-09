@@ -21,10 +21,7 @@ namespace KOTORModSync.Converters
         [NotNull]
         public static string RemoveSpacesExceptNewLine( [NotNull] string input )
         {
-            if ( input == null )
-            {
-                throw new ArgumentNullException( nameof( input ) );
-            }
+            ArgumentNullException.ThrowIfNull( input, nameof( input ) );
 
             string pattern = $@"(?:(?!{Environment.NewLine})[^\S{Environment.NewLine}])+";
             string result = Regex.Replace( input, pattern, "" );

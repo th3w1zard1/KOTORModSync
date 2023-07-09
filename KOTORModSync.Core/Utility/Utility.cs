@@ -36,7 +36,7 @@ namespace KOTORModSync.Core.Utility
                 return null;
             }
 
-            var attribute = field.GetCustomAttribute<DescriptionAttribute>();
+            DescriptionAttribute attribute = field.GetCustomAttribute<DescriptionAttribute>();
             return attribute?.Description;
         }
 

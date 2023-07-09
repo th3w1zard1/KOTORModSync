@@ -224,33 +224,14 @@ namespace KOTORModSync.Core
 
                     if ( !File.Exists( realSourcePath ) )
                     {
-                        // download isn't required if the dependency mod isn't selected for install.
-                        if ( instruction.Dependencies?.Count != 0
-                            && instruction.Dependencies != null )
+                        if ( Component.ShouldRunInstruction( instruction, ComponentsList ))
                         {
-                            bool selectedForInstall = false;
-                            foreach ( Guid dependencyGuid in instruction.Dependencies )
-                            {
-                                Component dependencyComponent = Component.FindComponentFromGuid( dependencyGuid, ComponentsList );
-                                if ( !dependencyComponent.IsSelected )
-                                {
-                                    continue;
-                                }
-
-                                selectedForInstall = true;
-                                break;
-                            }
-
-                            if ( selectedForInstall )
-                            {
-                                continue;
-                            }
+                            AddError(
+                                "Missing required download:" + $" '{Path.GetFileName( realSourcePath )}'",
+                                instruction
+                            );
                         }
 
-                        AddError(
-                            "Missing required download:" + $" '{Path.GetFileNameWithoutExtension( realSourcePath )}'",
-                            instruction
-                        );
                         continue;
                     }
 

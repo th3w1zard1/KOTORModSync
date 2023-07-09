@@ -12,7 +12,7 @@ namespace KOTORModSync.CallbackDialogs
 
         public OptionsDialogCallback( [CanBeNull] Window topLevelWindow ) => _topLevelWindow = topLevelWindow;
 
-        public Task<string> ShowOptionsDialog
-            ( [CanBeNull] List<string> options ) => OptionsDialog.ShowOptionsDialog( _topLevelWindow, options );
+        [NotNull]
+        public Task<string> ShowOptionsDialog( [CanBeNull] List<string> options ) => OptionsDialog.ShowOptionsDialog( _topLevelWindow, options );
     }
 }

@@ -81,11 +81,8 @@ namespace KOTORModSync
             InitialTab = this.FindControl<TabItem>( "InitialTab" );
             GuiEditTabItem = this.FindControl<TabItem>( "GuiEditTabItem" );
             RawEditTabItem = this.FindControl<TabItem>( "RawEditTabItem" );
-            RawEditTextBox = this.FindControl<TextBox>( "RawEditTextBox" );
-            if ( RawEditTextBox == null )
-            {
-                throw new NullReferenceException( "RawEditTextBox not defined for MainWindow." );
-            }
+            RawEditTextBox = this.FindControl<TextBox>( "RawEditTextBox" )
+                ?? throw new NullReferenceException( "RawEditTextBox not defined for MainWindow." );
 
             RawEditTextBox.LostFocus
                 += RawEditTextBox_LostFocus; // Prevents RawEditTextBox from being cleared when clicking elsewhere(?)
@@ -94,7 +91,8 @@ namespace KOTORModSync
             // Column 3
             configColumn.Width = new GridLength( 250 );
             MainConfigInstance = new MainConfig();
-            MainConfigStackPanel = this.FindControl<StackPanel>( "MainConfigStackPanel" ) ?? throw new NullReferenceException( "MainConfigStackPanel not defined for MainWindow." );
+            MainConfigStackPanel = this.FindControl<StackPanel>( "MainConfigStackPanel" )
+                ?? throw new NullReferenceException( "MainConfigStackPanel not defined for MainWindow." );
 
             MainConfigStackPanel.DataContext = MainConfigInstance;
         }
@@ -899,7 +897,6 @@ namespace KOTORModSync
                 }
 
 
-
                 var validator = new ComponentValidation( _currentComponent, MainConfig.AllComponents );
                 await Logger.LogVerboseAsync( $" == Validating '{name}' == " );
                 if ( !validator.Run() )
@@ -995,9 +992,11 @@ namespace KOTORModSync
                     _ = Logger.LogAsync( "Start installing all mods..." );
                     _installRunning = true;
 
-                    var progressWindow = new ProgressWindow();
+                    var progressWindow = new ProgressWindow
+                    {
+                        ProgressBar = { Value = 0 }
+                    };
                     progressWindow.Closed += ProgressWindowClosed;
-                    progressWindow.ProgressBar.Value = 0;
                     progressWindow.Show();
                     _progressWindowClosed = false;
 
@@ -1132,8 +1131,11 @@ namespace KOTORModSync
             }
         }
 
-        private static async Task SaveDocsToFileAsync( [CanBeNull] string filePath, [CanBeNull] string documentation )
+        private static async Task SaveDocsToFileAsync( [NotNull] string filePath, [NotNull] string documentation )
         {
+            if ( filePath is null ) throw new ArgumentNullException( nameof(filePath) );
+            if ( documentation is null ) throw new ArgumentNullException( nameof(documentation) );
+
             try
             {
                 if ( !string.IsNullOrEmpty( documentation ) )
@@ -1202,7 +1204,7 @@ namespace KOTORModSync
                 _ = Logger.LogVerboseAsync( $"Loading {selectedComponent.Name}..." );
 
                 _originalContent = selectedComponent.SerializeComponent();
-                if ( _originalContent.Equals( RawEditTextBox.Text, StringComparison.Ordinal )
+                if ( _originalContent?.Equals( RawEditTextBox.Text, StringComparison.Ordinal ) == true
                     && !string.IsNullOrWhiteSpace( RawEditTextBox.Text )
                     && selectedComponent != _currentComponent )
                 {
@@ -1239,8 +1241,7 @@ namespace KOTORModSync
         }
 
         // ReSharper disable once MemberCanBeMadeStatic.Local
-        private void RawEditTextBox_LostFocus
-            ( [NotNull] object sender, [NotNull] RoutedEventArgs e ) => e.Handled = true;
+        private void RawEditTextBox_LostFocus( [NotNull] object sender, [NotNull] RoutedEventArgs e ) => e.Handled = true;
 
         private bool CheckForChanges()
         {
@@ -1767,7 +1768,7 @@ namespace KOTORModSync
                     if ( !isCorrectOrder )
                     {
                         await Logger.LogVerboseAsync( "Reordered list to match dependency structure." );
-                        MainConfig.AllComponents = reorderedList;
+                        MainConfigInstance.allComponents = reorderedList;
                     }
                 }
                 catch ( KeyNotFoundException )
@@ -1802,10 +1803,9 @@ namespace KOTORModSync
                 _ = treeEnumerator.MoveNext();
                 LeftTreeView.ExpandSubTree( (TreeViewItem)treeEnumerator.Current );
 
-                if ( componentsList.Count == 0 )
-                {
-                    TabControl.SelectedItem = InitialTab;
-                }
+                if ( componentsList.Count > 0 || TabControl is null ) return;
+
+                TabControl.SelectedItem = InitialTab;
             }
             catch ( Exception ex )
             {
@@ -1979,11 +1979,14 @@ namespace KOTORModSync
                 var comboBox = (ComboBox)sender;
                 var selectedItem = (ComboBoxItem)comboBox.SelectedItem;
 
-                string stylePath = (string)selectedItem.Tag;
+                string stylePath = (string)selectedItem?.Tag;
 
                 Styles[0] = new Style();
 
-                if ( stylePath.Equals( "default" ) )
+                if (
+                    !( stylePath is null )
+                    && stylePath.Equals( "default" )
+                )
                 {
                     InvalidateArrange(); // force repaint of entire window.
                     InvalidateMeasure(); // force repaint of entire window.
@@ -2007,8 +2010,7 @@ namespace KOTORModSync
             }
         }
 
-        private static void TraverseControls
-            ( [NotNull] IControl control, [NotNull] ISupportInitialize styleControlComboBox )
+        private static void TraverseControls( [NotNull] IControl control, [NotNull] ISupportInitialize styleControlComboBox )
         {
             if ( control is null )
             {
@@ -2024,15 +2026,11 @@ namespace KOTORModSync
             control.ApplyTemplate();
 
             var logicalControl = control as ILogical;
-            if ( logicalControl.LogicalChildren is null )
-            {
-                return;
-            }
 
             // Traverse the child controls recursively
-            logicalControl.LogicalChildren.OfType<IControl>()
+            logicalControl.LogicalChildren?.OfType<IControl>()
                 .ToList()
-                .ForEach( childControl => TraverseControls( childControl, styleControlComboBox ) );
+                .ForEach( childControl => TraverseControls( childControl ?? throw new ArgumentNullException( nameof( childControl ) ), styleControlComboBox ) );
         }
     }
 }

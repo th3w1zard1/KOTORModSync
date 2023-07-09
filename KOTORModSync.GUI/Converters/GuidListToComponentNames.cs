@@ -12,8 +12,7 @@ namespace KOTORModSync.Converters
 {
     public class GuidListToComponentNames : IMultiValueConverter
     {
-        public object Convert
-        (
+        public object Convert(
             IList<object> values,
             Type targetType,
             object parameter,

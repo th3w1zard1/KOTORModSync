@@ -141,11 +141,8 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
             TSLPatcherLogNotFound
         }
 
-        public void SetParentComponent( [CanBeNull] Component parentComponent ) =>
-            ParentComponent = parentComponent;
-
-        public static async Task<bool> ExecuteInstructionAsync( Func<Task<bool>> instructionMethod ) =>
-            await instructionMethod().ConfigureAwait( false );
+        public void SetParentComponent( [CanBeNull] Component parentComponent ) => ParentComponent = parentComponent;
+        public static async Task<bool> ExecuteInstructionAsync( [NotNull] Func<Task<bool>> instructionMethod ) => await instructionMethod().ConfigureAwait( false );
 
         private List<string> RealSourcePaths { get; set; }
         private DirectoryInfo RealDestinationPath { get; set; }
@@ -158,26 +155,28 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
         public void SetRealPaths( bool noValidate = false )
         {
             // Get real path then enumerate the files/folders with wildcards and add them to the list
+            if ( Source is null ) throw new NullReferenceException(nameof(Source));
+
             RealSourcePaths = Source.ConvertAll( Utility.Utility.ReplaceCustomVariables );
             RealSourcePaths = FileHelper.EnumerateFilesWithWildcards( RealSourcePaths );
 
             if ( Destination != null )
             {
-                var destinationPath = new DirectoryInfo( Utility.Utility.ReplaceCustomVariables( Destination ) );
-                if ( !destinationPath.Exists )
+                string destinationPath = Utility.Utility.ReplaceCustomVariables( Destination );
+                DirectoryInfo thisDestination = new DirectoryInfo( destinationPath );
+                if ( !thisDestination.Exists )
                 {
-                    (FileSystemInfo caseSensitiveDestination, List<string> isMultiple)
-                        = PlatformAgnosticMethods.GetClosestMatchingEntry( destinationPath.FullName );
+                    ( FileSystemInfo caseSensitiveDestination, List<string> isMultiple )
+                        = PlatformAgnosticMethods.GetClosestMatchingEntry( thisDestination.FullName );
 
-                    destinationPath = (DirectoryInfo)caseSensitiveDestination
+                    thisDestination = (DirectoryInfo)caseSensitiveDestination
                         ?? throw new DirectoryNotFoundException( "Could not find the 'Destination' path!" );
                 }
 
-                RealDestinationPath = destinationPath;
+                RealDestinationPath = thisDestination;
             }
 
-            if ( !noValidate
-                && RealSourcePaths.Count == 0 )
+            if ( RealSourcePaths is null || !noValidate && RealSourcePaths.Count == 0 )
             {
                 throw new FileNotFoundException(
                     $"Could not find any files in the 'Source' path! Got [{string.Join( ", ", Source )}]"
@@ -185,14 +184,16 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
             }
         }
 
-        public async Task<ActionExitCode> ExtractFileAsync
-            ( DirectoryInfo argDestinationPath = null, List<string> argSourcePaths = null )
+        public async Task<ActionExitCode> ExtractFileAsync(
+            DirectoryInfo argDestinationPath = null,
+            List<string> argSourcePaths = null
+        )
         {
             try
             {
                 if ( argSourcePaths is null )
                 {
-                    argSourcePaths = RealSourcePaths;
+                    argSourcePaths = RealSourcePaths ?? throw new NullReferenceException( nameof(RealSourcePaths) );
                     //argDestinationPath = RealDestinationPath; // not used in this action.
                 }
 

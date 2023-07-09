@@ -88,30 +88,29 @@ namespace KOTORModSync.Core
             }
         }
 
-        public static Task LogAsync( [CanBeNull] string message ) => LogInternalAsync( message );
-        public static void LogVerbose( [CanBeNull] string message ) => Log( "[Verbose] " + message, !MainConfig.DebugLogging );
-
-        public static Task LogVerboseAsync
-            ( [CanBeNull] string message ) => LogInternalAsync( "[Verbose] " + message, !MainConfig.DebugLogging );
-
-        public static void LogWarning( [CanBeNull] string message ) => Log( "[Warning] " + message );
-        public static Task LogWarningAsync( [CanBeNull] string message ) => LogInternalAsync( "[Warning] " + message );
-        public static void LogError( [CanBeNull] string message ) => Log( "[Error] " + message );
-        public static Task LogErrorAsync( [CanBeNull] string message ) => LogInternalAsync( "[Error] " + message );
-        public static async Task LogExceptionAsync( [CanBeNull] Exception ex ) => await Task.Run( () => LogException( ex ) );
-
-        public static async Task LogExceptionAsync
-            ( [CanBeNull] Exception ex, [CanBeNull] string customMessage ) => await Task.Run( () => LogException( ex, customMessage ) );
+        [NotNull] public static Task LogAsync( [CanBeNull] string message ) => LogInternalAsync( message );
+        public static void LogVerbose( [CanBeNull] string message ) => Log( $"[Verbose] {message}", !MainConfig.DebugLogging );
+        [NotNull] public static Task LogVerboseAsync( [CanBeNull] string message ) => LogInternalAsync( $"[Verbose] {message}", !MainConfig.DebugLogging );
+        public static void LogWarning( [NotNull] string message ) => Log( $"[Warning] {message}" );
+        [NotNull] public static Task LogWarningAsync( [NotNull] string message ) => LogInternalAsync( $"[Warning] {message}" );
+        public static void LogError( [CanBeNull] string message ) => Log( $"[Error] {message}" );
+        [NotNull] public static Task LogErrorAsync( [CanBeNull] string message ) => LogInternalAsync( $"[Error] {message}" );
+        [NotNull] public static async Task LogExceptionAsync( [CanBeNull] Exception ex ) => await Task.Run( () => LogException( ex ) );
+        [NotNull] public static async Task LogExceptionAsync( [CanBeNull] Exception ex, [CanBeNull] string customMessage ) => await Task.Run( () => LogException( ex, customMessage ) );
 
         public static void LogException( [CanBeNull] Exception exception, [CanBeNull] string customMessage )
         {
+            exception = exception ?? new ApplicationException();
+
             LogException( exception );
             LogError( customMessage );
         }
 
-        public static void LogException( Exception ex )
+        public static void LogException( [CanBeNull] Exception ex )
         {
-            Log( $"Exception: {ex.GetType().Name} - {ex.Message}" );
+            ex = ex ?? new ApplicationException();
+
+            Log( $"Exception: {ex.GetType()?.Name} - {ex.Message}" );
             Log( $"Stack trace: {ex.StackTrace}" );
 
             ExceptionLogged.Invoke( ex ); // Raise the ExceptionLogged event
@@ -119,18 +118,23 @@ namespace KOTORModSync.Core
 
         private static void CurrentDomain_UnhandledException( [CanBeNull] object sender, UnhandledExceptionEventArgs e )
         {
-            if ( !( e.ExceptionObject is Exception ex ) )
+            if ( !( e?.ExceptionObject is Exception ex ) )
             {
+                Logger.LogError( "appdomain's unhandledexception did not have a valid exception handle?" );
                 return;
             }
 
             LogException( ex );
         }
 
-        private static void TaskScheduler_UnobservedTaskException( [CanBeNull] object sender, UnobservedTaskExceptionEventArgs e )
+        private static void TaskScheduler_UnobservedTaskException(
+            [CanBeNull] object sender,
+            UnobservedTaskExceptionEventArgs e
+        )
         {
-            if ( e.Exception is null )
+            if ( e?.Exception is null )
             {
+                Logger.LogError( "appdomain's unhandledexception did not have a valid exception handle?" );
                 return;
             }
 

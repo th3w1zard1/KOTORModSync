@@ -12,17 +12,21 @@ namespace KOTORModSync.Core.Utility
 {
     public static class Utility
     {
-        public static string ReplaceCustomVariables
-            ( string path ) => path.Replace( "<<modDirectory>>", MainConfig.SourcePath.FullName )
-            .Replace( "<<kotorDirectory>>", MainConfig.DestinationPath.FullName );
+        [NotNull]
+        public static string ReplaceCustomVariables( [CanBeNull] string path ) =>
+            path?.Replace( "<<modDirectory>>", MainConfig.SourcePath?.FullName )
+                .Replace( "<<kotorDirectory>>", MainConfig.DestinationPath?.FullName )
+            ?? string.Empty;
 
-        public static string RestoreCustomVariables
-            ( string fullPath ) => fullPath.Replace( MainConfig.SourcePath.FullName, "<<modDirectory>>" )
+        [NotNull]
+        public static string RestoreCustomVariables( [CanBeNull] string fullPath ) => fullPath?.Replace( MainConfig.SourcePath.FullName, "<<modDirectory>>" )
             .Replace( MainConfig.DestinationPath.FullName, "<<kotorDirectory>>" );
 
         [CanBeNull]
-        public static object GetEnumDescription( Enum value )
+        public static object GetEnumDescription( [NotNull] Enum value )
         {
+            if ( value is null ) throw new ArgumentNullException( nameof( value ) );
+
             Type type = value.GetType();
             string name = Enum.GetName( type, value );
             if ( name is null )
@@ -31,19 +35,15 @@ namespace KOTORModSync.Core.Utility
             }
 
             FieldInfo field = type.GetField( name );
-            if ( field is null )
-            {
-                return null;
-            }
 
-            var attribute = field.GetCustomAttribute<DescriptionAttribute>();
+            DescriptionAttribute attribute = field?.GetCustomAttribute<DescriptionAttribute>();
             return attribute?.Description;
         }
 
 
         public static bool IsDirectoryWritable( [CanBeNull] DirectoryInfo dirPath )
         {
-            if ( dirPath is null ) throw new ArgumentNullException( nameof( dirPath ) );
+            if ( dirPath is null ) throw new ArgumentNullException( nameof(dirPath) );
 
             try
             {

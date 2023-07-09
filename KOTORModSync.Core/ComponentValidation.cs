@@ -24,10 +24,12 @@ namespace KOTORModSync.Core
 
         private readonly List<ValidationResult> _validationResults;
         public readonly Component Component;
+        public readonly List<Component> ComponentsList;
 
-        public ComponentValidation( Component component )
+        public ComponentValidation( Component component, List<Component> componentsList )
         {
             Component = component;
+            ComponentsList = componentsList;
             _validationResults = new List<ValidationResult>();
         }
 
@@ -220,16 +222,23 @@ namespace KOTORModSync.Core
                         continue;
                     }
 
-                    if ( !File.Exists( realSourcePath ) )
+                    if ( File.Exists( realSourcePath ) )
                     {
-                        AddError(
-                            "Missing required download:" + $" '{Path.GetFileNameWithoutExtension( realSourcePath )}'",
-                            instruction
-                        );
+                        allArchives.Add( realSourcePath );
                         continue;
                     }
 
-                    allArchives.Add( realSourcePath );
+                    if ( !Component.ShouldRunInstruction( instruction, ComponentsList ) )
+                    {
+                        continue;
+                    }
+
+                    AddError(
+                        "Missing required download:" + $" '{Path.GetFileName( realSourcePath )}'",
+                        instruction
+                    );
+
+                    continue;
                 }
             }
 

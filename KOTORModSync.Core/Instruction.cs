@@ -887,12 +887,12 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
         public event PropertyChangedEventHandler PropertyChanged;
 
         protected virtual void OnPropertyChanged
-            ( [CallerMemberName] [CanBeNull] string propertyName = null ) => PropertyChanged?.Invoke(
+            ( [CallerMemberName][CanBeNull] string propertyName = null ) => PropertyChanged?.Invoke(
             this,
             new PropertyChangedEventArgs( propertyName )
         );
 
-        protected bool SetField<T>( [CanBeNull] ref T field, [CanBeNull] T value, [CallerMemberName] [CanBeNull] string propertyName = null )
+        protected bool SetField<T>( [CanBeNull] ref T field, [CanBeNull] T value, [CallerMemberName][CanBeNull] string propertyName = null )
         {
             if ( EqualityComparer<T>.Default.Equals( field, value ) )
             {

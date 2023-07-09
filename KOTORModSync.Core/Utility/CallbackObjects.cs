@@ -19,8 +19,8 @@ namespace KOTORModSync.Core.Utility
             [NotNull] IOptionsDialogCallback optionsDialog
         )
         {
-            ConfirmCallback = confirmDialog ?? throw new ArgumentNullException( nameof(confirmDialog) );
-            OptionsCallback = optionsDialog ?? throw new ArgumentNullException( nameof(optionsDialog) );
+            ConfirmCallback = confirmDialog ?? throw new ArgumentNullException( nameof( confirmDialog ) );
+            OptionsCallback = optionsDialog ?? throw new ArgumentNullException( nameof( optionsDialog ) );
         }
 
         public interface IConfirmationDialogCallback

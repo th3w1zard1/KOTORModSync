@@ -26,8 +26,8 @@ namespace KOTORModSync.Core.Utility
 
         public static async Task MoveFileAsync( [NotNull] string sourcePath, [NotNull] string destinationPath )
         {
-            if ( sourcePath is null ) throw new ArgumentNullException( nameof(sourcePath) );
-            if ( destinationPath is null ) throw new ArgumentNullException( nameof(destinationPath) );
+            if ( sourcePath is null ) throw new ArgumentNullException( nameof( sourcePath ) );
+            if ( destinationPath is null ) throw new ArgumentNullException( nameof( destinationPath ) );
 
             using ( var sourceStream = new FileStream(
                        sourcePath,
@@ -162,12 +162,12 @@ namespace KOTORModSync.Core.Utility
         }
 
         private static bool ContainsWildcards( [NotNull] string path ) =>
-            ( path ?? throw new ArgumentNullException( nameof(path) ) ).Contains( '*' ) || path.Contains( '?' );
+            ( path ?? throw new ArgumentNullException( nameof( path ) ) ).Contains( '*' ) || path.Contains( '?' );
 
         public static bool WildcardPathMatch( [NotNull] string input, [NotNull] string patternInput )
         {
-            if ( input is null ) throw new ArgumentNullException( nameof(input) );
-            if ( patternInput is null ) throw new ArgumentNullException( nameof(patternInput) );
+            if ( input is null ) throw new ArgumentNullException( nameof( input ) );
+            if ( patternInput is null ) throw new ArgumentNullException( nameof( patternInput ) );
 
             // Fix path formatting
             input = Serializer.FixPathFormatting( input );
@@ -208,8 +208,8 @@ namespace KOTORModSync.Core.Utility
         // Most end users don't know Regex, this function will convert basic wildcards to regex patterns.
         private static bool WildcardMatch( [NotNull] string input, [NotNull] string pattern )
         {
-            if ( input is null ) throw new ArgumentNullException( nameof(input) );
-            if ( pattern is null ) throw new ArgumentNullException( nameof(pattern) );
+            if ( input is null ) throw new ArgumentNullException( nameof( input ) );
+            if ( pattern is null ) throw new ArgumentNullException( nameof( pattern ) );
 
             // Escape special characters in the pattern
             pattern = Regex.Escape( pattern );

@@ -23,7 +23,7 @@ namespace KOTORModSync.Core.Utility
         {
             if ( path is null )
             {
-                throw new ArgumentNullException( nameof(path) );
+                throw new ArgumentNullException( nameof( path ) );
             }
 
             string directoryName = Path.GetDirectoryName( path );
@@ -36,7 +36,7 @@ namespace KOTORModSync.Core.Utility
 
             if ( directoryName is null )
             {
-                return ( null, duplicatePaths );
+                return (null, duplicatePaths);
             }
 
             var directory = new DirectoryInfo( directoryName );
@@ -65,19 +65,19 @@ namespace KOTORModSync.Core.Utility
                 }
             }
 
-            return ( closestMatch, duplicatePaths );
+            return (closestMatch, duplicatePaths);
         }
 
         private static int GetMatchingCharactersCount( [NotNull] string str1, [NotNull] string str2 )
         {
             if ( str1 is null )
             {
-                throw new ArgumentNullException( nameof(str1) );
+                throw new ArgumentNullException( nameof( str1 ) );
             }
 
             if ( str2 is null )
             {
-                throw new ArgumentNullException( nameof(str2) );
+                throw new ArgumentNullException( nameof( str2 ) );
             }
 
             int matchingCount = 0;
@@ -186,7 +186,7 @@ namespace KOTORModSync.Core.Utility
             string shellPath = GetShellExecutable();
             if ( string.IsNullOrEmpty( shellPath ) )
             {
-                return ( -1, string.Empty, "Unable to retrieve shell executable path." );
+                return (-1, string.Empty, "Unable to retrieve shell executable path.");
             }
 
             try
@@ -204,7 +204,7 @@ namespace KOTORModSync.Core.Utility
             }
             catch ( Exception ex )
             {
-                return ( -2, string.Empty, $"Command execution failed: {ex.Message}" );
+                return (-2, string.Empty, $"Command execution failed: {ex.Message}");
             }
         }
 
@@ -445,14 +445,14 @@ namespace KOTORModSync.Core.Utility
             {
                 if ( tcs is null )
                 {
-                    throw new ArgumentNullException( nameof(tcs) );
+                    throw new ArgumentNullException( nameof( tcs ) );
                 }
 
                 if ( process is null )
                 {
                     // Process disposed of early?
                     await Logger.LogExceptionAsync( new NotSupportedException() );
-                    tcs.SetResult( ( -4, string.Empty, string.Empty ) );
+                    tcs.SetResult( (-4, string.Empty, string.Empty) );
                     return;
                 }
 
@@ -463,7 +463,7 @@ namespace KOTORModSync.Core.Utility
                     ? await process.StandardError.ReadToEndAsync()
                     : null;
 
-                tcs.SetResult( ( process.ExitCode, output, error ) );
+                tcs.SetResult( (process.ExitCode, output, error) );
             }
             catch ( Exception e )
             {
@@ -480,7 +480,7 @@ namespace KOTORModSync.Core.Utility
         {
             if ( programFile is null )
             {
-                throw new ArgumentNullException( nameof(programFile) );
+                throw new ArgumentNullException( nameof( programFile ) );
             }
 
             List<ProcessStartInfo> processStartInfosWithFallbacks = GetProcessStartInfos( programFile, cmdlineArgs );
@@ -584,7 +584,7 @@ namespace KOTORModSync.Core.Utility
                             throw new TimeoutException( "Process timed out" );
                         }
 
-                        return ( process.ExitCode, output.ToString(), error.ToString() );
+                        return (process.ExitCode, output.ToString(), error.ToString());
                     }
                 }
                 catch ( Win32Exception localException )
@@ -609,20 +609,20 @@ namespace KOTORModSync.Core.Utility
                 {
                     await Logger.LogAsync( $"An unplanned error has occurred trying to run '{programFile.Name}'" );
                     await Logger.LogExceptionAsync( startinfoException );
-                    return ( -6, string.Empty, string.Empty );
+                    return (-6, string.Empty, string.Empty);
                 }
             }
 
             if ( startedProcess )
             {
                 return
-                    ( -2, string.Empty,
-                        string.Empty ); // todo: figure out what scenario this return code will happen in.
+                    (-2, string.Empty,
+                        string.Empty); // todo: figure out what scenario this return code will happen in.
             }
 
             await Logger.LogAsync( "Process failed to start with all possible combinations of arguments." );
             await Logger.LogExceptionAsync( ex ?? new InvalidOperationException() );
-            return ( -1, string.Empty, string.Empty );
+            return (-1, string.Empty, string.Empty);
         }
     }
 }

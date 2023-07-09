@@ -344,7 +344,7 @@ namespace KOTORModSync.Core.Utility
 
         // ReSharper disable once SuggestBaseTypeForParameter
         [CanBeNull]
-        private static TomlArray SerializeList( [CanBeNull] [ItemCanBeNull] IList list )
+        private static TomlArray SerializeList( [CanBeNull][ItemCanBeNull] IList list )
         {
             var serializedList = new TomlArray();
 

@@ -16,17 +16,17 @@ namespace KOTORModSync
     public partial class ConfirmationDialog : Window
     {
         public static readonly AvaloniaProperty s_confirmTextProperty
-            = AvaloniaProperty.Register<ConfirmationDialog, string>( nameof(ConfirmText) );
+            = AvaloniaProperty.Register<ConfirmationDialog, string>( nameof( ConfirmText ) );
 
         private static readonly RoutedEvent<RoutedEventArgs> s_yesButtonClickedEvent
             = RoutedEvent.Register<ConfirmationDialog, RoutedEventArgs>(
-                nameof(YesButtonClicked),
+                nameof( YesButtonClicked ),
                 RoutingStrategies.Bubble
             );
 
         private static readonly RoutedEvent<RoutedEventArgs> s_noButtonClickedEvent
             = RoutedEvent.Register<ConfirmationDialog, RoutedEventArgs>(
-                nameof(NoButtonClicked),
+                nameof( NoButtonClicked ),
                 RoutingStrategies.Bubble
             );
 

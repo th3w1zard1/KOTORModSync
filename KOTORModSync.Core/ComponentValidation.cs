@@ -77,7 +77,7 @@ namespace KOTORModSync.Core
 
         public bool VerifyExtractPaths( [NotNull] Component component )
         {
-            if ( component is null ) throw new ArgumentNullException( nameof(component) );
+            if ( component is null ) throw new ArgumentNullException( nameof( component ) );
 
             try
             {
@@ -196,7 +196,7 @@ namespace KOTORModSync.Core
 
         public List<string> GetAllArchivesFromInstructions( [NotNull] Component component )
         {
-            if ( component is null ) throw new ArgumentNullException( nameof(component) );
+            if ( component is null ) throw new ArgumentNullException( nameof( component ) );
 
             var allArchives = new List<string>();
 
@@ -251,7 +251,7 @@ namespace KOTORModSync.Core
 
         public bool ParseDestinationWithAction( [NotNull] Component component )
         {
-            if ( component is null ) throw new ArgumentNullException( nameof(component) );
+            if ( component is null ) throw new ArgumentNullException( nameof( component ) );
 
             bool success = true;
             foreach ( Instruction instruction in component.Instructions )
@@ -385,9 +385,9 @@ namespace KOTORModSync.Core
             [NotNull] Instruction instruction
         )
         {
-            if ( sourcePath is null ) throw new ArgumentNullException( nameof(sourcePath) );
-            if ( allArchives is null ) throw new ArgumentNullException( nameof(allArchives) );
-            if ( instruction is null ) throw new ArgumentNullException( nameof(instruction) );
+            if ( sourcePath is null ) throw new ArgumentNullException( nameof( sourcePath ) );
+            if ( allArchives is null ) throw new ArgumentNullException( nameof( allArchives ) );
+            if ( instruction is null ) throw new ArgumentNullException( nameof( instruction ) );
 
             bool foundInAnyArchive = false;
             bool hasError = false;
@@ -432,24 +432,24 @@ namespace KOTORModSync.Core
             if ( hasError )
             {
                 AddError( $"Invalid source path '{sourcePath}'. Reason: {errorDescription}", instruction );
-                return ( false, archiveNameFound );
+                return (false, archiveNameFound);
             }
 
             if ( foundInAnyArchive || !Component.ShouldRunInstruction( instruction, ComponentsList ) )
             {
-                return ( true, true );
+                return (true, true);
             }
 
             // todo, stop displaying errors for self extracting executables. This is the only mod using one that I've seen out of 200-some.
             if ( Component.Name.Equals( "Improved AI", StringComparison.OrdinalIgnoreCase ) )
             {
-                return ( true, true );
+                return (true, true);
             }
 
             // archive not required if instruction isn't running.
             if ( !Component.ShouldRunInstruction( instruction, ComponentsList, false ) )
             {
-                return ( true, true );
+                return (true, true);
             }
 
             AddError( $"Failed to find '{sourcePath}' in any archives!", instruction );
@@ -458,8 +458,8 @@ namespace KOTORModSync.Core
 
         private static ArchivePathCode IsPathInArchive( [NotNull] string relativePath, [NotNull] string archivePath )
         {
-            if ( relativePath is null ) throw new ArgumentNullException( nameof(relativePath) );
-            if ( archivePath is null ) throw new ArgumentNullException( nameof(archivePath) );
+            if ( relativePath is null ) throw new ArgumentNullException( nameof( relativePath ) );
+            if ( archivePath is null ) throw new ArgumentNullException( nameof( archivePath ) );
 
             if ( !ArchiveHelper.IsArchive( archivePath ) )
             {

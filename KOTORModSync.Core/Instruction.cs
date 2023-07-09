@@ -168,7 +168,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                 var thisDestination = new DirectoryInfo( destinationPath );
                 if ( !thisDestination.Exists )
                 {
-                    ( FileSystemInfo caseSensitiveDestination, List<string> isMultiple )
+                    (FileSystemInfo caseSensitiveDestination, List<string> isMultiple)
                         = PlatformAgnosticMethods.GetClosestMatchingEntry( thisDestination.FullName );
 
                     thisDestination = (DirectoryInfo)caseSensitiveDestination
@@ -195,7 +195,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
             {
                 if ( argSourcePaths is null )
                 {
-                    argSourcePaths = RealSourcePaths ?? throw new NullReferenceException( nameof(RealSourcePaths) );
+                    argSourcePaths = RealSourcePaths ?? throw new NullReferenceException( nameof( RealSourcePaths ) );
                     //argDestinationPath = RealDestinationPath; // not used in this action.
                 }
 

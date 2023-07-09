@@ -717,7 +717,7 @@ namespace KOTORModSync.Core
                 return ( InstallExitCode.DependencyViolation, null );
             }
 
-            if ( Instructions is null ) return ( InstallExitCode.Success, new Dictionary<SHA1, FileInfo>() );
+            if ( Instructions is null ) return (InstallExitCode.Success, new Dictionary<SHA1, FileInfo>());
 
             for ( int instructionIndex = 1; instructionIndex <= Instructions.Count; instructionIndex++ )
             {
@@ -880,7 +880,7 @@ namespace KOTORModSync.Core
 
                         // case null: cancel installing this mod (user closed confirmation dialog)
                         default:
-                            return ( InstallExitCode.UserCancelledInstall, null );
+                            return (InstallExitCode.UserCancelledInstall, null);
                     }
                 }
 

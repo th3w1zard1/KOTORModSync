@@ -44,7 +44,7 @@ namespace KOTORModSync.Core.Utility
 
         public static bool IsDirectoryWritable( [CanBeNull] DirectoryInfo dirPath )
         {
-            if ( dirPath is null ) throw new ArgumentNullException( nameof(dirPath) );
+            if ( dirPath is null ) throw new ArgumentNullException( nameof( dirPath ) );
 
             try
             {

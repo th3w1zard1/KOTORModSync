@@ -62,7 +62,7 @@ namespace KOTORModSync.Core.Utility
             bool topLevelOnly = false
         )
         {
-            if ( filesAndFolders is null ) throw new ArgumentNullException( nameof(filesAndFolders) );
+            if ( filesAndFolders is null ) throw new ArgumentNullException( nameof( filesAndFolders ) );
 
             var result = new List<string>();
             var uniquePaths = new HashSet<string>( filesAndFolders );

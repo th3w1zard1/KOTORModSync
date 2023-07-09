@@ -22,13 +22,16 @@ namespace KOTORModSync.ConsoleApp
             {
                 if ( args is null )
                 {
-                    throw new ArgumentNullException( nameof( args ) );
+                    throw new ArgumentNullException( nameof(args) );
                 }
 
                 for ( int index = 0; index < args.Length; index++ )
                 {
                     if ( index == 0 )
+                    {
                         Console.WriteLine( $"KOTORModSync CLI called with {args.Length} arguments." );
+                    }
+
                     string arg = args[index];
                     Console.WriteLine( $"Argument #{index + 1}: {arg}" );
                 }
@@ -122,8 +125,7 @@ namespace KOTORModSync.ConsoleApp
                             break;
 
                         case "4":
-                            if ( MainConfig.DestinationPath is null
-                                || MainConfig.SourcePath is null )
+                            if ( MainConfig.DestinationPath is null || MainConfig.SourcePath is null )
                             {
                                 Console.WriteLine( "Please select your directories first" );
                                 break;

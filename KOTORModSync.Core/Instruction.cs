@@ -142,7 +142,9 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
         }
 
         public void SetParentComponent( [CanBeNull] Component parentComponent ) => ParentComponent = parentComponent;
-        public static async Task<bool> ExecuteInstructionAsync( [NotNull] Func<Task<bool>> instructionMethod ) => await instructionMethod().ConfigureAwait( false );
+
+        public static async Task<bool> ExecuteInstructionAsync( [NotNull] Func<Task<bool>> instructionMethod ) =>
+            await instructionMethod().ConfigureAwait( false );
 
         private List<string> RealSourcePaths { get; set; }
         private DirectoryInfo RealDestinationPath { get; set; }
@@ -155,7 +157,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
         public void SetRealPaths( bool noValidate = false )
         {
             // Get real path then enumerate the files/folders with wildcards and add them to the list
-            if ( Source is null ) throw new NullReferenceException(nameof(Source));
+            if ( Source is null ) throw new NullReferenceException( nameof(Source) );
 
             RealSourcePaths = Source.ConvertAll( Utility.Utility.ReplaceCustomVariables );
             RealSourcePaths = FileHelper.EnumerateFilesWithWildcards( RealSourcePaths );
@@ -163,7 +165,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
             if ( Destination != null )
             {
                 string destinationPath = Utility.Utility.ReplaceCustomVariables( Destination );
-                DirectoryInfo thisDestination = new DirectoryInfo( destinationPath );
+                var thisDestination = new DirectoryInfo( destinationPath );
                 if ( !thisDestination.Exists )
                 {
                     ( FileSystemInfo caseSensitiveDestination, List<string> isMultiple )
@@ -176,7 +178,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                 RealDestinationPath = thisDestination;
             }
 
-            if ( RealSourcePaths is null || !noValidate && RealSourcePaths.Count == 0 )
+            if ( RealSourcePaths is null || ( !noValidate && RealSourcePaths.Count == 0 ) )
             {
                 throw new FileNotFoundException(
                     $"Could not find any files in the 'Source' path! Got [{string.Join( ", ", Source )}]"
@@ -199,7 +201,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
 
                 var extractionTasks = new List<Task>( 25 );
                 var semaphore = new SemaphoreSlim( 5 ); // Limiting to 5 concurrent extractions
-                ActionExitCode exitCode = ActionExitCode.Success;
+                var exitCode = ActionExitCode.Success;
 
                 foreach ( string sourcePath in argSourcePaths )
                 {
@@ -219,7 +221,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
 
                             if ( argDestinationPath is null )
                             {
-                                throw new ArgumentNullException( nameof( argDestinationPath ) );
+                                throw new ArgumentNullException( nameof(argDestinationPath) );
                             }
 
                             _ = Logger.LogAsync( $"File path: {thisFile.FullName}" );
@@ -296,8 +298,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                                     );
                                     string destinationDirectory = Path.GetDirectoryName( destinationItemPath );
 
-                                    if ( destinationDirectory != null
-                                        && !Directory.Exists( destinationDirectory ) )
+                                    if ( destinationDirectory != null && !Directory.Exists( destinationDirectory ) )
                                     {
                                         _ = Logger.LogAsync( $"Create directory '{destinationDirectory}'" );
                                         _ = Directory.CreateDirectory( destinationDirectory );
@@ -353,7 +354,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
             }
             else if ( !directoryPath.Exists )
             {
-                throw new ArgumentException( "Invalid directory path.", nameof( directoryPath ) );
+                throw new ArgumentException( "Invalid directory path.", nameof(directoryPath) );
             }
 
             if ( string.IsNullOrEmpty( fileExtension ) )
@@ -420,8 +421,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                 {
                     var thisFile = new FileInfo( thisFilePath );
 
-                    if ( !Path.IsPathRooted( thisFilePath )
-                        || !thisFile.Exists )
+                    if ( !Path.IsPathRooted( thisFilePath ) || !thisFile.Exists )
                     {
                         var ex = new ArgumentNullException(
                             $"Invalid wildcards or file does not exist: '{thisFilePath}'"
@@ -456,7 +456,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
         {
             try
             {
-                ActionExitCode exitCode = ActionExitCode.Success;
+                var exitCode = ActionExitCode.Success;
                 foreach ( string sourcePath in Source.ConvertAll( Utility.Utility.ReplaceCustomVariables ) )
                 {
                     // Check if the source file already exists
@@ -528,8 +528,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                     string destinationFilePath = Path.Combine( RealDestinationPath.FullName, fileName );
 
                     // Check if the destination file already exists
-                    if ( !Overwrite
-                        && File.Exists( destinationFilePath ) )
+                    if ( !Overwrite && File.Exists( destinationFilePath ) )
                     {
                         Logger.Log(
                             $"Skipping file '{Path.GetFileName( destinationFilePath )}' ( Overwrite set to False )"
@@ -570,8 +569,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                     string destinationFilePath = Path.Combine( RealDestinationPath.FullName, fileName );
 
                     // Check if the destination file already exists
-                    if ( !Overwrite
-                        && File.Exists( destinationFilePath ) )
+                    if ( !Overwrite && File.Exists( destinationFilePath ) )
                     {
                         Logger.Log(
                             $"Skipping file '{Path.GetFileName( destinationFilePath )}' ( Overwrite set to False )"
@@ -614,8 +612,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                         ? new FileInfo( t ).Directory // It's a file, get the parent folder.
                         : new DirectoryInfo( t ); // It's a folder, create a DirectoryInfo instance
 
-                    if ( tslPatcherDirectory is null
-                        || !tslPatcherDirectory.Exists )
+                    if ( tslPatcherDirectory is null || !tslPatcherDirectory.Exists )
                     {
                         throw new DirectoryNotFoundException(
                             $"The directory '{t}' could not be located on the disk."
@@ -690,14 +687,13 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                     }
 
 
-
                     await Logger.LogAsync( "Run TSLPatcher instructions..." );
                     if ( MainConfig.PatcherOption != MainConfig.AvailablePatchers.TSLPatcher )
                     {
                         await Logger.LogVerboseAsync( $"Using CLI to run command: '{tslPatcherCliPath} {args}'" );
                     }
 
-                    (int exitCode, string output, string error) = await PlatformAgnosticMethods.ExecuteProcessAsync(
+                    ( int exitCode, string output, string error ) = await PlatformAgnosticMethods.ExecuteProcessAsync(
                         tslPatcherCliPath,
                         args,
                         noAdmin: MainConfig.NoAdmin
@@ -747,7 +743,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
         {
             try
             {
-                ActionExitCode exitCode = ActionExitCode.Success; // Track the success status
+                var exitCode = ActionExitCode.Success; // Track the success status
                 foreach ( string sourcePath in RealSourcePaths )
                 {
                     try
@@ -760,7 +756,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                             );
                         }
 
-                        (int childExitCode, string output, string error)
+                        ( int childExitCode, string output, string error )
                             = await PlatformAgnosticMethods.ExecuteProcessAsync(
                                 thisProgram,
                                 noAdmin: MainConfig.NoAdmin
@@ -831,8 +827,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                              Path.AltDirectorySeparatorChar
                          ) )
                 {
-                    if ( !thisLine.Contains( "Error: " )
-                        && !thisLine.Contains( "[Error]" ) )
+                    if ( !thisLine.Contains( "Error: " ) && !thisLine.Contains( "[Error]" ) )
                     {
                         continue;
                     }
@@ -887,13 +882,14 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
 
         public event PropertyChangedEventHandler PropertyChanged;
 
-        protected virtual void OnPropertyChanged
-            ( [CallerMemberName][CanBeNull] string propertyName = null ) => PropertyChanged?.Invoke(
-            this,
-            new PropertyChangedEventArgs( propertyName )
-        );
+        protected virtual void OnPropertyChanged( [CallerMemberName] [CanBeNull] string propertyName = null ) =>
+            PropertyChanged?.Invoke( this, new PropertyChangedEventArgs( propertyName ) );
 
-        protected bool SetField<T>( [CanBeNull] ref T field, [CanBeNull] T value, [CallerMemberName][CanBeNull] string propertyName = null )
+        protected bool SetField<T>(
+            [CanBeNull] ref T field,
+            [CanBeNull] T value,
+            [CallerMemberName] [CanBeNull] string propertyName = null
+        )
         {
             if ( EqualityComparer<T>.Default.Equals( field, value ) )
             {

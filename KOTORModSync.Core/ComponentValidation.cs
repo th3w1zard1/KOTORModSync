@@ -31,11 +31,9 @@ namespace KOTORModSync.Core
 
         public ComponentValidation( [NotNull] Component component, [NotNull] List<Component> componentsList )
         {
-            Component = component
-                ?? throw new ArgumentNullException( nameof( component ) );
+            Component = component ?? throw new ArgumentNullException( nameof(component) );
             ComponentsList = new List<Component>(
-                componentsList
-                ?? throw new ArgumentNullException( nameof( componentsList ) )
+                componentsList ?? throw new ArgumentNullException( nameof(componentsList) )
             );
         }
 
@@ -93,12 +91,8 @@ namespace KOTORModSync.Core
                 {
                     foreach ( Instruction instruction in component.Instructions )
                     {
-                        if ( !(instruction.Action is null)
-                            && !instruction.Action.Equals(
-                                "extract",
-                                StringComparison.OrdinalIgnoreCase
-                            )
-                           )
+                        if ( !( instruction.Action is null )
+                            && !instruction.Action.Equals( "extract", StringComparison.OrdinalIgnoreCase ) )
                         {
                             continue;
                         }
@@ -154,8 +148,7 @@ namespace KOTORModSync.Core
                         // For some unholy reason, some archives act like there's another top level folder named after the archive to extract.
                         // doesn't even seem to be related to the archive type. Can't reproduce in 7zip either.
                         // either way, this will hide the issue until a real solution comes along.
-                        if ( !result.Item1
-                            && MainConfig.AttemptFixes )
+                        if ( !result.Item1 && MainConfig.AttemptFixes )
                         {
                             // Split the directory name using the directory separator character
                             string[] parts = sourcePath.Split( Path.DirectorySeparatorChar );
@@ -209,8 +202,7 @@ namespace KOTORModSync.Core
 
             foreach ( Instruction instruction in component.Instructions )
             {
-                if ( instruction.Source is null
-                    || instruction.Action != "extract" )
+                if ( instruction.Source is null || instruction.Action != "extract" )
                 {
                     continue;
                 }
@@ -248,10 +240,7 @@ namespace KOTORModSync.Core
                         continue;
                     }
 
-                    AddError(
-                        "Missing required download:" + $" '{Path.GetFileName( realSourcePath )}'",
-                        instruction
-                    );
+                    AddError( "Missing required download:" + $" '{Path.GetFileName( realSourcePath )}'", instruction );
 
                     continue;
                 }
@@ -464,7 +453,7 @@ namespace KOTORModSync.Core
             }
 
             AddError( $"Failed to find '{sourcePath}' in any archives!", instruction );
-            return (false, archiveNameFound);
+            return ( false, archiveNameFound );
         }
 
         private static ArchivePathCode IsPathInArchive( [NotNull] string relativePath, [NotNull] string archivePath )
@@ -545,7 +534,7 @@ namespace KOTORModSync.Core
                 // check if instruction.Source matches a folder.
                 foreach ( string folderPath in folderPaths )
                 {
-                    if ( !(folderPath is null) && FileHelper.WildcardPathMatch( folderPath, relativePath ) )
+                    if ( !( folderPath is null ) && FileHelper.WildcardPathMatch( folderPath, relativePath ) )
                     {
                         return ArchivePathCode.FoundSuccessfully;
                     }

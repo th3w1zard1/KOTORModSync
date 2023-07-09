@@ -11,7 +11,7 @@ namespace KOTORModSync.CallbackDialogs
 
         public ConfirmationDialogCallback( [CanBeNull] Window topLevelWindow ) => _topLevelWindow = topLevelWindow;
 
-        public Task<bool?> ShowConfirmationDialog
-            ( [CanBeNull] string message ) => ConfirmationDialog.ShowConfirmationDialog( _topLevelWindow, message );
+        public Task<bool?> ShowConfirmationDialog( [CanBeNull] string message ) =>
+            ConfirmationDialog.ShowConfirmationDialog( _topLevelWindow, message );
     }
 }

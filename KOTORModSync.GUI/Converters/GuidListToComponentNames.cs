@@ -21,8 +21,7 @@ namespace KOTORModSync.Converters
         {
             try
             {
-                if ( !( values[0] is List<Guid> guids )
-                    || !( values[1] is List<Component> componentsList ) )
+                if ( !( values[0] is List<Guid> guids ) || !( values[1] is List<Component> componentsList ) )
                 {
                     return null;
                 }

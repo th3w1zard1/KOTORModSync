@@ -28,13 +28,13 @@ namespace KOTORModSync
                 }
 
                 _isSelected = value;
-                OnPropertyChanged( nameof( IsSelected ) );
+                OnPropertyChanged( nameof(IsSelected) );
             }
         }
 
         public event PropertyChangedEventHandler PropertyChanged;
 
-        protected virtual void OnPropertyChanged
-            ( [CanBeNull] string propertyName ) => PropertyChanged?.Invoke( this, new PropertyChangedEventArgs( propertyName ) );
+        protected virtual void OnPropertyChanged( [CanBeNull] string propertyName ) =>
+            PropertyChanged?.Invoke( this, new PropertyChangedEventArgs( propertyName ) );
     }
 }

@@ -19,7 +19,7 @@ namespace KOTORModSync
     public partial class OptionsDialog : Window
     {
         public static readonly AvaloniaProperty OptionsListProperty
-            = AvaloniaProperty.Register<OptionsDialog, List<string>>( nameof( OptionsList ) );
+            = AvaloniaProperty.Register<OptionsDialog, List<string>>( nameof(OptionsList) );
 
         public OptionsDialog()
         {
@@ -97,7 +97,10 @@ namespace KOTORModSync
         }
 
         [ItemCanBeNull]
-        public static async Task<string> ShowOptionsDialog( [CanBeNull] Window parentWindow, [CanBeNull] List<string> optionsList )
+        public static async Task<string> ShowOptionsDialog(
+            [CanBeNull] Window parentWindow,
+            [CanBeNull] List<string> optionsList
+        )
         {
             var tcs = new TaskCompletionSource<string>();
 

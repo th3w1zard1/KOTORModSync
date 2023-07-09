@@ -12,8 +12,7 @@ namespace KOTORModSync.Converters
 {
     public class ComponentToGuidConverter : IValueConverter
     {
-        public object Convert
-        (
+        public object Convert(
             object value,
             Type targetType,
             object parameter,
@@ -28,8 +27,7 @@ namespace KOTORModSync.Converters
             return selectedComponent.Name;
         }
 
-        public object ConvertBack
-        (
+        public object ConvertBack(
             object value,
             Type targetType,
             object parameter,

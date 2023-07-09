@@ -216,8 +216,7 @@ namespace KOTORModSync.Tests
         // Custom converter for DirectoryInfo
         public class DirectoryInfoConverter : JsonConverter<DirectoryInfo>
         {
-            public override DirectoryInfo? ReadJson
-            (
+            public override DirectoryInfo? ReadJson(
                 JsonReader reader,
                 Type objectType,
                 DirectoryInfo? existingValue,

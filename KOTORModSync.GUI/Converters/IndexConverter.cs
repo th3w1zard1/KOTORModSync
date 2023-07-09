@@ -45,14 +45,12 @@ namespace KOTORModSync.Converters
             CultureInfo culture
         )
         {
-            if ( !( value is string indexString )
-                || !( parameter is ItemsRepeater itemsRepeater ) )
+            if ( !( value is string indexString ) || !( parameter is ItemsRepeater itemsRepeater ) )
             {
                 return null;
             }
 
-            if ( !int.TryParse( indexString, out int index )
-                || !( itemsRepeater.Tag is IEnumerable itemList ) )
+            if ( !int.TryParse( indexString, out int index ) || !( itemsRepeater.Tag is IEnumerable itemList ) )
             {
                 return null;
             }

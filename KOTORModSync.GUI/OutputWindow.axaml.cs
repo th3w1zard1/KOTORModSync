@@ -72,6 +72,9 @@ namespace KOTORModSync
             }
         }
 
-        private void logTextBox_TextChanged( [CanBeNull] object sender, [CanBeNull] AvaloniaPropertyChangedEventArgs e ) => UpdateLogText();
+        private void logTextBox_TextChanged(
+            [CanBeNull] object sender,
+            [CanBeNull] AvaloniaPropertyChangedEventArgs e
+        ) => UpdateLogText();
     }
 }

@@ -13,8 +13,7 @@ namespace KOTORModSync.Converters
     public class ComboBoxItemConverter : IValueConverter
     {
         [CanBeNull]
-        public object Convert
-        (
+        public object Convert(
             [CanBeNull] object value,
             [CanBeNull] Type targetType,
             [CanBeNull] object parameter,
@@ -25,8 +24,7 @@ namespace KOTORModSync.Converters
                 : (object)null;
 
         [CanBeNull]
-        public object ConvertBack
-        (
+        public object ConvertBack(
             [CanBeNull] object value,
             [CanBeNull] Type targetType,
             [CanBeNull] object parameter,

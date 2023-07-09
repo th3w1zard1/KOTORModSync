@@ -29,8 +29,11 @@ namespace KOTORModSync
 
         private void InitializeComponent() => AvaloniaXamlLoader.Load( this );
 
-        public static async Task ShowInformationDialog
-            ( [CanBeNull] Window parentWindow, [CanBeNull] string message, [CanBeNull] string title = "Information" )
+        public static async Task ShowInformationDialog(
+            [CanBeNull] Window parentWindow,
+            [CanBeNull] string message,
+            [CanBeNull] string title = "Information"
+        )
         {
             var dialog = new InformationDialog { Title = title, InfoText = message };
             _ = await dialog.ShowDialog<bool?>( parentWindow );

@@ -173,8 +173,11 @@ namespace KOTORModSync.Tests
             recursionDepth--;
         }
 
-        private static void AssertPropertyEquality
-            ( object? expectedValue, Dictionary<string, object> deserializedObject, string propertyName )
+        private static void AssertPropertyEquality(
+            object? expectedValue,
+            Dictionary<string, object> deserializedObject,
+            string propertyName
+        )
         {
             if ( expectedValue is null )
             {

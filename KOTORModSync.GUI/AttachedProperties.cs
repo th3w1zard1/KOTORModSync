@@ -20,14 +20,14 @@ namespace KOTORModSync
         [CanBeNull]
         public static ICommand GetItemClickCommand( Control control ) => control.GetValue( ItemClickCommandProperty );
 
-        public static void SetItemClickCommand
-            ( Control control, [CanBeNull] ICommand value ) => control.SetValue( ItemClickCommandProperty, value );
+        public static void SetItemClickCommand( Control control, [CanBeNull] ICommand value ) =>
+            control.SetValue( ItemClickCommandProperty, value );
 
         [CanBeNull]
-        public static object GetItemClickCommandParameter
-            ( Control control ) => control.GetValue( ItemClickCommandParameterProperty );
+        public static object GetItemClickCommandParameter( Control control ) =>
+            control.GetValue( ItemClickCommandParameterProperty );
 
-        public static void SetItemClickCommandParameter
-            ( Control control, [CanBeNull] object value ) => control.SetValue( ItemClickCommandParameterProperty, value );
+        public static void SetItemClickCommandParameter( Control control, [CanBeNull] object value ) =>
+            control.SetValue( ItemClickCommandParameterProperty, value );
     }
 }

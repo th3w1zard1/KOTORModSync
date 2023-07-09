@@ -11,13 +11,16 @@ namespace KOTORModSync.Tests
     [TestFixture]
     public class CommandExecutorTests
     {
-        private static void ExecuteCommand
-            ( string command, EventWaitHandle completed, IDictionary<string, object> sharedData )
+        private static void ExecuteCommand(
+            string command,
+            EventWaitHandle completed,
+            IDictionary<string, object> sharedData
+        )
         {
             try
             {
                 Logger.Log( "Testing TryExecuteCommand..." );
-                (int exitCode, string output, string error) = PlatformAgnosticMethods.TryExecuteCommand( command );
+                ( int exitCode, string output, string error ) = PlatformAgnosticMethods.TryExecuteCommand( command );
                 sharedData["success"] = exitCode == 0;
                 sharedData["output"] = output;
                 sharedData["error"] = error;
@@ -35,7 +38,7 @@ namespace KOTORModSync.Tests
                 }
 
                 Logger.Log( "Standard output from the timed-out process:" );
-                (int exitCode, string output, string error) = PlatformAgnosticMethods.TryExecuteCommand( "echo" );
+                ( int exitCode, string output, string error ) = PlatformAgnosticMethods.TryExecuteCommand( "echo" );
                 Logger.Log( output );
             }
             finally

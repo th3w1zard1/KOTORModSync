@@ -27,7 +27,7 @@ namespace KOTORModSync.Tests
             };
 
             // Act
-            (bool isCorrectOrder, List<Component> reorderedComponents)
+            ( bool isCorrectOrder, List<Component> reorderedComponents )
                 = Component.ConfirmComponentsInstallOrder( componentsListExpectedOrder );
 
             // Assert
@@ -66,7 +66,7 @@ namespace KOTORModSync.Tests
             };
 
             // Act
-            (bool isCorrectOrder, List<Component> reorderedComponents)
+            ( bool isCorrectOrder, List<Component> reorderedComponents )
                 = Component.ConfirmComponentsInstallOrder( unorderedList );
 
             // Create a copy of unorderedList with the expected order
@@ -109,7 +109,7 @@ namespace KOTORModSync.Tests
             };
 
             // Act
-            (bool isCorrectOrder, List<Component> reorderedComponents)
+            ( bool isCorrectOrder, List<Component> reorderedComponents )
                 = Component.ConfirmComponentsInstallOrder( componentsListExpectedOrder );
 
             // Assert
@@ -148,7 +148,7 @@ namespace KOTORModSync.Tests
             };
 
             // Act
-            (bool isCorrectOrder, List<Component> reorderedComponents)
+            ( bool isCorrectOrder, List<Component> reorderedComponents )
                 = Component.ConfirmComponentsInstallOrder( unorderedList );
 
             // Create a copy of unorderedList with the expected order
@@ -178,10 +178,7 @@ namespace KOTORModSync.Tests
             // Arrange
             var componentA = new Component
             {
-                Name = "A",
-                Guid = Guid.NewGuid(),
-                InstallAfter = null,
-                InstallBefore = null
+                Name = "A", Guid = Guid.NewGuid(), InstallAfter = null, InstallBefore = null
             };
             var componentB = new Component
             {
@@ -263,7 +260,7 @@ namespace KOTORModSync.Tests
             };
 
             // Act
-            (bool isCorrectOrder, List<Component> reorderedComponents)
+            ( bool isCorrectOrder, List<Component> reorderedComponents )
                 = Component.ConfirmComponentsInstallOrder( correctOrderedComponentsList );
 
             // Assert
@@ -289,10 +286,7 @@ namespace KOTORModSync.Tests
             // Arrange
             var componentA = new Component
             {
-                Name = "A",
-                Guid = Guid.NewGuid(),
-                InstallAfter = null,
-                InstallBefore = null
+                Name = "A", Guid = Guid.NewGuid(), InstallAfter = null, InstallBefore = null
             };
             var componentB = new Component
             {
@@ -387,7 +381,7 @@ namespace KOTORModSync.Tests
             };
 
             // Act
-            (bool isCorrectOrder, List<Component> reorderedComponents)
+            ( bool isCorrectOrder, List<Component> reorderedComponents )
                 = Component.ConfirmComponentsInstallOrder( unorderedComponentsList );
 
             // Assert
@@ -455,6 +449,6 @@ namespace KOTORModSync.Tests
 
 
         private static void Swap<T>( IList<T> list, int index1, int index2 ) =>
-            (list[index1], list[index2]) = (list[index2], list[index1]);
+            ( list[index1], list[index2] ) = ( list[index2], list[index1] );
     }
 }

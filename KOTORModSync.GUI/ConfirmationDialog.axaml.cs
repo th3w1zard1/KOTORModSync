@@ -16,17 +16,17 @@ namespace KOTORModSync
     public partial class ConfirmationDialog : Window
     {
         public static readonly AvaloniaProperty s_confirmTextProperty
-            = AvaloniaProperty.Register<ConfirmationDialog, string>( nameof( ConfirmText ) );
+            = AvaloniaProperty.Register<ConfirmationDialog, string>( nameof(ConfirmText) );
 
         private static readonly RoutedEvent<RoutedEventArgs> s_yesButtonClickedEvent
             = RoutedEvent.Register<ConfirmationDialog, RoutedEventArgs>(
-                nameof( YesButtonClicked ),
+                nameof(YesButtonClicked),
                 RoutingStrategies.Bubble
             );
 
         private static readonly RoutedEvent<RoutedEventArgs> s_noButtonClickedEvent
             = RoutedEvent.Register<ConfirmationDialog, RoutedEventArgs>(
-                nameof( NoButtonClicked ),
+                nameof(NoButtonClicked),
                 RoutingStrategies.Bubble
             );
 
@@ -47,7 +47,10 @@ namespace KOTORModSync
             confirmTextBlock.Text = ConfirmText;
         }
 
-        public static async Task<bool?> ShowConfirmationDialog( [CanBeNull] Window parentWindow, [CanBeNull] string confirmText )
+        public static async Task<bool?> ShowConfirmationDialog(
+            [CanBeNull] Window parentWindow,
+            [CanBeNull] string confirmText
+        )
         {
             var tcs = new TaskCompletionSource<bool?>();
 
@@ -108,10 +111,10 @@ namespace KOTORModSync
             remove => RemoveHandler( s_noButtonClickedEvent, value );
         }
 
-        private void YesButton_Click
-            ( [CanBeNull] object sender, [CanBeNull] RoutedEventArgs e ) => RaiseEvent( new RoutedEventArgs( s_yesButtonClickedEvent ) );
+        private void YesButton_Click( [CanBeNull] object sender, [CanBeNull] RoutedEventArgs e ) =>
+            RaiseEvent( new RoutedEventArgs( s_yesButtonClickedEvent ) );
 
-        private void NoButton_Click
-            ( [CanBeNull] object sender, [CanBeNull] RoutedEventArgs e ) => RaiseEvent( new RoutedEventArgs( s_noButtonClickedEvent ) );
+        private void NoButton_Click( [CanBeNull] object sender, [CanBeNull] RoutedEventArgs e ) =>
+            RaiseEvent( new RoutedEventArgs( s_noButtonClickedEvent ) );
     }
 }

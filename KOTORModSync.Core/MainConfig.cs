@@ -75,13 +75,13 @@ namespace KOTORModSync.Core
         public static bool DefaultInstall { get; private set; }
         public static AvailablePatchers PatcherOption { get; private set; }
         public static CompatibilityLevel CurrentCompatibilityLevel { get; private set; }
-        [NotNull][ItemNotNull] public static List<Component> AllComponents { get; set; } = new List<Component>();
+        [NotNull] [ItemNotNull] public static List<Component> AllComponents { get; set; } = new List<Component>();
 
         [CanBeNull]
         public List<Component> allComponents
         {
             get => AllComponents;
-            set => AllComponents = value ?? throw new ArgumentNullException( nameof( value ) );
+            set => AllComponents = value ?? throw new ArgumentNullException( nameof(value) );
         }
 
         [CanBeNull]
@@ -91,7 +91,7 @@ namespace KOTORModSync.Core
             set
             {
                 SourcePath = value;
-                OnPropertyChanged( nameof( sourcePathFullName ) );
+                OnPropertyChanged( nameof(sourcePathFullName) );
             }
         }
 
@@ -104,7 +104,7 @@ namespace KOTORModSync.Core
             set
             {
                 DestinationPath = value;
-                OnPropertyChanged( nameof( destinationPathFullName ) );
+                OnPropertyChanged( nameof(destinationPathFullName) );
             }
         }
 
@@ -167,10 +167,7 @@ namespace KOTORModSync.Core
 
 
         // used for the ui.
-        protected virtual void OnPropertyChanged
-            ( [CallerMemberName][CanBeNull] string propertyName = null ) => PropertyChanged?.Invoke(
-            this,
-            new PropertyChangedEventArgs( propertyName )
-        );
+        protected virtual void OnPropertyChanged( [CallerMemberName] [CanBeNull] string propertyName = null ) =>
+            PropertyChanged?.Invoke( this, new PropertyChangedEventArgs( propertyName ) );
     }
 }

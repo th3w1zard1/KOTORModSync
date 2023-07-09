@@ -16,6 +16,7 @@ namespace KOTORModSync.Controls
         [CanBeNull]
         public static string GetTooltip( Control element ) => element.GetValue( TooltipProperty );
 
-        public static void SetTooltip( Control element, [CanBeNull] string value ) => element.SetValue( TooltipProperty, value );
+        public static void SetTooltip( Control element, [CanBeNull] string value ) =>
+            element.SetValue( TooltipProperty, value );
     }
 }

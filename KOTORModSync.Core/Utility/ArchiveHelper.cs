@@ -16,12 +16,12 @@ namespace KOTORModSync.Core.Utility
     {
         public static readonly ExtractionOptions DefaultExtractionOptions = new ExtractionOptions
         {
-            ExtractFullPath = false,
-            Overwrite = true,
-            PreserveFileTime = true
+            ExtractFullPath = false, Overwrite = true, PreserveFileTime = true
         };
 
-        public static bool IsArchive( string filePath ) => IsArchive( new FileInfo( filePath ?? throw new ArgumentNullException( nameof( filePath ) ) ) );
+        public static bool IsArchive( string filePath ) => IsArchive(
+            new FileInfo( filePath ?? throw new ArgumentNullException( nameof(filePath) ) )
+        );
 
         public static bool IsArchive( FileInfo thisFile )
         {
@@ -43,7 +43,7 @@ namespace KOTORModSync.Core.Utility
         {
             if ( archivePath == null )
             {
-                throw new ArgumentNullException( nameof( archivePath ) );
+                throw new ArgumentNullException( nameof(archivePath) );
             }
 
             try
@@ -79,12 +79,12 @@ namespace KOTORModSync.Core.Utility
         {
             if ( directory == null )
             {
-                throw new ArgumentNullException( nameof( directory ) );
+                throw new ArgumentNullException( nameof(directory) );
             }
 
             if ( outputPath == null )
             {
-                throw new ArgumentNullException( nameof( outputPath ) );
+                throw new ArgumentNullException( nameof(outputPath) );
             }
 
             Dictionary<string, object> root = GenerateArchiveTreeJson( directory );
@@ -109,7 +109,7 @@ namespace KOTORModSync.Core.Utility
         {
             if ( directory == null )
             {
-                throw new ArgumentNullException( nameof( directory ) );
+                throw new ArgumentNullException( nameof(directory) );
             }
 
             var root = new Dictionary<string, object>( 65535 )
@@ -164,7 +164,7 @@ namespace KOTORModSync.Core.Utility
         {
             if ( archivePath == null )
             {
-                throw new ArgumentNullException( nameof( archivePath ) );
+                throw new ArgumentNullException( nameof(archivePath) );
             }
 
             var archiveEntries = new List<ModDirectory.ArchiveEntry>( 65535 );
@@ -183,7 +183,7 @@ namespace KOTORModSync.Core.Utility
                     let pathParts = entry.Key.Split(
                         archivePath.EndsWith( ".rar" )
                             ? '\\' // Use backslash as separator for RAR files
-                            : '/'  // Use forward slash for other archive types
+                            : '/' // Use forward slash for other archive types
                     )
                     select new ModDirectory.ArchiveEntry { Name = pathParts[pathParts.Length - 1], Path = entry.Key }
                 );

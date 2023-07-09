@@ -14,11 +14,13 @@ namespace KOTORModSync.Core.Utility
         public static IConfirmationDialogCallback ConfirmCallback { get; private set; }
         public static IOptionsDialogCallback OptionsCallback { get; private set; }
 
-        public static void SetCallbackObjects
-            ( [NotNull] IConfirmationDialogCallback confirmDialog, [NotNull] IOptionsDialogCallback optionsDialog )
+        public static void SetCallbackObjects(
+            [NotNull] IConfirmationDialogCallback confirmDialog,
+            [NotNull] IOptionsDialogCallback optionsDialog
+        )
         {
-            ConfirmCallback = confirmDialog ?? throw new ArgumentNullException( nameof( confirmDialog ) );
-            OptionsCallback = optionsDialog ?? throw new ArgumentNullException( nameof( optionsDialog ) );
+            ConfirmCallback = confirmDialog ?? throw new ArgumentNullException( nameof(confirmDialog) );
+            OptionsCallback = optionsDialog ?? throw new ArgumentNullException( nameof(optionsDialog) );
         }
 
         public interface IConfirmationDialogCallback

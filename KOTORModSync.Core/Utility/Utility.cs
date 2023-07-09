@@ -19,13 +19,14 @@ namespace KOTORModSync.Core.Utility
             ?? string.Empty;
 
         [NotNull]
-        public static string RestoreCustomVariables( [CanBeNull] string fullPath ) => fullPath?.Replace( MainConfig.SourcePath.FullName, "<<modDirectory>>" )
+        public static string RestoreCustomVariables( [CanBeNull] string fullPath ) => fullPath
+            ?.Replace( MainConfig.SourcePath.FullName, "<<modDirectory>>" )
             .Replace( MainConfig.DestinationPath.FullName, "<<kotorDirectory>>" );
 
         [CanBeNull]
         public static object GetEnumDescription( [NotNull] Enum value )
         {
-            if ( value is null ) throw new ArgumentNullException( nameof( value ) );
+            if ( value is null ) throw new ArgumentNullException( nameof(value) );
 
             Type type = value.GetType();
             string name = Enum.GetName( type, value );
@@ -36,7 +37,7 @@ namespace KOTORModSync.Core.Utility
 
             FieldInfo field = type.GetField( name );
 
-            DescriptionAttribute attribute = field?.GetCustomAttribute<DescriptionAttribute>();
+            var attribute = field?.GetCustomAttribute<DescriptionAttribute>();
             return attribute?.Description;
         }
 

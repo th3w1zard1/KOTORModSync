@@ -6,8 +6,7 @@ namespace KOTORModSync.Tests
     {
         public override bool CanConvert( Type objectType ) => objectType == typeof( FileInfo );
 
-        public override object? ReadJson
-        (
+        public override object? ReadJson(
             JsonReader reader,
             Type objectType,
             object? existingValue,

@@ -27,7 +27,11 @@ namespace KOTORModSync
             PercentCompleted = this.FindControl<TextBlock>( "PercentCompleted" );
         }
 
-        public static async Task ShowProgressWindow( [CanBeNull] Window parentWindow, [CanBeNull] string message, decimal progress )
+        public static async Task ShowProgressWindow(
+            [CanBeNull] Window parentWindow,
+            [CanBeNull] string message,
+            decimal progress
+        )
         {
             var progressWindow = new ProgressWindow { Owner = parentWindow };
             progressWindow.ProgressTextBlock.Text = message;

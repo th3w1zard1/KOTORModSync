@@ -21,7 +21,7 @@ namespace KOTORModSync.Converters
             FieldInfo fieldInfo = enumObj.GetType().GetField( enumObj.ToString() );
             if ( fieldInfo is null )
             {
-                Logger.LogException( new ArgumentNullException( nameof( enumObj ) ) );
+                Logger.LogException( new ArgumentNullException( nameof(enumObj) ) );
                 return null;
             }
 
@@ -50,8 +50,7 @@ namespace KOTORModSync.Converters
             return enumObj.ToString();
         }
 
-        object IValueConverter.Convert
-        (
+        object IValueConverter.Convert(
             [CanBeNull] object value,
             [CanBeNull] Type targetType,
             [CanBeNull] object parameter,
@@ -64,8 +63,7 @@ namespace KOTORModSync.Converters
         }
 
         [CanBeNull]
-        object IValueConverter.ConvertBack
-        (
+        object IValueConverter.ConvertBack(
             [CanBeNull] object value,
             [CanBeNull] Type targetType,
             [CanBeNull] object parameter,

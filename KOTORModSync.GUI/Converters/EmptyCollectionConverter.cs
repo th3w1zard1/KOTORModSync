@@ -14,16 +14,14 @@ namespace KOTORModSync.Converters
     public class EmptyCollectionConverter : IValueConverter
     {
         [CanBeNull]
-        public object Convert
-        (
+        public object Convert(
             [CanBeNull] object value,
             [CanBeNull] Type targetType,
             [CanBeNull] object parameter,
             [CanBeNull] CultureInfo culture
         )
         {
-            if ( value is ICollection collection
-                && collection.Count == 0 )
+            if ( value is ICollection collection && collection.Count == 0 )
             {
                 return new List<string> { string.Empty }; // Create a new collection with a default value
             }
@@ -31,8 +29,7 @@ namespace KOTORModSync.Converters
             return value;
         }
 
-        public object ConvertBack
-        (
+        public object ConvertBack(
             object value,
             Type targetType,
             object parameter,

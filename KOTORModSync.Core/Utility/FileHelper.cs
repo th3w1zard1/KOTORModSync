@@ -13,9 +13,10 @@ namespace KOTORModSync.Core.Utility
     public static class FileHelper
     {
         [CanBeNull]
-        public static string GetFolderName( [CanBeNull] string itemInArchivePath ) => Path.HasExtension( itemInArchivePath )
-            ? Path.GetDirectoryName( itemInArchivePath )
-            : itemInArchivePath;
+        public static string GetFolderName( [CanBeNull] string itemInArchivePath ) =>
+            Path.HasExtension( itemInArchivePath )
+                ? Path.GetDirectoryName( itemInArchivePath )
+                : itemInArchivePath;
 
         // Stop TSLPatcher from automatically assuming the KOTOR directory.
         // use PlaintextLog=1
@@ -25,8 +26,8 @@ namespace KOTORModSync.Core.Utility
 
         public static async Task MoveFileAsync( [NotNull] string sourcePath, [NotNull] string destinationPath )
         {
-            if ( sourcePath is null ) throw new ArgumentNullException( nameof( sourcePath ) );
-            if ( destinationPath is null ) throw new ArgumentNullException( nameof( destinationPath ) );
+            if ( sourcePath is null ) throw new ArgumentNullException( nameof(sourcePath) );
+            if ( destinationPath is null ) throw new ArgumentNullException( nameof(destinationPath) );
 
             using ( var sourceStream = new FileStream(
                        sourcePath,
@@ -66,7 +67,7 @@ namespace KOTORModSync.Core.Utility
             var result = new List<string>();
             var uniquePaths = new HashSet<string>( filesAndFolders );
 
-            foreach ( string path in uniquePaths.Where( path => !string.IsNullOrEmpty(path) ) )
+            foreach ( string path in uniquePaths.Where( path => !string.IsNullOrEmpty( path ) ) )
             {
                 try
                 {
@@ -123,8 +124,7 @@ namespace KOTORModSync.Core.Utility
                     while ( ContainsWildcards( currentDirectory ) )
                     {
                         string parentDirectory = Path.GetDirectoryName( currentDirectory );
-                        if ( string.IsNullOrEmpty( parentDirectory )
-                            || parentDirectory == currentDirectory )
+                        if ( string.IsNullOrEmpty( parentDirectory ) || parentDirectory == currentDirectory )
                         {
                             break; // Exit the loop if no parent directory is found or if the parent directory is the same as the current directory
                         }
@@ -132,8 +132,7 @@ namespace KOTORModSync.Core.Utility
                         currentDirectory = parentDirectory;
                     }
 
-                    if ( string.IsNullOrEmpty( currentDirectory )
-                        || !Directory.Exists( currentDirectory ) )
+                    if ( string.IsNullOrEmpty( currentDirectory ) || !Directory.Exists( currentDirectory ) )
                     {
                         continue;
                     }
@@ -146,7 +145,11 @@ namespace KOTORModSync.Core.Utility
                             : SearchOption.AllDirectories
                     );
 
-                    result.AddRange( checkFiles.Where( thisFile => !( thisFile is null ) && WildcardPathMatch( thisFile, formattedPath ) ) );
+                    result.AddRange(
+                        checkFiles.Where(
+                            thisFile => !( thisFile is null ) && WildcardPathMatch( thisFile, formattedPath )
+                        )
+                    );
                 }
                 catch ( Exception ex )
                 {
@@ -158,12 +161,13 @@ namespace KOTORModSync.Core.Utility
             return result;
         }
 
-        private static bool ContainsWildcards( [NotNull] string path ) => ( path ?? throw new ArgumentNullException( nameof( path ) ) ).Contains( '*' ) || path.Contains( '?' );
+        private static bool ContainsWildcards( [NotNull] string path ) =>
+            ( path ?? throw new ArgumentNullException( nameof(path) ) ).Contains( '*' ) || path.Contains( '?' );
 
         public static bool WildcardPathMatch( [NotNull] string input, [NotNull] string patternInput )
         {
-            if ( input is null ) throw new ArgumentNullException( nameof( input ) );
-            if ( patternInput is null ) throw new ArgumentNullException( nameof( patternInput ) );
+            if ( input is null ) throw new ArgumentNullException( nameof(input) );
+            if ( patternInput is null ) throw new ArgumentNullException( nameof(patternInput) );
 
             // Fix path formatting
             input = Serializer.FixPathFormatting( input );
@@ -186,8 +190,7 @@ namespace KOTORModSync.Core.Utility
                 string patternLevel = patternLevels[i];
 
                 // Check if the current level is a wildcard
-                if ( patternLevel == "*"
-                    || patternLevel == "?" )
+                if ( patternLevel == "*" || patternLevel == "?" )
                 {
                     continue;
                 }
@@ -205,8 +208,8 @@ namespace KOTORModSync.Core.Utility
         // Most end users don't know Regex, this function will convert basic wildcards to regex patterns.
         private static bool WildcardMatch( [NotNull] string input, [NotNull] string pattern )
         {
-            if ( input is null ) throw new ArgumentNullException( nameof( input ) );
-            if ( pattern is null ) throw new ArgumentNullException( nameof( pattern ) );
+            if ( input is null ) throw new ArgumentNullException( nameof(input) );
+            if ( pattern is null ) throw new ArgumentNullException( nameof(pattern) );
 
             // Escape special characters in the pattern
             pattern = Regex.Escape( pattern );
@@ -218,7 +221,8 @@ namespace KOTORModSync.Core.Utility
             return Regex.IsMatch( input, $"^{pattern}$" );
         }
 
-        public static bool IsDirectoryWithName( [NotNull] object directory, [NotNull] string name ) => directory is Dictionary<string, object> dict
+        public static bool IsDirectoryWithName( [NotNull] object directory, [NotNull] string name ) =>
+            directory is Dictionary<string, object> dict
             && dict.ContainsKey( "Name" )
             && dict["Name"] is string directoryName
             && directoryName.Equals( name, StringComparison.OrdinalIgnoreCase );

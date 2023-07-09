@@ -16,7 +16,7 @@ namespace KOTORModSync.Core.TSLPatcher
         {
             if ( directory == null )
             {
-                throw new ArgumentNullException( nameof( directory ) );
+                throw new ArgumentNullException( nameof(directory) );
             }
 
             FileInfo[] iniFiles = directory.GetFiles( "*.ini", SearchOption.AllDirectories );
@@ -52,7 +52,7 @@ namespace KOTORModSync.Core.TSLPatcher
         {
             if ( directory == null )
             {
-                throw new ArgumentNullException( nameof( directory ) );
+                throw new ArgumentNullException( nameof(directory) );
             }
 
             FileInfo[] iniFiles = directory.GetFiles( "*.ini", SearchOption.AllDirectories );

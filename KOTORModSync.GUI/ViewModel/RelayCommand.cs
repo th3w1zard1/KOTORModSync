@@ -15,7 +15,7 @@ namespace KOTORModSync.ViewModel
 
         public RelayCommand( Action execute, [CanBeNull] Func<bool> canExecute )
         {
-            _execute = execute ?? throw new ArgumentNullException( nameof( execute ) );
+            _execute = execute ?? throw new ArgumentNullException( nameof(execute) );
             _canExecute = canExecute;
             _canExecuteChangedHandlers = new List<WeakReference<EventHandler>>();
         }
@@ -40,8 +40,7 @@ namespace KOTORModSync.ViewModel
             _ = _canExecuteChangedHandlers?.RemoveAll(
                 h =>
                 {
-                    if ( !h.TryGetTarget( out EventHandler target )
-                        || target != handler )
+                    if ( !h.TryGetTarget( out EventHandler target ) || target != handler )
                     {
                         return false;
                     }

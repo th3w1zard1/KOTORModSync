@@ -4,8 +4,7 @@ namespace KOTORModSync.Core
 {
     public class ValidationResult
     {
-        public ValidationResult
-        (
+        public ValidationResult(
             ComponentValidation validator,
             Instruction instruction,
             [CanBeNull] string message,

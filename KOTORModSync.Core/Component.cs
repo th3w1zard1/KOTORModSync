@@ -429,7 +429,7 @@ namespace KOTORModSync.Core
             {
                 string caseInsensitiveKey
                     = dict.Keys.FirstOrDefault( k =>
-                        !(k is null)
+                        !( k is null )
                         && k.Equals( key, StringComparison.OrdinalIgnoreCase )
                     );
 
@@ -589,7 +589,7 @@ namespace KOTORModSync.Core
         [NotNull]
         public static List<Component> ReadComponentsFromFile( [NotNull] string filePath )
         {
-            if ( filePath is null ) throw new ArgumentNullException( nameof(filePath) );
+            if ( filePath is null ) throw new ArgumentNullException( nameof( filePath ) );
 
             try
             {

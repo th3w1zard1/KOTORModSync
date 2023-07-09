@@ -219,7 +219,7 @@ namespace KOTORModSync.Core
             _ = Logger.LogAsync( $"Successfully deserialized component '{Name}'" );
         }
 
-        public static void OutputConfigFile( [ItemNotNull] [NotNull] IEnumerable<Component> components, [NotNull] string filePath )
+        public static void OutputConfigFile( [ItemNotNull][NotNull] IEnumerable<Component> components, [NotNull] string filePath )
         {
             if ( components is null ) throw new ArgumentNullException( nameof( components ) );
             if ( filePath is null ) throw new ArgumentNullException( nameof( filePath ) );
@@ -705,7 +705,7 @@ namespace KOTORModSync.Core
                 return (InstallExitCode.DependencyViolation, null);
             }
 
-            if ( Instructions is null ) return ( InstallExitCode.Success, new Dictionary<SHA1, FileInfo>() );
+            if ( Instructions is null ) return (InstallExitCode.Success, new Dictionary<SHA1, FileInfo>());
 
             for ( int instructionIndex = 1; instructionIndex <= Instructions.Count; instructionIndex++ )
             {
@@ -868,7 +868,7 @@ namespace KOTORModSync.Core
 
                         // case null: cancel installing this mod (user closed confirmation dialog)
                         default:
-                            return ( InstallExitCode.UserCancelledInstall, null );
+                            return (InstallExitCode.UserCancelledInstall, null);
                     }
                 }
 

@@ -1133,8 +1133,8 @@ namespace KOTORModSync
 
         private static async Task SaveDocsToFileAsync( [NotNull] string filePath, [NotNull] string documentation )
         {
-            if ( filePath is null ) throw new ArgumentNullException( nameof(filePath) );
-            if ( documentation is null ) throw new ArgumentNullException( nameof(documentation) );
+            if ( filePath is null ) throw new ArgumentNullException( nameof( filePath ) );
+            if ( documentation is null ) throw new ArgumentNullException( nameof( documentation ) );
 
             try
             {

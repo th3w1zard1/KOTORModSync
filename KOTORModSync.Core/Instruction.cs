@@ -155,7 +155,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
         public void SetRealPaths( bool noValidate = false )
         {
             // Get real path then enumerate the files/folders with wildcards and add them to the list
-            if ( Source is null ) throw new NullReferenceException(nameof(Source));
+            if ( Source is null ) throw new NullReferenceException( nameof( Source ) );
 
             RealSourcePaths = Source.ConvertAll( Utility.Utility.ReplaceCustomVariables );
             RealSourcePaths = FileHelper.EnumerateFilesWithWildcards( RealSourcePaths );
@@ -166,7 +166,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                 DirectoryInfo thisDestination = new DirectoryInfo( destinationPath );
                 if ( !thisDestination.Exists )
                 {
-                    ( FileSystemInfo caseSensitiveDestination, List<string> isMultiple )
+                    (FileSystemInfo caseSensitiveDestination, List<string> isMultiple)
                         = PlatformAgnosticMethods.GetClosestMatchingEntry( thisDestination.FullName );
 
                     thisDestination = (DirectoryInfo)caseSensitiveDestination
@@ -193,7 +193,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
             {
                 if ( argSourcePaths is null )
                 {
-                    argSourcePaths = RealSourcePaths ?? throw new NullReferenceException( nameof(RealSourcePaths) );
+                    argSourcePaths = RealSourcePaths ?? throw new NullReferenceException( nameof( RealSourcePaths ) );
                     //argDestinationPath = RealDestinationPath; // not used in this action.
                 }
 

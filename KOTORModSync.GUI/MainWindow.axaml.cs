@@ -65,7 +65,7 @@ namespace KOTORModSync
             AvaloniaXamlLoader.Load( this );
 
             MainGrid = this.FindControl<Grid>( "MainGrid" ) ?? throw new NullReferenceException( "MainGrid undefined in MainWindow." );
-            if ( MainGrid.ColumnDefinitions?.Count != 3 )  throw new NullReferenceException( "MainGrid incorrectly defined, expected 3 columns." );
+            if ( MainGrid.ColumnDefinitions?.Count != 3 ) throw new NullReferenceException( "MainGrid incorrectly defined, expected 3 columns." );
 
             ColumnDefinition componentListColumn = MainGrid.ColumnDefinitions[0] ?? throw new NullReferenceException( "Column 0 of MainGrid (component list column) not defined." );
             ColumnDefinition configColumn = MainGrid.ColumnDefinitions[2] ?? throw new NullReferenceException( "Column 2 of MainGrid (component list column) not defined." );
@@ -1282,7 +1282,7 @@ namespace KOTORModSync
                         + " Ensure you single-clicked on a component on the left before pressing save."
                         + " Please back up your work and try again.";
 
-                    return ( false, errorMessage );
+                    return (false, errorMessage);
                 }
 
                 // Update the properties of the component

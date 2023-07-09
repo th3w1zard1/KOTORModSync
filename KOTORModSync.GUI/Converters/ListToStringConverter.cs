@@ -21,7 +21,7 @@ namespace KOTORModSync.Converters
         [NotNull]
         public static string RemoveSpacesExceptNewLine( [NotNull] string input )
         {
-            if ( input == null )
+            if ( input is null )
             {
                 throw new ArgumentNullException( nameof( input ) );
             }
@@ -49,7 +49,7 @@ namespace KOTORModSync.Converters
             var serializedList = new StringBuilder();
             foreach ( object item in list )
             {
-                if ( item == null )
+                if ( item is null )
                 {
                     continue;
                 }

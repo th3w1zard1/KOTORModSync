@@ -19,7 +19,7 @@ namespace KOTORModSync.Converters
         private static string GetEnumDescription( Enum enumObj )
         {
             FieldInfo fieldInfo = enumObj.GetType().GetField( enumObj.ToString() );
-            if ( fieldInfo == null )
+            if ( fieldInfo is null )
             {
                 Logger.LogException( new ArgumentNullException( nameof( enumObj ) ) );
                 return null;

@@ -269,7 +269,7 @@ namespace KOTORModSync.Core
                 _ = sb.Append( "**Directions**: " ).AppendLine( component.Directions );
 
                 // Instructions
-                if ( component.Instructions == null ) continue;
+                if ( component.Instructions is null ) continue;
 
                 _ = sb.AppendLine();
                 _ = sb.AppendLine( "**Installation Instructions:**" );
@@ -315,7 +315,7 @@ namespace KOTORModSync.Core
         [NotNull]
         private List<Instruction> DeserializeInstructions( [CanBeNull] TomlTableArray tomlObject )
         {
-            if ( tomlObject == null )
+            if ( tomlObject is null )
             {
                 _ = Logger.LogWarningAsync( $"No instructions found for component '{Name}'" );
                 return new List<Instruction>();
@@ -353,7 +353,7 @@ namespace KOTORModSync.Core
         [NotNull]
         private Dictionary<Guid, Option> DeserializeOptions( [CanBeNull] TomlTableArray tomlObject )
         {
-            if ( tomlObject == null )
+            if ( tomlObject is null )
             {
                 _ = Logger.LogVerboseAsync( $"No options found for component '{Name}'" );
                 return new Dictionary<Guid, Option>();
@@ -401,7 +401,7 @@ namespace KOTORModSync.Core
                 string caseInsensitiveKey
                     = dict.Keys.FirstOrDefault( k => k.Equals( key, StringComparison.OrdinalIgnoreCase ) );
 
-                if ( caseInsensitiveKey == null )
+                if ( caseInsensitiveKey is null )
                 {
                     if ( !required )
                     {
@@ -599,7 +599,7 @@ namespace KOTORModSync.Core
                 {
                     component.DeserializeComponent( tomlComponent );
                     components.Add( component );
-                    if ( component.Instructions == null )
+                    if ( component.Instructions is null )
                     {
                         Logger.Log( $"'{component.Name}' is missing instructions" );
                         continue;
@@ -694,7 +694,7 @@ namespace KOTORModSync.Core
                 var preinstallChecksums = MainConfig.DestinationPath.GetFiles( "*.*", SearchOption.AllDirectories )
                     .ToDictionary( file => file, file => FileChecksumValidator.CalculateSha1Async( file ).Result );
 
-                if ( instruction.OriginalChecksums == null )
+                if ( instruction.OriginalChecksums is null )
                 {
                     _ = Logger.LogVerboseAsync(
                         "Instructions file has no checksums available, storing checksums for the current install location as the default checksums."
@@ -1022,7 +1022,7 @@ namespace KOTORModSync.Core
             foreach ( Guid guidToFind in guidsToFind )
             {
                 Component foundComponent = FindComponentFromGuid( guidToFind, componentsList );
-                if ( foundComponent == null )
+                if ( foundComponent is null )
                 {
                     continue;
                 }
@@ -1176,7 +1176,7 @@ namespace KOTORModSync.Core
 
         public void MoveInstructionToIndex( Instruction thisInstruction, int index )
         {
-            if ( thisInstruction == null
+            if ( thisInstruction is null
                 || index < 0
                 || index >= Instructions.Count )
             {

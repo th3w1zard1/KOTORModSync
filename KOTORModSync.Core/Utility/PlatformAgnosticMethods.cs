@@ -21,7 +21,7 @@ namespace KOTORModSync.Core.Utility
     {
         public static (FileSystemInfo, List<string>) GetClosestMatchingEntry( [NotNull] string path )
         {
-            if ( path == null )
+            if ( path is null )
             {
                 throw new ArgumentNullException( nameof( path ) );
             }
@@ -34,7 +34,7 @@ namespace KOTORModSync.Core.Utility
             var duplicatePaths = new List<string>();
 
 
-            if ( directoryName == null )
+            if ( directoryName is null )
             {
                 return (null, duplicatePaths);
             }
@@ -70,12 +70,12 @@ namespace KOTORModSync.Core.Utility
 
         private static int GetMatchingCharactersCount( [NotNull] string str1, [NotNull] string str2 )
         {
-            if ( str1 == null )
+            if ( str1 is null )
             {
                 throw new ArgumentNullException( nameof( str1 ) );
             }
 
-            if ( str2 == null )
+            if ( str2 is null )
             {
                 throw new ArgumentNullException( nameof( str2 ) );
             }
@@ -439,12 +439,12 @@ namespace KOTORModSync.Core.Utility
         {
             try
             {
-                if ( tcs == null )
+                if ( tcs is null )
                 {
                     throw new ArgumentNullException( nameof( tcs ) );
                 }
 
-                if ( process == null )
+                if ( process is null )
                 {
                     // Process disposed of early?
                     await Logger.LogExceptionAsync( new NotSupportedException() );
@@ -475,7 +475,7 @@ namespace KOTORModSync.Core.Utility
             bool noAdmin = false
         )
         {
-            if ( programFile == null )
+            if ( programFile is null )
             {
                 throw new ArgumentNullException( nameof( programFile ) );
             }
@@ -537,7 +537,7 @@ namespace KOTORModSync.Core.Utility
                         {
                             process.OutputDataReceived += ( sender, e ) =>
                             {
-                                if ( e.Data == null )
+                                if ( e.Data is null )
                                 {
                                     _ = outputWaitHandle.Set();
                                 }
@@ -548,7 +548,7 @@ namespace KOTORModSync.Core.Utility
                             };
                             process.ErrorDataReceived += ( sender, e ) =>
                             {
-                                if ( e.Data == null )
+                                if ( e.Data is null )
                                 {
                                     _ = errorWaitHandle.Set();
                                 }

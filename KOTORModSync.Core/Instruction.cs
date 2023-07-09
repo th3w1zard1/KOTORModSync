@@ -184,7 +184,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
         {
             try
             {
-                if ( argSourcePaths == null )
+                if ( argSourcePaths is null )
                 {
                     argSourcePaths = RealSourcePaths;
                     //argDestinationPath = RealDestinationPath; // not used in this action.
@@ -205,12 +205,12 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                         try
                         {
                             var thisFile = new FileInfo( sourcePath );
-                            if ( argDestinationPath == null )
+                            if ( argDestinationPath is null )
                             {
                                 argDestinationPath = thisFile.Directory;
                             }
 
-                            if ( argDestinationPath == null )
+                            if ( argDestinationPath is null )
                             {
                                 throw new ArgumentNullException( nameof( argDestinationPath ) );
                             }
@@ -262,7 +262,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                                         break;
                                 }
 
-                                if ( archive == null )
+                                if ( archive is null )
                                 {
                                     exitCode = ActionExitCode.ArchiveParseError;
                                     throw new InvalidOperationException( $"Unable to parse archive '{sourcePath}'" );
@@ -276,7 +276,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                                         continue;
                                     }
 
-                                    if ( argDestinationPath?.FullName == null )
+                                    if ( argDestinationPath?.FullName is null )
                                     {
                                         continue;
                                     }
@@ -340,7 +340,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
 
         public void DeleteDuplicateFile( DirectoryInfo directoryPath = null, string fileExtension = "" )
         {
-            if ( directoryPath == null )
+            if ( directoryPath is null )
             {
                 directoryPath = RealDestinationPath;
             }
@@ -607,7 +607,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                         ? new FileInfo( t ).Directory // It's a file, get the parent folder.
                         : new DirectoryInfo( t ); // It's a folder, create a DirectoryInfo instance
 
-                    if ( tslPatcherDirectory == null
+                    if ( tslPatcherDirectory is null
                         || !tslPatcherDirectory.Exists )
                     {
                         throw new DirectoryNotFoundException(
@@ -660,7 +660,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                             break;
                     }
 
-                    if ( tslPatcherCliPath == null )
+                    if ( tslPatcherCliPath is null )
                     {
                         string executingAssemblyLocation = Assembly.GetEntryAssembly()?.Location;
                         if ( string.IsNullOrEmpty( executingAssemblyLocation ) )
@@ -794,7 +794,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
         {
             foreach ( string sourcePath in RealSourcePaths )
             {
-                if ( sourcePath == null )
+                if ( sourcePath is null )
                 {
                     continue;
                 }
@@ -847,7 +847,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
             Logger.LogVerbose( "Preparing TSLPatcher install..." );
             foreach ( string sourcePath in RealSourcePaths )
             {
-                if ( sourcePath == null )
+                if ( sourcePath is null )
                 {
                     continue;
                 }

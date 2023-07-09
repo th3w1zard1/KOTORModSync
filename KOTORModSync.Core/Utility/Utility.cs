@@ -25,13 +25,13 @@ namespace KOTORModSync.Core.Utility
         {
             Type type = value.GetType();
             string name = Enum.GetName( type, value );
-            if ( name == null )
+            if ( name is null )
             {
                 return null;
             }
 
             FieldInfo field = type.GetField( name );
-            if ( field == null )
+            if ( field is null )
             {
                 return null;
             }

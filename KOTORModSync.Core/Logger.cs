@@ -128,7 +128,7 @@ namespace KOTORModSync.Core
 
         private static void TaskScheduler_UnobservedTaskException( object sender, UnobservedTaskExceptionEventArgs e )
         {
-            if ( e.Exception == null )
+            if ( e.Exception is null )
             {
                 return;
             }

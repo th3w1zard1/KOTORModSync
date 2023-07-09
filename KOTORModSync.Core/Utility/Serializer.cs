@@ -219,7 +219,7 @@ namespace KOTORModSync.Core.Utility
         {
             while ( enumerator.MoveNext() )
             {
-                if ( enumerator.Current == null )
+                if ( enumerator.Current is null )
                 {
                     continue;
                 }
@@ -348,14 +348,14 @@ namespace KOTORModSync.Core.Utility
         {
             var serializedList = new TomlArray();
 
-            if ( list == null )
+            if ( list is null )
             {
                 return serializedList;
             }
 
             foreach ( object item in list )
             {
-                if ( item == null )
+                if ( item is null )
                 {
                     continue;
                 }

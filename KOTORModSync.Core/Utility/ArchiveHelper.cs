@@ -147,7 +147,7 @@ namespace KOTORModSync.Core.Utility
             try
             {
                 IArchive archive = OpenArchive( archivePath );
-                if ( archive == null )
+                if ( archive is null )
                 {
                     Logger.Log( $"Unsupported archive format: '{Path.GetExtension( archivePath )}'" );
                     return archiveEntries;

@@ -23,7 +23,7 @@ namespace KOTORModSync.Converters
             CultureInfo culture
         )
         {
-            if ( value == null )
+            if ( value is null )
             {
                 return targetType.IsValueType
                     ? AvaloniaProperty.UnsetValue

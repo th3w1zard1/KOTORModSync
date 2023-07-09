@@ -148,7 +148,7 @@ namespace KOTORModSync
                 };
 
                 string[] filePaths = await ShowFileDialog( false, filters, true );
-                if ( filePaths == null )
+                if ( filePaths is null )
                 {
                     await Logger.LogVerboseAsync( "User did not select any files." );
                     return null;
@@ -185,7 +185,7 @@ namespace KOTORModSync
         {
             try
             {
-                if ( defaultExt == null )
+                if ( defaultExt is null )
                 {
                     defaultExt = new List<string> { "toml", "tml" };
                 }
@@ -242,7 +242,7 @@ namespace KOTORModSync
                     ? new[] { await new OpenFolderDialog().ShowAsync( parent ) }
                     : await new OpenFileDialog { AllowMultiple = allowMultiple, Filters = filters }.ShowAsync( parent );
 
-                if ( results == null
+                if ( results is null
                     || results.Length == 0 )
                 {
                     await Logger.LogVerboseAsync( "User did not make a selection" );
@@ -271,7 +271,7 @@ namespace KOTORModSync
                 Component duplicateComponent
                     = components.FirstOrDefault( c => c.Guid == component.Guid && c != component );
 
-                if ( duplicateComponent == null )
+                if ( duplicateComponent is null )
                 {
                     continue;
                 }
@@ -406,7 +406,7 @@ namespace KOTORModSync
 
                 // Open the file dialog to select a file
                 List<string> files = await OpenFiles();
-                if ( files == null )
+                if ( files is null )
                 {
                     _ = Logger.LogVerboseAsync(
                         "No files chosen in BrowseSourceFiles_Click, returning to previous values"
@@ -431,7 +431,7 @@ namespace KOTORModSync
                         : filePath;
                 }
 
-                if ( MainConfig.SourcePath == null )
+                if ( MainConfig.SourcePath is null )
                 {
                     _ = Logger.LogWarningAsync(
                         "Not using custom variables <<kotorDirectory>> and <<modDirectory>> due to directories not being set prior."
@@ -469,7 +469,7 @@ namespace KOTORModSync
 
                 // Open the file dialog to select a file
                 string filePath = await OpenFolder();
-                if ( filePath == null )
+                if ( filePath is null )
                 {
                     _ = Logger.LogVerboseAsync(
                         "No file chosen in BrowseDestination_Click."
@@ -478,7 +478,7 @@ namespace KOTORModSync
                     return;
                 }
 
-                if ( MainConfig.SourcePath == null )
+                if ( MainConfig.SourcePath is null )
                 {
                     _ = Logger.LogAsync(
                         "Directories not set, setting raw folder path without custom variable <<kotorDirectory>>"
@@ -518,7 +518,7 @@ namespace KOTORModSync
         {
             try
             {
-                if ( _currentComponent == null )
+                if ( _currentComponent is null )
                 {
                     await InformationDialog.ShowInformationDialog(
                         this,
@@ -562,9 +562,9 @@ namespace KOTORModSync
         {
             try
             {
-                if ( MainConfigInstance == null
-                    || MainConfig.DestinationPath == null
-                    || MainConfig.SourcePath == null )
+                if ( MainConfigInstance is null
+                    || MainConfig.DestinationPath is null
+                    || MainConfig.SourcePath is null )
                 {
                     return (false, "Please set your directories first");
                 }
@@ -610,7 +610,7 @@ namespace KOTORModSync
                                 || component.InstallAfter?.Contains( item ) == true
                         )
                         == true
-                        || component.Dependencies == null;
+                        || component.Dependencies is null;
 
                     if ( component.Restrictions?.Count > 0
                         && component.IsSelected )
@@ -761,7 +761,7 @@ namespace KOTORModSync
             // Get the selected component from the TreeView
             try
             {
-                if ( _currentComponent == null )
+                if ( _currentComponent is null )
                 {
                     Logger.Log( "No component loaded into editor - nothing to remove." );
                     return;
@@ -810,7 +810,7 @@ namespace KOTORModSync
                     "Please select your mod directory (where ALL your mods are downloaded)."
                 );
                 chosenFolder = await OpenFolder();
-                if ( chosenFolder == null )
+                if ( chosenFolder is null )
                 {
                     _ = Logger.LogVerboseAsync( "User cancelled selecting folder" );
                     return;
@@ -842,15 +842,15 @@ namespace KOTORModSync
                     return;
                 }
 
-                if ( MainConfigInstance == null
-                    || MainConfig.DestinationPath == null )
+                if ( MainConfigInstance is null
+                    || MainConfig.DestinationPath is null )
                 {
                     var informationDialog = new InformationDialog { InfoText = "Please set your directories first" };
                     _ = await informationDialog.ShowDialog<bool?>( this );
                     return;
                 }
 
-                if ( _currentComponent == null )
+                if ( _currentComponent is null )
                 {
                     var informationDialog = new InformationDialog
                     {
@@ -861,7 +861,7 @@ namespace KOTORModSync
                 }
 
                 string name = _currentComponent.Name; // use correct name even if user clicks another component.
-                if ( name == null )
+                if ( name is null )
                 {
                     throw new NullReferenceException( "Component does not have a valid 'Name' field." );
                 }
@@ -1092,7 +1092,7 @@ namespace KOTORModSync
             try
             {
                 string file = await SaveFile( new List<string>( 65535 ) { "txt" } );
-                if ( file == null )
+                if ( file is null )
                 {
                     return;
                 }
@@ -1142,14 +1142,14 @@ namespace KOTORModSync
                 return;
             }
 
-            if ( selectedItem.Header == null )
+            if ( selectedItem.Header is null )
             {
                 return;
             }
 
             // Don't show content of any tabs (except the hidden one) if there's no content.
             if ( ComponentsList.Count == 0
-                || LeftTreeView.SelectedItem == null )
+                || LeftTreeView.SelectedItem is null )
             {
                 TabControl.SelectedItem = InitialTab;
                 return;
@@ -1173,8 +1173,8 @@ namespace KOTORModSync
         {
             try
             {
-                if ( selectedComponent == null
-                    || RawEditTextBox == null )
+                if ( selectedComponent is null
+                    || RawEditTextBox is null )
                 {
                     return;
                 }
@@ -1234,7 +1234,7 @@ namespace KOTORModSync
             try
             {
                 // Get the selected component from the tree view
-                if ( _currentComponent == null )
+                if ( _currentComponent is null )
                 {
                     return (false,
                         "TreeViewItem does not correspond to a valid Component"
@@ -1254,7 +1254,7 @@ namespace KOTORModSync
                 }
 
                 if ( index < 0
-                    && _currentComponent == null )
+                    && _currentComponent is null )
                 {
                     string componentName = string.IsNullOrWhiteSpace( newComponent?.Name )
                         ? "."
@@ -1295,7 +1295,7 @@ namespace KOTORModSync
                 var treeViewComponent = (Component)selectedTreeViewItem.Tag;
 
                 int index = ComponentsList.IndexOf( treeViewComponent );
-                if ( treeViewComponent == null
+                if ( treeViewComponent is null
                     || ( index == 0 && relativeIndex < 0 )
                     || index == -1
                     || index + relativeIndex == ComponentsList.Count )
@@ -1357,13 +1357,13 @@ namespace KOTORModSync
             try
             {
                 string filePath = await SaveFile();
-                if ( filePath == null )
+                if ( filePath is null )
                 {
                     return;
                 }
 
                 TreeViewItem rootItem = LeftTreeView.Items.OfType<TreeViewItem>().FirstOrDefault();
-                if ( rootItem == null )
+                if ( rootItem is null )
                 {
                     return;
                 }
@@ -1593,7 +1593,7 @@ namespace KOTORModSync
 
         private void CreateDependencyItems( [NotNull] Component component, [NotNull] ItemsControl parentItem )
         {
-            if ( component?.Dependencies == null
+            if ( component?.Dependencies is null
                 || component.Dependencies.Count == 0 )
             {
                 return;
@@ -1602,7 +1602,7 @@ namespace KOTORModSync
             foreach ( Guid dependencyGuid in component.Dependencies )
             {
                 Component dependency = GetComponentFromGuid( ComponentsList, dependencyGuid );
-                if ( dependency == null )
+                if ( dependency is null )
                 {
                     continue;
                 }
@@ -1616,12 +1616,12 @@ namespace KOTORModSync
         {
             try
             {
-                if ( parentItem == null )
+                if ( parentItem is null )
                 {
                     throw new ArgumentNullException( nameof( parentItem ) );
                 }
 
-                if ( component == null )
+                if ( component is null )
                 {
                     throw new ArgumentNullException( nameof( component ) );
                 }
@@ -1796,7 +1796,7 @@ namespace KOTORModSync
         {
             try
             {
-                if ( _currentComponent == null )
+                if ( _currentComponent is null )
                 {
                     await InformationDialog.ShowInformationDialog( this, "Load a component first" );
                     return;
@@ -1805,8 +1805,8 @@ namespace KOTORModSync
                 var addButton = (Button)sender;
                 var thisInstruction = addButton.Tag as Instruction;
                 var thisComponent = addButton.Tag as Component;
-                if ( thisInstruction == null
-                    && thisComponent == null )
+                if ( thisInstruction is null
+                    && thisComponent is null )
                 {
                     throw new NullReferenceException( "Cannot find instruction instance from button." );
                 }
@@ -1814,7 +1814,7 @@ namespace KOTORModSync
                 _currentComponent.Instructions = _currentComponent.Instructions ?? new List<Instruction>(); //todo
 
                 int index;
-                if ( thisInstruction == null )
+                if ( thisInstruction is null )
                 {
                     thisInstruction = new Instruction();
                     index = _currentComponent.Instructions.Count;
@@ -1847,7 +1847,7 @@ namespace KOTORModSync
         {
             try
             {
-                if ( _currentComponent == null )
+                if ( _currentComponent is null )
                 {
                     await InformationDialog.ShowInformationDialog( this, "Load a component first" );
                     return;
@@ -1873,7 +1873,7 @@ namespace KOTORModSync
         {
             try
             {
-                if ( _currentComponent == null )
+                if ( _currentComponent is null )
                 {
                     await InformationDialog.ShowInformationDialog( this, "Load a component first" );
                     return;
@@ -1895,7 +1895,7 @@ namespace KOTORModSync
         {
             try
             {
-                if ( _currentComponent == null )
+                if ( _currentComponent is null )
                 {
                     await InformationDialog.ShowInformationDialog( this, "Load a component first" );
                     return;
@@ -1926,7 +1926,7 @@ namespace KOTORModSync
 
             [UsedImplicitly] public event EventHandler CanExecuteChanged;
 
-            public bool CanExecute( [CanBeNull] object parameter ) => _canExecute == null || _canExecute( parameter );
+            public bool CanExecute( [CanBeNull] object parameter ) => _canExecute is null || _canExecute( parameter );
             public void Execute( [CanBeNull] object parameter ) => _execute?.Invoke( parameter );
         }
 
@@ -1989,7 +1989,7 @@ namespace KOTORModSync
         private static void TraverseControls
             ( [NotNull] IControl control, [NotNull] ISupportInitialize styleControlComboBox )
         {
-            if ( control == null )
+            if ( control is null )
             {
                 throw new ArgumentNullException( nameof( control ) );
             }
@@ -2003,7 +2003,7 @@ namespace KOTORModSync
             control.ApplyTemplate();
 
             var logicalControl = control as ILogical;
-            if ( logicalControl.LogicalChildren == null )
+            if ( logicalControl.LogicalChildren is null )
             {
                 return;
             }

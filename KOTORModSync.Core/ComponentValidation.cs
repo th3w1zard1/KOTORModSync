@@ -109,7 +109,7 @@ namespace KOTORModSync.Core
                     }
 
                     bool archiveNameFound = true;
-                    if ( instruction.Source == null )
+                    if ( instruction.Source is null )
                     {
                         AddWarning( "Instruction does not have a 'Source' key defined", instruction );
                         success = false;
@@ -194,7 +194,7 @@ namespace KOTORModSync.Core
 
             foreach ( Instruction instruction in component.Instructions )
             {
-                if ( instruction.Source == null
+                if ( instruction.Source is null
                     || instruction.Action != "extract" )
                 {
                     continue;
@@ -255,7 +255,7 @@ namespace KOTORModSync.Core
                     case null:
                         continue;
                     // tslpatcher must always use <<kotorDirectory>> and nothing else.
-                    case "tslpatcher" when instruction.Destination == null:
+                    case "tslpatcher" when instruction.Destination is null:
                         instruction.Destination = "<<kotorDirectory>>";
                         break;
 
@@ -279,7 +279,7 @@ namespace KOTORModSync.Core
                     // extract and delete cannot use the 'Destination' key.
                     case "extract":
                     case "delete":
-                        if ( instruction.Destination == null )
+                        if ( instruction.Destination is null )
                         {
                             break;
                         }
@@ -465,7 +465,7 @@ namespace KOTORModSync.Core
                     archive = SevenZipArchive.Open( stream );
                 }
 
-                if ( archive == null )
+                if ( archive is null )
                 {
                     return ArchivePathCode.CouldNotOpenArchive;
                 }

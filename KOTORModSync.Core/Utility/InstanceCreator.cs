@@ -68,7 +68,7 @@ namespace KOTORModSync.Core.Utility
                 }
 
                 if ( parameter.HasDefaultValue
-                    && constructorParameter == null )
+                    && constructorParameter is null )
                 {
                     continue;
                 }

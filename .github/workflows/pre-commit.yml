@@ -1,0 +1,62 @@
+name: lint
+
+on:
+  push:
+    branches:
+      - '*'
+
+env:
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: 1
+  DOTNET_NOLOGO: true
+  GITHUB_USER: th3w1zard1
+  GITHUB_REPOSITORY: KOTORModSync
+
+defaults:
+  run:
+    shell: pwsh
+
+jobs:
+  lint_csharp:
+    runs-on: windows-2019
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup .NET Core
+        uses: actions/setup-dotnet@v2
+        with:
+          dotnet-version: '6.0.x' # SDK Version to use
+
+      # Format the output of dotnet format
+      - name: Add dotnet-format problem matcher
+        uses: xt0rted/dotnet-format-problem-matcher@v1
+
+      # Install dotnet format as a global tool
+      - name: Install dotnet format
+        run: dotnet tool update --global dotnet-format
+
+      # Run dotnet format
+      - name: Run dotnet format
+        run: dotnet format --check --fix-whitespace --fix-analyzers --severity suggestion
+        
+      # Install ReSharper Command Line Tools
+      - name: Install ReSharper CLI
+        run: |
+          Invoke-WebRequest -Uri "https://download.jetbrains.com/resharper/ReSharperCLT.2021.2.3.zip" -OutFile "resharperclt.zip"
+          Expand-Archive -Path "resharperclt.zip" -DestinationPath "resharperclt"
+        shell: pwsh
+
+      # Run ReSharper cleanup
+      - name: Run ReSharper cleanup
+        run: |
+          & "./resharperclt/JetBrains.ReSharper.CommandLineTools.2021.2.3/tools/inspectcode.exe" -sln ${{ github.workspace }}/*.sln -o=output.xml -swea
+          & "./resharperclt/JetBrains.ReSharper.CommandLineTools.2021.2.3/tools/cleanupcode.exe" ${{ github.workspace }}/*.sln -s -ea
+
+        # Commit the changes
+        - name: Commit changes
+          run: |
+            git config --global user.name 'CSharp Lint'
+            git config --global user.email 'linter_workflow@githubactions.com'
+            git add .
+            git diff-index --quiet HEAD || git commit -m "Auto-format code using dotnet format" && git push
+          env:
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

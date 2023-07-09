@@ -12,6 +12,8 @@ namespace KOTORModSync.Core.TSLPatcher
 {
     public class IniHelper
     {
+        // Stop TSLPatcher from automatically assuming the KOTOR directory.
+        // use PlaintextLog=1
         public static void ReplaceLookupGameFolder( [NotNull] DirectoryInfo directory )
         {
             if ( directory == null )
@@ -48,6 +50,8 @@ namespace KOTORModSync.Core.TSLPatcher
             }
         }
 
+        // Stop TSLPatcher from automatically assuming the KOTOR directory.
+        // use PlaintextLog=1
         public static void ReplacePlaintextLog( [NotNull] DirectoryInfo directory )
         {
             if ( directory == null )

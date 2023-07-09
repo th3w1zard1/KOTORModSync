@@ -50,7 +50,6 @@ namespace KOTORModSync.Converters
             return enumObj.ToString();
         }
 
-        [CanBeNull]
         object IValueConverter.Convert
         (
             [CanBeNull] object value,

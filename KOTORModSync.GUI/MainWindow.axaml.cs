@@ -1947,8 +1947,8 @@ namespace KOTORModSync
 
             [UsedImplicitly] public event EventHandler CanExecuteChanged;
 
-            public bool CanExecute( [CanBeNull] object parameter ) => _canExecute is null || _canExecute( parameter );
-            public void Execute( [CanBeNull] object parameter ) => _execute?.Invoke( parameter );
+            public bool CanExecute( object parameter ) => _canExecute == null || _canExecute( parameter );
+            public void Execute( object parameter ) => _execute?.Invoke( parameter );
         }
 
 

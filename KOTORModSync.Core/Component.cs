@@ -974,7 +974,7 @@ namespace KOTORModSync.Core
         //The component has no dependencies or restrictions.
         //The component has dependencies, and all of the required components are being installed.
         //The component has restrictions, but none of the restricted components are being installed.
-        public bool ShouldInstallComponent( [CanBeNull] List<Component> componentsList, bool isInstall = true )
+        public bool ShouldInstallComponent( List<Component> componentsList, bool isInstall = true )
         {
             Dictionary<string, List<Component>> conflicts = GetConflictingComponents(
                 Dependencies,

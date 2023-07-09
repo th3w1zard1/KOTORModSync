@@ -35,10 +35,10 @@ namespace KOTORModSync.Converters
 
         public object Convert
         (
-            [CanBeNull] object value,
-            [NotNull] Type targetType,
-            [CanBeNull] object parameter,
-            [NotNull] CultureInfo culture
+            object value,
+            Type targetType,
+            object parameter,
+            CultureInfo culture
         )
         {
             if ( !( value is IEnumerable list ) )
@@ -61,13 +61,12 @@ namespace KOTORModSync.Converters
         }
 
 
-        [CanBeNull]
         public object ConvertBack
         (
-            [CanBeNull] object value,
-            [NotNull] Type targetType,
-            [CanBeNull] object parameter,
-            [NotNull] CultureInfo culture
+            object value,
+            Type targetType,
+            object parameter,
+            CultureInfo culture
         )
         {
             try

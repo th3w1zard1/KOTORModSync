@@ -12,13 +12,12 @@ namespace KOTORModSync.Converters
 {
     public class StringToGuidConverter : IValueConverter
     {
-        [CanBeNull]
         public object Convert
         (
-            [CanBeNull] object value,
-            [NotNull] Type targetType,
-            [CanBeNull] object parameter,
-            [NotNull] CultureInfo culture
+            object value,
+            Type targetType,
+            object parameter,
+            CultureInfo culture
         )
         {
             // Convert Guid to string
@@ -32,10 +31,10 @@ namespace KOTORModSync.Converters
 
         public object ConvertBack
         (
-            [CanBeNull] object value,
-            [NotNull] Type targetType,
-            [CanBeNull] object parameter,
-            [NotNull] CultureInfo culture
+            object value,
+            Type targetType,
+            object parameter,
+            CultureInfo culture
         )
         {
             try

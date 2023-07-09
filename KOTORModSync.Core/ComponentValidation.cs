@@ -332,7 +332,7 @@ namespace KOTORModSync.Core
                             success = false;
                             AddError( "Destination cannot be found!" + $" Got '{destinationPath}'", instruction );
 
-                            if ( !MainConfig.AttemptFixes )
+                            /*if ( !MainConfig.AttemptFixes )
                             {
                                 break;
                             }
@@ -341,7 +341,7 @@ namespace KOTORModSync.Core
                                 "Fixing the above issue automatically"
                                 + $" (setting Destination to '<<kotorDirectory>>{Path.DirectorySeparatorChar}Override')"
                             );
-                            instruction.Destination = $"<<kotorDirectory>>{Path.DirectorySeparatorChar}Override";
+                            instruction.Destination = $"<<kotorDirectory>>{Path.DirectorySeparatorChar}Override";*/
                         }
 
                         break;
@@ -421,6 +421,12 @@ namespace KOTORModSync.Core
 
             // todo, stop displaying errors for self extracting executables. This is the only mod using one that I've seen out of 200-some.
             if ( Component.Name.Equals( "Improved AI", StringComparison.OrdinalIgnoreCase ) )
+            {
+                return (true, true);
+            }
+
+            // archive not required if instruction isn't running.
+            if ( !Component.ShouldRunInstruction( instruction, ComponentsList, false ) )
             {
                 return (true, true);
             }

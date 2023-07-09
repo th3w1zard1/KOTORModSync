@@ -659,6 +659,8 @@ namespace KOTORModSync
                     individuallyValidated &= validator.Run();
                 }
 
+                await Logger.LogVerboseAsync( "Finished validating all components." );
+
                 string informationMessage = string.Empty;
                 if ( !isCorrectOrder )
                 {

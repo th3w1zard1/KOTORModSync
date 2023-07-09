@@ -222,20 +222,23 @@ namespace KOTORModSync.Core
                         continue;
                     }
 
-                    if ( !File.Exists( realSourcePath ) )
+                    if ( File.Exists( realSourcePath ) )
                     {
-                        if ( Component.ShouldRunInstruction( instruction, ComponentsList ))
-                        {
-                            AddError(
-                                "Missing required download:" + $" '{Path.GetFileName( realSourcePath )}'",
-                                instruction
-                            );
-                        }
-
+                        allArchives.Add( realSourcePath );
                         continue;
                     }
 
-                    allArchives.Add( realSourcePath );
+                    if ( !Component.ShouldRunInstruction( instruction, ComponentsList ) )
+                    {
+                        continue;
+                    }
+
+                    AddError(
+                        "Missing required download:" + $" '{Path.GetFileName( realSourcePath )}'",
+                        instruction
+                    );
+
+                    continue;
                 }
             }
 

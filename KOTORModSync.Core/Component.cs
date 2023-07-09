@@ -61,17 +61,17 @@ namespace KOTORModSync.Core
     ]
     installOrder = 3";
 
-        private DirectoryInfo _tempPath;
-        public string Name { get; set; }
+        [NotNull] private DirectoryInfo _tempPath;
+        [NotNull] public string Name { get; set; } = string.Empty;
         public Guid Guid { get; set; }
-        public string Author { get; set; }
-        public string Category { get; set; }
-        public string Tier { get; set; }
-        public string Description { get; set; }
-        public string Directions { get; set; }
-        private List<Guid> _dependencies;
+        [NotNull] public string Author { get; set; } = string.Empty;
+        [NotNull] public string Category { get; set; } = string.Empty;
+        [NotNull] public string Tier { get; set; } = string.Empty;
+        [NotNull] public string Description { get; set; } = string.Empty;
+        [NotNull] public string Directions { get; set; } = string.Empty;
+        [NotNull] private List<Guid> _dependencies = new List<Guid>();
 
-        [CanBeNull]
+        [NotNull]
         public List<Guid> Dependencies
         {
             get => _dependencies;
@@ -83,9 +83,9 @@ namespace KOTORModSync.Core
         }
 
 
-        private List<Guid> _restrictions;
+        [NotNull] private List<Guid> _restrictions = new List<Guid>();
 
-        [CanBeNull]
+        [NotNull]
         public List<Guid> Restrictions
         {
             get => _restrictions;
@@ -97,15 +97,15 @@ namespace KOTORModSync.Core
         }
 
 
-        public List<Guid> InstallBefore { get; set; }
-        public List<Guid> InstallAfter { get; set; }
+        [NotNull] public List<Guid> InstallBefore { get; set; } = new List<Guid>();
+        [NotNull] public List<Guid> InstallAfter { get; set; } = new List<Guid>();
         public bool NonEnglishFunctionality { get; set; }
-        public string InstallationMethod { get; set; }
-        public List<Instruction> Instructions { get; set; }
-        public Dictionary<Guid, Option> Options { get; set; }
-        public List<string> Language { get; private set; }
-        public string ModLink { get; set; }
-        public List<Option> ChosenOptions { get; set; }
+        [NotNull] public string InstallationMethod { get; set; } = string.Empty;
+        [NotNull] public List<Instruction> Instructions { get; set; } = new List<Instruction>();
+        [NotNull] public Dictionary<Guid, Option> Options { get; set; } = new Dictionary<Guid, Option>();
+        [NotNull] public List<string> Language { get; private set; } = new List<string>();
+        [NotNull] public string ModLink { get; set; } = string.Empty;
+        [NotNull] public List<Option> ChosenOptions { get; set; } = new List<Option>();
         private ComponentValidation Validator { get; set; }
 
         private bool _isSelected;
@@ -125,6 +125,7 @@ namespace KOTORModSync.Core
             }
         }
 
+        [NotNull]
         public string SerializeComponent()
         {
             _ = TomlSettings.Create();
@@ -168,15 +169,12 @@ namespace KOTORModSync.Core
             }
 
             string tomlString = Nett.Toml.WriteString( rootTable );
-            return Serializer.FixWhitespaceIssues( tomlString );
+            return Serializer.FixWhitespaceIssues( tomlString ?? string.Empty );
         }
 
         public void DeserializeComponent( [NotNull] TomlObject tomlObject )
         {
-            if ( !( tomlObject is TomlTable componentTable ) )
-            {
-                throw new ArgumentException( "[TomlError] Expected a TOML table for component data." );
-            }
+            if ( !( tomlObject is TomlTable componentTable ) ) throw new ArgumentException( "[TomlError] Expected a TOML table for component data." );
 
             _tempPath = new DirectoryInfo( Path.GetTempPath() );
 
@@ -192,7 +190,7 @@ namespace KOTORModSync.Core
             Tier = GetValueOrDefault<string>( componentDict, "tier" );
             Language = GetValueOrDefault<List<string>>( componentDict, "language" );
             Author = GetValueOrDefault<string>( componentDict, "author" );
-            Dependencies = GetValueOrDefault<List<Guid>>( componentDict, "dependencies" );
+            Dependencies = new List<Guid>( GetValueOrDefault<List<Guid>>( componentDict, "dependencies" ) );
             Restrictions = GetValueOrDefault<List<Guid>>( componentDict, "restrictions" );
             InstallBefore = GetValueOrDefault<List<Guid>>( componentDict, "installbefore" );
             InstallAfter = GetValueOrDefault<List<Guid>>( componentDict, "installafter" );
@@ -402,17 +400,17 @@ namespace KOTORModSync.Core
             return options;
         }
 
-        [CanBeNull]
+        [NotNull]
         private static T GetRequiredValue<T>(
-            [CanBeNull] IReadOnlyDictionary<string, object> dict,
-            [CanBeNull] string key
+            [NotNull] IReadOnlyDictionary<string, object> dict,
+            [NotNull] string key
         ) =>
             GetValue<T>( dict, key, true );
 
         [CanBeNull]
         private static T GetValueOrDefault<T>(
-            [CanBeNull] IReadOnlyDictionary<string, object> dict,
-            [CanBeNull] string key
+            [NotNull] IReadOnlyDictionary<string, object> dict,
+            [NotNull] string key
         ) =>
             GetValue<T>( dict, key, false );
 
@@ -430,118 +428,108 @@ namespace KOTORModSync.Core
             if ( !dict.TryGetValue( key, out object value ) )
             {
                 string caseInsensitiveKey
-                    = dict.Keys.FirstOrDefault( k => k.Equals( key, StringComparison.OrdinalIgnoreCase ) );
+                    = dict.Keys.FirstOrDefault( k =>
+                        !(k is null)
+                        && k.Equals( key, StringComparison.OrdinalIgnoreCase )
+                    );
 
-                if ( caseInsensitiveKey is null )
+                if ( !dict.TryGetValue( caseInsensitiveKey ?? string.Empty, out object val2 ) )
                 {
                     if ( !required )
                     {
                         return default;
                     }
-
-                    throw new ArgumentException( $"[Error] Missing or invalid '{key}' field." );
                 }
 
-                value = dict[caseInsensitiveKey];
+                value = val2;
             }
 
-            if ( value is T t )
+            switch ( value )
             {
-                return t;
+                case null:
+                    throw new KeyNotFoundException( $"[Error] Missing or invalid '{key}' field." );
+                case T t:
+                    return t;
+                case string valueStr2 when string.IsNullOrEmpty( valueStr2 ):
+                    {
+                        if ( required )
+                        {
+                            throw new KeyNotFoundException( $"'{key}' field cannot be empty." );
+                        }
+
+                        return default;
+                    }
+                case string guidStr when typeof( T ) == typeof( Guid ):
+                    {
+                        guidStr = Serializer.FixGuidString( guidStr );
+                        if ( !string.IsNullOrEmpty( guidStr ) && Guid.TryParse( guidStr, out Guid guid ) )
+                        {
+                            return (T)(object)guid;
+                        }
+
+                        if ( required )
+                        {
+                            throw new ArgumentException( $"'{key}' field is not a valid Guid!" );
+                        }
+
+                        return (T)(object)Guid.Empty;
+                    }
             }
 
-            if ( value is null )
-            {
-                return default;
-            }
-
-            Type targetType = value.GetType();
-
-            if ( value is string guidStr && typeof( T ) == typeof( Guid ) )
-            {
-                guidStr = Serializer.FixGuidString( guidStr );
-                if ( !string.IsNullOrEmpty( guidStr ) && Guid.TryParse( guidStr, out Guid guid ) )
-                {
-                    return (T)(object)guid;
-                }
-
-                if ( required )
-                {
-                    throw new ArgumentException( $"'{key}' field is not a valid Guid!" );
-                }
-
-                return (T)(object)Guid.Empty;
-            }
-
+            // probably some sort of array at this point
             var valueTomlArray = value as Tomlyn.Model.TomlArray;
             var valueList = value as IList;
 
-            if ( ( targetType.IsGenericType && targetType.GetGenericTypeDefinition() == typeof( List<> ) )
+            Type targetType = value.GetType();
+
+            if ( targetType.IsGenericType
+                && ( targetType.GetGenericTypeDefinition() == typeof( IList<> ) || targetType.GetGenericTypeDefinition() == typeof( List<> ) )
                 || valueTomlArray != null
                 || valueList != null )
             {
-                dynamic valueEnumerable = valueTomlArray ?? (dynamic)valueList;
+                var valueEnumerable = new List<object>( valueTomlArray ?? (dynamic)valueList );
                 Type elementType = typeof( T ).GetGenericArguments()[0];
                 dynamic dynamicList = Activator.CreateInstance( typeof( List<> ).MakeGenericType( elementType ) )
                     ?? throw new InvalidOperationException( nameof( dynamicList ) );
 
-                if ( valueEnumerable != null )
+                foreach ( object item in valueEnumerable )
                 {
-                    foreach ( object item in valueEnumerable )
+                    // handle guid possibility first
+                    if ( elementType == typeof( Guid ) && item is string guidString )
                     {
-                        if ( elementType == typeof( Guid ) && item is string guidString )
+                        guidString = Serializer.FixGuidString( guidString );
+                        if ( !string.IsNullOrEmpty( guidString ) )
                         {
-                            guidString = Serializer.FixGuidString( guidString );
-                            if ( !string.IsNullOrEmpty( guidString ) )
-                            {
-                                dynamicList.Add( Guid.Parse( guidString ) );
-                            }
-                            else if ( !required )
-                            {
-                                dynamicList.Add( Guid.Empty );
-                            }
-                            else
-                            {
-                                throw new ArgumentException( $"'{key}' field is not a list of valid Guids!" );
-                            }
+                            dynamicList.Add( Guid.Parse( guidString ) );
+                        }
+                        else if ( !required )
+                        {
+                            dynamicList.Add( Guid.Empty );
                         }
                         else
                         {
-                            dynamic convertedItem = Convert.ChangeType( item, elementType );
-                            dynamicList.Add( convertedItem );
+                            throw new InvalidCastException( $"'{key}' field is not a list of valid Guids!" );
                         }
                     }
-
-                    return dynamicList;
-                }
-            }
-
-            if ( value is string valueStr2 && string.IsNullOrEmpty( valueStr2 ) )
-            {
-                if ( required )
-                {
-                    throw new ArgumentException( $"'{key}' field is null or empty." );
+                    else // simpler types
+                    {
+                        dynamic convertedItem = Convert.ChangeType( item, elementType );
+                        dynamicList.Add( convertedItem );
+                    }
                 }
 
-                return default;
+                return dynamicList;
             }
 
             try
             {
                 return (T)Convert.ChangeType( value, typeof( T ) );
             }
-            catch ( InvalidCastException )
+            catch ( Exception )
             {
                 if ( required )
                 {
-                    throw new ArgumentException( $"Invalid '{key}' field type." );
-                }
-            }
-            catch ( FormatException )
-            {
-                if ( required )
-                {
-                    throw new ArgumentException( $"Invalid format for '{key}' field." );
+                    throw;
                 }
             }
 
@@ -601,14 +589,16 @@ namespace KOTORModSync.Core
         [NotNull]
         public static List<Component> ReadComponentsFromFile( [NotNull] string filePath )
         {
+            if ( filePath is null ) throw new ArgumentNullException( nameof(filePath) );
+
             try
             {
                 // Read the contents of the file into a string
                 string tomlString = File.ReadAllText( filePath )
                     // the code expects instructions to always be defined. When it's not, code errors and prevents a save.
                     // make the user experience better by just removing the empty instructions key.
-                    .Replace( "Instructions = []", "" )
-                    .Replace( "Options = []", "" );
+                    .Replace( "Instructions = []", string.Empty )
+                    .Replace( "Options = []", string.Empty );
 
                 tomlString = Serializer.FixWhitespaceIssues( tomlString );
 
@@ -622,33 +612,35 @@ namespace KOTORModSync.Core
                     {
                         if ( message is null ) continue;
 
-                        Logger.LogException( new Exception( message.Message ) );
+                        Logger.LogException( new FormatException( message.Message ) );
                     }
                 }
 
                 TomlTable tomlTable = tomlDocument.ToModel();
 
                 // Get the array of Component tables
-                var componentTables = tomlTable["thisMod"] as TomlTableArray;
-
+                var componentTables = (TomlTableArray)tomlTable["thisMod"];
                 var components = new List<Component>( 65535 );
-                foreach ( (TomlObject tomlComponent, Component component) in
-                         // Deserialize each TomlTable into a Component object
-                         from TomlObject tomlComponent in componentTables
-                         let component = new Component()
-                         select (tomlComponent, component) )
+                // Deserialize each TomlTable into a Component object
+                foreach ( TomlTable tomlComponent in componentTables )
                 {
-                    component.DeserializeComponent( tomlComponent );
-                    components.Add( component );
-                    if ( component.Instructions is null )
+                    var thisComponent = new Component();
+                    if ( !( tomlComponent is null ) )
                     {
-                        Logger.Log( $"'{component.Name}' is missing instructions" );
+                        thisComponent.DeserializeComponent( tomlComponent );
+                    }
+
+                    components.Add( thisComponent );
+
+                    if ( thisComponent.Instructions.Count == 0 )
+                    {
+                        Logger.Log( $"'{thisComponent.Name}' is missing instructions" );
                         continue;
                     }
 
-                    foreach ( Instruction instruction in component.Instructions )
+                    foreach ( Instruction instruction in thisComponent.Instructions )
                     {
-                        instruction.SetParentComponent( component );
+                        instruction?.SetParentComponent( thisComponent );
                     }
                 }
 
@@ -672,7 +664,7 @@ namespace KOTORModSync.Core
             [Description( "User cancelled the installation." )]
             UserCancelledInstall,
 
-            [Description( "something about invalid operations" )]
+            [Description( "An invalid operation was attempted." )]
             InvalidOperation,
 
             [Description( "An unexpected exception was thrown" )]

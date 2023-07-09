@@ -181,7 +181,7 @@ namespace KOTORModSync.Tests
             // Add mixed line endings and extra whitespaces
             tomlContents = "    \r\n\t   \r\n\r\n\r\n" + tomlContents + "    \r\n\t   \r\n\r\n\r\n";
 
-            // Save the modified TOMLIN file
+            // Save the modified TOMLYN file
             string modifiedFilePath = Path.GetTempFileName();
             File.WriteAllText( modifiedFilePath, tomlContents );
 

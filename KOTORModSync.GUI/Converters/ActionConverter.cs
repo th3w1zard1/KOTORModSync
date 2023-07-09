@@ -10,17 +10,19 @@ using Avalonia;
 using Avalonia.Data;
 using Avalonia.Data.Converters;
 using Avalonia.Utilities;
+using JetBrains.Annotations;
 
 namespace KOTORModSync.Converters
 {
     public class ActionConverter : IValueConverter
     {
+        [CanBeNull]
         public object Convert
         (
-            object value,
+            [CanBeNull] object value,
             Type targetType,
-            object parameter,
-            CultureInfo culture
+            [CanBeNull] object parameter,
+            [CanBeNull] CultureInfo culture
         )
         {
             if ( value is null )
@@ -63,12 +65,13 @@ namespace KOTORModSync.Converters
             return new BindingNotification( new InvalidCastException( message ), BindingErrorType.Error );
         }
 
+        [CanBeNull]
         public object ConvertBack
         (
-            object value,
-            Type targetType,
-            object parameter,
-            CultureInfo culture
+            [CanBeNull] object value,
+            [CanBeNull] Type targetType,
+            [CanBeNull] object parameter,
+            [CanBeNull] CultureInfo culture
         ) =>
             Convert( value, targetType, parameter, culture );
     }

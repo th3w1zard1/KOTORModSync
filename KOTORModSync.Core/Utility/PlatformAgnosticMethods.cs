@@ -97,7 +97,7 @@ namespace KOTORModSync.Core.Utility
             return matchingCount;
         }
 
-        public static async Task<int> CalculateMaxDegreeOfParallelismAsync( DirectoryInfo thisDir )
+        public static async Task<int> CalculateMaxDegreeOfParallelismAsync( [CanBeNull] DirectoryInfo thisDir )
         {
             int maxParallelism = Environment.ProcessorCount; // Start with the number of available processors
 
@@ -157,7 +157,7 @@ namespace KOTORModSync.Core.Utility
             return availableMemory;
         }
 
-        private static long ParseAvailableMemory( string output, string command )
+        private static long ParseAvailableMemory( string output, [CanBeNull] string command )
         {
             string pattern = string.Empty;
 
@@ -181,7 +181,7 @@ namespace KOTORModSync.Core.Utility
         }
 
 
-        public static (int ExitCode, string Output, string Error) TryExecuteCommand( string command )
+        public static (int ExitCode, string Output, string Error) TryExecuteCommand( [CanBeNull] string command )
         {
             string shellPath = GetShellExecutable();
             if ( string.IsNullOrEmpty( shellPath ) )
@@ -218,6 +218,7 @@ namespace KOTORModSync.Core.Utility
             return isSupported;
         }
 
+        [CanBeNull]
         public static string GetShellExecutable()
         {
             string[] shellExecutables =
@@ -244,7 +245,7 @@ namespace KOTORModSync.Core.Utility
             return string.Empty;
         }
 
-        public static double GetMaxDiskSpeed( string drivePath )
+        public static double GetMaxDiskSpeed( [CanBeNull] string drivePath )
         {
             try
             {

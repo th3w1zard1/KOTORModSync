@@ -5,6 +5,7 @@
 using System;
 using System.Globalization;
 using Avalonia.Data.Converters;
+using JetBrains.Annotations;
 
 namespace KOTORModSync.Converters
 {
@@ -12,10 +13,10 @@ namespace KOTORModSync.Converters
     {
         public object Convert
         (
-            object value,
-            Type targetType,
-            object parameter,
-            CultureInfo culture
+            [CanBeNull] object value,
+            [CanBeNull] Type targetType,
+            [CanBeNull] object parameter,
+            [CanBeNull] CultureInfo culture
         ) =>
             value is bool isExpanded && targetType == typeof( string )
                 ? isExpanded

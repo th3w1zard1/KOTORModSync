@@ -41,13 +41,13 @@ namespace KOTORModSync
 
         private void InitializeComponent() => AvaloniaXamlLoader.Load( this );
 
-        private void OnOpened( object sender, EventArgs e )
+        private void OnOpened( [CanBeNull] object sender, [CanBeNull] EventArgs e )
         {
             var confirmTextBlock = this.FindControl<TextBlock>( "ConfirmTextBlock" );
             confirmTextBlock.Text = ConfirmText;
         }
 
-        public static async Task<bool?> ShowConfirmationDialog( Window parentWindow, string confirmText )
+        public static async Task<bool?> ShowConfirmationDialog( [CanBeNull] Window parentWindow, [CanBeNull] string confirmText )
         {
             var tcs = new TaskCompletionSource<bool?>();
 
@@ -109,9 +109,9 @@ namespace KOTORModSync
         }
 
         private void YesButton_Click
-            ( object sender, RoutedEventArgs e ) => RaiseEvent( new RoutedEventArgs( s_yesButtonClickedEvent ) );
+            ( [CanBeNull] object sender, [CanBeNull] RoutedEventArgs e ) => RaiseEvent( new RoutedEventArgs( s_yesButtonClickedEvent ) );
 
         private void NoButton_Click
-            ( object sender, RoutedEventArgs e ) => RaiseEvent( new RoutedEventArgs( s_noButtonClickedEvent ) );
+            ( [CanBeNull] object sender, [CanBeNull] RoutedEventArgs e ) => RaiseEvent( new RoutedEventArgs( s_noButtonClickedEvent ) );
     }
 }

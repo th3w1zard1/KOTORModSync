@@ -12,6 +12,8 @@ using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
+using JetBrains.Annotations;
+using KOTORModSync.Core.TSLPatcher;
 using KOTORModSync.Core.Utility;
 using SharpCompress.Archives;
 using SharpCompress.Archives.Rar;
@@ -63,6 +65,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
 
         private List<string> _source;
 
+        [CanBeNull]
         public List<string> Source
         {
             get => _source;
@@ -75,6 +78,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
 
         private string _destination;
 
+        [CanBeNull]
         public string Destination
         {
             get => _destination;
@@ -87,6 +91,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
 
         private List<Guid> _dependencies;
 
+        [CanBeNull]
         public List<Guid> Dependencies
         {
             get => _dependencies;
@@ -100,6 +105,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
 
         private List<Guid> _restrictions;
 
+        [CanBeNull]
         public List<Guid> Restrictions
         {
             get => _restrictions;
@@ -135,7 +141,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
             TSLPatcherLogNotFound
         }
 
-        public void SetParentComponent( Component parentComponent ) =>
+        public void SetParentComponent( [CanBeNull] Component parentComponent ) =>
             ParentComponent = parentComponent;
 
         public static async Task<bool> ExecuteInstructionAsync( Func<Task<bool>> instructionMethod ) =>
@@ -633,8 +639,8 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                     }
 
                     await Logger.LogAsync( " - Pre-installing TSLPatcher LookUpGameFolder hooks..." );
-                    FileHelper.ReplacePlaintextLog( tslPatcherDirectory );
-                    FileHelper.ReplaceLookupGameFolder( tslPatcherDirectory );
+                    IniHelper.ReplacePlaintextLog( tslPatcherDirectory );
+                    IniHelper.ReplaceLookupGameFolder( tslPatcherDirectory );
 
                     string args = $@"""{MainConfig.DestinationPath}""" // arg1 = swkotor directory
                         + $@" ""{tslPatcherDirectory}""" // arg2 = mod directory (where tslpatchdata folder is)
@@ -881,12 +887,12 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
         public event PropertyChangedEventHandler PropertyChanged;
 
         protected virtual void OnPropertyChanged
-            ( [CallerMemberName] string propertyName = null ) => PropertyChanged?.Invoke(
+            ( [CallerMemberName] [CanBeNull] string propertyName = null ) => PropertyChanged?.Invoke(
             this,
             new PropertyChangedEventArgs( propertyName )
         );
 
-        protected bool SetField<T>( ref T field, T value, [CallerMemberName] string propertyName = null )
+        protected bool SetField<T>( [CanBeNull] ref T field, [CanBeNull] T value, [CallerMemberName] [CanBeNull] string propertyName = null )
         {
             if ( EqualityComparer<T>.Default.Equals( field, value ) )
             {

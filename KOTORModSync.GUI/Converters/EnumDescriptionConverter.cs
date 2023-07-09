@@ -53,10 +53,10 @@ namespace KOTORModSync.Converters
         [CanBeNull]
         object IValueConverter.Convert
         (
-            object value,
-            Type targetType,
-            object parameter,
-            CultureInfo culture
+            [CanBeNull] object value,
+            [CanBeNull] Type targetType,
+            [CanBeNull] object parameter,
+            [CanBeNull] CultureInfo culture
         )
         {
             var myEnum = (Enum)value;
@@ -64,12 +64,13 @@ namespace KOTORModSync.Converters
             return description;
         }
 
+        [CanBeNull]
         object IValueConverter.ConvertBack
         (
-            object value,
-            Type targetType,
-            object parameter,
-            CultureInfo culture
+            [CanBeNull] object value,
+            [CanBeNull] Type targetType,
+            [CanBeNull] object parameter,
+            [CanBeNull] CultureInfo culture
         ) => value;
     }
 }

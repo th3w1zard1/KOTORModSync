@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Avalonia.Controls;
+using JetBrains.Annotations;
 using KOTORModSync.Core.Utility;
 
 namespace KOTORModSync.CallbackDialogs
@@ -9,9 +10,9 @@ namespace KOTORModSync.CallbackDialogs
     {
         private readonly Window _topLevelWindow;
 
-        public OptionsDialogCallback( Window topLevelWindow ) => _topLevelWindow = topLevelWindow;
+        public OptionsDialogCallback( [CanBeNull] Window topLevelWindow ) => _topLevelWindow = topLevelWindow;
 
         public Task<string> ShowOptionsDialog
-            ( List<string> options ) => OptionsDialog.ShowOptionsDialog( _topLevelWindow, options );
+            ( [CanBeNull] List<string> options ) => OptionsDialog.ShowOptionsDialog( _topLevelWindow, options );
     }
 }

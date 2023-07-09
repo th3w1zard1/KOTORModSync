@@ -7,6 +7,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 using Avalonia.Threading;
+using JetBrains.Annotations;
 using KOTORModSync.Core;
 
 namespace KOTORModSync
@@ -71,6 +72,6 @@ namespace KOTORModSync
             }
         }
 
-        private void logTextBox_TextChanged( object sender, AvaloniaPropertyChangedEventArgs e ) => UpdateLogText();
+        private void logTextBox_TextChanged( [CanBeNull] object sender, [CanBeNull] AvaloniaPropertyChangedEventArgs e ) => UpdateLogText();
     }
 }

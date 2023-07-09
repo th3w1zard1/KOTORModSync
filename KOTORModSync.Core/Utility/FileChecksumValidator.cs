@@ -22,9 +22,9 @@ namespace KOTORModSync.Core.Utility
 
         public FileChecksumValidator
         (
-            string destinationPath,
-            Dictionary<FileInfo, SHA1> expectedChecksums,
-            Dictionary<FileInfo, SHA1> originalChecksums
+            [CanBeNull] string destinationPath,
+            [CanBeNull] Dictionary<FileInfo, SHA1> expectedChecksums,
+            [CanBeNull] Dictionary<FileInfo, SHA1> originalChecksums
         )
         {
             _destinationPath = destinationPath;
@@ -134,7 +134,7 @@ namespace KOTORModSync.Core.Utility
         }
 
 
-        public static async Task SaveChecksumsToFileAsync( string filePath, Dictionary<DirectoryInfo, SHA1> checksums )
+        public static async Task SaveChecksumsToFileAsync( string filePath, [CanBeNull] Dictionary<DirectoryInfo, SHA1> checksums )
         {
             string json = JsonConvert.SerializeObject( checksums );
             using ( var writer = new StreamWriter( filePath ) )

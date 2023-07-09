@@ -5,6 +5,7 @@
 using System.Windows.Input;
 using Avalonia;
 using Avalonia.Controls;
+using JetBrains.Annotations;
 
 namespace KOTORModSync
 {
@@ -16,15 +17,17 @@ namespace KOTORModSync
         public static readonly AttachedProperty<object> ItemClickCommandParameterProperty
             = AvaloniaProperty.RegisterAttached<AttachedProperties, Control, object>( "ItemClickCommandParameter" );
 
+        [CanBeNull]
         public static ICommand GetItemClickCommand( Control control ) => control.GetValue( ItemClickCommandProperty );
 
         public static void SetItemClickCommand
-            ( Control control, ICommand value ) => control.SetValue( ItemClickCommandProperty, value );
+            ( Control control, [CanBeNull] ICommand value ) => control.SetValue( ItemClickCommandProperty, value );
 
+        [CanBeNull]
         public static object GetItemClickCommandParameter
             ( Control control ) => control.GetValue( ItemClickCommandParameterProperty );
 
         public static void SetItemClickCommandParameter
-            ( Control control, object value ) => control.SetValue( ItemClickCommandParameterProperty, value );
+            ( Control control, [CanBeNull] object value ) => control.SetValue( ItemClickCommandParameterProperty, value );
     }
 }

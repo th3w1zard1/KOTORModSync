@@ -30,19 +30,19 @@ namespace KOTORModSync
         private void InitializeComponent() => AvaloniaXamlLoader.Load( this );
 
         public static async Task ShowInformationDialog
-            ( Window parentWindow, string message, string title = "Information" )
+            ( [CanBeNull] Window parentWindow, [CanBeNull] string message, [CanBeNull] string title = "Information" )
         {
             var dialog = new InformationDialog { Title = title, InfoText = message };
             _ = await dialog.ShowDialog<bool?>( parentWindow );
         }
 
-        protected override void OnOpened( EventArgs e )
+        protected override void OnOpened( [CanBeNull] EventArgs e )
         {
             base.OnOpened( e );
             UpdateInfoText();
         }
 
-        private void OKButton_Click( object sender, RoutedEventArgs e ) => Close();
+        private void OKButton_Click( [CanBeNull] object sender, [CanBeNull] RoutedEventArgs e ) => Close();
 
         private void UpdateInfoText() => Dispatcher.UIThread.InvokeAsync(
             () =>

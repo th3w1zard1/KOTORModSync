@@ -71,6 +71,7 @@ namespace KOTORModSync.Core
         public string Directions { get; set; }
         private List<Guid> _dependencies;
 
+        [CanBeNull]
         public List<Guid> Dependencies
         {
             get => _dependencies;
@@ -84,6 +85,7 @@ namespace KOTORModSync.Core
 
         private List<Guid> _restrictions;
 
+        [CanBeNull]
         public List<Guid> Restrictions
         {
             get => _restrictions;
@@ -386,14 +388,15 @@ namespace KOTORModSync.Core
         }
 
         [CanBeNull]
-        private static T GetRequiredValue<T>( IReadOnlyDictionary<string, object> dict, string key ) =>
+        private static T GetRequiredValue<T>( [CanBeNull] IReadOnlyDictionary<string, object> dict, [CanBeNull] string key ) =>
             GetValue<T>( dict, key, true );
 
         [CanBeNull]
-        private static T GetValueOrDefault<T>( IReadOnlyDictionary<string, object> dict, string key ) =>
+        private static T GetValueOrDefault<T>( [CanBeNull] IReadOnlyDictionary<string, object> dict, [CanBeNull] string key ) =>
             GetValue<T>( dict, key, false );
 
         // why did I do this...
+        [CanBeNull]
         private static T GetValue<T>( IReadOnlyDictionary<string, object> dict, string key, bool required )
         {
             if ( !dict.TryGetValue( key, out object value ) )
@@ -647,7 +650,7 @@ namespace KOTORModSync.Core
             ValidationPostInstallMismatch
         }
 
-        public async Task<InstallExitCode> InstallAsync( List<Component> componentsList )
+        public async Task<InstallExitCode> InstallAsync( [CanBeNull] List<Component> componentsList )
         {
             try
             {
@@ -672,7 +675,7 @@ namespace KOTORModSync.Core
         }
 
         private async Task<(InstallExitCode, Dictionary<SHA1, FileInfo>)> ExecuteInstructionsAsync
-            ( List<Component> componentsList )
+            ( [CanBeNull] List<Component> componentsList )
         {
             if ( !ShouldInstallComponent( componentsList ) )
             {
@@ -900,10 +903,12 @@ namespace KOTORModSync.Core
         (
             [CanBeNull] List<Guid> dependencyGuids,
             [CanBeNull] List<Guid> restrictionGuids,
-            List<Component> componentsList,
+            [NotNull] List<Component> componentsList,
             bool isInstall = false
         )
         {
+            if ( componentsList == null ) throw new ArgumentNullException( nameof( componentsList ) );
+
             var conflicts = new Dictionary<string, List<Component>>();
 
             if ( dependencyGuids?.Count > 0 )
@@ -923,7 +928,7 @@ namespace KOTORModSync.Core
 
                 if ( isInstall && dependencyConflicts.Count > 0 )
                 {
-                    Logger.LogWarning(
+                    Logger.Log(
                         $"Skipping, required components not selected for install: [{string.Join( ",", dependencyConflicts.Select( component => component.Name ).ToList() )}]"
                     );
                 }
@@ -950,7 +955,7 @@ namespace KOTORModSync.Core
 
                 if ( isInstall && restrictionConflicts.Count > 0 )
                 {
-                    Logger.LogWarning(
+                    Logger.Log(
                         $"Skipping due to restricted components in install queue: [{string.Join( ",", restrictionConflicts.Select( component => component.Name ).ToList() )}]"
                     );
                 }
@@ -969,8 +974,7 @@ namespace KOTORModSync.Core
         //The component has no dependencies or restrictions.
         //The component has dependencies, and all of the required components are being installed.
         //The component has restrictions, but none of the restricted components are being installed.
-        [CanBeNull]
-        public bool ShouldInstallComponent( List<Component> componentsList, bool isInstall = true )
+        public bool ShouldInstallComponent( [CanBeNull] List<Component> componentsList, bool isInstall = true )
         {
             Dictionary<string, List<Component>> conflicts = GetConflictingComponents(
                 Dependencies,
@@ -985,9 +989,8 @@ namespace KOTORModSync.Core
         //The instruction has no dependencies or restrictions.
         //The instruction has dependencies, and all of the required components are being installed.
         //The instruction has restrictions, but none of the restricted components are being installed.
-        [CanBeNull]
         public static bool ShouldRunInstruction
-            ( Instruction instruction, List<Component> componentsList, bool isInstall = true )
+            ( Instruction instruction, [CanBeNull] List<Component> componentsList, bool isInstall = true )
         {
             Dictionary<string, List<Component>> conflicts = GetConflictingComponents(
                 instruction.Dependencies,
@@ -998,6 +1001,7 @@ namespace KOTORModSync.Core
             return conflicts.Count == 0;
         }
 
+        [CanBeNull]
         public static Component FindComponentFromGuid( Guid guidToFind, List<Component> componentsList )
         {
             Component foundComponent = null;
@@ -1016,7 +1020,7 @@ namespace KOTORModSync.Core
         }
 
         public static List<Component> FindComponentsFromGuidList
-            ( List<Guid> guidsToFind, List<Component> componentsList )
+            ( List<Guid> guidsToFind, [CanBeNull] List<Component> componentsList )
         {
             var foundComponents = new List<Component>();
             foreach ( Guid guidToFind in guidsToFind )
@@ -1112,7 +1116,7 @@ namespace KOTORModSync.Core
             public Component Component { get; }
             public HashSet<GraphNode> Dependencies { get; }
 
-            public GraphNode( Component component )
+            public GraphNode( [CanBeNull] Component component )
             {
                 Component = component;
                 Dependencies = new HashSet<GraphNode>();

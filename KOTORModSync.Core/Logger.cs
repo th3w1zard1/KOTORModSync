@@ -7,6 +7,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using JetBrains.Annotations;
 
 namespace KOTORModSync.Core
 {
@@ -44,7 +45,7 @@ namespace KOTORModSync.Core
             }
         }
 
-        public static void Log( string message, bool fileOnly = false )
+        public static void Log( [CanBeNull] string message, bool fileOnly = false )
         {
             string logMessage = $"[{DateTime.Now}] {message}";
             if ( !fileOnly )
@@ -60,7 +61,7 @@ namespace KOTORModSync.Core
             Logged.Invoke( logMessage ); // Raise the Logged event
         }
 
-        private static async Task LogInternalAsync( string internalMessage, bool fileOnly = false )
+        private static async Task LogInternalAsync( [CanBeNull] string internalMessage, bool fileOnly = false )
         {
             await s_semaphore.WaitAsync();
             try
@@ -87,22 +88,22 @@ namespace KOTORModSync.Core
             }
         }
 
-        public static Task LogAsync( string message ) => LogInternalAsync( message );
-        public static void LogVerbose( string message ) => Log( "[Verbose] " + message, !MainConfig.DebugLogging );
+        public static Task LogAsync( [CanBeNull] string message ) => LogInternalAsync( message );
+        public static void LogVerbose( [CanBeNull] string message ) => Log( "[Verbose] " + message, !MainConfig.DebugLogging );
 
         public static Task LogVerboseAsync
-            ( string message ) => LogInternalAsync( "[Verbose] " + message, !MainConfig.DebugLogging );
+            ( [CanBeNull] string message ) => LogInternalAsync( "[Verbose] " + message, !MainConfig.DebugLogging );
 
-        public static void LogWarning( string message ) => Log( "[Warning] " + message );
-        public static Task LogWarningAsync( string message ) => LogInternalAsync( "[Warning] " + message );
-        public static void LogError( string message ) => Log( "[Error] " + message );
-        public static Task LogErrorAsync( string message ) => LogInternalAsync( "[Error] " + message );
-        public static async Task LogExceptionAsync( Exception ex ) => await Task.Run( () => LogException( ex ) );
+        public static void LogWarning( [CanBeNull] string message ) => Log( "[Warning] " + message );
+        public static Task LogWarningAsync( [CanBeNull] string message ) => LogInternalAsync( "[Warning] " + message );
+        public static void LogError( [CanBeNull] string message ) => Log( "[Error] " + message );
+        public static Task LogErrorAsync( [CanBeNull] string message ) => LogInternalAsync( "[Error] " + message );
+        public static async Task LogExceptionAsync( [CanBeNull] Exception ex ) => await Task.Run( () => LogException( ex ) );
 
         public static async Task LogExceptionAsync
-            ( Exception ex, string customMessage ) => await Task.Run( () => LogException( ex, customMessage ) );
+            ( [CanBeNull] Exception ex, [CanBeNull] string customMessage ) => await Task.Run( () => LogException( ex, customMessage ) );
 
-        public static void LogException( Exception exception, string customMessage )
+        public static void LogException( [CanBeNull] Exception exception, [CanBeNull] string customMessage )
         {
             LogException( exception );
             LogError( customMessage );
@@ -116,7 +117,7 @@ namespace KOTORModSync.Core
             ExceptionLogged.Invoke( ex ); // Raise the ExceptionLogged event
         }
 
-        private static void CurrentDomain_UnhandledException( object sender, UnhandledExceptionEventArgs e )
+        private static void CurrentDomain_UnhandledException( [CanBeNull] object sender, UnhandledExceptionEventArgs e )
         {
             if ( !( e.ExceptionObject is Exception ex ) )
             {
@@ -126,7 +127,7 @@ namespace KOTORModSync.Core
             LogException( ex );
         }
 
-        private static void TaskScheduler_UnobservedTaskException( object sender, UnobservedTaskExceptionEventArgs e )
+        private static void TaskScheduler_UnobservedTaskException( [CanBeNull] object sender, UnobservedTaskExceptionEventArgs e )
         {
             if ( e.Exception is null )
             {

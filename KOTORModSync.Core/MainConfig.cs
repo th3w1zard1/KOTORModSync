@@ -44,6 +44,7 @@ namespace KOTORModSync.Core
         }
 
         [UsedImplicitly]
+        [NotNull]
         public IEnumerable<CompatibilityLevel> AllCompatibilityLevels =>
             Enum.GetValues( typeof( CompatibilityLevel ) ).Cast<CompatibilityLevel>();
 
@@ -61,6 +62,7 @@ namespace KOTORModSync.Core
         }
 
         [UsedImplicitly]
+        [NotNull]
         public IEnumerable<AvailablePatchers> AllAvailablePatchers =>
             Enum.GetValues( typeof( AvailablePatchers ) ).Cast<AvailablePatchers>();
 
@@ -73,7 +75,16 @@ namespace KOTORModSync.Core
         public static bool DefaultInstall { get; private set; }
         public static AvailablePatchers PatcherOption { get; private set; }
         public static CompatibilityLevel CurrentCompatibilityLevel { get; private set; }
+        [NotNull][ItemNotNull] public static List<Component> AllComponents { get; set; } = new List<Component>();
 
+        [CanBeNull]
+        public List<Component> allComponents
+        {
+            get => AllComponents;
+            set => AllComponents = value ?? throw new ArgumentNullException( nameof( value ) );
+        }
+
+        [CanBeNull]
         public DirectoryInfo sourcePath
         {
             get => SourcePath;
@@ -86,6 +97,7 @@ namespace KOTORModSync.Core
 
         [CanBeNull] public string sourcePathFullName => SourcePath?.FullName;
 
+        [CanBeNull]
         public DirectoryInfo destinationPath
         {
             get => DestinationPath;
@@ -124,6 +136,7 @@ namespace KOTORModSync.Core
             set => DebugLogging = value;
         }
 
+        [CanBeNull]
         public DirectoryInfo lastOutputDirectory
         {
             get => LastOutputDirectory;

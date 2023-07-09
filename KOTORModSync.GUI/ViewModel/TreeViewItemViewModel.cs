@@ -27,6 +27,7 @@ namespace KOTORModSync.ViewModel
         private bool _isSelected;
         private string _name;
 
+        [CanBeNull]
         public string Name
         {
             get => _name;
@@ -57,6 +58,7 @@ namespace KOTORModSync.ViewModel
             }
         }
 
+        [CanBeNull]
         public ObservableCollection<TreeViewItemViewModel> ChildItems
         {
             get => _childItems;

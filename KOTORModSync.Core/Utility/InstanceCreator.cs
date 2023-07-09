@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using JetBrains.Annotations;
 
 namespace KOTORModSync.Core.Utility
 {
@@ -14,7 +15,8 @@ namespace KOTORModSync.Core.Utility
         private static readonly Dictionary<Type, ConstructorInfo[]> s_cachedConstructors
             = new Dictionary<Type, ConstructorInfo[]>();
 
-        public static T CreateInstance<T>( params object[] constructorParameters )
+        [CanBeNull]
+        public static T CreateInstance<T>( [CanBeNull] params object[] constructorParameters )
         {
             Type type = typeof( T );
 
@@ -55,7 +57,7 @@ namespace KOTORModSync.Core.Utility
             return default;
         }
 
-        private static bool AreParametersCompatible( ParameterInfo[] parameters, object[] constructorParameters )
+        private static bool AreParametersCompatible( ParameterInfo[] parameters, [CanBeNull] object[] constructorParameters )
         {
             for ( int i = 0; i < parameters.Length; i++ )
             {

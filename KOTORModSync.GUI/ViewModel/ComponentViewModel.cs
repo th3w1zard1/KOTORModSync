@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel;
+using JetBrains.Annotations;
 
 namespace KOTORModSync.ViewModel
 {
@@ -25,6 +26,6 @@ namespace KOTORModSync.ViewModel
         public event PropertyChangedEventHandler PropertyChanged;
 
         protected virtual void OnPropertyChanged
-            ( string propertyName ) => PropertyChanged?.Invoke( this, new PropertyChangedEventArgs( propertyName ) );
+            ( [CanBeNull] string propertyName ) => PropertyChanged?.Invoke( this, new PropertyChangedEventArgs( propertyName ) );
     }
 }

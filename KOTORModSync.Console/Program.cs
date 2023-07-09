@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using JetBrains.Annotations;
 using KOTORModSync.Core;
 using KOTORModSync.Core.Utility;
 
@@ -242,6 +243,6 @@ namespace KOTORModSync.ConsoleApp
             }
         }
 
-        public static void WriteToLegacyConsole( string message ) => Console.WriteLine( message );
+        public static void WriteToLegacyConsole( [CanBeNull] string message ) => Console.WriteLine( message );
     }
 }

@@ -43,6 +43,8 @@ namespace KOTORModSync
         private string _originalContent;
         private Window _outputWindow;
 
+        public List<Component> ComponentsList;
+
         public MainWindow()
         {
             InitializeComponent();
@@ -97,6 +99,7 @@ namespace KOTORModSync
             // Column 3
             configColumn.Width = new GridLength( 250 );
             MainConfigInstance = new MainConfig();
+            ComponentsList = MainConfig.AllComponents;
             MainConfigStackPanel = this.FindControl<StackPanel>( "MainConfigStackPanel" )
                 ?? throw new NullReferenceException( "MainConfigStackPanel not defined for MainWindow." );
 

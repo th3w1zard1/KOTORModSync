@@ -66,8 +66,10 @@ namespace KOTORModSync
 
             MainGrid = this.FindControl<Grid>( "MainGrid" )
                 ?? throw new NullReferenceException( "MainGrid undefined in MainWindow." );
-            if ( MainGrid.ColumnDefinitions?.Count != 3 )
+            if ( MainGrid.ColumnDefinitions == null || MainGrid.ColumnDefinitions.Count != 3 )
+            {
                 throw new NullReferenceException( "MainGrid incorrectly defined, expected 3 columns." );
+            }
 
             ColumnDefinition componentListColumn = MainGrid.ColumnDefinitions[0]
                 ?? throw new NullReferenceException( "Column 0 of MainGrid (component list column) not defined." );
@@ -396,7 +398,8 @@ namespace KOTORModSync
                 using ( var reader = new StreamReader( filePath ) )
                 {
                     string fileContents = await reader.ReadToEndAsync();
-                    if ( MainConfig.AllComponents?.Count > 0
+                    if (
+                        MainConfig.AllComponents.Count > 0
                         && await ConfirmationDialog.ShowConfirmationDialog(
                             this,
                             "You already have a config loaded. Do you want to load the markdown anyway?"
@@ -625,13 +628,16 @@ namespace KOTORModSync
 
                     // Confirm that dependencies are all found in InstallBefore and InstallAfter keys:
                     bool installOrderKeysDefined = component.Dependencies?.All(
-                            item => component.InstallBefore?.Contains( item ) == true
-                                || component.InstallAfter?.Contains( item ) == true
+                            item => component.InstallBefore?.Contains(item) == true
+                                || component.InstallAfter?.Contains(item) == true
                         )
-                        == true
-                        || component.Dependencies is null;
+                        == true;
 
-                    if ( component.Restrictions?.Count > 0 && component.IsSelected )
+                    if (
+                        component.Restrictions != null
+                        && component.Restrictions.Count > 0
+                        && component.IsSelected
+                    )
                     {
                         List<Component> restrictedComponentsList = Component.FindComponentsFromGuidList(
                             component.Restrictions,
@@ -649,7 +655,11 @@ namespace KOTORModSync
                         }
                     }
 
-                    if ( component.Dependencies?.Count > 0 && component.IsSelected )
+                    if (
+                        component.Dependencies != null
+                        && component.Dependencies.Count > 0
+                        && component.IsSelected
+                    )
                     {
                         List<Component> dependencyComponentsList = Component.FindComponentsFromGuidList(
                             component.Dependencies,
@@ -1160,7 +1170,7 @@ namespace KOTORModSync
 
         private void TabControl_SelectionChanged( [CanBeNull] object sender, [CanBeNull] SelectionChangedEventArgs e )
         {
-            if ( !( ( sender as TabControl )?.SelectedItem is TabItem selectedItem ) )
+            if ( !( (sender as TabControl)?.SelectedItem is TabItem selectedItem ) )
             {
                 return;
             }

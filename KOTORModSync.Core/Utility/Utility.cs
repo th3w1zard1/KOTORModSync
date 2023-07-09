@@ -81,7 +81,13 @@ namespace KOTORModSync.Core.Utility
         public static DirectoryInfo ChooseDirectory()
         {
             Console.Write( "Enter the path: " );
-            string thisPath = Console.ReadLine()?.Trim();
+            string thisPath = Console.ReadLine();
+            if ( string.IsNullOrEmpty( thisPath ) )
+            {
+                return default;
+            }
+
+            thisPath = thisPath.Trim();
 
             if ( Directory.Exists( thisPath ) )
             {

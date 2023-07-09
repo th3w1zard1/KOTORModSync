@@ -281,9 +281,15 @@ namespace KOTORModSync.Core
 
                 _ = sb.AppendLine();
                 _ = sb.AppendLine( "**Installation Instructions:**" );
-                foreach ( Instruction instruction in component.Instructions.Where(
-                             instruction => instruction?.Action != "extract"
-                         ) )
+                foreach (
+                    Instruction instruction
+                    in component.Instructions
+                        .Where(
+                            instruction =>
+                                !(instruction is null)
+                                && instruction.Action != "extract"
+                        )
+                )
                 {
                     _ = sb.Append( "**Action**: " ).AppendLine( instruction?.Action );
                     if ( instruction?.Action == "move" )
@@ -303,7 +309,7 @@ namespace KOTORModSync.Core
 
                         if ( instruction.Action != "move" )
                         {
-                            thisLine = thisLine?.Replace( "Source: ", "" );
+                            thisLine = thisLine.Replace( "Source: ", "" );
                         }
 
                         _ = sb.AppendLine( thisLine );
@@ -768,7 +774,9 @@ namespace KOTORModSync.Core
                     }
                 }*/
 
+#pragma warning disable IDE0008
                 var exitCode = Instruction.ActionExitCode.Success;
+#pragma warning restore IDE0008
 
                 switch ( instruction.Action.ToLower() )
                 {
@@ -854,7 +862,7 @@ namespace KOTORModSync.Core
 
 
                 _ = Logger.LogVerboseAsync(
-                    $"Instruction #{instructionIndex} '{instruction.Action}' exited with code {exitCode}"
+                    $"Instruction #{instructionIndex} '{instruction.Action}' exited with code {Instruction.ActionExitCode.Success}"
                 );
                 if ( exitCode != Instruction.ActionExitCode.Success )
                 {
@@ -864,7 +872,7 @@ namespace KOTORModSync.Core
                     bool? confirmationResult = await PromptUserInstallError(
                         $"An error occurred during the installation of '{Name}':"
                         + Environment.NewLine
-                        + Utility.Utility.GetEnumDescription( exitCode )
+                        + Utility.Utility.GetEnumDescription( Instruction.ActionExitCode.Success )
                     );
 
                     switch ( confirmationResult )
@@ -948,7 +956,7 @@ namespace KOTORModSync.Core
 
             var conflicts = new Dictionary<string, List<Component>>();
 
-            if ( dependencyGuids?.Count > 0 )
+            if ( dependencyGuids != null && dependencyGuids.Count > 0 )
             {
                 var dependencyConflicts = new List<Component>();
 
@@ -976,7 +984,7 @@ namespace KOTORModSync.Core
                 }
             }
 
-            if ( restrictionGuids?.Count > 0 )
+            if ( restrictionGuids != null && restrictionGuids.Count > 0 )
             {
                 var restrictionConflicts = new List<Component>();
 

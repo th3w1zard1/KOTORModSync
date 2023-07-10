@@ -25,6 +25,7 @@ using Avalonia.Markup.Xaml;
 using Avalonia.Markup.Xaml.Styling;
 using Avalonia.Styling;
 using Avalonia.Threading;
+using Avalonia.VisualTree;
 using JetBrains.Annotations;
 using KOTORModSync.CallbackDialogs;
 using KOTORModSync.Core;
@@ -147,19 +148,65 @@ namespace KOTORModSync
             this.PointerPressed += InputElement_OnPointerPressed;
             this.PointerMoved += InputElement_OnPointerMoved;
             this.PointerReleased += InputElement_OnPointerReleased;
+            FindComboBoxesInWindow(this);
         }
 
+        // Prevents a combobox from dragging the window around.
+        private void FindComboBoxes( [CanBeNull] Control control )
+        {
+            if ( !( control is ILogical visual ) ) throw new ArgumentNullException( nameof(control) );
 
-        private void InputElement_OnPointerMoved( object sender, PointerEventArgs e )
+            if ( control is ComboBox _ )
+            {
+                control.PointerPressed += ComboBox_Pressed;
+                control.PointerEnter += ComboBox_Pressed;
+                control.PointerLeave += ComboBox_Pressed;
+                control.Tapped += ComboBox_Opened;
+            }
+
+            if ( visual.LogicalChildren is null || visual.LogicalChildren.Count == 0 )
+            {
+                return;
+            }
+
+            foreach ( ILogical child in visual.LogicalChildren )
+            {
+                if ( child is Control childControl )
+                {
+                    FindComboBoxes( childControl );
+                }
+            }
+        }
+
+        // Call the method in your window initialization or event handler
+        private void FindComboBoxesInWindow( [NotNull] Window thisWindow)
+        {
+            if ( thisWindow is null ) throw new ArgumentNullException( nameof(thisWindow) );
+
+            // Assuming 'this' refers to your window instance
+            FindComboBoxes( thisWindow );
+        }
+
+        private void ComboBox_Pressed( [NotNull] object sender, [NotNull] PointerEventArgs e )
+        {
+            _mouseDownForWindowMoving = false;
+        }
+
+        private void ComboBox_Opened( [NotNull] object sender, [NotNull] RoutedEventArgs e )
+        {
+            _mouseDownForWindowMoving = false;
+        }
+
+        private void InputElement_OnPointerMoved( [NotNull] object sender, [NotNull] PointerEventArgs e )
         {
             if ( !_mouseDownForWindowMoving ) return;
-
-            PointerPoint currentPoint = e.GetCurrentPoint( this );
-            Position = new PixelPoint( Position.X + (int)( currentPoint.Position.X - _originalPoint.Position.X ),
-                Position.Y + (int)( currentPoint.Position.Y - _originalPoint.Position.Y ) );
+            
+                PointerPoint currentPoint = e.GetCurrentPoint( this );
+                Position = new PixelPoint( Position.X + (int)( currentPoint.Position.X - _originalPoint.Position.X ),
+                    Position.Y + (int)( currentPoint.Position.Y - _originalPoint.Position.Y ) );
         }
 
-        private void InputElement_OnPointerPressed( object sender, PointerPressedEventArgs e )
+        private void InputElement_OnPointerPressed( [NotNull] object sender, [NotNull] PointerEventArgs e )
         {
             if ( WindowState == WindowState.Maximized || WindowState == WindowState.FullScreen ) return;
 
@@ -167,10 +214,12 @@ namespace KOTORModSync
             _originalPoint = e.GetCurrentPoint( this );
         }
 
-        private void InputElement_OnPointerReleased( object sender, PointerReleasedEventArgs e )
+        private void InputElement_OnPointerReleased( [NotNull] object sender, [NotNull] PointerEventArgs e )
         {
             _mouseDownForWindowMoving = false;
         }
+
+        private void CloseButton_Click( object sender, RoutedEventArgs e ) => Close();
 
         [ItemCanBeNull]
         private async Task<string> OpenFile()
@@ -195,6 +244,11 @@ namespace KOTORModSync
             }
 
             return null;
+        }
+
+        private void MinimizeButton_Click( object sender, RoutedEventArgs e )
+        {
+            WindowState = WindowState.Minimized;
         }
 
         [ItemCanBeNull]

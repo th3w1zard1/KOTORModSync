@@ -344,7 +344,8 @@ namespace KOTORModSync.Core
                 Serializer.DeserializeGuidDictionary( instructionDict, "Restrictions" );
                 Serializer.DeserializeGuidDictionary( instructionDict, "Dependencies" );
 
-                var instruction = new Instruction { Action = GetRequiredValue<string>( instructionDict, "Action" ) };
+                var instruction = new Instruction();
+                instruction.Action = GetRequiredValue<string>( instructionDict, "Action" );
                 _ = Logger.LogAsync(
                     $"{Environment.NewLine}-- Deserialize instruction #{index + 1} action {instruction.Action}"
                 );
@@ -446,30 +447,40 @@ namespace KOTORModSync.Core
                 return t;
             }
 
-            if ( value is string valueStr2 && string.IsNullOrEmpty( valueStr2 ) )
+            Type targetType = typeof( T );
+
+            if ( value is string valueStr )
             {
-                if ( required )
+                if (string.IsNullOrEmpty(valueStr))
                 {
-                    throw new KeyNotFoundException( $"'{key}' field cannot be empty." );
+                    if (required)
+                    {
+                        throw new KeyNotFoundException($"'{key}' field cannot be empty.");
+                    }
+
+                    return default;
                 }
 
-                return default;
-            }
-
-            if ( value is string guidStr && typeof( T ) == typeof( Guid ) )
-            {
-                guidStr = Serializer.FixGuidString( guidStr );
-                if ( !string.IsNullOrEmpty( guidStr ) && Guid.TryParse( guidStr, out Guid guid ) )
+                if (targetType == typeof(Guid) )
                 {
-                    return (T)(object)guid;
+                    string guidStr = Serializer.FixGuidString(valueStr);
+                    if (!string.IsNullOrEmpty(guidStr) && Guid.TryParse(guidStr, out Guid guid))
+                    {
+                        return (T)(object)guid;
+                    }
+
+                    if ( required )
+                    {
+                        throw new ArgumentException($"'{key}' field is not a valid Guid!");
+                    }
+
+                    return (T)(object)Guid.Empty;
                 }
 
-                if ( required )
+                if ( targetType == typeof( string ) )
                 {
-                    throw new ArgumentException( $"'{key}' field is not a valid Guid!" );
+                    return (T)(object)valueStr;
                 }
-
-                return (T)(object)Guid.Empty;
             }
 
             // probably some sort of array at this point
@@ -508,12 +519,14 @@ namespace KOTORModSync.Core
             {
                 return (T)Convert.ChangeType( value, typeof( T ) );
             }
-            catch ( Exception )
+            catch ( Exception e )
             {
                 if ( required )
                 {
                     throw;
                 }
+
+                Logger.LogVerbose( e.Message );
             }
 
             return default;

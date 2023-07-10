@@ -27,7 +27,7 @@ namespace KOTORModSync.Core
         public static readonly string DefaultInstructions = @"
 [[thisMod.instructions]]
 action = ""extract""
-source = ""<<modDirectory>>\\path\\to\\mod\\mod.rar""
+source = [""<<modDirectory>>\\path\\to\\mod\\mod.rar""]
 overwrite = true
 
 [[thisMod.instructions]]
@@ -57,7 +57,7 @@ Source = [""<<modDirectory>>\\path\\to\\mod\\program.exe""]
 arguments = ""any command line arguments to pass""
 [[thisMod.instructions]]
 action = ""TSLPatcher""
-source = ""<<modDirectory>>\\path\\to\\mod\\TSLPatcher directory""
+source = [""<<modDirectory>>\\path\\to\\mod\\TSLPatcher directory""]
 arguments = ""any command line arguments to pass (in TSLPatcher, this is the index of the desired option in namespaces.ini))""
 ";
 

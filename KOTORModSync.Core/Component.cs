@@ -372,7 +372,7 @@ namespace KOTORModSync.Core
 
             var options = new Dictionary<Guid, Option>( 65535 );
 
-            foreach ( IDictionary<string, object> optionDict in optionsSerializedList)
+            foreach ( IDictionary<string, object> optionDict in optionsSerializedList )
             {
                 if ( optionDict is null ) continue;
 

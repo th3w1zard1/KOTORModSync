@@ -146,7 +146,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
         public static async Task<bool> ExecuteInstructionAsync( [NotNull] Func<Task<bool>> instructionMethod ) =>
             await instructionMethod().ConfigureAwait( false );
 
-        [NotNull] [ItemNotNull] private List<string> RealSourcePaths { get; set; } = new List<string>();
+        [NotNull][ItemNotNull] private List<string> RealSourcePaths { get; set; } = new List<string>();
         private DirectoryInfo RealDestinationPath { get; set; }
 
 
@@ -699,7 +699,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
 
                     await Logger.LogAsync( output );
                     await Logger.LogAsync( error );
-                    
+
                     try
                     {
                         List<string> installErrors = VerifyInstall();
@@ -739,7 +739,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
         {
             try
             {
-                if ( RealSourcePaths is null ) throw new NullReferenceException(nameof(RealSourcePaths) );
+                if ( RealSourcePaths is null ) throw new NullReferenceException( nameof( RealSourcePaths ) );
 
                 ActionExitCode exitCode = ActionExitCode.Success; // Track the success status
                 foreach ( string sourcePath in RealSourcePaths )
@@ -754,7 +754,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                             );
                         }
 
-                        ( int childExitCode, string output, string error )
+                        (int childExitCode, string output, string error)
                             = await PlatformAgnosticMethods.ExecuteProcessAsync(
                                 thisProgram,
                                 noAdmin: MainConfig.NoAdmin

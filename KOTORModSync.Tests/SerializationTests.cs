@@ -9,16 +9,6 @@ namespace KOTORModSync.Tests
     [TestFixture]
     public class SerializationTests
     {
-        //[Test]
-        private static void TestSerializeObject()
-        {
-            MyClass obj = new(); // Replace MyClass with your class name
-            object? serialized = Serializer.SerializeObject( obj );
-
-            Assert.That( serialized, Is.Not.Null );
-            Assert.That( serialized, Is.InstanceOf<Dictionary<string, object>>() );
-        }
-
         [Test]
         public void TestSerializeString()
         {
@@ -59,15 +49,6 @@ namespace KOTORModSync.Tests
 
             Assert.That( serialized, Is.InstanceOf<IList<object>>() );
             CollectionAssert.AllItemsAreInstancesOfType( (IList<object>)serialized, typeof( string ) );
-        }
-
-        //[Test]
-        private static void TestSerializeDictionaryOfGuidString()
-        {
-            Dictionary<Guid, string> dict = new() { { Guid.NewGuid(), "Value 1" }, { Guid.NewGuid(), "Value 2" } };
-            object? serialized = Serializer.SerializeObject( dict );
-
-            Assert.That( serialized, Is.InstanceOf<Dictionary<object, object>>() );
         }
 
         [Test]

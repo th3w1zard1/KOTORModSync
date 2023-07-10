@@ -12,13 +12,11 @@ namespace KOTORModSync.Converters
 {
     public class ComponentToGuidConverter : IValueConverter
     {
-        [CanBeNull]
-        public object Convert
-        (
-            [CanBeNull] object value,
-            [NotNull] Type targetType,
-            [CanBeNull] object parameter,
-            [NotNull] CultureInfo culture
+        public object Convert(
+            object value,
+            Type targetType,
+            object parameter,
+            CultureInfo culture
         )
         {
             if ( !( value is Component selectedComponent ) )
@@ -29,13 +27,11 @@ namespace KOTORModSync.Converters
             return selectedComponent.Name;
         }
 
-        [CanBeNull]
-        public object ConvertBack
-        (
-            [CanBeNull] object value,
-            [NotNull] Type targetType,
-            [CanBeNull] object parameter,
-            [NotNull] CultureInfo culture
+        public object ConvertBack(
+            object value,
+            Type targetType,
+            object parameter,
+            CultureInfo culture
         )
         {
             if ( !( value is List<Component> ) )

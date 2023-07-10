@@ -5,17 +5,17 @@
 using System;
 using System.Globalization;
 using Avalonia.Data.Converters;
+using JetBrains.Annotations;
 
 namespace KOTORModSync.Converters
 {
     public class BooleanToArrowConverter : IValueConverter
     {
-        public object Convert
-        (
-            object value,
-            Type targetType,
-            object parameter,
-            CultureInfo culture
+        public object Convert(
+            [CanBeNull] object value,
+            [CanBeNull] Type targetType,
+            [CanBeNull] object parameter,
+            [CanBeNull] CultureInfo culture
         ) =>
             value is bool isExpanded && targetType == typeof( string )
                 ? isExpanded
@@ -23,8 +23,7 @@ namespace KOTORModSync.Converters
                     : "▶"
                 : (object)string.Empty;
 
-        public object ConvertBack
-        (
+        public object ConvertBack(
             object value,
             Type targetType,
             object parameter,

@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
+using JetBrains.Annotations;
 
 namespace KOTORModSync
 {
@@ -36,7 +37,7 @@ namespace KOTORModSync
         }
 
         // ReSharper disable once MemberCanBeMadeStatic.Local
-        private void HandleUnobservedTaskException( object sender, UnobservedTaskExceptionEventArgs e )
+        private void HandleUnobservedTaskException( [CanBeNull] object sender, UnobservedTaskExceptionEventArgs e )
         {
             // Log or handle the unobserved task exception here
             Core.Logger.LogException( e.Exception );

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using JetBrains.Annotations;
 using KOTORModSync.Core.Utility;
 using SharpCompress.Archives;
 using SharpCompress.Archives.Rar;
@@ -22,15 +23,18 @@ namespace KOTORModSync.Core
             NoArchivesFound
         }
 
-        private readonly List<ValidationResult> _validationResults;
+        [NotNull] private readonly List<ValidationResult> _validationResults = new List<ValidationResult>();
         public readonly Component Component;
+
+        [NotNull]
         public readonly List<Component> ComponentsList;
 
-        public ComponentValidation( Component component, List<Component> componentsList )
+        public ComponentValidation( [NotNull] Component component, [NotNull] List<Component> componentsList )
         {
-            Component = component;
-            ComponentsList = componentsList;
-            _validationResults = new List<ValidationResult>();
+            Component = component ?? throw new ArgumentNullException( nameof( component ) );
+            ComponentsList = new List<Component>(
+                componentsList ?? throw new ArgumentNullException( nameof( componentsList ) )
+            );
         }
 
         public bool Run() =>
@@ -39,10 +43,10 @@ namespace KOTORModSync.Core
             // Ensure all the 'Destination' keys are valid for their respective action.
             && ParseDestinationWithAction( Component );
 
-        private void AddError( string message, Instruction instruction ) =>
+        private void AddError( [CanBeNull] string message, [CanBeNull] Instruction instruction ) =>
             _validationResults.Add( new ValidationResult( this, instruction, message, true ) );
 
-        private void AddWarning( string message, Instruction instruction ) =>
+        private void AddWarning( [CanBeNull] string message, [CanBeNull] Instruction instruction ) =>
             _validationResults.Add( new ValidationResult( this, instruction, message, false ) );
 
         public List<string> GetErrors() =>
@@ -53,7 +57,7 @@ namespace KOTORModSync.Core
                 .Select( r => r.Message )
                 .ToList();
 
-        public List<string> GetErrors( Instruction instruction ) =>
+        public List<string> GetErrors( [CanBeNull] Instruction instruction ) =>
             _validationResults.Where( r => r.Instruction == instruction && r.IsError )
                 .Select( r => r.Message )
                 .ToList();
@@ -66,13 +70,15 @@ namespace KOTORModSync.Core
                 .Select( r => r.Message )
                 .ToList();
 
-        public List<string> GetWarnings( Instruction instruction ) =>
+        public List<string> GetWarnings( [CanBeNull] Instruction instruction ) =>
             _validationResults.Where( r => r.Instruction == instruction && !r.IsError )
                 .Select( r => r.Message )
                 .ToList();
 
-        public bool VerifyExtractPaths( Component component )
+        public bool VerifyExtractPaths( [NotNull] Component component )
         {
+            if ( component is null ) throw new ArgumentNullException( nameof( component ) );
+
             try
             {
                 bool success = true;
@@ -81,11 +87,12 @@ namespace KOTORModSync.Core
                 List<string> allArchives = GetAllArchivesFromInstructions( component );
 
                 // probably something wrong if there's no archives found.
-                if ( allArchives.Count == 0 )
+                if ( allArchives == null || allArchives.Count == 0 )
                 {
                     foreach ( Instruction instruction in component.Instructions )
                     {
-                        if ( !instruction.Action.Equals( "extract", StringComparison.OrdinalIgnoreCase ) )
+                        if ( !( instruction.Action is null )
+                            && !instruction.Action.Equals( "extract", StringComparison.OrdinalIgnoreCase ) )
                         {
                             continue;
                         }
@@ -109,7 +116,7 @@ namespace KOTORModSync.Core
                     }
 
                     bool archiveNameFound = true;
-                    if ( instruction.Source == null )
+                    if ( instruction.Source is null )
                     {
                         AddWarning( "Instruction does not have a 'Source' key defined", instruction );
                         success = false;
@@ -141,8 +148,7 @@ namespace KOTORModSync.Core
                         // For some unholy reason, some archives act like there's another top level folder named after the archive to extract.
                         // doesn't even seem to be related to the archive type. Can't reproduce in 7zip either.
                         // either way, this will hide the issue until a real solution comes along.
-                        if ( !result.Item1
-                            && MainConfig.AttemptFixes )
+                        if ( !result.Item1 && MainConfig.AttemptFixes )
                         {
                             // Split the directory name using the directory separator character
                             string[] parts = sourcePath.Split( Path.DirectorySeparatorChar );
@@ -188,14 +194,15 @@ namespace KOTORModSync.Core
             }
         }
 
-        public List<string> GetAllArchivesFromInstructions( Component component )
+        public List<string> GetAllArchivesFromInstructions( [NotNull] Component component )
         {
+            if ( component is null ) throw new ArgumentNullException( nameof( component ) );
+
             var allArchives = new List<string>();
 
             foreach ( Instruction instruction in component.Instructions )
             {
-                if ( instruction.Source == null
-                    || instruction.Action != "extract" )
+                if ( instruction.Source is null || instruction.Action != "extract" )
                 {
                     continue;
                 }
@@ -233,10 +240,7 @@ namespace KOTORModSync.Core
                         continue;
                     }
 
-                    AddError(
-                        "Missing required download:" + $" '{Path.GetFileName( realSourcePath )}'",
-                        instruction
-                    );
+                    AddError( "Missing required download:" + $" '{Path.GetFileName( realSourcePath )}'", instruction );
 
                     continue;
                 }
@@ -245,8 +249,10 @@ namespace KOTORModSync.Core
             return allArchives;
         }
 
-        public bool ParseDestinationWithAction( Component component )
+        public bool ParseDestinationWithAction( [NotNull] Component component )
         {
+            if ( component is null ) throw new ArgumentNullException( nameof( component ) );
+
             bool success = true;
             foreach ( Instruction instruction in component.Instructions )
             {
@@ -255,7 +261,7 @@ namespace KOTORModSync.Core
                     case null:
                         continue;
                     // tslpatcher must always use <<kotorDirectory>> and nothing else.
-                    case "tslpatcher" when instruction.Destination == null:
+                    case "tslpatcher" when instruction.Destination is null:
                         instruction.Destination = "<<kotorDirectory>>";
                         break;
 
@@ -279,7 +285,7 @@ namespace KOTORModSync.Core
                     // extract and delete cannot use the 'Destination' key.
                     case "extract":
                     case "delete":
-                        if ( instruction.Destination == null )
+                        if ( instruction.Destination is null )
                         {
                             break;
                         }
@@ -332,7 +338,7 @@ namespace KOTORModSync.Core
                             success = false;
                             AddError( "Destination cannot be found!" + $" Got '{destinationPath}'", instruction );
 
-                            if ( !MainConfig.AttemptFixes )
+                            /*if ( !MainConfig.AttemptFixes )
                             {
                                 break;
                             }
@@ -341,7 +347,7 @@ namespace KOTORModSync.Core
                                 "Fixing the above issue automatically"
                                 + $" (setting Destination to '<<kotorDirectory>>{Path.DirectorySeparatorChar}Override')"
                             );
-                            instruction.Destination = $"<<kotorDirectory>>{Path.DirectorySeparatorChar}Override";
+                            instruction.Destination = $"<<kotorDirectory>>{Path.DirectorySeparatorChar}Override";*/
                         }
 
                         break;
@@ -367,14 +373,22 @@ namespace KOTORModSync.Core
                     return "Not found in archive";
                 case ArchivePathCode.NoArchivesFound:
                     return "No archives found/no extract instructions created";
+                case ArchivePathCode.NeedsAppendedArchiveName:
                 default:
                     return "Unknown error";
             }
         }
 
-        public (bool, bool) IsSourcePathInArchives
-            ( string sourcePath, List<string> allArchives, Instruction instruction )
+        public (bool, bool) IsSourcePathInArchives(
+            [NotNull] string sourcePath,
+            [NotNull] List<string> allArchives,
+            [NotNull] Instruction instruction
+        )
         {
+            if ( sourcePath is null ) throw new ArgumentNullException( nameof( sourcePath ) );
+            if ( allArchives is null ) throw new ArgumentNullException( nameof( allArchives ) );
+            if ( instruction is null ) throw new ArgumentNullException( nameof( instruction ) );
+
             bool foundInAnyArchive = false;
             bool hasError = false;
             bool archiveNameFound = false;
@@ -386,11 +400,18 @@ namespace KOTORModSync.Core
 
             foreach ( string archivePath in allArchives )
             {
+                if ( archivePath is null )
+                {
+                    AddError( $"Archive is not a valid file path", instruction );
+                    continue;
+                }
+
                 // Check if the archive name matches the first portion of the sourcePath
                 string archiveName = Path.GetFileNameWithoutExtension( archivePath );
-                string[] pathParts = sourcePath.Split( Path.DirectorySeparatorChar );
-                archiveNameFound = FileHelper.WildcardPathMatch( archiveName, pathParts[0] );
 
+                string[] pathParts = sourcePath.Split( Path.DirectorySeparatorChar );
+
+                archiveNameFound = FileHelper.WildcardPathMatch( archiveName, pathParts[0] );
                 ArchivePathCode code = IsPathInArchive( sourcePath, archivePath );
 
                 if ( code == ArchivePathCode.FoundSuccessfully )
@@ -414,7 +435,7 @@ namespace KOTORModSync.Core
                 return (false, archiveNameFound);
             }
 
-            if ( foundInAnyArchive || !Component.ShouldRunInstruction( instruction, ComponentsList ))
+            if ( foundInAnyArchive || !Component.ShouldRunInstruction( instruction, ComponentsList ) )
             {
                 return (true, true);
             }
@@ -425,12 +446,21 @@ namespace KOTORModSync.Core
                 return (true, true);
             }
 
+            // archive not required if instruction isn't running.
+            if ( !Component.ShouldRunInstruction( instruction, ComponentsList, false ) )
+            {
+                return (true, true);
+            }
+
             AddError( $"Failed to find '{sourcePath}' in any archives!", instruction );
             return (false, archiveNameFound);
         }
 
-        private static ArchivePathCode IsPathInArchive( string relativePath, string archivePath )
+        private static ArchivePathCode IsPathInArchive( [NotNull] string relativePath, [NotNull] string archivePath )
         {
+            if ( relativePath is null ) throw new ArgumentNullException( nameof( relativePath ) );
+            if ( archivePath is null ) throw new ArgumentNullException( nameof( archivePath ) );
+
             if ( !ArchiveHelper.IsArchive( archivePath ) )
             {
                 return ArchivePathCode.NotAnArchive;
@@ -446,20 +476,20 @@ namespace KOTORModSync.Core
             {
                 IArchive archive = null;
 
-                if ( archivePath.EndsWith( ".zip" ) )
+                if ( archivePath.EndsWith( ".zip", StringComparison.OrdinalIgnoreCase ) )
                 {
                     archive = SharpCompress.Archives.Zip.ZipArchive.Open( stream );
                 }
-                else if ( archivePath.EndsWith( ".rar" ) )
+                else if ( archivePath.EndsWith( ".rar", StringComparison.OrdinalIgnoreCase ) )
                 {
                     archive = RarArchive.Open( stream );
                 }
-                else if ( archivePath.EndsWith( ".7z" ) )
+                else if ( archivePath.EndsWith( ".7z", StringComparison.OrdinalIgnoreCase ) )
                 {
                     archive = SevenZipArchive.Open( stream );
                 }
 
-                if ( archive == null )
+                if ( archive is null )
                 {
                     return ArchivePathCode.CouldNotOpenArchive;
                 }
@@ -504,7 +534,7 @@ namespace KOTORModSync.Core
                 // check if instruction.Source matches a folder.
                 foreach ( string folderPath in folderPaths )
                 {
-                    if ( FileHelper.WildcardPathMatch( folderPath, relativePath ) )
+                    if ( !( folderPath is null ) && FileHelper.WildcardPathMatch( folderPath, relativePath ) )
                     {
                         return ArchivePathCode.FoundSuccessfully;
                     }

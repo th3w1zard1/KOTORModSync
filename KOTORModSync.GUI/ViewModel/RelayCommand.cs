@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Windows.Input;
+using JetBrains.Annotations;
 
 namespace KOTORModSync.ViewModel
 {
@@ -10,18 +11,18 @@ namespace KOTORModSync.ViewModel
         private readonly List<WeakReference<EventHandler>> _canExecuteChangedHandlers;
         private readonly Action _execute;
 
-        public RelayCommand( Action execute ) : this( execute, null ) { }
+        public RelayCommand( [CanBeNull] Action execute ) : this( execute, null ) { }
 
-        public RelayCommand( Action execute, Func<bool> canExecute )
+        public RelayCommand( Action execute, [CanBeNull] Func<bool> canExecute )
         {
             _execute = execute ?? throw new ArgumentNullException( nameof( execute ) );
             _canExecute = canExecute;
             _canExecuteChangedHandlers = new List<WeakReference<EventHandler>>();
         }
 
-        public bool CanExecute( object parameter ) => _canExecute?.Invoke() ?? true;
+        public bool CanExecute( [CanBeNull] object parameter ) => _canExecute?.Invoke() ?? true;
 
-        public void Execute( object parameter ) => _execute();
+        public void Execute( [CanBeNull] object parameter ) => _execute();
 
         public event EventHandler CanExecuteChanged
         {
@@ -29,18 +30,17 @@ namespace KOTORModSync.ViewModel
             remove => RemoveWeakEventHandler( value );
         }
 
-        private void AddWeakEventHandler( EventHandler handler )
+        private void AddWeakEventHandler( [CanBeNull] EventHandler handler )
         {
             _ = _canExecuteChangedHandlers.RemoveAll( h => !h.TryGetTarget( out _ ) );
             _canExecuteChangedHandlers.Add( new WeakReference<EventHandler>( handler ) );
         }
 
-        private void RemoveWeakEventHandler( EventHandler handler ) =>
+        private void RemoveWeakEventHandler( [CanBeNull] EventHandler handler ) =>
             _ = _canExecuteChangedHandlers?.RemoveAll(
                 h =>
                 {
-                    if ( !h.TryGetTarget( out EventHandler target )
-                        || target != handler )
+                    if ( !h.TryGetTarget( out EventHandler target ) || target != handler )
                     {
                         return false;
                     }

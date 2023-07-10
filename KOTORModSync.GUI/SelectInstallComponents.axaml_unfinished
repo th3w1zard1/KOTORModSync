@@ -13,7 +13,7 @@
                 <DataTemplate DataType="{x:Type viewModel:SelectComponentsViewModel}">
                     <StackPanel>
                         <!-- Component selection screen -->
-                        <TextBlock Text="Select the components you want to install:" Margin="10"/>
+                        <TextBlock Text="Select the components you want to install:" Margin="10" />
                         <ListBox Items="{Binding Components}"
                                  SelectedItems="{Binding SelectedComponents}"
                                  SelectionMode="Multiple"
@@ -29,26 +29,26 @@
                         </ListBox>
 
                         <!-- Next button -->
-                        <Button Content="Next" Command="{Binding NextCommand}" Margin="10"/>
+                        <Button Content="Next" Command="{Binding NextCommand}" Margin="10" />
                     </StackPanel>
                 </DataTemplate>
 
                 <DataTemplate DataType="{x:Type viewModel:ConfirmationScreenViewModel}">
                     <StackPanel>
                         <!-- Confirmation screen -->
-                        <TextBlock Text="Confirm the selected components:" Margin="10"/>
+                        <TextBlock Text="Confirm the selected components:" Margin="10" />
                         <ListBox Items="{Binding SelectedComponents}">
                             <ListBox.ItemTemplate>
                                 <DataTemplate>
-                                    <TextBlock Text="{Binding Name}" Margin="10"/>
+                                    <TextBlock Text="{Binding Name}" Margin="10" />
                                 </DataTemplate>
                             </ListBox.ItemTemplate>
                         </ListBox>
 
                         <!-- Back and Next buttons -->
                         <StackPanel Orientation="Horizontal" Margin="10">
-                            <Button Content="Back" Command="{Binding BackCommand}" Margin="10"/>
-                            <Button Content="Next" Command="{Binding NextCommand}" Margin="10"/>
+                            <Button Content="Back" Command="{Binding BackCommand}" Margin="10" />
+                            <Button Content="Next" Command="{Binding NextCommand}" Margin="10" />
                         </StackPanel>
                     </StackPanel>
                 </DataTemplate>
@@ -56,24 +56,24 @@
                 <DataTemplate DataType="{x:Type viewModel:InstallationProgressScreenViewModel}">
                     <StackPanel>
                         <!-- Installation progress screen -->
-                        <TextBlock Text="Installation in progress..." Margin="10"/>
+                        <TextBlock Text="Installation in progress..." Margin="10" />
 
                         <!-- Progress bar or other progress indicator -->
 
                         <!-- Confirmation dialog -->
-                        <Button Content="Next" Command="{Binding NextCommand}" Margin="10"/>
+                        <Button Content="Next" Command="{Binding NextCommand}" Margin="10" />
                     </StackPanel>
                 </DataTemplate>
 
                 <DataTemplate DataType="{x:Type viewModel:ResultsScreenViewModel}">
                     <StackPanel>
                         <!-- Results screen -->
-                        <TextBlock Text="Installation completed!" Margin="10"/>
+                        <TextBlock Text="Installation completed!" Margin="10" />
 
                         <!-- Show results based on installation -->
 
                         <!-- Finish button -->
-                        <Button Content="Finish" Command="{Binding FinishCommand}" Margin="10"/>
+                        <Button Content="Finish" Command="{Binding FinishCommand}" Margin="10" />
                     </StackPanel>
                 </DataTemplate>
             </ContentControl.Resources>

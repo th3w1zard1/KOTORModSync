@@ -90,8 +90,8 @@ Ditto. There were so many KOTOR-specific things to learn, without his help I'd s
 Thank you for helping test that obnoxious UAC elevation problem legacy Windows apps like TSLPatcher have.
 
 #### Other notable users
-#### @Woodske
-Created *TSLPatcherCLI* used in the project.
+#### @NickHugi
+Created *PyKotor* used in the project, and helped iron out the remaining bugs with the CLI.
 
 #### Fair-Strides
 Released source code of *TSLPatcher* on GitHub, and coded in a few updates to the program.

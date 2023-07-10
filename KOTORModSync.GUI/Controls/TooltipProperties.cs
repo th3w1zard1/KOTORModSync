@@ -4,6 +4,7 @@
 
 using Avalonia;
 using Avalonia.Controls;
+using JetBrains.Annotations;
 
 namespace KOTORModSync.Controls
 {
@@ -12,8 +13,10 @@ namespace KOTORModSync.Controls
         public static readonly AttachedProperty<string> TooltipProperty
             = AvaloniaProperty.RegisterAttached<TooltipProperties, Control, string>( "Tooltip" );
 
+        [CanBeNull]
         public static string GetTooltip( Control element ) => element.GetValue( TooltipProperty );
 
-        public static void SetTooltip( Control element, string value ) => element.SetValue( TooltipProperty, value );
+        public static void SetTooltip( Control element, [CanBeNull] string value ) =>
+            element.SetValue( TooltipProperty, value );
     }
 }

@@ -12,19 +12,16 @@ namespace KOTORModSync.Converters
 {
     public class GuidListToComponentNames : IMultiValueConverter
     {
-        [CanBeNull]
-        public object Convert
-        (
-            [NotNull] IList<object> values,
-            [NotNull] Type targetType,
-            [CanBeNull] object parameter,
-            [NotNull] CultureInfo culture
+        public object Convert(
+            IList<object> values,
+            Type targetType,
+            object parameter,
+            CultureInfo culture
         )
         {
             try
             {
-                if ( !( values[0] is List<Guid> guids )
-                    || !( values[1] is List<Component> componentsList ) )
+                if ( !( values[0] is List<Guid> guids ) || !( values[1] is List<Component> componentsList ) )
                 {
                     return null;
                 }

@@ -216,8 +216,7 @@ namespace KOTORModSync.Tests
         // Custom converter for DirectoryInfo
         public class DirectoryInfoConverter : JsonConverter<DirectoryInfo>
         {
-            public override DirectoryInfo? ReadJson
-            (
+            public override DirectoryInfo? ReadJson(
                 JsonReader reader,
                 Type objectType,
                 DirectoryInfo? existingValue,
@@ -250,7 +249,7 @@ namespace KOTORModSync.Tests
             };
 
             // Convert the directory paths to DirectoryInfo objects
-            Dictionary<DirectoryInfo, SHA1>? directoryChecksums = checksums.ToDictionary(
+            var directoryChecksums = checksums.ToDictionary(
                 static kvp => new DirectoryInfo( kvp.Key ),
                 static kvp => SHA1.Create()
             );

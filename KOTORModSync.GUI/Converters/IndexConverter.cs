@@ -15,12 +15,11 @@ namespace KOTORModSync.Converters
 {
     public class IndexConverter : IValueConverter
     {
-        public object Convert
-        (
-            [CanBeNull] object value,
-            [NotNull] Type targetType,
-            [CanBeNull] object parameter,
-            [NotNull] CultureInfo culture
+        public object Convert(
+            object value,
+            Type targetType,
+            object parameter,
+            CultureInfo culture
         )
         {
             if ( !( value is IEnumerable )
@@ -39,29 +38,25 @@ namespace KOTORModSync.Converters
             return index.ToString();
         }
 
-        [CanBeNull]
-        public object ConvertBack
-        (
-            [CanBeNull] object value,
-            [NotNull] Type targetType,
-            [CanBeNull] object parameter,
-            [NotNull] CultureInfo culture
+        public object ConvertBack(
+            object value,
+            Type targetType,
+            object parameter,
+            CultureInfo culture
         )
         {
-            if ( !( value is string indexString )
-                || !( parameter is ItemsRepeater itemsRepeater ) )
+            if ( !( value is string indexString ) || !( parameter is ItemsRepeater itemsRepeater ) )
             {
                 return null;
             }
 
-            if ( !int.TryParse( indexString, out int index )
-                || !( itemsRepeater.Tag is IEnumerable itemList ) )
+            if ( !int.TryParse( indexString, out int index ) || !( itemsRepeater.Tag is IEnumerable itemList ) )
             {
                 return null;
             }
 
             IEnumerable enumerable = itemList.Cast<object>().ToList();
-            List<object> itemList2 = enumerable.Cast<object>().ToList();
+            var itemList2 = enumerable.Cast<object>().ToList();
             return index < 0 || index >= itemList2.Count
                 ? null
                 : itemList2[index];

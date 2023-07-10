@@ -9,82 +9,19 @@ using JetBrains.Annotations;
 
 namespace KOTORModSync.Core.Utility
 {
-    [SuppressMessage( "ReSharper", "UnusedMember.Local" )]
     public static class FileHelper
     {
         [CanBeNull]
-        public static string GetFolderName( string itemInArchivePath ) => Path.HasExtension( itemInArchivePath )
-            ? Path.GetDirectoryName( itemInArchivePath )
-            : itemInArchivePath;
+        public static string GetFolderName( [CanBeNull] string itemInArchivePath ) =>
+            Path.HasExtension( itemInArchivePath )
+                ? Path.GetDirectoryName( itemInArchivePath )
+                : itemInArchivePath;
 
-        // Stop TSLPatcher from automatically assuming the KOTOR directory.
-        // use PlaintextLog=1
-        public static void ReplaceLookupGameFolder( DirectoryInfo directory )
+        public static async Task MoveFileAsync( [NotNull] string sourcePath, [NotNull] string destinationPath )
         {
-            FileInfo[] iniFiles = directory.GetFiles( "*.ini", SearchOption.AllDirectories );
-            if ( iniFiles.Length == 0 )
-            {
-                throw new InvalidOperationException( "No .ini files found!" );
-            }
+            if ( sourcePath is null ) throw new ArgumentNullException( nameof( sourcePath ) );
+            if ( destinationPath is null ) throw new ArgumentNullException( nameof( destinationPath ) );
 
-            foreach ( FileInfo file in iniFiles )
-            {
-                string filePath = file.FullName;
-                string fileContents = File.ReadAllText( filePath );
-
-                // Create a regular expression pattern to match "LookupGameFolder=1" with optional whitespace
-                const string pattern = @"LookupGameFolder\s*=\s*1";
-
-                // Use Regex.IsMatch to check if the pattern exists in the file contents
-                if ( !Regex.IsMatch( fileContents, pattern ) )
-                {
-                    continue;
-                }
-
-                Logger.Log( $"Preventing tslpatcher automatic game lookups '{file.Name}'" );
-                Logger.LogVerbose( $"change 'LookupGameFolder' from 1 to 0 in '{file.Name}'" );
-                fileContents = Regex.Replace( fileContents, pattern, "LookupGameFolder=0" );
-
-                // Write the modified file contents back to the file
-                File.WriteAllText( filePath, fileContents );
-            }
-        }
-
-        // Stop TSLPatcher from automatically assuming the KOTOR directory.
-        // use PlaintextLog=1
-        public static void ReplacePlaintextLog( DirectoryInfo directory )
-        {
-            FileInfo[] iniFiles = directory.GetFiles( "*.ini", SearchOption.AllDirectories );
-            if ( iniFiles.Length == 0 )
-            {
-                throw new InvalidOperationException( "No .ini files found!" );
-            }
-
-            foreach ( FileInfo file in iniFiles )
-            {
-                string filePath = file.FullName;
-                string fileContents = File.ReadAllText( filePath );
-
-                // Create a regular expression pattern to match "PlaintextLog=0" with optional whitespace
-                const string pattern = @"PlaintextLog\s*=\s*0";
-
-                // Use Regex.IsMatch to check if the pattern exists in the file contents
-                if ( !Regex.IsMatch( fileContents, pattern, RegexOptions.IgnoreCase ) )
-                {
-                    continue;
-                }
-
-                Logger.Log( $"Redirecting TSLPatcher logging from '{file.Name}' to 'installlog.txt'" );
-                Logger.LogVerbose( $"change 'PlaintextLog' from 0 to 1 in '{file.Name}'" );
-                fileContents = Regex.Replace( fileContents, pattern, "PlaintextLog=1" );
-
-                // Write the modified file contents back to the file
-                File.WriteAllText( filePath, fileContents );
-            }
-        }
-
-        public static async Task MoveFileAsync( string sourcePath, string destinationPath )
-        {
             using ( var sourceStream = new FileStream(
                        sourcePath,
                        FileMode.Open,
@@ -111,9 +48,15 @@ namespace KOTORModSync.Core.Utility
             File.Delete( sourcePath );
         }
 
-        public static List<string> EnumerateFilesWithWildcards
-            ( IEnumerable<string> filesAndFolders, bool topLevelOnly = false )
+        [CanBeNull]
+        [ItemNotNull]
+        public static List<string> EnumerateFilesWithWildcards(
+            [NotNull] IEnumerable<string> filesAndFolders,
+            bool topLevelOnly = false
+        )
         {
+            if ( filesAndFolders is null ) throw new ArgumentNullException( nameof( filesAndFolders ) );
+
             var result = new List<string>();
             var uniquePaths = new HashSet<string>( filesAndFolders );
 
@@ -174,8 +117,7 @@ namespace KOTORModSync.Core.Utility
                     while ( ContainsWildcards( currentDirectory ) )
                     {
                         string parentDirectory = Path.GetDirectoryName( currentDirectory );
-                        if ( string.IsNullOrEmpty( parentDirectory )
-                            || parentDirectory == currentDirectory )
+                        if ( string.IsNullOrEmpty( parentDirectory ) || parentDirectory == currentDirectory )
                         {
                             break; // Exit the loop if no parent directory is found or if the parent directory is the same as the current directory
                         }
@@ -183,8 +125,7 @@ namespace KOTORModSync.Core.Utility
                         currentDirectory = parentDirectory;
                     }
 
-                    if ( string.IsNullOrEmpty( currentDirectory )
-                        || !Directory.Exists( currentDirectory ) )
+                    if ( string.IsNullOrEmpty( currentDirectory ) || !Directory.Exists( currentDirectory ) )
                     {
                         continue;
                     }
@@ -197,7 +138,11 @@ namespace KOTORModSync.Core.Utility
                             : SearchOption.AllDirectories
                     );
 
-                    result.AddRange( checkFiles.Where( thisFile => WildcardPathMatch( thisFile, formattedPath ) ) );
+                    result.AddRange(
+                        checkFiles.Where(
+                            thisFile => !( thisFile is null ) && WildcardPathMatch( thisFile, formattedPath )
+                        )
+                    );
                 }
                 catch ( Exception ex )
                 {
@@ -209,10 +154,14 @@ namespace KOTORModSync.Core.Utility
             return result;
         }
 
-        private static bool ContainsWildcards( string path ) => path.Contains( '*' ) || path.Contains( '?' );
+        private static bool ContainsWildcards( [NotNull] string path ) =>
+            ( path ?? throw new ArgumentNullException( nameof( path ) ) ).Contains( '*' ) || path.Contains( '?' );
 
-        public static bool WildcardPathMatch( string input, string patternInput )
+        public static bool WildcardPathMatch( [NotNull] string input, [NotNull] string patternInput )
         {
+            if ( input is null ) throw new ArgumentNullException( nameof( input ) );
+            if ( patternInput is null ) throw new ArgumentNullException( nameof( patternInput ) );
+
             // Fix path formatting
             input = Serializer.FixPathFormatting( input );
             patternInput = Serializer.FixPathFormatting( patternInput );
@@ -234,8 +183,7 @@ namespace KOTORModSync.Core.Utility
                 string patternLevel = patternLevels[i];
 
                 // Check if the current level is a wildcard
-                if ( patternLevel == "*"
-                    || patternLevel == "?" )
+                if ( patternLevel == "*" || patternLevel == "?" )
                 {
                     continue;
                 }
@@ -251,8 +199,11 @@ namespace KOTORModSync.Core.Utility
         }
 
         // Most end users don't know Regex, this function will convert basic wildcards to regex patterns.
-        private static bool WildcardMatch( string input, string pattern )
+        private static bool WildcardMatch( [NotNull] string input, [NotNull] string pattern )
         {
+            if ( input is null ) throw new ArgumentNullException( nameof( input ) );
+            if ( pattern is null ) throw new ArgumentNullException( nameof( pattern ) );
+
             // Escape special characters in the pattern
             pattern = Regex.Escape( pattern );
 
@@ -263,23 +214,10 @@ namespace KOTORModSync.Core.Utility
             return Regex.IsMatch( input, $"^{pattern}$" );
         }
 
-        public static bool IsDirectoryWithName
-            ( [NotNull] object directory, [NotNull] string name ) => directory is Dictionary<string, object> dict
+        public static bool IsDirectoryWithName( [NotNull] object directory, [NotNull] string name ) =>
+            directory is Dictionary<string, object> dict
             && dict.ContainsKey( "Name" )
             && dict["Name"] is string directoryName
             && directoryName.Equals( name, StringComparison.OrdinalIgnoreCase );
-
-        [NotNull]
-        private static Dictionary<string, object> CreateNewDirectory
-            ( [CanBeNull] string name, bool isDirectory ) => new Dictionary<string, object>
-        {
-            { "Name", name },
-            {
-                "Type", isDirectory
-                    ? "directory"
-                    : "file"
-            },
-            { "Contents", new List<object>() }
-        };
     }
 }

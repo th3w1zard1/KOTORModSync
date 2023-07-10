@@ -16,7 +16,6 @@ namespace KOTORModSync.Core
     // there should only ever be one MainConfig instance created at any one time.
     // instance has GET and SET access.
     // Everyone else has readonly GET access.
-    [SuppressMessage( "ReSharper", "InconsistentNaming" )]
     [SuppressMessage( "Performance", "CA1822:Mark members as static", Justification = "<Pending>" )]
     [SuppressMessage( "CodeQuality", "IDE0079:Remove unnecessary suppression", Justification = "<Pending>" )]
     public class MainConfig : INotifyPropertyChanged
@@ -44,6 +43,7 @@ namespace KOTORModSync.Core
         }
 
         [UsedImplicitly]
+        [NotNull]
         public IEnumerable<CompatibilityLevel> AllCompatibilityLevels =>
             Enum.GetValues( typeof( CompatibilityLevel ) ).Cast<CompatibilityLevel>();
 
@@ -54,13 +54,12 @@ namespace KOTORModSync.Core
             [Description( "Use TSLPatcher" )]
             TSLPatcher = 0,
 
-            [Description( "Use TSLPatcherCLI (not tested)" )]
-            TSLPatcherCLI = 1,
-
-            [Description( "Use PyKotorCLI" )] PyKotorCLI = 2
+            [Description( "Use PyKotorCLI" )]
+            PyKotorCLI = 2
         }
 
         [UsedImplicitly]
+        [NotNull]
         public IEnumerable<AvailablePatchers> AllAvailablePatchers =>
             Enum.GetValues( typeof( AvailablePatchers ) ).Cast<AvailablePatchers>();
 
@@ -73,7 +72,16 @@ namespace KOTORModSync.Core
         public static bool DefaultInstall { get; private set; }
         public static AvailablePatchers PatcherOption { get; private set; }
         public static CompatibilityLevel CurrentCompatibilityLevel { get; private set; }
+        [NotNull][ItemNotNull] public static List<Component> AllComponents { get; set; } = new List<Component>();
 
+        [CanBeNull]
+        public List<Component> allComponents
+        {
+            get => AllComponents;
+            set => AllComponents = value ?? throw new ArgumentNullException( nameof( value ) );
+        }
+
+        [CanBeNull]
         public DirectoryInfo sourcePath
         {
             get => SourcePath;
@@ -86,6 +94,7 @@ namespace KOTORModSync.Core
 
         [CanBeNull] public string sourcePathFullName => SourcePath?.FullName;
 
+        [CanBeNull]
         public DirectoryInfo destinationPath
         {
             get => DestinationPath;
@@ -124,6 +133,7 @@ namespace KOTORModSync.Core
             set => DebugLogging = value;
         }
 
+        [CanBeNull]
         public DirectoryInfo lastOutputDirectory
         {
             get => LastOutputDirectory;
@@ -150,14 +160,13 @@ namespace KOTORModSync.Core
             set => NoAdmin = value;
         }
 
+        public static string CurrentVersion => "0.7.2";
+
         public event PropertyChangedEventHandler PropertyChanged;
 
 
         // used for the ui.
-        protected virtual void OnPropertyChanged
-            ( [CallerMemberName][CanBeNull] string propertyName = null ) => PropertyChanged?.Invoke(
-            this,
-            new PropertyChangedEventArgs( propertyName )
-        );
+        protected virtual void OnPropertyChanged( [CallerMemberName][CanBeNull] string propertyName = null ) =>
+            PropertyChanged?.Invoke( this, new PropertyChangedEventArgs( propertyName ) );
     }
 }

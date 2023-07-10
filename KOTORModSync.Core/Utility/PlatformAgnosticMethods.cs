@@ -21,7 +21,7 @@ namespace KOTORModSync.Core.Utility
     {
         public static (FileSystemInfo, List<string>) GetClosestMatchingEntry( [NotNull] string path )
         {
-            if ( path == null )
+            if ( path is null )
             {
                 throw new ArgumentNullException( nameof( path ) );
             }
@@ -34,7 +34,7 @@ namespace KOTORModSync.Core.Utility
             var duplicatePaths = new List<string>();
 
 
-            if ( directoryName == null )
+            if ( directoryName is null )
             {
                 return (null, duplicatePaths);
             }
@@ -70,12 +70,12 @@ namespace KOTORModSync.Core.Utility
 
         private static int GetMatchingCharactersCount( [NotNull] string str1, [NotNull] string str2 )
         {
-            if ( str1 == null )
+            if ( str1 is null )
             {
                 throw new ArgumentNullException( nameof( str1 ) );
             }
 
-            if ( str2 == null )
+            if ( str2 is null )
             {
                 throw new ArgumentNullException( nameof( str2 ) );
             }
@@ -97,7 +97,7 @@ namespace KOTORModSync.Core.Utility
             return matchingCount;
         }
 
-        public static async Task<int> CalculateMaxDegreeOfParallelismAsync( DirectoryInfo thisDir )
+        public static async Task<int> CalculateMaxDegreeOfParallelismAsync( [CanBeNull] DirectoryInfo thisDir )
         {
             int maxParallelism = Environment.ProcessorCount; // Start with the number of available processors
 
@@ -108,7 +108,7 @@ namespace KOTORModSync.Core.Utility
                 Parallel.Invoke( () => maxParallelism = Math.Max( 1, maxParallelism / 2 ) );
             }
 
-            Task<double> maxDiskSpeedTask = Task.Run( () => GetMaxDiskSpeed( Path.GetPathRoot( thisDir.FullName ) ) );
+            var maxDiskSpeedTask = Task.Run( () => GetMaxDiskSpeed( Path.GetPathRoot( thisDir.FullName ) ) );
             double maxDiskSpeed = await maxDiskSpeedTask;
 
             const double diskSpeedThreshold = 100.0; // MB/sec threshold
@@ -157,7 +157,7 @@ namespace KOTORModSync.Core.Utility
             return availableMemory;
         }
 
-        private static long ParseAvailableMemory( string output, string command )
+        private static long ParseAvailableMemory( string output, [CanBeNull] string command )
         {
             string pattern = string.Empty;
 
@@ -181,7 +181,7 @@ namespace KOTORModSync.Core.Utility
         }
 
 
-        public static (int ExitCode, string Output, string Error) TryExecuteCommand( string command )
+        public static (int ExitCode, string Output, string Error) TryExecuteCommand( [CanBeNull] string command )
         {
             string shellPath = GetShellExecutable();
             if ( string.IsNullOrEmpty( shellPath ) )
@@ -218,6 +218,7 @@ namespace KOTORModSync.Core.Utility
             return isSupported;
         }
 
+        [CanBeNull]
         public static string GetShellExecutable()
         {
             string[] shellExecutables =
@@ -244,7 +245,7 @@ namespace KOTORModSync.Core.Utility
             return string.Empty;
         }
 
-        public static double GetMaxDiskSpeed( string drivePath )
+        public static double GetMaxDiskSpeed( [CanBeNull] string drivePath )
         {
             try
             {
@@ -303,8 +304,7 @@ namespace KOTORModSync.Core.Utility
 
             var regex = new Regex( @"([0-9,.]+)\s*(bytes/sec|MB/sec)" );
             Match match = regex.Match( output );
-            if ( !match.Success
-                || match.Groups.Count < 3 )
+            if ( !match.Success || match.Groups.Count < 3 )
             {
                 return maxSpeed;
             }
@@ -331,7 +331,7 @@ namespace KOTORModSync.Core.Utility
             if ( RuntimeInformation.IsOSPlatform( OSPlatform.Windows ) )
             {
                 // Check for administrator privileges on Windows
-                WindowsIdentity windowsIdentity = WindowsIdentity.GetCurrent();
+                var windowsIdentity = WindowsIdentity.GetCurrent();
                 var windowsPrincipal = new WindowsPrincipal( windowsIdentity );
                 return windowsPrincipal.IsInRole( WindowsBuiltInRole.Administrator );
             }
@@ -385,8 +385,10 @@ namespace KOTORModSync.Core.Utility
             public static extern uint geteuid();
         }
 
-        private static List<ProcessStartInfo> GetProcessStartInfos
-            ( [NotNull] FileInfo programFile, [NotNull] string cmdlineArgs ) => new List<ProcessStartInfo>
+        private static List<ProcessStartInfo> GetProcessStartInfos(
+            [NotNull] FileInfo programFile,
+            [NotNull] string cmdlineArgs
+        ) => new List<ProcessStartInfo>
         {
             // top-level, preferred ProcessStartInfo args. Provides the most flexibility with our code.
             new ProcessStartInfo
@@ -434,48 +436,14 @@ namespace KOTORModSync.Core.Utility
             }
         };
 
-        private static async Task HandleProcessExitedAsync
-            ( [CanBeNull] Process process, [CanBeNull] TaskCompletionSource<(int, string, string)> tcs )
-        {
-            try
-            {
-                if ( tcs == null )
-                {
-                    throw new ArgumentNullException( nameof( tcs ) );
-                }
-
-                if ( process == null )
-                {
-                    // Process disposed of early?
-                    await Logger.LogExceptionAsync( new NotSupportedException() );
-                    tcs.SetResult( (-4, string.Empty, string.Empty) );
-                    return;
-                }
-
-                string output = process.StartInfo.RedirectStandardOutput
-                    ? await process.StandardOutput.ReadToEndAsync()
-                    : null;
-                string error = process.StartInfo.RedirectStandardError
-                    ? await process.StandardError.ReadToEndAsync()
-                    : null;
-
-                tcs.SetResult( (process.ExitCode, output, error) );
-            }
-            catch ( Exception e )
-            {
-                await Logger.LogExceptionAsync( e );
-            }
-        }
-
-        public static async Task<(int, string, string)> ExecuteProcessAsync
-        (
+        public static async Task<(int, string, string)> ExecuteProcessAsync(
             [CanBeNull] FileInfo programFile,
             string cmdlineArgs = "",
             int timeout = 0,
             bool noAdmin = false
         )
         {
-            if ( programFile == null )
+            if ( programFile is null )
             {
                 throw new ArgumentNullException( nameof( programFile ) );
             }
@@ -537,7 +505,7 @@ namespace KOTORModSync.Core.Utility
                         {
                             process.OutputDataReceived += ( sender, e ) =>
                             {
-                                if ( e.Data == null )
+                                if ( e.Data is null )
                                 {
                                     _ = outputWaitHandle.Set();
                                 }
@@ -548,7 +516,7 @@ namespace KOTORModSync.Core.Utility
                             };
                             process.ErrorDataReceived += ( sender, e ) =>
                             {
-                                if ( e.Data == null )
+                                if ( e.Data is null )
                                 {
                                     _ = errorWaitHandle.Set();
                                 }
@@ -576,8 +544,7 @@ namespace KOTORModSync.Core.Utility
                             process.WaitForExit();
                         }
 
-                        if ( timeout > 0
-                            && cancellationTokenSource.Token.IsCancellationRequested )
+                        if ( timeout > 0 && cancellationTokenSource.Token.IsCancellationRequested )
                         {
                             throw new TimeoutException( "Process timed out" );
                         }
@@ -588,8 +555,7 @@ namespace KOTORModSync.Core.Utility
                 catch ( Win32Exception localException )
                 {
                     await Logger.LogVerboseAsync( $"Exception occurred for startInfo: '{startInfo}'" );
-                    if ( !noAdmin
-                        && isAdmin == true )
+                    if ( !noAdmin && isAdmin == true )
                     {
                         startInfo.Verb = "runas";
                         index--;

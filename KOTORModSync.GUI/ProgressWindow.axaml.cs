@@ -5,6 +5,7 @@
 using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
+using JetBrains.Annotations;
 
 namespace KOTORModSync
 {
@@ -26,7 +27,11 @@ namespace KOTORModSync
             PercentCompleted = this.FindControl<TextBlock>( "PercentCompleted" );
         }
 
-        public static async Task ShowProgressWindow( Window parentWindow, string message, decimal progress )
+        public static async Task ShowProgressWindow(
+            [CanBeNull] Window parentWindow,
+            [CanBeNull] string message,
+            decimal progress
+        )
         {
             var progressWindow = new ProgressWindow { Owner = parentWindow };
             progressWindow.ProgressTextBlock.Text = message;

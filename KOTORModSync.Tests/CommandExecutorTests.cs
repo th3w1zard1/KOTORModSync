@@ -11,8 +11,11 @@ namespace KOTORModSync.Tests
     [TestFixture]
     public class CommandExecutorTests
     {
-        private static void ExecuteCommand
-            ( string command, EventWaitHandle completed, IDictionary<string, object> sharedData )
+        private static void ExecuteCommand(
+            string command,
+            EventWaitHandle completed,
+            IDictionary<string, object> sharedData
+        )
         {
             try
             {

@@ -2,8 +2,9 @@ name: lint
 
 on:
   push:
-    branches:
-      - '*'
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
 
 env:
   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: 1
@@ -19,32 +20,24 @@ jobs:
   lint_csharp:
     runs-on: windows-2019
     steps:
-      - uses: actions/checkout@v3
+    - uses: actions/checkout@v2
 
-      - name: Setup .NET Core
-        uses: actions/setup-dotnet@v2
-        with:
-          dotnet-version: '6.0.x' # SDK Version to use
+    - name: Set remote URL
+      run: git remote set-url origin "https://github.com/${{ env.GITHUB_REPOSITORY }}.git"
 
-      # Format the output of dotnet format
-      - name: Add dotnet-format problem matcher
-        uses: xt0rted/dotnet-format-problem-matcher@v1
+    - name: Setup .NET Core
+      uses: actions/setup-dotnet@v2
+      with:
+        dotnet-version: '6.0.x' # SDK Version to use;
 
-      # Install dotnet format as a global tool
-      - name: Install dotnet format
-        run: dotnet tool update --global dotnet-format
+    # Format the output of dotnet format
+    - name: Add dotnet-format problem matcher
+      uses: xt0rted/dotnet-format-problem-matcher@v1
+      
+    # Install dotnet format as a global tool
+    - name: Install dotnet format
+      run: dotnet tool update --global dotnet-format
 
-      # Run dotnet format
-      - name: Run dotnet format
-        run: dotnet format --verbosity diagnostic
-
-      # Commit the changes
-      - name: Commit changes
-        run: |
-          git config --global user.name 'CSharp Lint'
-          git config --global user.email 'linter_workflow@githubactions.com'
-          git add .
-          git commit -m "Auto-format code using dotnet format"
-          git push
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    # Run dotnet format
+    - name: Run dotnet format
+      run: dotnet format --verify-no-changes

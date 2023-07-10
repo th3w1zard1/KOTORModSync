@@ -20,11 +20,10 @@ namespace KOTORModSync.Core.Utility
         private readonly Dictionary<FileInfo, SHA1> _expectedChecksums;
         private readonly Dictionary<FileInfo, SHA1> _originalChecksums;
 
-        public FileChecksumValidator
-        (
-            string destinationPath,
-            Dictionary<FileInfo, SHA1> expectedChecksums,
-            Dictionary<FileInfo, SHA1> originalChecksums
+        public FileChecksumValidator(
+            [CanBeNull] string destinationPath,
+            [CanBeNull] Dictionary<FileInfo, SHA1> expectedChecksums,
+            [CanBeNull] Dictionary<FileInfo, SHA1> originalChecksums
         )
         {
             _destinationPath = destinationPath;
@@ -32,9 +31,9 @@ namespace KOTORModSync.Core.Utility
             _originalChecksums = originalChecksums;
         }
 
-        public static string Sha1ToString( SHA1 sha1 ) => string.Concat( sha1.Hash.Select( b => b.ToString( "x2" ) ) );
+        public static string Sha1ToString( [NotNull] SHA1 sha1 ) => string.Concat( sha1.Hash.Select( b => b.ToString( "x2" ) ) );
 
-        public static string StringToSha1( string s ) => string.Concat(
+        public static string StringToSha1( [NotNull] string s ) => string.Concat(
             SHA1.Create()
                 .ComputeHash(
                     Enumerable.Range( 0, s.Length )
@@ -134,7 +133,10 @@ namespace KOTORModSync.Core.Utility
         }
 
 
-        public static async Task SaveChecksumsToFileAsync( string filePath, Dictionary<DirectoryInfo, SHA1> checksums )
+        public static async Task SaveChecksumsToFileAsync(
+            string filePath,
+            [CanBeNull] Dictionary<DirectoryInfo, SHA1> checksums
+        )
         {
             string json = JsonConvert.SerializeObject( checksums );
             using ( var writer = new StreamWriter( filePath ) )

@@ -3,6 +3,7 @@ using System.Linq;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
+using JetBrains.Annotations;
 using KOTORModSync.Core;
 
 namespace KOTORModSync
@@ -30,7 +31,7 @@ namespace KOTORModSync
         public List<ComponentViewModel> Components { get; set; }
         public List<ComponentViewModel> SelectedComponents { get; set; }
 
-        private async void InstallButton_Click( object sender, RoutedEventArgs e )
+        private async void InstallButton_Click( [CanBeNull] object sender, [CanBeNull] RoutedEventArgs e )
         {
             IEnumerable<string> selectedComponentNames = SelectedComponents.Select( component => component.Name );
             string message = $"Selected Components: {string.Join( ", ", selectedComponentNames )}";

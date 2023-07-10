@@ -10,20 +10,21 @@ using Avalonia;
 using Avalonia.Data;
 using Avalonia.Data.Converters;
 using Avalonia.Utilities;
+using JetBrains.Annotations;
 
 namespace KOTORModSync.Converters
 {
     public class ActionConverter : IValueConverter
     {
-        public object Convert
-        (
-            object value,
+        [CanBeNull]
+        public object Convert(
+            [CanBeNull] object value,
             Type targetType,
-            object parameter,
-            CultureInfo culture
+            [CanBeNull] object parameter,
+            [CanBeNull] CultureInfo culture
         )
         {
-            if ( value == null )
+            if ( value is null )
             {
                 return targetType.IsValueType
                     ? AvaloniaProperty.UnsetValue
@@ -63,12 +64,12 @@ namespace KOTORModSync.Converters
             return new BindingNotification( new InvalidCastException( message ), BindingErrorType.Error );
         }
 
-        public object ConvertBack
-        (
-            object value,
-            Type targetType,
-            object parameter,
-            CultureInfo culture
+        [CanBeNull]
+        public object ConvertBack(
+            [CanBeNull] object value,
+            [CanBeNull] Type targetType,
+            [CanBeNull] object parameter,
+            [CanBeNull] CultureInfo culture
         ) =>
             Convert( value, targetType, parameter, culture );
     }

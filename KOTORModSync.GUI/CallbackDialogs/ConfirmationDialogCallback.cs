@@ -1,5 +1,6 @@
 using System.Threading.Tasks;
 using Avalonia.Controls;
+using JetBrains.Annotations;
 using KOTORModSync.Core.Utility;
 
 namespace KOTORModSync.CallbackDialogs
@@ -8,9 +9,9 @@ namespace KOTORModSync.CallbackDialogs
     {
         private readonly Window _topLevelWindow;
 
-        public ConfirmationDialogCallback( Window topLevelWindow ) => _topLevelWindow = topLevelWindow;
+        public ConfirmationDialogCallback( [CanBeNull] Window topLevelWindow ) => _topLevelWindow = topLevelWindow;
 
-        public Task<bool?> ShowConfirmationDialog
-            ( string message ) => ConfirmationDialog.ShowConfirmationDialog( _topLevelWindow, message );
+        public Task<bool?> ShowConfirmationDialog( [CanBeNull] string message ) =>
+            ConfirmationDialog.ShowConfirmationDialog( _topLevelWindow, message );
     }
 }

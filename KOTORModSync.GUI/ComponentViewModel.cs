@@ -3,6 +3,7 @@
 // See LICENSE.txt file in the project root for full license information.
 
 using System.ComponentModel;
+using JetBrains.Annotations;
 using Component = KOTORModSync.Core.Component;
 
 namespace KOTORModSync
@@ -12,9 +13,9 @@ namespace KOTORModSync
         private readonly Component _component;
         private bool _isSelected;
 
-        public ComponentViewModel( Component component ) => _component = component;
+        public ComponentViewModel( [CanBeNull] Component component ) => _component = component;
 
-        public string Name => _component.Name;
+        [CanBeNull] public string Name => _component.Name;
 
         public bool IsSelected
         {
@@ -33,7 +34,7 @@ namespace KOTORModSync
 
         public event PropertyChangedEventHandler PropertyChanged;
 
-        protected virtual void OnPropertyChanged
-            ( string propertyName ) => PropertyChanged?.Invoke( this, new PropertyChangedEventArgs( propertyName ) );
+        protected virtual void OnPropertyChanged( [CanBeNull] string propertyName ) =>
+            PropertyChanged?.Invoke( this, new PropertyChangedEventArgs( propertyName ) );
     }
 }

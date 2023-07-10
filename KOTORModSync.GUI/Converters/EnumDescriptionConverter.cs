@@ -19,7 +19,7 @@ namespace KOTORModSync.Converters
         private static string GetEnumDescription( Enum enumObj )
         {
             FieldInfo fieldInfo = enumObj.GetType().GetField( enumObj.ToString() );
-            if ( fieldInfo == null )
+            if ( fieldInfo is null )
             {
                 Logger.LogException( new ArgumentNullException( nameof( enumObj ) ) );
                 return null;
@@ -50,13 +50,11 @@ namespace KOTORModSync.Converters
             return enumObj.ToString();
         }
 
-        [CanBeNull]
-        object IValueConverter.Convert
-        (
-            object value,
-            Type targetType,
-            object parameter,
-            CultureInfo culture
+        object IValueConverter.Convert(
+            [CanBeNull] object value,
+            [CanBeNull] Type targetType,
+            [CanBeNull] object parameter,
+            [CanBeNull] CultureInfo culture
         )
         {
             var myEnum = (Enum)value;
@@ -64,12 +62,12 @@ namespace KOTORModSync.Converters
             return description;
         }
 
-        object IValueConverter.ConvertBack
-        (
-            object value,
-            Type targetType,
-            object parameter,
-            CultureInfo culture
+        [CanBeNull]
+        object IValueConverter.ConvertBack(
+            [CanBeNull] object value,
+            [CanBeNull] Type targetType,
+            [CanBeNull] object parameter,
+            [CanBeNull] CultureInfo culture
         ) => value;
     }
 }

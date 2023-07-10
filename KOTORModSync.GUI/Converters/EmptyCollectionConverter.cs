@@ -7,21 +7,21 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
 using Avalonia.Data.Converters;
+using JetBrains.Annotations;
 
 namespace KOTORModSync.Converters
 {
     public class EmptyCollectionConverter : IValueConverter
     {
-        public object Convert
-        (
-            object value,
-            Type targetType,
-            object parameter,
-            CultureInfo culture
+        [CanBeNull]
+        public object Convert(
+            [CanBeNull] object value,
+            [CanBeNull] Type targetType,
+            [CanBeNull] object parameter,
+            [CanBeNull] CultureInfo culture
         )
         {
-            if ( value is ICollection collection
-                && collection.Count == 0 )
+            if ( value is ICollection collection && collection.Count == 0 )
             {
                 return new List<string> { string.Empty }; // Create a new collection with a default value
             }
@@ -29,8 +29,7 @@ namespace KOTORModSync.Converters
             return value;
         }
 
-        public object ConvertBack
-        (
+        public object ConvertBack(
             object value,
             Type targetType,
             object parameter,

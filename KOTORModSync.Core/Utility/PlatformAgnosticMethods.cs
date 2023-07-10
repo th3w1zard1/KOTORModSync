@@ -108,7 +108,7 @@ namespace KOTORModSync.Core.Utility
                 Parallel.Invoke( () => maxParallelism = Math.Max( 1, maxParallelism / 2 ) );
             }
 
-            Task<double> maxDiskSpeedTask = Task.Run( () => GetMaxDiskSpeed( Path.GetPathRoot( thisDir.FullName ) ) );
+            var maxDiskSpeedTask = Task.Run( () => GetMaxDiskSpeed( Path.GetPathRoot( thisDir.FullName ) ) );
             double maxDiskSpeed = await maxDiskSpeedTask;
 
             const double diskSpeedThreshold = 100.0; // MB/sec threshold
@@ -331,7 +331,7 @@ namespace KOTORModSync.Core.Utility
             if ( RuntimeInformation.IsOSPlatform( OSPlatform.Windows ) )
             {
                 // Check for administrator privileges on Windows
-                WindowsIdentity windowsIdentity = WindowsIdentity.GetCurrent();
+                var windowsIdentity = WindowsIdentity.GetCurrent();
                 var windowsPrincipal = new WindowsPrincipal( windowsIdentity );
                 return windowsPrincipal.IsInRole( WindowsBuiltInRole.Administrator );
             }
@@ -435,41 +435,6 @@ namespace KOTORModSync.Core.Utility
                 UseShellExecute = IsShellExecutionSupported() // not supported on all OS's.
             }
         };
-
-        private static async Task HandleProcessExitedAsync(
-            [CanBeNull] Process process,
-            [CanBeNull] TaskCompletionSource<(int, string, string)> tcs
-        )
-        {
-            try
-            {
-                if ( tcs is null )
-                {
-                    throw new ArgumentNullException( nameof( tcs ) );
-                }
-
-                if ( process is null )
-                {
-                    // Process disposed of early?
-                    await Logger.LogExceptionAsync( new NotSupportedException() );
-                    tcs.SetResult( (-4, string.Empty, string.Empty) );
-                    return;
-                }
-
-                string output = process.StartInfo.RedirectStandardOutput
-                    ? await process.StandardOutput.ReadToEndAsync()
-                    : null;
-                string error = process.StartInfo.RedirectStandardError
-                    ? await process.StandardError.ReadToEndAsync()
-                    : null;
-
-                tcs.SetResult( (process.ExitCode, output, error) );
-            }
-            catch ( Exception e )
-            {
-                await Logger.LogExceptionAsync( e );
-            }
-        }
 
         public static async Task<(int, string, string)> ExecuteProcessAsync(
             [CanBeNull] FileInfo programFile,

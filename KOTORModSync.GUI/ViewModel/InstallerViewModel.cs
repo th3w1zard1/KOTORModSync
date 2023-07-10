@@ -9,7 +9,6 @@ namespace KOTORModSync.ViewModel
 {
     public class InstallerViewModel : UserControl
     {
-        private readonly List<Component> _allComponents;
         private ConfirmationScreenViewModel _confirmationScreenViewModel;
         private InstallationProgressScreenViewModel _installationProgressScreenViewModel;
         private ResultsScreenViewModel _resultsScreenViewModel;

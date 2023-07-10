@@ -43,7 +43,7 @@ namespace KOTORModSync
 
         private void OnOpened( [CanBeNull] object sender, [CanBeNull] EventArgs e )
         {
-            var confirmTextBlock = this.FindControl<TextBlock>( "ConfirmTextBlock" );
+            TextBlock confirmTextBlock = this.FindControl<TextBlock>( "ConfirmTextBlock" );
             confirmTextBlock.Text = ConfirmText;
         }
 

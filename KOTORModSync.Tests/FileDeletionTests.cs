@@ -52,7 +52,7 @@ namespace KOTORModSync.Tests
         }
 
         [Test]
-        [Ignore("todo in DeleteDuplicateFile()")]
+        [Ignore( "todo in DeleteDuplicateFile()" )]
         public void DeleteDuplicateFile_DuplicateFilesWithDifferentExtensions_AllDuplicatesDeleted()
         {
             // Arrange

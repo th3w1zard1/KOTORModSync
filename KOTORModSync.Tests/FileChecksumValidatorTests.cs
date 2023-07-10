@@ -249,7 +249,7 @@ namespace KOTORModSync.Tests
             };
 
             // Convert the directory paths to DirectoryInfo objects
-            Dictionary<DirectoryInfo, SHA1>? directoryChecksums = checksums.ToDictionary(
+            var directoryChecksums = checksums.ToDictionary(
                 static kvp => new DirectoryInfo( kvp.Key ),
                 static kvp => SHA1.Create()
             );

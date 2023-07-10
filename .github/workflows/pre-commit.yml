@@ -47,20 +47,28 @@ jobs:
       - name: Find duplicate code
         run: dupFinder.sh '**/*.cs' -o=.github/resharper_format_action_logs.log
         
-      - name: Find Solution File
-        id: solution
-        run: |
-          $solutionFile = Get-ChildItem -Path . -Filter '*.sln' -Recurse -Depth 1 | Select-Object -First 1
-          Write-Host "::set-output name=solution_path::$($solutionFile.FullName)"
+    - name: Find Solution File
+      id: solution
+      run: |
+        if [ "$MATRIX_OS" == "windows-latest" ]; then
+          solutionFile=$(Get-ChildItem -Path . -Filter '*.sln' -Recurse -Depth 1 | Select-Object -First 1)
+        else
+          solutionFile=$(find . -type f -name '*.sln' -print -quit)
+        fi
+        echo "::set-output name=solution_path::$solutionFile"
 
-
-      - name: Analyze code
-        run: InspectCode.sh ${{ steps.solution.outputs.solution_path }} -o=resharper_inspect_action_logs.log
+    - name: Analyze code
+      run: |
+        if [ "$MATRIX_OS" == "windows-latest" ]; then
+          .\InspectCode.sh ${{ steps.solution.outputs.solution_path }} -o=TestResults\resharper_inspect_action_logs.log
+        else
+          ./InspectCode.sh ${{ steps.solution.outputs.solution_path }} -o=TestResults/resharper_inspect_action_logs.log
+        fi
 
       - name: Commit changes
         run: |
-          git config --global user.name 'CSharp Lint'
-          git config --global user.email 'linter_workflow@githubactions.com'
+          git config --global user.name 'Pre-commit Style Enforcer'
+          git config --global user.email 'precommit_workflow@githubactions.com'
           git add .
           git diff-index --quiet HEAD || git commit -m "Auto-format code using dotnet format" && git push
         env:

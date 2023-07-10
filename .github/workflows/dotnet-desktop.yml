@@ -76,7 +76,11 @@ jobs:
       continue-on-error: true
 
     - name: Summarize test results
-      run: dotnet tool install --global trx2junit && trx2junit "TestResults\test_results_$(date:yyyyMMddHHmmss).xml" --output "TestResults\summary_$(date:yyyyMMddHHmmss).xml"
+      run: |
+        dotnet tool install --global trx2junit
+        $date = Get-Date -Format yyyyMMddHHmmss
+        trx2junit "TestResults\test_results_$date.xml" --output "TestResults\summary_$date.xml"
+
       
     - name: Modify test results XML
       uses: actions/github-script@v4
@@ -85,8 +89,8 @@ jobs:
         script: |
           const fs = require('fs');
           const commitHash = process.env.GITHUB_SHA;
-          const filePath = 'TestResults/test_results_$(date:yyyyMMddHHmmss).xml';
-
+          $date = Get-Date -Format yyyyMMddHHmmss
+          const filePath = 'TestResults/test_results_$date.xml';
           let xmlContent = fs.readFileSync(filePath, 'utf8');
           xmlContent = xmlContent.replace('<test-run', `<test-run commit-hash="${commitHash}"`);
 

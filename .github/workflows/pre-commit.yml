@@ -45,7 +45,9 @@ jobs:
       run: cleanupcode.sh ${{ github.workspace }}/*.sln
 
     - name: Find duplicate code
-      run: dupFinder.sh '**/*.cs' -o=.github/resharper_format_action_logs.log
+      run: |
+        $date = Get-Date -Format yyyy-MM-dd_HH:mm
+        dupFinder.sh '**/*.cs' -o=.github/resharper_duplicatefinder_$date.log
       
     - name: Find Solution File
       id: solution
@@ -59,10 +61,11 @@ jobs:
 
     - name: Analyze code
       run: |
+        $date = Get-Date -Format yyyy-MM-dd_HH:mm
         if [ "$MATRIX_OS" == "windows-latest" ]; then
-          .\InspectCode.sh ${{ steps.solution.outputs.solution_path }} -o=TestResults\resharper_inspect_action_logs.log
+          .\InspectCode.sh ${{ steps.solution.outputs.solution_path }} -o=TestResults\resharper_inspect_$date.log
         else
-          ./InspectCode.sh ${{ steps.solution.outputs.solution_path }} -o=TestResults/resharper_inspect_action_logs.log
+          ./InspectCode.sh ${{ steps.solution.outputs.solution_path }} -o=TestResults/resharper_inspect_$date.log
         fi
 
     - name: Commit changes

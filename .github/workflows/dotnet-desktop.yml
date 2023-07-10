@@ -78,7 +78,7 @@ jobs:
     - name: Summarize test results
       run: |
         dotnet tool install --global trx2junit
-        $date = Get-Date -Format yyyyMMddHHmmss
+        $date = Get-Date -Format yyyy-MM-dd_HH:mm
         trx2junit "TestResults\test_results_$date.xml" --output "TestResults\summary_$date.xml"
 
       
@@ -89,7 +89,7 @@ jobs:
         script: |
           const fs = require('fs');
           const commitHash = process.env.GITHUB_SHA;
-          $date = Get-Date -Format yyyyMMddHHmmss
+          $date = Get-Date -Format yyyy-MM-dd_HH:mm
           const filePath = 'TestResults/test_results_$date.xml';
           let xmlContent = fs.readFileSync(filePath, 'utf8');
           xmlContent = xmlContent.replace('<test-run', `<test-run commit-hash="${commitHash}"`);

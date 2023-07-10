@@ -327,7 +327,7 @@ namespace KOTORModSync.Core
         [NotNull]
         private List<Instruction> DeserializeInstructions( [CanBeNull][ItemCanBeNull] IList<object> instructionsSerializedList )
         {
-            if ( !( instructionsSerializedList is TomlArray _ ) )
+            if ( ( instructionsSerializedList is null || instructionsSerializedList.Count == 0 ) )
             {
                 _ = Logger.LogWarningAsync( $"No instructions found for component '{Name}'" );
                 return new List<Instruction>();
@@ -362,9 +362,9 @@ namespace KOTORModSync.Core
         }
 
         [NotNull]
-        private Dictionary<Guid, Option> DeserializeOptions( [CanBeNull] IList<IDictionary<string, object>> tomlObject )
+        private Dictionary<Guid, Option> DeserializeOptions( [CanBeNull] IList<IDictionary<string, object>> optionsSerializedList )
         {
-            if ( tomlObject is null )
+            if ( optionsSerializedList is null || optionsSerializedList.Count == 0 )
             {
                 _ = Logger.LogVerboseAsync( $"No options found for component '{Name}'" );
                 return new Dictionary<Guid, Option>();
@@ -372,7 +372,7 @@ namespace KOTORModSync.Core
 
             var options = new Dictionary<Guid, Option>( 65535 );
 
-            foreach ( IDictionary<string, object> optionDict in tomlObject )
+            foreach ( IDictionary<string, object> optionDict in optionsSerializedList)
             {
                 if ( optionDict is null ) continue;
 

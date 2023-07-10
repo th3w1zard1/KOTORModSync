@@ -18,6 +18,7 @@ using Avalonia.Controls;
 using Avalonia.Controls.Chrome;
 using Avalonia.Controls.Primitives;
 using Avalonia.Data;
+using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.LogicalTree;
 using Avalonia.Markup.Xaml;
@@ -43,6 +44,8 @@ namespace KOTORModSync
 
         private string _originalContent;
         private Window _outputWindow;
+        private bool _mouseDownForWindowMoving;
+        private PointerPoint _originalPoint;
 
         public List<Component> ComponentsList;
 
@@ -59,6 +62,35 @@ namespace KOTORModSync
                 new ConfirmationDialogCallback( this ),
                 new OptionsDialogCallback( this )
             );
+
+#if DEBUG
+            this.AttachDevTools();
+#endif
+        }
+
+        // test the options dialog for use with the 'Options' IDictionary<string, object>.
+        public async void Testwindow()
+        {
+            // Create an instance of OptionsDialogCallback
+            var optionsDialogCallback = new OptionsDialogCallback( this );
+
+            // Create a list of options
+            var options = new List<string> { "Option 1", "Option 2", "Option 3" };
+
+            // Show the options dialog and get the selected option
+            string selectedOption = await optionsDialogCallback.ShowOptionsDialog( options );
+
+            // Use the selected option
+            if ( selectedOption != null )
+            {
+                // Option selected, do something with it
+                Console.WriteLine( "Selected option: " + selectedOption );
+            }
+            else
+            {
+                // No option selected or dialog closed
+                Console.WriteLine( "No option selected or dialog closed" );
+            }
         }
 
         private MainConfig MainConfigInstance { get; set; }
@@ -110,31 +142,34 @@ namespace KOTORModSync
                 ?? throw new NullReferenceException( "MainConfigStackPanel not defined for MainWindow." );
 
             MainConfigStackPanel.DataContext = MainConfigInstance;
+
+            // Attach event handlers
+            this.PointerPressed += InputElement_OnPointerPressed;
+            this.PointerMoved += InputElement_OnPointerMoved;
+            this.PointerReleased += InputElement_OnPointerReleased;
         }
 
-        // test the options dialog for use with the 'Options' IDictionary<string, object>.
-        public async void Testwindow()
+
+        private void InputElement_OnPointerMoved( object sender, PointerEventArgs e )
         {
-            // Create an instance of OptionsDialogCallback
-            var optionsDialogCallback = new OptionsDialogCallback( this );
+            if ( !_mouseDownForWindowMoving ) return;
 
-            // Create a list of options
-            var options = new List<string> { "Option 1", "Option 2", "Option 3" };
+            PointerPoint currentPoint = e.GetCurrentPoint( this );
+            Position = new PixelPoint( Position.X + (int)( currentPoint.Position.X - _originalPoint.Position.X ),
+                Position.Y + (int)( currentPoint.Position.Y - _originalPoint.Position.Y ) );
+        }
 
-            // Show the options dialog and get the selected option
-            string selectedOption = await optionsDialogCallback.ShowOptionsDialog( options );
+        private void InputElement_OnPointerPressed( object sender, PointerPressedEventArgs e )
+        {
+            if ( WindowState == WindowState.Maximized || WindowState == WindowState.FullScreen ) return;
 
-            // Use the selected option
-            if ( selectedOption != null )
-            {
-                // Option selected, do something with it
-                Console.WriteLine( "Selected option: " + selectedOption );
-            }
-            else
-            {
-                // No option selected or dialog closed
-                Console.WriteLine( "No option selected or dialog closed" );
-            }
+            _mouseDownForWindowMoving = true;
+            _originalPoint = e.GetCurrentPoint( this );
+        }
+
+        private void InputElement_OnPointerReleased( object sender, PointerReleasedEventArgs e )
+        {
+            _mouseDownForWindowMoving = false;
         }
 
         [ItemCanBeNull]

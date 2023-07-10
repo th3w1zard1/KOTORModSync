@@ -1,4 +1,22 @@
-    runs-on: windows-2019
+name: lint
+
+on:
+  push:
+    branches:
+      - '*'
+
+env:
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: 1
+  DOTNET_NOLOGO: true
+  GITHUB_USER: th3w1zard1
+  GITHUB_REPOSITORY: KOTORModSync
+
+defaults:
+  run:
+    shell: pwsh
+
+jobs:
+  lint_csharp:    runs-on: windows-2019
     steps:
     - uses: actions/checkout@v2
 

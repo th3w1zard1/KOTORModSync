@@ -1,4 +1,4 @@
-name: lint
+name: pre-commit
 
 on:
   push:

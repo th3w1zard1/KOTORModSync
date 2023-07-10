@@ -38,20 +38,18 @@ jobs:
       - name: Run dotnet format
         run: dotnet format --severity info
         
-      # Install ReSharper Command Line Tools
-      - name: Install ReSharper CLI
-        run: |
-          Invoke-WebRequest -Uri "https://download.jetbrains.com/resharper/ReSharperCLT.2021.2.3.zip" -OutFile "resharperclt.zip"
-          Expand-Archive -Path "resharperclt.zip" -DestinationPath "resharperclt"
-        shell: pwsh
+      - name: Install ReSharper CLT
+        uses: kasperhesthaven/setup-resharper-clt@v1.1.0
+        
+      - name: Clean up code
+        run: cleanupcode.sh ${{ github.workspace }}/*.sln
 
-      # Run ReSharper cleanup
-      - name: Run ReSharper cleanup
-        run: |
-          & "./resharperclt/JetBrains.ReSharper.CommandLineTools.2021.2.3/tools/inspectcode.exe" -sln ${{ github.workspace }}/*.sln -o=output.xml -swea
-          & "./resharperclt/JetBrains.ReSharper.CommandLineTools.2021.2.3/tools/cleanupcode.exe" ${{ github.workspace }}/*.sln -s -ea
+      - name: Find duplicate code
+        run: dupFinder.sh <source> -o=<PathToOutputFile>
 
-      # Commit the changes
+      - name: Analyze code
+        run: InspectCode.sh YourSolution.sln -o=<PathToOutputFile>
+
       - name: Commit changes
         run: |
           git config --global user.name 'CSharp Lint'

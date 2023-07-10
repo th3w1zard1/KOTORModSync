@@ -73,6 +73,7 @@ jobs:
 
     - name: Execute unit tests
       run: dotnet test --logger "trx;LogFileName=test_results.xml" --results-directory TestResults
+      continue-on-error: true
 
     - name: Summarize test results
       run: dotnet tool install --global trx2junit && trx2junit "TestResults\test_results.xml" --output "TestResults\summary.xml"

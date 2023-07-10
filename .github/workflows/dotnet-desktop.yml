@@ -76,7 +76,7 @@ jobs:
       continue-on-error: true
 
     - name: Summarize test results
-      run: dotnet tool install --global trx2junit && trx2junit "TestResults\test_results.xml" --output "TestResults\summary.xml"
+      run: dotnet tool install --global trx2junit && trx2junit "TestResults\test_results_$(date:yyyyMMddHHmmss).xml" --output "TestResults\summary_$(date:yyyyMMddHHmmss).xml"
       
     - name: Modify test results XML
       uses: actions/github-script@v4

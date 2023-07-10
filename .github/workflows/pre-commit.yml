@@ -50,8 +50,9 @@ jobs:
       - name: Find Solution File
         id: solution
         run: |
-          solution_file=$(find . -type f -name '*.sln' -print -quit)
-          echo "::set-output name=solution_path::$solution_file"
+          $solutionFile = Get-ChildItem -Path . -Filter '*.sln' -Recurse -Depth 1 | Select-Object -First 1
+          Write-Host "::set-output name=solution_path::$($solutionFile.FullName)"
+
 
       - name: Analyze code
         run: InspectCode.sh ${{ steps.solution.outputs.solution_path }} -o=resharper_inspect_action_logs.log

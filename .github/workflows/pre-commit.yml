@@ -45,10 +45,16 @@ jobs:
         run: cleanupcode.sh ${{ github.workspace }}/*.sln
 
       - name: Find duplicate code
-        run: dupFinder.sh <source> -o=<PathToOutputFile>
+        run: dupFinder.sh '**/*.cs' -o=.github/resharper_format_action_logs.log
+        
+      - name: Find Solution File
+        id: solution
+        run: |
+          solution_file=$(find . -type f -name '*.sln' -print -quit)
+          echo "::set-output name=solution_path::$solution_file"
 
       - name: Analyze code
-        run: InspectCode.sh YourSolution.sln -o=<PathToOutputFile>
+        run: InspectCode.sh ${{ steps.solution.outputs.solution_path }} -o=resharper_inspect_action_logs.log
 
       - name: Commit changes
         run: |

@@ -72,11 +72,25 @@ jobs:
       uses: microsoft/setup-msbuild@v1.0.2
 
     - name: Execute unit tests
-      run: dotnet test --logger "trx;LogFileName=test_results.xml" --results-directory TestResults
+      run: dotnet test --logger "trx;LogFileName=test_results_$(date:yyyyMMddHHmmss).xml" --results-directory TestResults
       continue-on-error: true
 
     - name: Summarize test results
       run: dotnet tool install --global trx2junit && trx2junit "TestResults\test_results.xml" --output "TestResults\summary.xml"
+      
+    - name: Modify test results XML
+      uses: actions/github-script@v4
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        script: |
+          const fs = require('fs');
+          const commitHash = process.env.GITHUB_SHA;
+          const filePath = 'TestResults/test_results_$(date:yyyyMMddHHmmss).xml';
+
+          let xmlContent = fs.readFileSync(filePath, 'utf8');
+          xmlContent = xmlContent.replace('<test-run', `<test-run commit-hash="${commitHash}"`);
+
+          fs.writeFileSync(filePath, xmlContent);
 
     - name: Upload summary
       uses: actions/upload-artifact@v2

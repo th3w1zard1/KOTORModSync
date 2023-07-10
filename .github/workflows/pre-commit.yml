@@ -38,26 +38,12 @@ jobs:
     - name: Run dotnet format
       run: dotnet format --severity info
 
-    - name: Setup ReSharper Command Line Tools
-      uses: goit/setup-resharper@v2.0.1
+    - name: 'Qodana Scan'
+      uses: JetBrains/qodana-action@v2023.1.0
+      
+    - uses: github/codeql-action/upload-sarif@v2
       with:
-        version: '2021.1'
-
-    - name: Clean up code
-      run: cleanupcode.sh ${{ github.workspace }}/*.sln
-
-    - name: Find duplicate code
-      run: dupFinder.sh "**/*.cs" -o=.github/resharper_duplicatefinder_$(date +\%Y-\%m-\%d).log
-
-    - name: Find Solution File
-      id: solution
-      run: |
-        solutionFile=$(find . -name "*.sln" -type f -print -quit)
-        echo "::set-output name=solution_path::$solutionFile"
-
-    - name: Analyze code
-      run: ./InspectCode.sh ${{ steps.solution.outputs.solution_path }} -o=TestResults/resharper_inspect_$(date +\%Y-\%m-\%d).log
-
+        sarif_file: ${{ runner.temp }}/qodana/results/qodana.sarif.json
 
     - name: Commit changes
       run: |

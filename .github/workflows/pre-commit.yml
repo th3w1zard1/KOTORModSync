@@ -13,11 +13,11 @@ env:
 
 defaults:
   run:
-    shell: pwsh
+    shell: bash
 
 jobs:
   pre-commit-csharp:
-    runs-on: windows-2019
+    runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
 
@@ -37,27 +37,25 @@ jobs:
     # Run dotnet format
     - name: Run dotnet format
       run: dotnet format --severity info
-      
+
     - name: Install ReSharper CLT
       uses: kasperhesthaven/setup-resharper-clt@v1.1.0
-      
+
     - name: Clean up code
       run: cleanupcode.sh ${{ github.workspace }}/*.sln
 
     - name: Find duplicate code
-      run: |
-        $date = Get-Date -Format yyyy-MM-dd
-        dupFinder.sh '**/*.cs' -o=.github/resharper_duplicatefinder_$date.log
-      
+      run: dupFinder.sh "**/*.cs" -o=.github/resharper_duplicatefinder_$(date +\%Y-\%m-\%d).log
+
     - name: Find Solution File
       id: solution
       run: |
-        $solutionFile = Get-ChildItem -Path . -Filter '*.sln' -Recurse -Depth 1 | Select-Object -First 1
+        solutionFile=$(find . -name "*.sln" -type f -print -quit)
         echo "::set-output name=solution_path::$solutionFile"
 
     - name: Analyze code
-      run: |
-        .\InspectCode.sh ${{ steps.solution.outputs.solution_path }} -o=TestResults\resharper_inspect_$date.log
+      run: ./InspectCode.sh ${{ steps.solution.outputs.solution_path }} -o=TestResults/resharper_inspect_$(date +\%Y-\%m-\%d).log
+
 
     - name: Commit changes
       run: |

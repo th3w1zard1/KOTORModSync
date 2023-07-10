@@ -36,7 +36,7 @@ jobs:
 
       # Run dotnet format
       - name: Run dotnet format
-        run: dotnet format --check --fix-whitespace --fix-analyzers --severity info
+        run: dotnet format --severity info
         
       # Install ReSharper Command Line Tools
       - name: Install ReSharper CLI

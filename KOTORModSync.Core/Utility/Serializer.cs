@@ -52,7 +52,7 @@ namespace KOTORModSync.Core.Utility
             return guidString;
         }
 
-        public static void DeserializePathInDictionary( Dictionary<string, object> dict, string key )
+        public static void DeserializePathInDictionary( IDictionary<string, object> dict, string key )
         {
             if ( !dict.TryGetValue( key, out object pathValue ) )
             {
@@ -81,7 +81,7 @@ namespace KOTORModSync.Core.Utility
             }
         }
 
-        public static void DeserializeGuidDictionary( [NotNull] Dictionary<string, object> dict, [NotNull] string key )
+        public static void DeserializeGuidDictionary( [NotNull] IDictionary<string, object> dict, [NotNull] string key )
         {
             if ( !dict.TryGetValue( key, out object value ) )
             {
@@ -162,29 +162,6 @@ namespace KOTORModSync.Core.Utility
             formattedPath = formattedPath.TrimEnd( Path.DirectorySeparatorChar );
 
             return formattedPath;
-        }
-
-        [NotNull]
-        public static Dictionary<string, object> ConvertTomlTableToDictionary( [NotNull] TomlTable tomlTable )
-        {
-            var dict = new Dictionary<string, object>( 65535 );
-
-            foreach ( KeyValuePair<string, object> kvp in tomlTable )
-            {
-                string key = kvp.Key.ToLowerInvariant();
-                object value = kvp.Value;
-
-                if ( value is TomlTable nestedTable )
-                {
-                    dict.Add( key, ConvertTomlTableToDictionary( nestedTable ) );
-                }
-                else
-                {
-                    dict.Add( key, value );
-                }
-            }
-
-            return dict;
         }
 
         [NotNull]
@@ -303,16 +280,16 @@ namespace KOTORModSync.Core.Utility
                         break;
                     case IDictionary dictionary:
                         {
-                            var tomlTable = new TomlTable();
+                            var newDictionary = new Dictionary<string, object>();
 
                             foreach ( DictionaryEntry entry in dictionary )
                             {
                                 string key = entry.Key.ToString();
                                 object value2 = SerializeObject( entry.Value );
-                                tomlTable.Add( key, value2 );
+                                newDictionary.Add( key, value2 );
                             }
 
-                            serializedProperties[memberName] = tomlTable;
+                            serializedProperties[memberName] = newDictionary;
 
                             break;
                         }

@@ -123,7 +123,7 @@ namespace KOTORModSync.Tests
                 = Component.DeserializeTomlComponent( Component.DefaultComponent + Instruction.DefaultInstructions )
                 ?? throw new InvalidOperationException();
             newComponent.Guid = Guid.NewGuid();
-            newComponent.Name = "new mod_" + Path.GetRandomFileName();
+            newComponent.Name = "test_mod_" + Path.GetRandomFileName();
 
             // Serialize
             string tomlString = newComponent.SerializeComponent();

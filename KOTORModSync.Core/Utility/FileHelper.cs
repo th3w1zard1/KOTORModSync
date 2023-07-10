@@ -18,12 +18,6 @@ namespace KOTORModSync.Core.Utility
                 ? Path.GetDirectoryName( itemInArchivePath )
                 : itemInArchivePath;
 
-        // Stop TSLPatcher from automatically assuming the KOTOR directory.
-        // use PlaintextLog=1
-
-        // Stop TSLPatcher from automatically assuming the KOTOR directory.
-        // use PlaintextLog=1
-
         public static async Task MoveFileAsync( [NotNull] string sourcePath, [NotNull] string destinationPath )
         {
             if ( sourcePath is null ) throw new ArgumentNullException( nameof( sourcePath ) );

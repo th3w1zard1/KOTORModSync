@@ -51,12 +51,12 @@ jobs:
           & "./resharperclt/JetBrains.ReSharper.CommandLineTools.2021.2.3/tools/inspectcode.exe" -sln ${{ github.workspace }}/*.sln -o=output.xml -swea
           & "./resharperclt/JetBrains.ReSharper.CommandLineTools.2021.2.3/tools/cleanupcode.exe" ${{ github.workspace }}/*.sln -s -ea
 
-        # Commit the changes
-        - name: Commit changes
-          run: |
-            git config --global user.name 'CSharp Lint'
-            git config --global user.email 'linter_workflow@githubactions.com'
-            git add .
-            git diff-index --quiet HEAD || git commit -m "Auto-format code using dotnet format" && git push
-          env:
-            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # Commit the changes
+      - name: Commit changes
+        run: |
+          git config --global user.name 'CSharp Lint'
+          git config --global user.email 'linter_workflow@githubactions.com'
+          git add .
+          git diff-index --quiet HEAD || git commit -m "Auto-format code using dotnet format" && git push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

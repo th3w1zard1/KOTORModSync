@@ -6,6 +6,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -14,14 +15,10 @@ using System.Text;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
 using KOTORModSync.Core.Utility;
-using Nett;
 using Tomlyn;
+using Tomlyn.Model;
 using Tomlyn.Syntax;
 using static KOTORModSync.Core.Utility.CallbackObjects;
-using Toml = Tomlyn.Toml;
-using TomlObject = Tomlyn.Model.TomlObject;
-using TomlTable = Tomlyn.Model.TomlTable;
-using TomlTableArray = Tomlyn.Model.TomlTableArray;
 
 namespace KOTORModSync.Core
 {
@@ -101,11 +98,11 @@ namespace KOTORModSync.Core
         [NotNull] public List<Guid> InstallAfter { get; set; } = new List<Guid>();
         public bool NonEnglishFunctionality { get; set; }
         [NotNull] public string InstallationMethod { get; set; } = string.Empty;
-        [NotNull] public List<Instruction> Instructions { get; set; } = new List<Instruction>();
+        [NotNull][ItemNotNull] public List<Instruction> Instructions { get; set; } = new List<Instruction>();
         [NotNull] public Dictionary<Guid, Option> Options { get; set; } = new Dictionary<Guid, Option>();
-        [NotNull] public List<string> Language { get; private set; } = new List<string>();
+        [NotNull][ItemNotNull] public List<string> Language { get; private set; } = new List<string>();
         [NotNull] public string ModLink { get; set; } = string.Empty;
-        [NotNull] public List<Option> ChosenOptions { get; set; } = new List<Option>();
+        [NotNull][ItemNotNull] public List<Option> ChosenOptions { get; set; } = new List<Option>();
         private ComponentValidation Validator { get; set; }
 
         private bool _isSelected;
@@ -126,83 +123,88 @@ namespace KOTORModSync.Core
         }
 
         [NotNull]
+        [SuppressMessage( "ReSharper", "PossibleNullReferenceException" )]
         public string SerializeComponent()
         {
-            _ = TomlSettings.Create();
-            var rootTable = new Dictionary<string, List<object>>
+            _ = Nett.TomlSettings.Create();
+            var rootTable = new Dictionary<string, List<object>>( StringComparer.OrdinalIgnoreCase )
             {
                 ["thisMod"] = new List<object>( 65535 ) { Serializer.SerializeObject( this ) }
             };
 
             // Loop through the "thisMod" list
-            for ( int i = 0; i < rootTable["thisMod"].Count; i++ )
+            var itemsToRemove = new List<string>();
+
+            foreach ( object kvp in rootTable["thisMod"] )
             {
-                // Check if the item is a Dictionary<string, object> representing a TOML table
-                if ( !( rootTable["thisMod"][i] is IDictionary<string, object> table
-                        && table.TryGetValue( "Instructions", out object value ) ) )
-                {
+                if ( !( kvp is IDictionary<string, object> table ) )
                     continue;
+
+                var emptyKeys = table.Keys
+                    .Where( key =>
+                        {
+                            if ( key is null ) return default;
+
+                            object value = table[key];
+                            return value is IList<object> list && list.Count == 0
+                                || value is IDictionary<string, object> dict && dict.Count == 0;
+                        }
+                    )
+                    .ToList();
+
+                foreach ( string key in emptyKeys )
+                {
+                    if ( !( key is null ) )
+                    {
+                        _ = table.Remove( key );
+                    }
                 }
 
-                // Check if the "Instructions" table is empty
-                // Remove the empty "Instructions" table from the root table
-                if ( value is IList<object> instructions && instructions.Count != 0 )
+                if ( table.Count == 0 )
                 {
-                    continue;
+                    itemsToRemove.Add( table.GetHashCode().ToString() );
                 }
-
-                _ = table.Remove( "Instructions" );
-
-                // Check if the "Options" table is empty
-                // Remove the empty "Options" table from the root table
-                if ( value is List<object> options && options.Count != 0 )
-                {
-                    continue;
-                }
-
-                _ = table.Remove( "Options" );
-
-                // don't serialize stuff chosen during an install.
-                _ = table.Remove( "ChosenOptions" );
-
-                break;
             }
+
+            foreach ( string key in itemsToRemove )
+            {
+                _ = rootTable["thisMod"].RemoveAll( item => item.GetHashCode().ToString() == key );
+            }
+
 
             string tomlString = Nett.Toml.WriteString( rootTable );
             return Serializer.FixWhitespaceIssues( tomlString ?? string.Empty );
         }
 
-        public void DeserializeComponent( [NotNull] TomlObject tomlObject )
+        public void DeserializeComponent( [NotNull] IDictionary<string, object> componentDict )
         {
-            if ( !( tomlObject is TomlTable componentTable ) ) throw new ArgumentException( "[TomlError] Expected a TOML table for component data." );
+            if ( !( componentDict is TomlTable _ ) ) throw new ArgumentException( "[TomlError] Expected a TOML table for component data." );
 
             _tempPath = new DirectoryInfo( Path.GetTempPath() );
 
-            Dictionary<string, object> componentDict = Serializer.ConvertTomlTableToDictionary( componentTable );
-
-            // reminder: ConvertTomlTableToDictionary lowercases all string keys automatically.
-            Name = GetRequiredValue<string>( componentDict, "name" );
+            Name = GetRequiredValue<string>( componentDict, "Name" );
             _ = Logger.LogAsync( $"{Environment.NewLine}== Deserialize next component '{Name}' ==" );
-            Guid = GetRequiredValue<Guid>( componentDict, "guid" );
-            Description = GetValueOrDefault<string>( componentDict, "description" );
-            Directions = GetValueOrDefault<string>( componentDict, "directions" );
-            Category = GetValueOrDefault<string>( componentDict, "category" );
-            Tier = GetValueOrDefault<string>( componentDict, "tier" );
-            Language = GetValueOrDefault<List<string>>( componentDict, "language" );
-            Author = GetValueOrDefault<string>( componentDict, "author" );
-            Dependencies = new List<Guid>( GetValueOrDefault<List<Guid>>( componentDict, "dependencies" ) );
-            Restrictions = GetValueOrDefault<List<Guid>>( componentDict, "restrictions" );
-            InstallBefore = GetValueOrDefault<List<Guid>>( componentDict, "installbefore" );
-            InstallAfter = GetValueOrDefault<List<Guid>>( componentDict, "installafter" );
-            ModLink = GetValueOrDefault<string>( componentDict, "modlink" );
-            IsSelected = GetValueOrDefault<bool>( componentDict, "isselected" );
+            Guid = GetRequiredValue<Guid>( componentDict, "Guid" );
+            Description = GetValueOrDefault<string>( componentDict, "Description" );
+            Directions = GetValueOrDefault<string>( componentDict, "Directions" );
+            Category = GetValueOrDefault<string>( componentDict, "Category" );
+            Tier = GetValueOrDefault<string>( componentDict, "Tier" );
+            Language = GetValueOrDefault<List<string>>( componentDict, "Language" );
+            Author = GetValueOrDefault<string>( componentDict, "Author" );
+            Dependencies = GetValueOrDefault<List<Guid>>( componentDict, "Dependencies" );
+            Restrictions = GetValueOrDefault<List<Guid>>( componentDict, "Restrictions" );
+            InstallBefore = GetValueOrDefault<List<Guid>>( componentDict, "InstallBefore" );
+            InstallAfter = GetValueOrDefault<List<Guid>>( componentDict, "InstallAfter" );
+            ModLink = GetValueOrDefault<string>( componentDict, "Modlink" );
+            IsSelected = GetValueOrDefault<bool>( componentDict, "IsSelected" );
 
             Instructions = DeserializeInstructions(
-                GetValueOrDefault<TomlTableArray>( componentDict, "instructions" )
+                GetValueOrDefault<IList<object>>( componentDict, "Instructions" )
             );
-            Instructions.ForEach( instruction => instruction.SetParentComponent( this ) );
+            Instructions.ForEach( instruction => instruction ?.SetParentComponent( this ) );
 
-            Options = DeserializeOptions( GetValueOrDefault<TomlTableArray>( componentDict, "options" ) );
+
+            Options = DeserializeOptions( GetValueOrDefault<IList<IDictionary<string, object>>>( componentDict, "Options" ) );
 
             // can't validate anything if directories aren't set.
             if ( string.IsNullOrWhiteSpace( MainConfig.SourcePath?.FullName )
@@ -323,10 +325,11 @@ namespace KOTORModSync.Core
             return sb.ToString();
         }
 
+        [ItemNotNull]
         [NotNull]
-        private List<Instruction> DeserializeInstructions( [CanBeNull] TomlTableArray tomlObject )
+        private List<Instruction> DeserializeInstructions( [CanBeNull] [ItemCanBeNull] IList<object> instructionsSerializedList )
         {
-            if ( tomlObject is null )
+            if ( !( instructionsSerializedList is TomlArray _ ) )
             {
                 _ = Logger.LogWarningAsync( $"No instructions found for component '{Name}'" );
                 return new List<Instruction>();
@@ -334,29 +337,26 @@ namespace KOTORModSync.Core
 
             var instructions = new List<Instruction>( 65535 );
 
-            for ( int index = 0; index < tomlObject.Count; index++ )
+            for ( int index = 0; index < instructionsSerializedList.Count; index++ )
             {
-                TomlTable item = tomlObject[index];
-                if ( item is null ) continue;
+                var instructionDict = (IDictionary<string, object>)instructionsSerializedList[index];
+                if ( instructionDict is null ) continue;
 
-                Dictionary<string, object> instructionDict = Serializer.ConvertTomlTableToDictionary( item );
+                Serializer.DeserializePathInDictionary( instructionDict, "Source" );
+                Serializer.DeserializeGuidDictionary( instructionDict, "Restrictions" );
+                Serializer.DeserializeGuidDictionary( instructionDict, "Dependencies" );
 
-                // reminder: ConvertTomlTableToDictionary lowercases all string keys automatically.
-                Serializer.DeserializePathInDictionary( instructionDict, "source" );
-                Serializer.DeserializeGuidDictionary( instructionDict, "restrictions" );
-                Serializer.DeserializeGuidDictionary( instructionDict, "dependencies" );
-
-                var instruction = new Instruction { Action = GetRequiredValue<string>( instructionDict, "action" ) };
+                var instruction = new Instruction { Action = GetRequiredValue<string>( instructionDict, "Action" ) };
                 _ = Logger.LogAsync(
                     $"{Environment.NewLine}-- Deserialize instruction #{index + 1} action {instruction.Action}"
                 );
-                instruction.Arguments = GetValueOrDefault<string>( instructionDict, "arguments" );
-                instruction.Overwrite = GetValueOrDefault<bool>( instructionDict, "overwrite" );
+                instruction.Arguments = GetValueOrDefault<string>( instructionDict, "Arguments" );
+                instruction.Overwrite = GetValueOrDefault<bool>( instructionDict, "Overwrite" );
 
-                instruction.Restrictions = GetValueOrDefault<List<Guid>>( instructionDict, "restrictions" );
-                instruction.Dependencies = GetValueOrDefault<List<Guid>>( instructionDict, "dependencies" );
-                instruction.Source = GetValueOrDefault<List<string>>( instructionDict, "source" );
-                instruction.Destination = GetValueOrDefault<string>( instructionDict, "destination" );
+                instruction.Restrictions = GetValueOrDefault<List<Guid>>( instructionDict, "Restrictions" );
+                instruction.Dependencies = GetValueOrDefault<List<Guid>>( instructionDict, "Dependencies" );
+                instruction.Source = GetValueOrDefault<List<string>>( instructionDict, "Source" );
+                instruction.Destination = GetValueOrDefault<string>( instructionDict, "Destination" );
                 instructions.Add( instruction );
             }
 
@@ -364,7 +364,7 @@ namespace KOTORModSync.Core
         }
 
         [NotNull]
-        private Dictionary<Guid, Option> DeserializeOptions( [CanBeNull] TomlTableArray tomlObject )
+        private Dictionary<Guid, Option> DeserializeOptions( [CanBeNull] IList<IDictionary<string, object>> tomlObject )
         {
             if ( tomlObject is null )
             {
@@ -374,24 +374,21 @@ namespace KOTORModSync.Core
 
             var options = new Dictionary<Guid, Option>( 65535 );
 
-            foreach ( TomlTable item in tomlObject )
+            foreach ( IDictionary<string, object> optionDict in tomlObject )
             {
-                if ( item is null ) continue;
+                if ( optionDict is null ) continue;
 
-                Dictionary<string, object> optionDict = Serializer.ConvertTomlTableToDictionary( item );
-
-                // reminder: ConvertTomlTableToDictionary lowercases all string keys automatically.
-                Serializer.DeserializePathInDictionary( optionDict, "source" );
-                Serializer.DeserializeGuidDictionary( optionDict, "restrictions" );
-                Serializer.DeserializeGuidDictionary( optionDict, "dependencies" );
+                Serializer.DeserializePathInDictionary( optionDict, "Source" );
+                Serializer.DeserializeGuidDictionary( optionDict, "Restrictions" );
+                Serializer.DeserializeGuidDictionary( optionDict, "Dependencies" );
 
                 var option = new Option
                 {
-                    Source = GetRequiredValue<List<string>>( optionDict, "source" ),
-                    Guid = GetValueOrDefault<Guid>( optionDict, "guid" ),
-                    Destination = GetRequiredValue<string>( optionDict, "destination" ),
-                    Restrictions = GetValueOrDefault<List<Guid>>( optionDict, "restrictions" ),
-                    Dependencies = GetValueOrDefault<List<Guid>>( optionDict, "dependencies" )
+                    Source = GetRequiredValue<List<string>>( optionDict, "Source" ),
+                    Guid = GetValueOrDefault<Guid>( optionDict, "Guid" ),
+                    Destination = GetRequiredValue<string>( optionDict, "Destination" ),
+                    Restrictions = GetValueOrDefault<List<Guid>>( optionDict, "Restrictions" ),
+                    Dependencies = GetValueOrDefault<List<Guid>>( optionDict, "Dependencies" )
                 };
 
                 options.Add( Guid.NewGuid(), option ); // Generate a new GUID key for each option
@@ -402,22 +399,22 @@ namespace KOTORModSync.Core
 
         [NotNull]
         private static T GetRequiredValue<T>(
-            [NotNull] IReadOnlyDictionary<string, object> dict,
+            [NotNull] IDictionary<string, object> dict,
             [NotNull] string key
         ) =>
             GetValue<T>( dict, key, true );
 
-        [CanBeNull]
+        [NotNull]
         private static T GetValueOrDefault<T>(
-            [NotNull] IReadOnlyDictionary<string, object> dict,
+            [NotNull] IDictionary<string, object> dict,
             [NotNull] string key
         ) =>
             GetValue<T>( dict, key, false );
 
         // why did I do this...
-        [CanBeNull]
+        [NotNull]
         private static T GetValue<T>(
-            [NotNull] IReadOnlyDictionary<string, object> dict,
+            [NotNull] IDictionary<string, object> dict,
             [NotNull] string key,
             bool required
         )
@@ -433,88 +430,75 @@ namespace KOTORModSync.Core
                         && k.Equals( key, StringComparison.OrdinalIgnoreCase )
                     );
 
-                if ( !dict.TryGetValue( caseInsensitiveKey ?? string.Empty, out object val2 ) )
+                if ( !dict.TryGetValue( caseInsensitiveKey ?? string.Empty, out object val2 ) && !required )
                 {
-                    if ( !required )
-                    {
-                        return default;
-                    }
+                    return default;
                 }
 
                 value = val2;
             }
 
-            switch ( value )
+            if ( value == null )
             {
-                case null:
-                    throw new KeyNotFoundException( $"[Error] Missing or invalid '{key}' field." );
-                case T t:
-                    return t;
-                case string valueStr2 when string.IsNullOrEmpty( valueStr2 ):
-                    {
-                        if ( required )
-                        {
-                            throw new KeyNotFoundException( $"'{key}' field cannot be empty." );
-                        }
+                throw new KeyNotFoundException( $"[Error] Missing or invalid '{key}' field." );
+            }
 
-                        return default;
-                    }
-                case string guidStr when typeof( T ) == typeof( Guid ):
-                    {
-                        guidStr = Serializer.FixGuidString( guidStr );
-                        if ( !string.IsNullOrEmpty( guidStr ) && Guid.TryParse( guidStr, out Guid guid ) )
-                        {
-                            return (T)(object)guid;
-                        }
+            if ( value is T t )
+            {
+                return t;
+            }
 
-                        if ( required )
-                        {
-                            throw new ArgumentException( $"'{key}' field is not a valid Guid!" );
-                        }
+            if ( value is string valueStr2 && string.IsNullOrEmpty( valueStr2 ) )
+            {
+                if ( required )
+                {
+                    throw new KeyNotFoundException( $"'{key}' field cannot be empty." );
+                }
 
-                        return (T)(object)Guid.Empty;
-                    }
+                return default;
+            }
+
+            if ( value is string guidStr && typeof( T ) == typeof( Guid ) )
+            {
+                guidStr = Serializer.FixGuidString( guidStr );
+                if ( !string.IsNullOrEmpty( guidStr ) && Guid.TryParse( guidStr, out Guid guid ) )
+                {
+                    return (T)(object)guid;
+                }
+
+                if ( required )
+                {
+                    throw new ArgumentException( $"'{key}' field is not a valid Guid!" );
+                }
+
+                return (T)(object)Guid.Empty;
             }
 
             // probably some sort of array at this point
-            var valueTomlArray = value as Tomlyn.Model.TomlArray;
-            var valueList = value as IList;
 
-            Type targetType = value.GetType();
-
-            if ( targetType.IsGenericType
-                && ( targetType.GetGenericTypeDefinition() == typeof( IList<> ) || targetType.GetGenericTypeDefinition() == typeof( List<> ) )
-                || valueTomlArray != null
-                || valueList != null )
+            var tomlArray = value as IList<object>;
+            var tomlTableArray = value as IList<TomlTable>;
+            if ( !( tomlArray is null && tomlTableArray is null ) )
             {
-                var valueEnumerable = new List<object>( valueTomlArray ?? (dynamic)valueList );
                 Type elementType = typeof( T ).GetGenericArguments()[0];
                 dynamic dynamicList = Activator.CreateInstance( typeof( List<> ).MakeGenericType( elementType ) )
-                    ?? throw new InvalidOperationException( nameof( dynamicList ) );
+                    ?? throw new InvalidOperationException( nameof(dynamicList) );
 
+                dynamic valueEnumerable = tomlArray;
+                valueEnumerable = valueEnumerable ?? tomlTableArray;
                 foreach ( object item in valueEnumerable )
                 {
-                    // handle guid possibility first
                     if ( elementType == typeof( Guid ) && item is string guidString )
                     {
                         guidString = Serializer.FixGuidString( guidString );
-                        if ( !string.IsNullOrEmpty( guidString ) )
-                        {
-                            dynamicList.Add( Guid.Parse( guidString ) );
-                        }
-                        else if ( !required )
-                        {
-                            dynamicList.Add( Guid.Empty );
-                        }
-                        else
-                        {
-                            throw new InvalidCastException( $"'{key}' field is not a list of valid Guids!" );
-                        }
+                        Guid parsedGuid = string.IsNullOrEmpty( guidString )
+                            ? Guid.Empty
+                            : Guid.Parse( guidString );
+                        dynamicList.Add( parsedGuid );
                     }
-                    else // simpler types
+                    else
                     {
-                        dynamic convertedItem = Convert.ChangeType( item, elementType );
-                        dynamicList.Add( convertedItem );
+                        dynamicList.Add( item );
                     }
                 }
 
@@ -545,10 +529,10 @@ namespace KOTORModSync.Core
             tomlString = Serializer.FixWhitespaceIssues( tomlString );
 
             // Can't be bothered to find a real fix when this works fine.
-            tomlString = tomlString.Replace( "Instructions = []", "" );
-            tomlString = tomlString.Replace( "Options = []", "" );
+            tomlString = tomlString.Replace( $"{Environment.NewLine}Instructions = []", "" );
+            tomlString = tomlString.Replace( $"{Environment.NewLine}Options = []", "" );
 
-            // Parse the TOML syntax into a TomlTable
+            // Parse the TOML syntax into a IDictionary<string, object>
             DocumentSyntax tomlDocument = Toml.Parse( tomlString );
 
             // Print any errors on the syntax
@@ -564,29 +548,28 @@ namespace KOTORModSync.Core
                 return null;
             }
 
-            TomlTable tomlTable = tomlDocument.ToModel();
+            IDictionary<string, object> tomlTable = tomlDocument.ToModel();
 
             // Get the array of Component tables
-
             var component = new Component();
-
-            // Deserialize each TomlTable into a Component object
-            if ( !( tomlTable["thisMod"] is TomlTableArray componentTables ) )
+            if ( !( tomlTable["thisMod"] is IList<TomlTable> componentTables ) )
             {
                 return component;
             }
 
+            // Deserialize each IDictionary<string, object> into a Component object
             foreach ( TomlTable tomlComponent in componentTables )
             {
-                if ( tomlComponent is null ) continue;
+                if ( !( tomlComponent is IDictionary<string, object> componentDict ) ) continue;
 
-                component.DeserializeComponent( tomlComponent );
+                component.DeserializeComponent( componentDict );
             }
 
             return component;
         }
 
-        [NotNull]
+        
+        [NotNull][ItemNotNull]
         public static List<Component> ReadComponentsFromFile( [NotNull] string filePath )
         {
             if ( filePath is null ) throw new ArgumentNullException( nameof( filePath ) );
@@ -600,10 +583,15 @@ namespace KOTORModSync.Core
                     .Replace( "Instructions = []", string.Empty )
                     .Replace( "Options = []", string.Empty );
 
+                if ( string.IsNullOrWhiteSpace( tomlString ) )
+                {
+                    throw new Nett.Parser.ParseException( $"Expected an instructions file at '{filePath}' but the file was empty." );
+                }
+
                 tomlString = Serializer.FixWhitespaceIssues( tomlString );
 
-                // Parse the TOML syntax into a TomlTable
-                DocumentSyntax tomlDocument = Toml.Parse( tomlString );
+                // Parse the TOML syntax into a IDictionary<string, object>
+                DocumentSyntax tomlDocument = Tomlyn.Toml.Parse( tomlString );
 
                 // Print any errors on the syntax
                 if ( tomlDocument.HasErrors )
@@ -612,17 +600,19 @@ namespace KOTORModSync.Core
                     {
                         if ( message is null ) continue;
 
-                        Logger.LogException( new FormatException( message.Message ) );
+                        Logger.LogError( message.Message );
                     }
                 }
 
-                TomlTable tomlTable = tomlDocument.ToModel();
+                IDictionary<string, object> tomlTable = tomlDocument.ToModel();
 
                 // Get the array of Component tables
-                var componentTables = (TomlTableArray)tomlTable["thisMod"];
+                var componentTables = (IList<Tomlyn.Model.TomlTable>)tomlTable["thisMod"];
                 var components = new List<Component>( 65535 );
-                // Deserialize each TomlTable into a Component object
-                foreach ( TomlTable tomlComponent in componentTables )
+                // Deserialize each IDictionary<string, object> into a Component object
+                if ( componentTables is null ) return components;
+
+                foreach ( IDictionary<string, object> tomlComponent in componentTables )
                 {
                     var thisComponent = new Component();
                     if ( !( tomlComponent is null ) )
@@ -649,7 +639,7 @@ namespace KOTORModSync.Core
             catch ( Exception ex )
             {
                 Logger.LogException( ex, "There was a problem serializing the components in the file." );
-                throw;
+                return null;
             }
         }
 

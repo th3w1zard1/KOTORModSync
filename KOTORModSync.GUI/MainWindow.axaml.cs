@@ -106,7 +106,7 @@ namespace KOTORModSync
             MainConfigStackPanel.DataContext = MainConfigInstance;
         }
 
-        // test the options dialog for use with the 'Options' TomlTable.
+        // test the options dialog for use with the 'Options' IDictionary<string, object>.
         public async void Testwindow()
         {
             // Create an instance of OptionsDialogCallback
@@ -896,10 +896,6 @@ namespace KOTORModSync
                 }
 
                 string name = _currentComponent.Name; // use correct name even if user clicks another component.
-                if ( name is null )
-                {
-                    throw new NullReferenceException( "Component does not have a valid 'Name' field." );
-                }
 
                 bool? confirm = await ConfirmationDialog.ShowConfirmationDialog(
                     this,

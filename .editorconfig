@@ -44,7 +44,7 @@ csharp_new_line_before_else = false
 csharp_new_line_before_open_brace = accessors,anonymous_methods,anonymous_types,control_blocks,events,indexers,lambdas,local_functions,methods,object_collection_array_initalizers,properties,types
 csharp_preferred_modifier_order = public, private, protected, internal, file, new, static, abstract, virtual, sealed, readonly, override, extern, unsafe, volatile, async, required:suggestion
 csharp_style_prefer_utf8_string_literals = true:suggestion
-csharp_style_var_elsewhere = true:none
+csharp_style_var_elsewhere = false:none
 csharp_style_var_for_built_in_types = true:suggestion
 csharp_style_var_when_type_is_apparent = true:none
 dotnet_naming_style.lower_camel_case_style.capitalization = camel_case
@@ -72,9 +72,11 @@ dotnet_style_qualification_for_method = true:none
 insert_final_newline = true
 
 # ReSharper properties
+resharper_blank_lines_before_block_statements = 0
 resharper_instance_members_qualify_declared_in = 
 resharper_keep_existing_attribute_arrangement = true
 resharper_use_heuristics_for_body_style = true
+resharper_use_roslyn_logic_for_evident_types = false
 
 [project.json]
 indent_size = 2

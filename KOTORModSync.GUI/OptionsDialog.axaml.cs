@@ -57,7 +57,7 @@ namespace KOTORModSync
 
         private void OnOpened( [CanBeNull] object sender, [CanBeNull] EventArgs e )
         {
-            var optionStackPanel = this.FindControl<StackPanel>( "OptionStackPanel" );
+            StackPanel optionStackPanel = this.FindControl<StackPanel>( "OptionStackPanel" );
 
             foreach ( string option in OptionsList )
             {

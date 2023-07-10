@@ -41,4 +41,4 @@ jobs:
 
     # Run dotnet format
     - name: Run dotnet format
-      run: dotnet format --check --verbosity diagnostic
+      run: dotnet format --verify-no-changes --verbosity diagnostic

@@ -18,7 +18,8 @@ defaults:
     shell: pwsh
 
 jobs:
-  lint_csharp:    runs-on: windows-2019
+  lint_csharp:
+    runs-on: windows-2019
     steps:
     - uses: actions/checkout@v2
 

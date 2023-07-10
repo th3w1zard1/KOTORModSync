@@ -19,34 +19,34 @@ jobs:
   lint_csharp:
     runs-on: windows-2019
     steps:
-      - uses: actions/checkout@v3
+    - uses: actions/checkout@v3
 
-      - name: Setup .NET Core
-        uses: actions/setup-dotnet@v2
-        with:
-          dotnet-version: '6.0.x' # SDK Version to use
+    - name: Setup .NET Core
+      uses: actions/setup-dotnet@v2
+      with:
+        dotnet-version: '6.0.x' # SDK Version to use
 
-      # Format the output of dotnet format
-      - name: Add dotnet-format problem matcher
-        uses: xt0rted/dotnet-format-problem-matcher@v1
+    # Format the output of dotnet format
+    - name: Add dotnet-format problem matcher
+      uses: xt0rted/dotnet-format-problem-matcher@v1
 
-      # Install dotnet format as a global tool
-      - name: Install dotnet format
-        run: dotnet tool update --global dotnet-format
+    # Install dotnet format as a global tool
+    - name: Install dotnet format
+      run: dotnet tool update --global dotnet-format
 
-      # Run dotnet format
-      - name: Run dotnet format
-        run: dotnet format --severity info
-        
-      - name: Install ReSharper CLT
-        uses: kasperhesthaven/setup-resharper-clt@v1.1.0
-        
-      - name: Clean up code
-        run: cleanupcode.sh ${{ github.workspace }}/*.sln
+    # Run dotnet format
+    - name: Run dotnet format
+      run: dotnet format --severity info
+      
+    - name: Install ReSharper CLT
+      uses: kasperhesthaven/setup-resharper-clt@v1.1.0
+      
+    - name: Clean up code
+      run: cleanupcode.sh ${{ github.workspace }}/*.sln
 
-      - name: Find duplicate code
-        run: dupFinder.sh '**/*.cs' -o=.github/resharper_format_action_logs.log
-        
+    - name: Find duplicate code
+      run: dupFinder.sh '**/*.cs' -o=.github/resharper_format_action_logs.log
+      
     - name: Find Solution File
       id: solution
       run: |

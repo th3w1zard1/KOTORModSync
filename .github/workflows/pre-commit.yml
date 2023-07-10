@@ -65,11 +65,11 @@ jobs:
           ./InspectCode.sh ${{ steps.solution.outputs.solution_path }} -o=TestResults/resharper_inspect_action_logs.log
         fi
 
-      - name: Commit changes
-        run: |
-          git config --global user.name 'Pre-commit Style Enforcer'
-          git config --global user.email 'precommit_workflow@githubactions.com'
-          git add .
-          git diff-index --quiet HEAD || git commit -m "Auto-format code using dotnet format" && git push
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    - name: Commit changes
+      run: |
+        git config --global user.name 'Pre-commit Style Enforcer'
+        git config --global user.email 'precommit_workflow@githubactions.com'
+        git add .
+        git diff-index --quiet HEAD || git commit -m "Auto-format code using dotnet format" && git push
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

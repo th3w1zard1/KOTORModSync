@@ -15,6 +15,7 @@ using System.Windows.Input;
 using Avalonia;
 using Avalonia.Collections;
 using Avalonia.Controls;
+using Avalonia.Controls.Chrome;
 using Avalonia.Controls.Primitives;
 using Avalonia.Data;
 using Avalonia.Interactivity;
@@ -72,6 +73,11 @@ namespace KOTORModSync
             {
                 throw new NullReferenceException( "MainGrid incorrectly defined, expected 3 columns." );
             }
+
+            // set title and version
+            Title = $"KOTORModSync v{MainConfig.CurrentVersion}";
+            TitleTextBlock = this.FindControl<TextBlock>( "TitleTextBlock" );
+            TitleTextBlock.Text = Title;
 
             ColumnDefinition componentListColumn = MainGrid.ColumnDefinitions[0]
                 ?? throw new NullReferenceException( "Column 0 of MainGrid (component list column) not defined." );

@@ -16,7 +16,7 @@ defaults:
     shell: pwsh
 
 jobs:
-  lint_csharp:
+  pre-commit-csharp:
     runs-on: windows-2019
     steps:
     - uses: actions/checkout@v3
@@ -52,21 +52,12 @@ jobs:
     - name: Find Solution File
       id: solution
       run: |
-        if [ "$MATRIX_OS" == "windows-latest" ]; then
-          solutionFile=$(Get-ChildItem -Path . -Filter '*.sln' -Recurse -Depth 1 | Select-Object -First 1)
-        else
-          solutionFile=$(find . -type f -name '*.sln' -print -quit)
-        fi
+        $solutionFile = Get-ChildItem -Path . -Filter '*.sln' -Recurse -Depth 1 | Select-Object -First 1
         echo "::set-output name=solution_path::$solutionFile"
 
     - name: Analyze code
       run: |
-        $date = Get-Date -Format yyyy-MM-dd
-        if [ "$MATRIX_OS" == "windows-latest" ]; then
-          .\InspectCode.sh ${{ steps.solution.outputs.solution_path }} -o=TestResults\resharper_inspect_$date.log
-        else
-          ./InspectCode.sh ${{ steps.solution.outputs.solution_path }} -o=TestResults/resharper_inspect_$date.log
-        fi
+        .\InspectCode.sh ${{ steps.solution.outputs.solution_path }} -o=TestResults\resharper_inspect_$date.log
 
     - name: Commit changes
       run: |

@@ -44,9 +44,7 @@ on:
       - '*'
 
 jobs:
-
   build:
-
     strategy:
       matrix:
         configuration: [Release]
@@ -81,18 +79,18 @@ jobs:
       run: |
         dotnet tool install --global trx2junit
         $date = Get-Date -Format yyyy-MM-dd
-        trx2junit "TestResults\test_results_$date.xml" --output "TestResults\summary_$date.xml"
+        trx2junit "TestResults/test_results_$date.xml" --output "TestResults/summary_$date.xml"
 
-      
     - name: Modify test results XML
       uses: actions/github-script@v4
       with:
         github-token: ${{ secrets.GITHUB_TOKEN }}
         script: |
           const fs = require('fs');
+          const process = require('process');
           const commitHash = process.env.GITHUB_SHA;
-          $date = Get-Date -Format yyyy-MM-dd
-          const filePath = 'TestResults/test_results_$date.xml';
+          const date = new Date().toISOString().split('T')[0];
+          const filePath = 'TestResults/test_results_' + date + '.xml';
           let xmlContent = fs.readFileSync(filePath, 'utf8');
           xmlContent = xmlContent.replace('<test-run', `<test-run commit-hash="${commitHash}"`);
 

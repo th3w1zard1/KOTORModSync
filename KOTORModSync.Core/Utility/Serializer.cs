@@ -15,11 +15,8 @@ using Newtonsoft.Json;
 using Tomlyn.Model;
 
 // ReSharper disable UnusedMember.Global
-#pragma warning disable RCS1213, IDE0051, IDE0079
-
 namespace KOTORModSync.Core.Utility
 {
-    [SuppressMessage( "ReSharper", "MemberCanBePrivate.Global" )]
     public static class Serializer
     {
         [NotNull]

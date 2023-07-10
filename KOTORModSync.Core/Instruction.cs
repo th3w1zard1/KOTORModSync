@@ -146,7 +146,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
         public static async Task<bool> ExecuteInstructionAsync( [NotNull] Func<Task<bool>> instructionMethod ) =>
             await instructionMethod().ConfigureAwait( false );
 
-        private List<string> RealSourcePaths { get; set; }
+        [NotNull] [ItemNotNull] private List<string> RealSourcePaths { get; set; } = new List<string>();
         private DirectoryInfo RealDestinationPath { get; set; }
 
 
@@ -655,9 +655,6 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                                 ? "pykotorcli.exe" // windows
                                 : "pykotorcli"; // linux/mac
                             break;
-                        case MainConfig.AvailablePatchers.TSLPatcherCLI:
-                            thisExe = "TSLPatcherCLI.exe";
-                            break;
                         case MainConfig.AvailablePatchers.TSLPatcher:
                         default:
                             tslPatcherCliPath = new FileInfo( t );
@@ -687,7 +684,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                     }
 
 
-                    await Logger.LogAsync( "Run TSLPatcher instructions..." );
+                    await Logger.LogAsync( "Starting TSLPatcher instructions..." );
                     if ( MainConfig.PatcherOption != MainConfig.AvailablePatchers.TSLPatcher )
                     {
                         await Logger.LogVerboseAsync( $"Using CLI to run command: '{tslPatcherCliPath} {args}'" );
@@ -702,8 +699,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
 
                     await Logger.LogAsync( output );
                     await Logger.LogAsync( error );
-
-
+                    
                     try
                     {
                         List<string> installErrors = VerifyInstall();
@@ -743,6 +739,8 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
         {
             try
             {
+                if ( RealSourcePaths is null ) throw new NullReferenceException(nameof(RealSourcePaths) );
+
                 ActionExitCode exitCode = ActionExitCode.Success; // Track the success status
                 foreach ( string sourcePath in RealSourcePaths )
                 {
@@ -756,7 +754,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                             );
                         }
 
-                        (int childExitCode, string output, string error)
+                        ( int childExitCode, string output, string error )
                             = await PlatformAgnosticMethods.ExecuteProcessAsync(
                                 thisProgram,
                                 noAdmin: MainConfig.NoAdmin

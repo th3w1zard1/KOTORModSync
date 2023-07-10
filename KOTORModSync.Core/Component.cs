@@ -123,7 +123,6 @@ namespace KOTORModSync.Core
         }
 
         [NotNull]
-        [SuppressMessage( "ReSharper", "PossibleNullReferenceException" )]
         public string SerializeComponent()
         {
             _ = Nett.TomlSettings.Create();
@@ -140,17 +139,16 @@ namespace KOTORModSync.Core
                 if ( !( kvp is IDictionary<string, object> table ) )
                     continue;
 
-                var emptyKeys = table.Keys
-                    .Where( key =>
-                        {
-                            if ( key is null ) return default;
+                var emptyKeys = table.Keys.Where(
+                    key =>
+                    {
+                        if ( key is null ) return default;
 
-                            object value = table[key];
-                            return value is IList<object> list && list.Count == 0
-                                || value is IDictionary<string, object> dict && dict.Count == 0;
-                        }
-                    )
-                    .ToList();
+                        object value = table[key];
+                        return value is IList<object> list && list.Count == 0
+                            || value is IDictionary<string, object> dict && dict.Count == 0;
+                    }
+                ).ToList();
 
                 foreach ( string key in emptyKeys )
                 {

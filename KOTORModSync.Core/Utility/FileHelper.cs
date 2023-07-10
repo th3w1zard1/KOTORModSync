@@ -9,7 +9,6 @@ using JetBrains.Annotations;
 
 namespace KOTORModSync.Core.Utility
 {
-    [SuppressMessage( "ReSharper", "UnusedMember.Local" )]
     public static class FileHelper
     {
         [CanBeNull]

@@ -12,31 +12,32 @@ namespace KOTORModSync.Core.Utility
 {
     public static class Utility
     {
-        public static string ReplaceCustomVariables
-            ( string path ) => path.Replace( "<<modDirectory>>", MainConfig.SourcePath.FullName )
-            .Replace( "<<kotorDirectory>>", MainConfig.DestinationPath.FullName );
+        [NotNull]
+        public static string ReplaceCustomVariables( [CanBeNull] string path ) =>
+            path?.Replace( "<<modDirectory>>", MainConfig.SourcePath?.FullName )
+                .Replace( "<<kotorDirectory>>", MainConfig.DestinationPath?.FullName )
+            ?? string.Empty;
 
-        public static string RestoreCustomVariables
-            ( string fullPath ) => fullPath.Replace( MainConfig.SourcePath.FullName, "<<modDirectory>>" )
+        [NotNull]
+        public static string RestoreCustomVariables( [CanBeNull] string fullPath ) => fullPath
+            ?.Replace( MainConfig.SourcePath.FullName, "<<modDirectory>>" )
             .Replace( MainConfig.DestinationPath.FullName, "<<kotorDirectory>>" );
 
         [CanBeNull]
-        public static object GetEnumDescription( Enum value )
+        public static object GetEnumDescription( [NotNull] Enum value )
         {
+            if ( value is null ) throw new ArgumentNullException( nameof( value ) );
+
             Type type = value.GetType();
             string name = Enum.GetName( type, value );
-            if ( name == null )
+            if ( name is null )
             {
                 return null;
             }
 
             FieldInfo field = type.GetField( name );
-            if ( field == null )
-            {
-                return null;
-            }
 
-            var attribute = field.GetCustomAttribute<DescriptionAttribute>();
+            DescriptionAttribute attribute = field?.GetCustomAttribute<DescriptionAttribute>();
             return attribute?.Description;
         }
 
@@ -80,7 +81,13 @@ namespace KOTORModSync.Core.Utility
         public static DirectoryInfo ChooseDirectory()
         {
             Console.Write( "Enter the path: " );
-            string thisPath = Console.ReadLine()?.Trim();
+            string thisPath = Console.ReadLine();
+            if ( string.IsNullOrEmpty( thisPath ) )
+            {
+                return default;
+            }
+
+            thisPath = thisPath.Trim();
 
             if ( Directory.Exists( thisPath ) )
             {

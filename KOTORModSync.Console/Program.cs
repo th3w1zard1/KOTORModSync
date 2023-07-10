@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using JetBrains.Annotations;
 using KOTORModSync.Core;
 using KOTORModSync.Core.Utility;
 
@@ -27,7 +28,10 @@ namespace KOTORModSync.ConsoleApp
                 for ( int index = 0; index < args.Length; index++ )
                 {
                     if ( index == 0 )
+                    {
                         Console.WriteLine( $"KOTORModSync CLI called with {args.Length} arguments." );
+                    }
+
                     string arg = args[index];
                     Console.WriteLine( $"Argument #{index + 1}: {arg}" );
                 }
@@ -63,7 +67,7 @@ namespace KOTORModSync.ConsoleApp
                             );
                             DirectoryInfo modDownloads = Utility.ChooseDirectory();
                             MainConfigInstance.sourcePath = modDownloads;
-                            if ( modDownloads == null )
+                            if ( modDownloads is null )
                             {
                                 Console.WriteLine(
                                     "Please try again and choose a valid directory path to your downloaded mods."
@@ -101,7 +105,7 @@ namespace KOTORModSync.ConsoleApp
                             );
                             DirectoryInfo kotorInstallDir = Utility.ChooseDirectory();
                             MainConfigInstance.destinationPath = kotorInstallDir;
-                            if ( kotorInstallDir == null )
+                            if ( kotorInstallDir is null )
                             {
                                 Console.WriteLine( "Please try again and choose your KOTOR installation dir." );
                                 break;
@@ -121,8 +125,7 @@ namespace KOTORModSync.ConsoleApp
                             break;
 
                         case "4":
-                            if ( MainConfig.DestinationPath == null
-                                || MainConfig.SourcePath == null )
+                            if ( MainConfig.DestinationPath is null || MainConfig.SourcePath is null )
                             {
                                 Console.WriteLine( "Please select your directories first" );
                                 break;
@@ -138,7 +141,7 @@ namespace KOTORModSync.ConsoleApp
                                 }
                             }
 
-                            if ( MainConfig.LastOutputDirectory == null )
+                            if ( MainConfig.LastOutputDirectory is null )
                             {
                                 Console.WriteLine( "Please specify the path to the output file." );
                                 MainConfigInstance.lastOutputDirectory = Utility.ChooseDirectory();
@@ -154,7 +157,7 @@ namespace KOTORModSync.ConsoleApp
                             break;
 
                         case "5":
-                            if ( MainConfig.DestinationPath == null )
+                            if ( MainConfig.DestinationPath is null )
                             {
                                 Console.WriteLine( "Please select your KOTOR2 installation directory first." );
                                 break;
@@ -170,7 +173,7 @@ namespace KOTORModSync.ConsoleApp
                                 }
                             }
 
-                            if ( MainConfig.LastOutputDirectory == null )
+                            if ( MainConfig.LastOutputDirectory is null )
                             {
                                 Console.WriteLine( "Please specify the path to the output file." );
                                 MainConfigInstance.lastOutputDirectory = Utility.ChooseDirectory();
@@ -242,6 +245,6 @@ namespace KOTORModSync.ConsoleApp
             }
         }
 
-        public static void WriteToLegacyConsole( string message ) => Console.WriteLine( message );
+        public static void WriteToLegacyConsole( [CanBeNull] string message ) => Console.WriteLine( message );
     }
 }

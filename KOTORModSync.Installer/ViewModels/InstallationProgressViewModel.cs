@@ -41,13 +41,6 @@ namespace KOTORModSync.Installer.ViewModels
             // TODO: Implement the logic to navigate to the next screen (ResultsView).
         }
 
-        private static async Task PerformInstallation()
-        {
-            // TODO: Implement the installation logic.
-            // You can use async/await or any other approach to handle the installation process.
-            // Update the ProgressText property to display progress and diagnostics to the user.
-        }
-
         public void OnNavigatedTo( NavigationContext navigationContext )
         {
             // TODO: Implement any necessary initialization or data loading when navigating to this view.

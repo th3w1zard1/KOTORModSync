@@ -123,7 +123,7 @@ namespace KOTORModSync.Tests
                 = Component.DeserializeTomlComponent( Component.DefaultComponent + Instruction.DefaultInstructions )
                 ?? throw new InvalidOperationException();
             newComponent.Guid = Guid.NewGuid();
-            newComponent.Name = "new mod_" + Path.GetRandomFileName();
+            newComponent.Name = "test_mod_" + Path.GetRandomFileName();
 
             // Serialize
             string tomlString = newComponent.SerializeComponent();
@@ -181,7 +181,7 @@ namespace KOTORModSync.Tests
             // Add mixed line endings and extra whitespaces
             tomlContents = "    \r\n\t   \r\n\r\n\r\n" + tomlContents + "    \r\n\t   \r\n\r\n\r\n";
 
-            // Save the modified TOMLIN file
+            // Save the modified TOMLYN file
             string modifiedFilePath = Path.GetTempFileName();
             File.WriteAllText( modifiedFilePath, tomlContents );
 
@@ -390,8 +390,11 @@ namespace KOTORModSync.Tests
             }
         }
 
-        private static void AssertComponentEquality
-            ( Component expected, Component actual, bool caseSensitiveKeys = true ) =>
+        private static void AssertComponentEquality(
+            Component expected,
+            Component actual,
+            bool caseSensitiveKeys = true
+        ) =>
             Assert.Multiple(
                 () =>
                 {

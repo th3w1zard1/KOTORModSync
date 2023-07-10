@@ -3,18 +3,18 @@ using System.ComponentModel;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
+using JetBrains.Annotations;
 
 namespace KOTORModSync.ViewModel
 {
     public class InstallerViewModel : UserControl
     {
-        private readonly List<Component> _allComponents;
         private ConfirmationScreenViewModel _confirmationScreenViewModel;
         private InstallationProgressScreenViewModel _installationProgressScreenViewModel;
         private ResultsScreenViewModel _resultsScreenViewModel;
         private SelectComponentsViewModel _selectComponentsViewModel;
 
-        public InstallerViewModel( List<Component> availableComponents )
+        public InstallerViewModel( [CanBeNull] List<Component> availableComponents )
         {
             InitializeComponent();
             InitializeViewModels();
@@ -31,9 +31,9 @@ namespace KOTORModSync.ViewModel
             _resultsScreenViewModel = new ResultsScreenViewModel();
         }
 
-        private void ShowScreen( object screenViewModel ) => DataContext = screenViewModel;
+        private void ShowScreen( [CanBeNull] object screenViewModel ) => DataContext = screenViewModel;
 
-        private void NextButton_Click( object sender, RoutedEventArgs e )
+        private void NextButton_Click( [CanBeNull] object sender, [CanBeNull] RoutedEventArgs e )
         {
             switch ( DataContext )
             {
@@ -50,7 +50,7 @@ namespace KOTORModSync.ViewModel
             // Handle navigation to additional screens if needed
         }
 
-        private void BackButton_Click( object sender, RoutedEventArgs e )
+        private void BackButton_Click( [CanBeNull] object sender, [CanBeNull] RoutedEventArgs e )
         {
             switch ( DataContext )
             {

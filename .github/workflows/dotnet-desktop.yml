@@ -40,24 +40,20 @@ name: .NET Core Desktop
 
 on:
   push:
-    branches: [ "master" ]
-  pull_request:
-    branches: [ "master" ]
+    branches:
+      - '*'
 
 jobs:
-
   build:
-
     strategy:
       matrix:
-        configuration: [Debug, Release]
+        configuration: [Release]
 
-    runs-on: windows-latest  # For a list of available runner types, refer to
-                             # https://help.github.com/en/actions/reference/workflow-syntax-for-github-actions#jobsjob_idruns-on
+    runs-on: windows-latest
 
     env:
-      Solution_Name: KOTORModSync                                       # Replace with your solution name, i.e. MyWpfApp.sln.
-      Test_Project_Path: KOTORModSync.Tests\KOTORModSync.Tests.csproj   # Replace with the path to your test project, i.e. MyWpfApp.Tests\MyWpfApp.Tests.csproj.
+      Solution_Name: KOTORModSync
+      Test_Project_Path: KOTORModSync.Tests\KOTORModSync.Tests.csproj
 
     steps:
     - name: Checkout
@@ -65,16 +61,53 @@ jobs:
       with:
         fetch-depth: 0
 
-    # Install the .NET Core workload
     - name: Install .NET Core
       uses: actions/setup-dotnet@v3
       with:
         dotnet-version: 6.0.x
 
-    # Add  MSBuild to the PATH: https://github.com/microsoft/setup-msbuild
     - name: Setup MSBuild.exe
       uses: microsoft/setup-msbuild@v1.0.2
 
-    # Execute all unit tests in the solution
     - name: Execute unit tests
-      run: dotnet test
+      run: |
+        $date = Get-Date -Format yyyy-MM-dd
+        dotnet test --logger "trx;LogFileName=test_results_$date.xml" --results-directory TestResults
+      continue-on-error: true
+
+    - name: Summarize test results
+      run: |
+        dotnet tool install --global trx2junit
+        $date = Get-Date -Format yyyy-MM-dd
+        trx2junit "TestResults/test_results_$date.xml" --output "TestResults/summary_$date.xml"
+
+    - name: Modify test results XML
+      uses: actions/github-script@v4
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        script: |
+          const fs = require('fs');
+          const process = require('process');
+          const commitHash = process.env.GITHUB_SHA;
+          const date = new Date().toISOString().split('T')[0];
+          const filePath = 'TestResults/test_results_' + date + '.xml';
+          let xmlContent = fs.readFileSync(filePath, 'utf8');
+          xmlContent = xmlContent.replace('<test-run', `<test-run commit-hash="${commitHash}"`);
+
+          fs.writeFileSync(filePath, xmlContent);
+
+    - name: Generate date
+      id: generate-date
+      run: |
+        $date = Get-Date -Format yyyy-MM-dd
+        echo "::set-output name=date::$date"
+
+    - name: Upload summary
+      uses: actions/upload-artifact@v2
+      with:
+        name: Test Summary
+        path: |
+          TestResults/summary_${{ steps.generate-date.outputs.date }}.xml
+          TestResults/test_results_${{ steps.generate-date.outputs.date }}.xml
+
+

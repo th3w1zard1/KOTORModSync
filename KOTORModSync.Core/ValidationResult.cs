@@ -1,12 +1,13 @@
-﻿namespace KOTORModSync.Core
+﻿using JetBrains.Annotations;
+
+namespace KOTORModSync.Core
 {
     public class ValidationResult
     {
-        public ValidationResult
-        (
+        public ValidationResult(
             ComponentValidation validator,
             Instruction instruction,
-            string message,
+            [CanBeNull] string message,
             bool isError
         )
         {

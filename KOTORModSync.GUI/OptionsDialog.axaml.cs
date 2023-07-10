@@ -39,7 +39,7 @@ namespace KOTORModSync
 
         private void InitializeComponent() => AvaloniaXamlLoader.Load( this );
 
-        private void OKButton_Click( object sender, RoutedEventArgs e )
+        private void OKButton_Click( [CanBeNull] object sender, [CanBeNull] RoutedEventArgs e )
         {
             RadioButton selectedRadioButton = OptionStackPanel.Children.OfType<RadioButton>()
                 .SingleOrDefault( rb => rb.IsChecked == true );
@@ -55,9 +55,9 @@ namespace KOTORModSync
 
         public event EventHandler<string> OptionSelected;
 
-        private void OnOpened( object sender, EventArgs e )
+        private void OnOpened( [CanBeNull] object sender, [CanBeNull] EventArgs e )
         {
-            var optionStackPanel = this.FindControl<StackPanel>( "OptionStackPanel" );
+            StackPanel optionStackPanel = this.FindControl<StackPanel>( "OptionStackPanel" );
 
             foreach ( string option in OptionsList )
             {
@@ -96,7 +96,11 @@ namespace KOTORModSync
             Position = new PixelPoint( (int)left, (int)top );
         }
 
-        public static async Task<string> ShowOptionsDialog( Window parentWindow, List<string> optionsList )
+        [ItemCanBeNull]
+        public static async Task<string> ShowOptionsDialog(
+            [CanBeNull] Window parentWindow,
+            [CanBeNull] List<string> optionsList
+        )
         {
             var tcs = new TaskCompletionSource<string>();
 

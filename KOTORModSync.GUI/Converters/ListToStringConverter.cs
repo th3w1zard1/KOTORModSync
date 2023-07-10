@@ -21,7 +21,7 @@ namespace KOTORModSync.Converters
         [NotNull]
         public static string RemoveSpacesExceptNewLine( [NotNull] string input )
         {
-            if ( input == null )
+            if ( input is null )
             {
                 throw new ArgumentNullException( nameof( input ) );
             }
@@ -33,12 +33,11 @@ namespace KOTORModSync.Converters
         }
 
 
-        public object Convert
-        (
-            [CanBeNull] object value,
-            [NotNull] Type targetType,
-            [CanBeNull] object parameter,
-            [NotNull] CultureInfo culture
+        public object Convert(
+            object value,
+            Type targetType,
+            object parameter,
+            CultureInfo culture
         )
         {
             if ( !( value is IEnumerable list ) )
@@ -49,7 +48,7 @@ namespace KOTORModSync.Converters
             var serializedList = new StringBuilder();
             foreach ( object item in list )
             {
-                if ( item == null )
+                if ( item is null )
                 {
                     continue;
                 }
@@ -61,13 +60,11 @@ namespace KOTORModSync.Converters
         }
 
 
-        [CanBeNull]
-        public object ConvertBack
-        (
-            [CanBeNull] object value,
-            [NotNull] Type targetType,
-            [CanBeNull] object parameter,
-            [NotNull] CultureInfo culture
+        public object ConvertBack(
+            object value,
+            Type targetType,
+            object parameter,
+            CultureInfo culture
         )
         {
             try

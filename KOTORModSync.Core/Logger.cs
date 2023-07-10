@@ -7,6 +7,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using JetBrains.Annotations;
 
 namespace KOTORModSync.Core
 {
@@ -44,7 +45,7 @@ namespace KOTORModSync.Core
             }
         }
 
-        public static void Log( string message, bool fileOnly = false )
+        public static void Log( [CanBeNull] string message, bool fileOnly = false )
         {
             string logMessage = $"[{DateTime.Now}] {message}";
             if ( !fileOnly )
@@ -60,7 +61,7 @@ namespace KOTORModSync.Core
             Logged.Invoke( logMessage ); // Raise the Logged event
         }
 
-        private static async Task LogInternalAsync( string internalMessage, bool fileOnly = false )
+        private static async Task LogInternalAsync( [CanBeNull] string internalMessage, bool fileOnly = false )
         {
             await s_semaphore.WaitAsync();
             try
@@ -87,49 +88,74 @@ namespace KOTORModSync.Core
             }
         }
 
-        public static Task LogAsync( string message ) => LogInternalAsync( message );
-        public static void LogVerbose( string message ) => Log( "[Verbose] " + message, !MainConfig.DebugLogging );
+        [NotNull] public static Task LogAsync( [CanBeNull] string message ) => LogInternalAsync( message );
 
-        public static Task LogVerboseAsync
-            ( string message ) => LogInternalAsync( "[Verbose] " + message, !MainConfig.DebugLogging );
+        public static void LogVerbose( [CanBeNull] string message ) =>
+            Log( $"[Verbose] {message}", !MainConfig.DebugLogging );
 
-        public static void LogWarning( string message ) => Log( "[Warning] " + message );
-        public static Task LogWarningAsync( string message ) => LogInternalAsync( "[Warning] " + message );
-        public static void LogError( string message ) => Log( "[Error] " + message );
-        public static Task LogErrorAsync( string message ) => LogInternalAsync( "[Error] " + message );
-        public static async Task LogExceptionAsync( Exception ex ) => await Task.Run( () => LogException( ex ) );
+        [NotNull]
+        public static Task LogVerboseAsync( [CanBeNull] string message ) =>
+            LogInternalAsync( $"[Verbose] {message}", !MainConfig.DebugLogging );
 
-        public static async Task LogExceptionAsync
-            ( Exception ex, string customMessage ) => await Task.Run( () => LogException( ex, customMessage ) );
+        public static void LogWarning( [NotNull] string message ) => Log( $"[Warning] {message}" );
 
-        public static void LogException( Exception exception, string customMessage )
+        [NotNull]
+        public static Task LogWarningAsync( [NotNull] string message ) =>
+            LogInternalAsync( $"[Warning] {message}" );
+
+        public static void LogError( [CanBeNull] string message ) => Log( $"[Error] {message}" );
+
+        [NotNull]
+        public static Task LogErrorAsync( [CanBeNull] string message ) =>
+            LogInternalAsync( $"[Error] {message}" );
+
+        [NotNull]
+        public static async Task LogExceptionAsync( [CanBeNull] Exception ex ) =>
+            await Task.Run( () => LogException( ex ) );
+
+        [NotNull]
+        public static async Task LogExceptionAsync(
+            [CanBeNull] Exception ex,
+            [CanBeNull] string customMessage
+        ) => await Task.Run( () => LogException( ex, customMessage ) );
+
+        public static void LogException( [CanBeNull] Exception exception, [CanBeNull] string customMessage )
         {
+            exception = exception ?? new ApplicationException();
+
             LogException( exception );
             LogError( customMessage );
         }
 
-        public static void LogException( Exception ex )
+        public static void LogException( [CanBeNull] Exception ex )
         {
-            Log( $"Exception: {ex.GetType().Name} - {ex.Message}" );
+            ex = ex ?? new ApplicationException();
+
+            Log( $"Exception: {ex.GetType()?.Name} - {ex.Message}" );
             Log( $"Stack trace: {ex.StackTrace}" );
 
             ExceptionLogged.Invoke( ex ); // Raise the ExceptionLogged event
         }
 
-        private static void CurrentDomain_UnhandledException( object sender, UnhandledExceptionEventArgs e )
+        private static void CurrentDomain_UnhandledException( [CanBeNull] object sender, UnhandledExceptionEventArgs e )
         {
-            if ( !( e.ExceptionObject is Exception ex ) )
+            if ( !( e?.ExceptionObject is Exception ex ) )
             {
+                LogError( "appdomain's unhandledexception did not have a valid exception handle?" );
                 return;
             }
 
             LogException( ex );
         }
 
-        private static void TaskScheduler_UnobservedTaskException( object sender, UnobservedTaskExceptionEventArgs e )
+        private static void TaskScheduler_UnobservedTaskException(
+            [CanBeNull] object sender,
+            UnobservedTaskExceptionEventArgs e
+        )
         {
-            if ( e.Exception == null )
+            if ( e?.Exception is null )
             {
+                LogError( "appdomain's unhandledexception did not have a valid exception handle?" );
                 return;
             }
 

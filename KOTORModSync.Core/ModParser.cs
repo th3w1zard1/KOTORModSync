@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
+using JetBrains.Annotations;
 
 namespace KOTORModSync.Core
 {
@@ -13,12 +14,12 @@ namespace KOTORModSync.Core
     {
         private const string Separator = "__";
 
-        public static List<Component> ParseMods
-            ( string source ) => source.Split( new[] { Separator }, StringSplitOptions.RemoveEmptyEntries )
+        public static List<Component> ParseMods( string source ) => source
+            .Split( new[] { Separator }, StringSplitOptions.RemoveEmptyEntries )
             .Select( ParseMod )
             .ToList();
 
-        private static Component ParseMod( string modText )
+        private static Component ParseMod( [CanBeNull] string modText )
         {
             var mod = new Component();
 
@@ -50,7 +51,7 @@ namespace KOTORModSync.Core
             return (name, modLink);
         }
 
-        private static string GetPropertyValue( string text, string propertyName )
+        private static string GetPropertyValue( string text, [CanBeNull] string propertyName )
         {
             string pattern = $@"(?i)\*\*{propertyName}:\*\* ([^_*]+)";
             Match match = Regex.Match( text, pattern, RegexOptions.Singleline );
@@ -62,16 +63,12 @@ namespace KOTORModSync.Core
 
         private static string GetName( (string, string) nameAndModLink ) => nameAndModLink.Item1;
 
-        private static string GetHyperlinkUrl
-            ( (string, string) nameAndModLink, string linkType ) => string.Equals(
-            linkType,
-            "name",
-            StringComparison.OrdinalIgnoreCase
-        )
-            ? nameAndModLink.Item2
-            : string.Empty;
+        private static string GetHyperlinkUrl( (string, string) nameAndModLink, [CanBeNull] string linkType ) =>
+            string.Equals( linkType, "name", StringComparison.OrdinalIgnoreCase )
+                ? nameAndModLink.Item2
+                : string.Empty;
 
-        private static (string, string) GetCategoryAndTier( string text, string categoryTierName )
+        private static (string, string) GetCategoryAndTier( string text, [CanBeNull] string categoryTierName )
         {
             string pattern = $@"(?i)\*\*{categoryTierName}:\*\* ([^_*]+)";
             Match match = Regex.Match( text, pattern, RegexOptions.Singleline );
@@ -87,7 +84,7 @@ namespace KOTORModSync.Core
                 : (string.Empty, string.Empty);
         }
 
-        private static bool GetBoolValue( string text, string propertyName )
+        private static bool GetBoolValue( string text, [CanBeNull] string propertyName )
         {
             string pattern = $@"\*\*{propertyName}:\*\* (.+)";
             Match match = Regex.Match( text, pattern );

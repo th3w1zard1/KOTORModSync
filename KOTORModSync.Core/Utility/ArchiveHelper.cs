@@ -21,7 +21,9 @@ namespace KOTORModSync.Core.Utility
             PreserveFileTime = true
         };
 
-        public static bool IsArchive( string filePath ) => IsArchive( new FileInfo( filePath ) );
+        public static bool IsArchive( string filePath ) => IsArchive(
+            new FileInfo( filePath ?? throw new ArgumentNullException( nameof( filePath ) ) )
+        );
 
         public static bool IsArchive( FileInfo thisFile )
         {
@@ -39,8 +41,13 @@ namespace KOTORModSync.Core.Utility
         }
 
         [CanBeNull]
-        public static IArchive OpenArchive( string archivePath )
+        public static IArchive OpenArchive( [NotNull] string archivePath )
         {
+            if ( archivePath == null )
+            {
+                throw new ArgumentNullException( nameof( archivePath ) );
+            }
+
             try
             {
                 IArchive archive = null;
@@ -70,8 +77,18 @@ namespace KOTORModSync.Core.Utility
         }
 
 
-        public static void OutputModTree( DirectoryInfo directory, string outputPath )
+        public static void OutputModTree( [NotNull] DirectoryInfo directory, [NotNull] string outputPath )
         {
+            if ( directory == null )
+            {
+                throw new ArgumentNullException( nameof( directory ) );
+            }
+
+            if ( outputPath == null )
+            {
+                throw new ArgumentNullException( nameof( outputPath ) );
+            }
+
             Dictionary<string, object> root = GenerateArchiveTreeJson( directory );
             try
             {
@@ -90,8 +107,13 @@ namespace KOTORModSync.Core.Utility
         }
 
         [CanBeNull]
-        public static Dictionary<string, object> GenerateArchiveTreeJson( DirectoryInfo directory )
+        public static Dictionary<string, object> GenerateArchiveTreeJson( [NotNull] DirectoryInfo directory )
         {
+            if ( directory == null )
+            {
+                throw new ArgumentNullException( nameof( directory ) );
+            }
+
             var root = new Dictionary<string, object>( 65535 )
             {
                 { "Name", directory.Name }, { "Type", "directory" }, { "Contents", new List<object>() }
@@ -101,7 +123,7 @@ namespace KOTORModSync.Core.Utility
             {
                 foreach ( FileInfo file in directory.EnumerateFiles( "*.*", SearchOption.TopDirectoryOnly ) )
                 {
-                    if ( !IsArchive( file.Extension ) )
+                    if ( file == null || !IsArchive( file.Extension ) )
                     {
                         continue;
                     }
@@ -140,14 +162,19 @@ namespace KOTORModSync.Core.Utility
             return root;
         }
 
-        public static List<ModDirectory.ArchiveEntry> TraverseArchiveEntries( string archivePath )
+        public static List<ModDirectory.ArchiveEntry> TraverseArchiveEntries( [NotNull] string archivePath )
         {
+            if ( archivePath == null )
+            {
+                throw new ArgumentNullException( nameof( archivePath ) );
+            }
+
             var archiveEntries = new List<ModDirectory.ArchiveEntry>( 65535 );
 
             try
             {
                 IArchive archive = OpenArchive( archivePath );
-                if ( archive == null )
+                if ( archive is null )
                 {
                     Logger.Log( $"Unsupported archive format: '{Path.GetExtension( archivePath )}'" );
                     return archiveEntries;

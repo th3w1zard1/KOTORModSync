@@ -7,10 +7,9 @@ namespace KOTORModSync.Installer.ViewModels
 {
     public class WelcomeViewModel : BindableBase
     {
-        private string _welcomeMessage;
         private bool _isInstructionsLoaded;
         private string _selectedDirectories;
-        private Action<string> _navigateToSelectComponents;
+        private readonly Action<string> _navigateToSelectComponents;
 
         public WelcomeViewModel( Action<string> navigateToSelectComponents )
         {

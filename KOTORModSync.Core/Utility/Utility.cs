@@ -37,7 +37,7 @@ namespace KOTORModSync.Core.Utility
 
             FieldInfo field = type.GetField( name );
 
-            var attribute = field?.GetCustomAttribute<DescriptionAttribute>();
+            DescriptionAttribute attribute = field?.GetCustomAttribute<DescriptionAttribute>();
             return attribute?.Description;
         }
 

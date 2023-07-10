@@ -10,7 +10,7 @@ namespace KOTORModSync.Tests
     public class SerializationTests
     {
         //[Test]
-        public static void TestSerializeObject()
+        private static void TestSerializeObject()
         {
             MyClass obj = new(); // Replace MyClass with your class name
             object? serialized = Serializer.SerializeObject( obj );
@@ -62,7 +62,7 @@ namespace KOTORModSync.Tests
         }
 
         //[Test]
-        public static void TestSerializeDictionaryOfGuidString()
+        private static void TestSerializeDictionaryOfGuidString()
         {
             Dictionary<Guid, string> dict = new() { { Guid.NewGuid(), "Value 1" }, { Guid.NewGuid(), "Value 2" } };
             object? serialized = Serializer.SerializeObject( dict );
@@ -171,36 +171,6 @@ namespace KOTORModSync.Tests
             action.Invoke();
 
             recursionDepth--;
-        }
-
-        private static void AssertPropertyEquality(
-            object? expectedValue,
-            Dictionary<string, object> deserializedObject,
-            string propertyName
-        )
-        {
-            if ( expectedValue is null )
-            {
-                Assert.That(
-                    deserializedObject[propertyName],
-                    Is.Null,
-                    $"Property '{propertyName}' should be null after deserialization."
-                );
-                return;
-            }
-
-            Assert.That(
-                deserializedObject.ContainsKey( propertyName ),
-                Is.True,
-                $"Property '{propertyName}' is missing after deserialization."
-            );
-            object actualValue = deserializedObject[propertyName];
-
-            Assert.That(
-                actualValue,
-                Is.EqualTo( expectedValue ),
-                $"Property '{propertyName}' does not match after deserialization."
-            );
         }
 
         private static void VerifyUniqueSerialization( object serialized, HashSet<object> serializedObjects )

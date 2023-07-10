@@ -56,7 +56,7 @@ namespace KOTORModSync.Converters
             }
 
             IEnumerable enumerable = itemList.Cast<object>().ToList();
-            List<object> itemList2 = enumerable.Cast<object>().ToList();
+            var itemList2 = enumerable.Cast<object>().ToList();
             return index < 0 || index >= itemList2.Count
                 ? null
                 : itemList2[index];

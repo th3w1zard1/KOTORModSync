@@ -201,7 +201,7 @@ namespace KOTORModSync.Core
             Instructions = DeserializeInstructions(
                 GetValueOrDefault<IList<object>>( componentDict, "Instructions" )
             );
-            Instructions.ForEach( instruction => instruction ?.SetParentComponent( this ) );
+            Instructions.ForEach( instruction => instruction?.SetParentComponent( this ) );
 
 
             Options = DeserializeOptions( GetValueOrDefault<IList<IDictionary<string, object>>>( componentDict, "Options" ) );
@@ -327,7 +327,7 @@ namespace KOTORModSync.Core
 
         [ItemNotNull]
         [NotNull]
-        private List<Instruction> DeserializeInstructions( [CanBeNull] [ItemCanBeNull] IList<object> instructionsSerializedList )
+        private List<Instruction> DeserializeInstructions( [CanBeNull][ItemCanBeNull] IList<object> instructionsSerializedList )
         {
             if ( !( instructionsSerializedList is TomlArray _ ) )
             {
@@ -569,8 +569,9 @@ namespace KOTORModSync.Core
             return component;
         }
 
-        
-        [NotNull][ItemNotNull]
+
+        [NotNull]
+        [ItemNotNull]
         public static List<Component> ReadComponentsFromFile( [NotNull] string filePath )
         {
             if ( filePath is null ) throw new ArgumentNullException( nameof( filePath ) );

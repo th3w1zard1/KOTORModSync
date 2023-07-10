@@ -201,7 +201,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
 
                 var extractionTasks = new List<Task>( 25 );
                 var semaphore = new SemaphoreSlim( 5 ); // Limiting to 5 concurrent extractions
-                var exitCode = ActionExitCode.Success;
+                ActionExitCode exitCode = ActionExitCode.Success;
 
                 foreach ( string sourcePath in argSourcePaths )
                 {
@@ -456,7 +456,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
         {
             try
             {
-                var exitCode = ActionExitCode.Success;
+                ActionExitCode exitCode = ActionExitCode.Success;
                 foreach ( string sourcePath in Source.ConvertAll( Utility.Utility.ReplaceCustomVariables ) )
                 {
                     // Check if the source file already exists
@@ -743,7 +743,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
         {
             try
             {
-                var exitCode = ActionExitCode.Success; // Track the success status
+                ActionExitCode exitCode = ActionExitCode.Success; // Track the success status
                 foreach ( string sourcePath in RealSourcePaths )
                 {
                     try

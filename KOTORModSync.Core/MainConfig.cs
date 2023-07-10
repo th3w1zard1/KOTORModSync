@@ -16,7 +16,6 @@ namespace KOTORModSync.Core
     // there should only ever be one MainConfig instance created at any one time.
     // instance has GET and SET access.
     // Everyone else has readonly GET access.
-    [SuppressMessage( "ReSharper", "InconsistentNaming" )]
     [SuppressMessage( "Performance", "CA1822:Mark members as static", Justification = "<Pending>" )]
     [SuppressMessage( "CodeQuality", "IDE0079:Remove unnecessary suppression", Justification = "<Pending>" )]
     public class MainConfig : INotifyPropertyChanged
@@ -55,10 +54,8 @@ namespace KOTORModSync.Core
             [Description( "Use TSLPatcher" )]
             TSLPatcher = 0,
 
-            [Description( "Use TSLPatcherCLI (not tested)" )]
-            TSLPatcherCLI = 1,
-
-            [Description( "Use PyKotorCLI" )] PyKotorCLI = 2
+            [Description( "Use PyKotorCLI" )]
+            PyKotorCLI = 2
         }
 
         [UsedImplicitly]
@@ -162,6 +159,8 @@ namespace KOTORModSync.Core
             get => NoAdmin;
             set => NoAdmin = value;
         }
+
+        public static string CurrentVersion => "0.7.2";
 
         public event PropertyChangedEventHandler PropertyChanged;
 

@@ -46,7 +46,7 @@ jobs:
 
     - name: Find duplicate code
       run: |
-        $date = Get-Date -Format yyyy-MM-dd_HH:mm
+        $date = Get-Date -Format yyyy-MM-dd
         dupFinder.sh '**/*.cs' -o=.github/resharper_duplicatefinder_$date.log
       
     - name: Find Solution File
@@ -61,7 +61,7 @@ jobs:
 
     - name: Analyze code
       run: |
-        $date = Get-Date -Format yyyy-MM-dd_HH:mm
+        $date = Get-Date -Format yyyy-MM-dd
         if [ "$MATRIX_OS" == "windows-latest" ]; then
           .\InspectCode.sh ${{ steps.solution.outputs.solution_path }} -o=TestResults\resharper_inspect_$date.log
         else

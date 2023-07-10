@@ -475,17 +475,17 @@ namespace KOTORModSync.Core
             }
 
             // probably some sort of array at this point
-
             var tomlArray = value as IList<object>;
             var tomlTableArray = value as IList<TomlTable>;
-            if ( !( tomlArray is null && tomlTableArray is null ) )
+
+            dynamic valueEnumerable = tomlArray;
+            valueEnumerable = valueEnumerable ?? tomlTableArray;
+            if ( valueEnumerable != null )
             {
                 Type elementType = typeof( T ).GetGenericArguments()[0];
-                dynamic dynamicList = Activator.CreateInstance( typeof( List<> ).MakeGenericType( elementType ) )
-                    ?? throw new InvalidOperationException( nameof(dynamicList) );
-
-                dynamic valueEnumerable = tomlArray;
-                valueEnumerable = valueEnumerable ?? tomlTableArray;
+                Type listType = typeof( List<> ).MakeGenericType( elementType );
+                dynamic dynamicList = Activator.CreateInstance( listType )
+                    ?? throw new InvalidOperationException( nameof( dynamicList ) );
                 foreach ( object item in valueEnumerable )
                 {
                     if ( elementType == typeof( Guid ) && item is string guidString )
@@ -494,16 +494,17 @@ namespace KOTORModSync.Core
                         Guid parsedGuid = string.IsNullOrEmpty( guidString )
                             ? Guid.Empty
                             : Guid.Parse( guidString );
-                        dynamicList.Add( parsedGuid );
+                        dynamicList.Add( (dynamic)parsedGuid );
                     }
                     else
                     {
-                        dynamicList.Add( item );
+                        dynamicList.Add( (dynamic)item );
                     }
                 }
 
-                return dynamicList;
+                return (T)dynamicList;
             }
+
 
             try
             {

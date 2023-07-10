@@ -96,9 +96,18 @@ jobs:
 
           fs.writeFileSync(filePath, xmlContent);
 
+    - name: Generate date
+      id: generate-date
+      run: |
+        $date = Get-Date -Format yyyy-MM-dd
+        echo "::set-output name=date::$date"
+
     - name: Upload summary
       uses: actions/upload-artifact@v2
       with:
         name: Test Summary
-        path: TestResults/summary.xml
+        path: |
+          TestResults/summary_${{ steps.generate-date.outputs.date }}.xml
+          TestResults/test_results_${{ steps.generate-date.outputs.date }}.xml
+
 

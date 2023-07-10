@@ -166,7 +166,7 @@ namespace KOTORModSync.Core
 
             foreach ( string key in itemsToRemove )
             {
-                _ = rootTable["thisMod"].RemoveAll( item => item.GetHashCode().ToString() == key );
+                _ = rootTable["thisMod"].RemoveAll( item => item?.GetHashCode().ToString() == key );
             }
 
 

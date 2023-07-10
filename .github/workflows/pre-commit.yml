@@ -41,7 +41,7 @@ jobs:
     - name: Setup ReSharper Command Line Tools
       uses: goit/setup-resharper@v2.0.1
       with:
-        versionSpec: '2021.1'
+        version: '2021.1'
 
     - name: Clean up code
       run: cleanupcode.sh ${{ github.workspace }}/*.sln

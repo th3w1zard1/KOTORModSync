@@ -20,9 +20,20 @@ namespace KOTORModSync.Controls
     {
         public DependencyControl() => InitializeComponent();
 
+        // used to fix the move window code with comboboxes.
+        protected override void OnAttachedToVisualTree( VisualTreeAttachmentEventArgs e )
+        {
+            base.OnAttachedToVisualTree( e );
+
+            if ( VisualRoot is MainWindow mainWindow )
+            {
+                mainWindow.FindComboBoxesInWindow( mainWindow );
+            }
+        }
+
         [NotNull]
         public static readonly StyledProperty<List<Guid>> ThisGuidListProperty
-            = AvaloniaProperty.Register<DependencyControl, List<Guid>>( nameof( ThisGuidList ) );
+            = AvaloniaProperty.Register<DependencyControl, List<Guid>>( nameof(ThisGuidList) );
 
         [NotNull]
         public List<Guid> ThisGuidList

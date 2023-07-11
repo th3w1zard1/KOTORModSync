@@ -5,7 +5,6 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using Avalonia.Data.Converters;
-using JetBrains.Annotations;
 using KOTORModSync.Core;
 
 namespace KOTORModSync.Converters

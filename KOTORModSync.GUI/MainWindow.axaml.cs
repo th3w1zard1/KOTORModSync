@@ -15,7 +15,6 @@ using System.Windows.Input;
 using Avalonia;
 using Avalonia.Collections;
 using Avalonia.Controls;
-using Avalonia.Controls.Chrome;
 using Avalonia.Controls.Primitives;
 using Avalonia.Data;
 using Avalonia.Input;
@@ -25,7 +24,6 @@ using Avalonia.Markup.Xaml;
 using Avalonia.Markup.Xaml.Styling;
 using Avalonia.Styling;
 using Avalonia.Threading;
-using Avalonia.VisualTree;
 using JetBrains.Annotations;
 using KOTORModSync.CallbackDialogs;
 using KOTORModSync.Core;
@@ -40,15 +38,7 @@ namespace KOTORModSync
 {
     public partial class MainWindow : Window
     {
-        private Component _currentComponent;
-        private bool _installRunning;
-
-        private string _originalContent;
-        private Window _outputWindow;
-        private bool _mouseDownForWindowMoving;
-        private PointerPoint _originalPoint;
-
-        public List<Component> ComponentsList;
+        public List<Component> ComponentsList => MainConfig.AllComponents;
 
         public MainWindow()
         {
@@ -68,6 +58,16 @@ namespace KOTORModSync
             this.AttachDevTools();
 #endif
         }
+
+        private MainConfig MainConfigInstance { get; set; }
+        private Component _currentComponent;
+        private bool _installRunning;
+
+        private string _originalContent;
+        private Window _outputWindow;
+        private bool _ignoreWindowMoveWhenClickingComboBox;
+        private bool _mouseDownForWindowMoving;
+        private PointerPoint _originalPoint;
 
         // test the options dialog for use with the 'Options' IDictionary<string, object>.
         public async void Testwindow()
@@ -93,8 +93,6 @@ namespace KOTORModSync
                 Console.WriteLine( "No option selected or dialog closed" );
             }
         }
-
-        private MainConfig MainConfigInstance { get; set; }
 
         private void InitializeComponent()
         {
@@ -138,17 +136,18 @@ namespace KOTORModSync
             // Column 3
             configColumn.Width = new GridLength( 250 );
             MainConfigInstance = new MainConfig();
-            ComponentsList = MainConfig.AllComponents;
             MainConfigStackPanel = this.FindControl<StackPanel>( "MainConfigStackPanel" )
                 ?? throw new NullReferenceException( "MainConfigStackPanel not defined for MainWindow." );
 
             MainConfigStackPanel.DataContext = MainConfigInstance;
 
+            Logger.LogVerboseAsync( "Setup window move event handlers..." );
             // Attach event handlers
             this.PointerPressed += InputElement_OnPointerPressed;
             this.PointerMoved += InputElement_OnPointerMoved;
             this.PointerReleased += InputElement_OnPointerReleased;
-            FindComboBoxesInWindow(this);
+            this.PointerLeave += InputElement_OnPointerReleased;
+            FindComboBoxesInWindow( this );
         }
 
         // Prevents a combobox from dragging the window around.
@@ -158,10 +157,10 @@ namespace KOTORModSync
 
             if ( control is ComboBox _ )
             {
-                control.PointerPressed += ComboBox_Pressed;
-                control.PointerEnter += ComboBox_Pressed;
-                control.PointerLeave += ComboBox_Pressed;
+                control.Tapped -= ComboBox_Opened;
+                control.PointerCaptureLost -= ComboBox_Opened;
                 control.Tapped += ComboBox_Opened;
+                control.PointerCaptureLost += ComboBox_Opened;
             }
 
             if ( visual.LogicalChildren is null || visual.LogicalChildren.Count == 0 )
@@ -178,37 +177,41 @@ namespace KOTORModSync
             }
         }
 
-        // Call the method in your window initialization or event handler
-        private void FindComboBoxesInWindow( [NotNull] Window thisWindow)
+        public void FindComboBoxesInWindow( [NotNull] Window thisWindow)
         {
             if ( thisWindow is null ) throw new ArgumentNullException( nameof(thisWindow) );
 
-            // Assuming 'this' refers to your window instance
             FindComboBoxes( thisWindow );
-        }
-
-        private void ComboBox_Pressed( [NotNull] object sender, [NotNull] PointerEventArgs e )
-        {
-            _mouseDownForWindowMoving = false;
         }
 
         private void ComboBox_Opened( [NotNull] object sender, [NotNull] RoutedEventArgs e )
         {
             _mouseDownForWindowMoving = false;
+            _ignoreWindowMoveWhenClickingComboBox = true;
         }
 
         private void InputElement_OnPointerMoved( [NotNull] object sender, [NotNull] PointerEventArgs e )
         {
             if ( !_mouseDownForWindowMoving ) return;
-            
-                PointerPoint currentPoint = e.GetCurrentPoint( this );
-                Position = new PixelPoint( Position.X + (int)( currentPoint.Position.X - _originalPoint.Position.X ),
-                    Position.Y + (int)( currentPoint.Position.Y - _originalPoint.Position.Y ) );
+
+            if ( _ignoreWindowMoveWhenClickingComboBox )
+            {
+                _ignoreWindowMoveWhenClickingComboBox = false;
+                _mouseDownForWindowMoving = false;
+                return;
+            }
+
+            PointerPoint currentPoint = e.GetCurrentPoint( this );
+            Position = new PixelPoint( Position.X + (int)( currentPoint.Position.X - _originalPoint.Position.X ),
+                Position.Y + (int)( currentPoint.Position.Y - _originalPoint.Position.Y ) );
         }
 
         private void InputElement_OnPointerPressed( [NotNull] object sender, [NotNull] PointerEventArgs e )
         {
-            if ( WindowState == WindowState.Maximized || WindowState == WindowState.FullScreen ) return;
+            if ( WindowState == WindowState.Maximized || WindowState == WindowState.FullScreen )
+                return;
+            if ( sender is ComboBox )
+                return;
 
             _mouseDownForWindowMoving = true;
             _originalPoint = e.GetCurrentPoint( this );

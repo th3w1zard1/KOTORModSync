@@ -160,7 +160,7 @@ namespace KOTORModSync.Core
             set => NoAdmin = value;
         }
 
-        public static string CurrentVersion => "0.7.2";
+        public static string CurrentVersion => "0.7.2.01";
 
         public event PropertyChangedEventHandler PropertyChanged;
 

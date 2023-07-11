@@ -670,9 +670,9 @@ namespace KOTORModSync.Core
 
             [Description( "An unexpected exception was thrown" )]
             UnexpectedException,
+            UnknownError,
 
             [Description( "A tslpatcher error was thrown" )]
-            UnknownError,
             TSLPatcherError,
 
             [Description(

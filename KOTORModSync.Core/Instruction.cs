@@ -651,9 +651,12 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                     switch ( MainConfig.PatcherOption )
                     {
                         case MainConfig.AvailablePatchers.PyKotorCLI:
-                            thisExe = RuntimeInformation.IsOSPlatform( OSPlatform.Windows )
-                                ? "pykotorcli.exe" // windows
-                                : "pykotorcli"; // linux/mac
+                            thisExe = Path.Combine(
+                                "Resources",
+                                RuntimeInformation.IsOSPlatform( OSPlatform.Windows )
+                                    ? "pykotorcli.exe" // windows
+                                    : "pykotorcli" // linux/mac
+                            );
                             break;
                         case MainConfig.AvailablePatchers.TSLPatcher:
                         default:
@@ -847,11 +850,6 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
             Logger.LogVerbose( "Preparing TSLPatcher install..." );
             foreach ( string sourcePath in RealSourcePaths )
             {
-                if ( sourcePath is null )
-                {
-                    continue;
-                }
-
                 string tslPatcherDirPath = Path.GetDirectoryName( sourcePath )
                     ?? throw new DirectoryNotFoundException(
                         $"Could not retrieve parent directory of '{sourcePath}'."

@@ -726,14 +726,6 @@ namespace KOTORModSync
                         continue;
                     }
 
-
-                    // Confirm that dependencies are all found in InstallBefore and InstallAfter keys:
-                    bool installOrderKeysDefined = component.Dependencies?.All(
-                            item => component.InstallBefore?.Contains( item ) == true
-                                || component.InstallAfter?.Contains( item ) == true
-                        )
-                        == true;
-
                     if (
                         component.Restrictions != null
                         && component.Restrictions.Count > 0
@@ -776,14 +768,6 @@ namespace KOTORModSync
                                 individuallyValidated = false;
                             }
                         }
-                    }
-
-                    if ( !installOrderKeysDefined )
-                    {
-                        await Logger.LogErrorAsync(
-                            $"'{component.Name}' 'InstallBefore' and 'InstallAfter' keys must be defined for all dependencies."
-                        );
-                        individuallyValidated = false;
                     }
 
                     var validator = new ComponentValidation( component, MainConfig.AllComponents );

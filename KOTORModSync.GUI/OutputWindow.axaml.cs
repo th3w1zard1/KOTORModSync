@@ -55,7 +55,7 @@ namespace KOTORModSync
             // Open the file and retrieve the last 200 lines
             string logfileName = $"{Logger.LogFileName}{DateTime.Now:yyyy-MM-dd}";
             string executingDirectory = Core.Utility.Utility.GetExecutingAssemblyDirectory();
-            string filePath = Path.Combine(executingDirectory, logfileName + ".txt");
+            string filePath = Path.Combine( executingDirectory, logfileName + ".txt" );
             if ( !File.Exists( filePath ) )
                 return;
 

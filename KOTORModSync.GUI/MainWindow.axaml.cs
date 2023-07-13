@@ -1744,7 +1744,7 @@ namespace KOTORModSync
         [CanBeNull]
         private static TreeViewItem FindExistingItem( [NotNull] ItemsControl parentItem, [CanBeNull] Component component )
         {
-            if ( parentItem is null ) throw new ArgumentNullException( nameof(parentItem) );
+            if ( parentItem is null ) throw new ArgumentNullException( nameof( parentItem ) );
             if ( parentItem.Items is null ) return null;
 
             foreach ( object item in parentItem.Items )

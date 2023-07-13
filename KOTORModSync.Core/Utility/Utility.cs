@@ -37,7 +37,7 @@ namespace KOTORModSync.Core.Utility
                 executingAssemblyLocation = AppDomain.CurrentDomain.BaseDirectory;
             }
 
-            return Path.GetDirectoryName( executingAssemblyLocation ) ?? throw new InvalidOperationException("Could not determine the path to the program!");
+            return Path.GetDirectoryName( executingAssemblyLocation ) ?? throw new InvalidOperationException( "Could not determine the path to the program!" );
         }
 
         [CanBeNull]

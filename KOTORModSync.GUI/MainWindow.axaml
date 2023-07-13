@@ -289,7 +289,6 @@
                         Grid.Row="6" HorizontalAlignment="Stretch" />
             </Grid>
 
-
             <StackPanel x:Name="MainConfigStackPanel" DataContext="{Binding MainConfigInstance}">
                 <CheckBox Content="Default Install" IsChecked="{Binding defaultInstall}" />
                 <CheckBox Content="Verbose Logging" IsChecked="{Binding debugLogging}" />
@@ -297,7 +296,7 @@
                 <CheckBox Content="No Admin" IsChecked="{Binding noAdmin}"
                           ToolTip.Tip="Do not prompt for admin on any instruction. It's recommended you run KOTORModSync as admin instead (NOT RECOMMENDED). Does nothing on Linux" />
                 <TextBlock Text="Patcher Option"
-                           ToolTip.Tip="Mods are packaged with 'TSLPatcher' by default. Try another patcher if you run into problems. PyKotorCLI is not tested - use at your own risk" />
+                           ToolTip.Tip="Mods are packaged with 'TSLPatcher' by default. Use 'PyKotorCLI' for a one-click install-all approach" />
                 <ComboBox
                     Items="{Binding AllAvailablePatchers}"
                     SelectedItem="{Binding patcherOption, Mode=TwoWay, Converter={StaticResource EnumConverter}}"

@@ -23,6 +23,7 @@ using Avalonia.Layout;
 using Avalonia.LogicalTree;
 using Avalonia.Markup.Xaml;
 using Avalonia.Markup.Xaml.Styling;
+using Avalonia.Media;
 using Avalonia.Styling;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
@@ -55,25 +56,68 @@ namespace KOTORModSync
                 new ConfirmationDialogCallback( this ),
                 new OptionsDialogCallback( this )
             );
+
             PropertyChanged += SearchText_PropertyChanged;
         }
 
-        private void SearchText_PropertyChanged( object sender, PropertyChangedEventArgs e )
+        private void InitializeComponent()
         {
-            if ( e.PropertyName != nameof( SearchText ) )
-                return;
+            AvaloniaXamlLoader.Load(this);
 
-            string searchText = SearchText;
+            MainGrid = this.FindControl<Grid>("MainGrid")
+                ?? throw new NullReferenceException("MainGrid undefined in MainWindow.");
+            if (MainGrid.ColumnDefinitions == null || MainGrid.ColumnDefinitions.Count != 3)
+            {
+                throw new NullReferenceException("MainGrid incorrectly defined, expected 3 columns.");
+            }
 
-            // Get the root item of the TreeView
-            var rootItem = (TreeViewItem)LeftTreeView.ItemContainerGenerator.ContainerFromIndex( 0 );
+            // set title and version
+            Title = $"KOTORModSync v{MainConfig.CurrentVersion}";
+            TitleTextBlock = this.FindControl<TextBlock>("TitleTextBlock");
+            TitleTextBlock.Text = Title;
 
-            FilterControlListItems( rootItem, searchText );
+            ColumnDefinition componentListColumn = MainGrid.ColumnDefinitions[0]
+                ?? throw new NullReferenceException("Column 0 of MainGrid (component list column) not defined.");
+            ColumnDefinition configColumn = MainGrid.ColumnDefinitions[2]
+                ?? throw new NullReferenceException("Column 2 of MainGrid (component list column) not defined.");
+
+
+            // Column 0
+            componentListColumn.Width = new GridLength(250);
+            LeftTreeView = this.FindControl<TreeView>("LeftTreeView");
+            ApplyEditorButton = this.FindControl<Button>("ApplyEditorButton");
+            // Column 1
+            ComponentsItemsControl = this.FindControl<ItemsControl>("ComponentsItemsControl");
+            TabControl = this.FindControl<TabControl>("TabControl");
+            InitialTab = this.FindControl<TabItem>("InitialTab");
+            GuiEditTabItem = this.FindControl<TabItem>("GuiEditTabItem");
+            RawEditTabItem = this.FindControl<TabItem>("RawEditTabItem");
+            RawEditTextBox = this.FindControl<TextBox>("RawEditTextBox")
+                ?? throw new NullReferenceException("RawEditTextBox not defined for MainWindow.");
+
+            RawEditTextBox.LostFocus
+                += RawEditTextBox_LostFocus; // Prevents RawEditTextBox from being cleared when clicking elsewhere(?)
+            RawEditTextBox.DataContext = new ObservableCollection<string>();
+
+            // Column 3
+            configColumn.Width = new GridLength(250);
+            MainConfigInstance = new MainConfig();
+            MainConfigStackPanel = this.FindControl<StackPanel>("MainConfigStackPanel")
+                ?? throw new NullReferenceException("MainConfigStackPanel not defined for MainWindow.");
+
+            MainConfigStackPanel.DataContext = MainConfigInstance;
+
+            _ = Logger.LogVerboseAsync("Setup window move event handlers...");
+            // Attach event handlers
+            PointerPressed += InputElement_OnPointerPressed;
+            PointerMoved += InputElement_OnPointerMoved;
+            PointerReleased += InputElement_OnPointerReleased;
+            PointerLeave += InputElement_OnPointerReleased;
+            FindComboBoxesInWindow(this);
         }
 
-
         private MainConfig MainConfigInstance { get; set; }
-        private Component _currentComponent;
+        [NotNull] private Component _currentComponent = new Component();
         private bool _installRunning;
 
         private string _originalContent;
@@ -82,6 +126,17 @@ namespace KOTORModSync
         private bool _mouseDownForWindowMoving;
         private PointerPoint _originalPoint;
 
+        private void SearchText_PropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName != nameof(SearchText))
+                return;
+
+            // Get the root item of the TreeView
+            var rootItem = (TreeViewItem)LeftTreeView.ItemContainerGenerator.ContainerFromIndex(0);
+
+            // ReSharper disable once AssignNullToNotNullAttribute
+            FilterControlListItems(rootItem, SearchText);
+        }
 
         public new event PropertyChangedEventHandler PropertyChanged;
         private string _searchText;
@@ -121,8 +176,17 @@ namespace KOTORModSync
             }
         }
 
-        private static void ApplySearchVisibility( IVisual item, string itemName, string searchText )
+        private static void ApplySearchVisibility( [NotNull] IVisual item, [NotNull] string itemName, [NotNull] string searchText )
         {
+            if ( item is null )
+                throw new ArgumentNullException( nameof( item ) );
+
+            if ( itemName is null )
+                throw new ArgumentNullException( nameof( itemName ) );
+
+            if ( searchText is null )
+                throw new ArgumentNullException( nameof( searchText ) );
+
             // Check if the item matches the search text
             // Show or hide the item based on the match
             item.IsVisible = itemName.ToLower().Contains( searchText.ToLower() );
@@ -151,62 +215,6 @@ namespace KOTORModSync
                 // No option selected or dialog closed
                 Console.WriteLine( "No option selected or dialog closed" );
             }
-        }
-
-        private void InitializeComponent()
-        {
-            AvaloniaXamlLoader.Load( this );
-
-            MainGrid = this.FindControl<Grid>( "MainGrid" )
-                ?? throw new NullReferenceException( "MainGrid undefined in MainWindow." );
-            if ( MainGrid.ColumnDefinitions == null || MainGrid.ColumnDefinitions.Count != 3 )
-            {
-                throw new NullReferenceException( "MainGrid incorrectly defined, expected 3 columns." );
-            }
-
-            // set title and version
-            Title = $"KOTORModSync v{MainConfig.CurrentVersion}";
-            TitleTextBlock = this.FindControl<TextBlock>( "TitleTextBlock" );
-            TitleTextBlock.Text = Title;
-
-            ColumnDefinition componentListColumn = MainGrid.ColumnDefinitions[0]
-                ?? throw new NullReferenceException( "Column 0 of MainGrid (component list column) not defined." );
-            ColumnDefinition configColumn = MainGrid.ColumnDefinitions[2]
-                ?? throw new NullReferenceException( "Column 2 of MainGrid (component list column) not defined." );
-
-
-            // Column 0
-            componentListColumn.Width = new GridLength( 250 );
-            LeftTreeView = this.FindControl<TreeView>( "LeftTreeView" );
-            ApplyEditorButton = this.FindControl<Button>( "ApplyEditorButton" );
-            // Column 1
-            ComponentsItemsControl = this.FindControl<ItemsControl>( "ComponentsItemsControl" );
-            TabControl = this.FindControl<TabControl>( "TabControl" );
-            InitialTab = this.FindControl<TabItem>( "InitialTab" );
-            GuiEditTabItem = this.FindControl<TabItem>( "GuiEditTabItem" );
-            RawEditTabItem = this.FindControl<TabItem>( "RawEditTabItem" );
-            RawEditTextBox = this.FindControl<TextBox>( "RawEditTextBox" )
-                ?? throw new NullReferenceException( "RawEditTextBox not defined for MainWindow." );
-
-            RawEditTextBox.LostFocus
-                += RawEditTextBox_LostFocus; // Prevents RawEditTextBox from being cleared when clicking elsewhere(?)
-            RawEditTextBox.DataContext = new ObservableCollection<string>();
-
-            // Column 3
-            configColumn.Width = new GridLength( 250 );
-            MainConfigInstance = new MainConfig();
-            MainConfigStackPanel = this.FindControl<StackPanel>( "MainConfigStackPanel" )
-                ?? throw new NullReferenceException( "MainConfigStackPanel not defined for MainWindow." );
-
-            MainConfigStackPanel.DataContext = MainConfigInstance;
-
-            _ = Logger.LogVerboseAsync( "Setup window move event handlers..." );
-            // Attach event handlers
-            PointerPressed += InputElement_OnPointerPressed;
-            PointerMoved += InputElement_OnPointerMoved;
-            PointerReleased += InputElement_OnPointerReleased;
-            PointerLeave += InputElement_OnPointerReleased;
-            FindComboBoxesInWindow( this );
         }
 
         // Prevents a combobox from dragging the window around.
@@ -445,21 +453,18 @@ namespace KOTORModSync
         private async Task<bool> FindDuplicateComponents( [NotNull][ItemNotNull] List<Component> components )
         {
             if ( components == null )
-            {
                 throw new ArgumentNullException( nameof( components ) );
-            }
 
             // Check for duplicate GUID
             bool duplicatesFixed = true;
+            bool promptUser = true;
             foreach ( Component component in components )
             {
                 Component duplicateComponent
                     = components.FirstOrDefault( c => c.Guid == component.Guid && c != component );
 
                 if ( duplicateComponent is null )
-                {
                     continue;
-                }
 
                 if ( !Guid.TryParse( duplicateComponent.Guid.ToString(), out Guid _ ) )
                 {
@@ -478,23 +483,28 @@ namespace KOTORModSync
                     = $"Component '{component.Name}' has a duplicate GUID with component '{duplicateComponent.Name}'";
                 _ = Logger.LogAsync( message );
 
-                bool? confirm = await ConfirmationDialog.ShowConfirmationDialog(
+                bool? confirm = true;
+                if ( promptUser )
+                {
+                    confirm = await ConfirmationDialog.ShowConfirmationDialog(
                         this,
                         $"{message}.{Environment.NewLine}Assign a random GUID to '{duplicateComponent.Name}'? (default: NO)"
-                    )
-                    == true;
-
-                if ( confirm == true )
-                {
-                    duplicateComponent.Guid = Guid.NewGuid();
-                    _ = Logger.LogAsync( $"Replaced GUID of component '{duplicateComponent.Name}'" );
-                }
-                else
-                {
-                    _ = Logger.LogVerboseAsync(
-                        $"User canceled GUID replacement for component '{duplicateComponent.Name}'"
                     );
-                    duplicatesFixed = false;
+                }
+
+                switch ( confirm )
+                {
+                    case true:
+                        duplicateComponent.Guid = Guid.NewGuid();
+                        _ = Logger.LogAsync( $"Replaced GUID of component '{duplicateComponent.Name}'" );
+                        break;
+                    case false:
+                        _ = Logger.LogVerboseAsync( $"User canceled GUID replacement for component '{duplicateComponent.Name}'" );
+                        duplicatesFixed = false;
+                        break;
+                    case null:
+                        promptUser = false;
+                        break;
                 }
             }
 
@@ -508,9 +518,7 @@ namespace KOTORModSync
             {
                 string filePath = await OpenFile();
                 if ( string.IsNullOrEmpty( filePath ) )
-                {
                     return;
-                }
 
                 var thisFile = new FileInfo( filePath );
 
@@ -532,9 +540,7 @@ namespace KOTORModSync
                         "You already have a config loaded." + " Do you want to load this instruction file anyway?"
                     );
                     if ( confirm != true )
-                    {
                         return;
-                    }
                 }
 
                 // Load components dynamically
@@ -553,9 +559,7 @@ namespace KOTORModSync
             {
                 string filePath = await OpenFile();
                 if ( string.IsNullOrEmpty( filePath ) )
-                {
                     return; // user cancelled
-                }
 
                 using ( var reader = new StreamReader( filePath ) )
                 {
@@ -748,7 +752,11 @@ namespace KOTORModSync
         {
             try
             {
-                if ( MainConfigInstance is null || MainConfig.DestinationPath is null || MainConfig.SourcePath is null )
+                if (
+                    MainConfigInstance is null
+                    || MainConfig.DestinationPath is null
+                    || MainConfig.SourcePath is null
+                )
                 {
                     return (false, "Please set your directories first");
                 }
@@ -786,7 +794,7 @@ namespace KOTORModSync
                         continue;
                     }
 
-                    if ( component.Restrictions != null && component.Restrictions.Count > 0 && component.IsSelected )
+                    if ( component.Restrictions.Count > 0 && component.IsSelected )
                     {
                         List<Component> restrictedComponentsList = Component.FindComponentsFromGuidList(
                             component.Restrictions,
@@ -794,7 +802,7 @@ namespace KOTORModSync
                         );
                         foreach ( Component restrictedComponent in restrictedComponentsList )
                         {
-                            if ( restrictedComponent.IsSelected )
+                            if ( restrictedComponent?.IsSelected == true )
                             {
                                 await Logger.LogErrorAsync(
                                     $"Cannot install '{component.Name}' due to '{restrictedComponent.Name}' being selected for install."
@@ -804,20 +812,23 @@ namespace KOTORModSync
                         }
                     }
 
-                    if ( component.Dependencies != null && component.Dependencies.Count > 0 && component.IsSelected )
+                    if ( component.Dependencies.Count > 0 && component.IsSelected )
                     {
                         List<Component> dependencyComponentsList = Component.FindComponentsFromGuidList(
                             component.Dependencies,
                             MainConfig.AllComponents
                         );
-                        foreach ( Component dependencyComponent in dependencyComponentsList )
+                        if ( !( dependencyComponentsList is null ) )
                         {
-                            if ( !dependencyComponent.IsSelected )
+                            foreach ( Component dependencyComponent in dependencyComponentsList )
                             {
-                                await Logger.LogErrorAsync(
-                                    $"Cannot install '{component.Name}' due to '{dependencyComponent.Name}' not being selected for install."
-                                );
-                                individuallyValidated = false;
+                                if ( dependencyComponent?.IsSelected != true )
+                                {
+                                    await Logger.LogErrorAsync(
+                                        $"Cannot install '{component.Name}' due to '{dependencyComponent?.Name}' not being selected for install."
+                                    );
+                                    individuallyValidated = false;
+                                }
                             }
                         }
                     }
@@ -1551,11 +1562,16 @@ namespace KOTORModSync
         }
 
         public void ComponentCheckboxChecked(
-            [CanBeNull] Component component,
-            [CanBeNull] HashSet<Component> visitedComponents,
+            [NotNull] Component component,
+            [NotNull] HashSet<Component> visitedComponents,
             bool suppressErrors = false
         )
         {
+            if ( component is null )
+                throw new ArgumentNullException( nameof( component ) );
+            if ( visitedComponents is null )
+                throw new ArgumentNullException( nameof( visitedComponents ) );
+
             try
             {
                 // Check if the component has already been visited
@@ -1580,11 +1596,11 @@ namespace KOTORModSync
                 );
 
                 // Handling conflicts based on what's defined for THIS component
-                if ( conflicts.TryGetValue( "Dependency", out List<Component> dependencyConflicts ) )
+                if ( conflicts.TryGetValue( "Dependency", out List<Component> dependencyConflicts) && !( dependencyConflicts is null ))
                 {
                     foreach ( Component conflictComponent in dependencyConflicts )
                     {
-                        if ( conflictComponent.IsSelected == false )
+                        if ( conflictComponent?.IsSelected == false )
                         {
                             conflictComponent.IsSelected = true;
                             ComponentCheckboxChecked( conflictComponent, visitedComponents );
@@ -1592,11 +1608,11 @@ namespace KOTORModSync
                     }
                 }
 
-                if ( conflicts.TryGetValue( "Restriction", out List<Component> restrictionConflicts ) )
+                if ( conflicts.TryGetValue( "Restriction", out List<Component> restrictionConflicts ) && !( restrictionConflicts is null ) )
                 {
                     foreach ( Component conflictComponent in restrictionConflicts )
                     {
-                        if ( conflictComponent.IsSelected )
+                        if ( conflictComponent?.IsSelected == true )
                         {
                             conflictComponent.IsSelected = false;
                             ComponentCheckboxUnchecked( conflictComponent, visitedComponents );
@@ -1684,7 +1700,13 @@ namespace KOTORModSync
 
         private CheckBox CreateComponentCheckbox( [CanBeNull] Component component )
         {
-            var checkBox = new CheckBox { Name = "IsSelected", IsChecked = true };
+            var checkBox = new CheckBox
+            {
+                Name = "IsSelected",
+                IsChecked = true,
+                VerticalContentAlignment = VerticalAlignment.Center,
+                VerticalAlignment = VerticalAlignment.Center
+            };
             var binding = new Binding( "IsSelected" ) { Source = component, Mode = BindingMode.TwoWay };
 
             // Set up the event handler for the checkbox
@@ -1699,12 +1721,32 @@ namespace KOTORModSync
             return checkBox;
         }
 
-        private Control CreateComponentHeader( Component component )
+        private Control CreateComponentHeader( [NotNull] Component component, int index )
         {
-            CheckBox checkBox = CreateComponentCheckbox( component );
-            var header = new DockPanel();
-            header.Children.Add( checkBox );
-            header.Children.Add( new TextBlock { Text = component.Name } );
+            if ( component is null )
+                throw new ArgumentNullException( nameof( component ) );
+
+            CheckBox checkBox = CreateComponentCheckbox(component);
+            var header = new DockPanel
+            {
+                Children =
+                {
+                    new TextBlock
+                    {
+                        VerticalAlignment = VerticalAlignment.Center,
+                        Text = $"{index + 1}: ",
+                        FontWeight = FontWeight.DemiBold,
+                        Margin = new Thickness(0, 0, 5, 0)
+                    },
+                    checkBox,
+                    new TextBlock
+                    {
+                        VerticalAlignment = VerticalAlignment.Center,
+                        Text = $"{component.Name}"
+                    }
+                }
+            };
+
 
             return header;
         }
@@ -1721,11 +1763,14 @@ namespace KOTORModSync
             }
         );
 
-        private TreeViewItem CreateComponentItem( [CanBeNull] Component component )
+        private TreeViewItem CreateComponentItem( [NotNull] Component component, int index )
         {
+            if ( component is null )
+                throw new ArgumentNullException( nameof( component ) );
+
             var componentItem = new TreeViewItem
             {
-                Header = CreateComponentHeader( component ),
+                Header = CreateComponentHeader( component, index ),
                 Tag = component,
                 IsExpanded = true,
                 HorizontalAlignment = HorizontalAlignment.Left
@@ -1763,19 +1808,15 @@ namespace KOTORModSync
             return null;
         }
 
-        private void CreateTreeViewItem( [NotNull] Component component, [NotNull] ItemsControl parentItem )
+        private void CreateTreeViewItem( [NotNull] Component component, ItemsControl parentItem, int index )
         {
             try
             {
                 if ( parentItem is null )
-                {
                     throw new ArgumentNullException( nameof( parentItem ) );
-                }
 
-                if ( component is null )
-                {
+                if ( component is null ) 
                     throw new ArgumentNullException( nameof( component ) );
-                }
 
                 if ( !( parentItem.Items is AvaloniaList<object> parentItemItems ) )
                 {
@@ -1792,7 +1833,7 @@ namespace KOTORModSync
                     return;
                 }
 
-                TreeViewItem componentItem = CreateComponentItem( component );
+                TreeViewItem componentItem = CreateComponentItem( component, index );
                 parentItemItems.Add( componentItem );
             }
             catch ( Exception ex )
@@ -1814,12 +1855,9 @@ namespace KOTORModSync
             checkBox.Checked += ( sender, e ) =>
             {
                 if ( manualSet )
-                {
                     return;
-                }
 
                 bool allChecked = true;
-
                 var finishedComponents = new HashSet<Component>();
                 foreach ( Component component in MainConfig.AllComponents )
                 {
@@ -1829,17 +1867,15 @@ namespace KOTORModSync
 
                 foreach ( Component component in MainConfig.AllComponents )
                 {
-                    if ( !component.IsSelected )
-                    {
-                        allChecked = false;
-                        break;
-                    }
+                    if ( component.IsSelected )
+                        continue;
+
+                    allChecked = false;
+                    break;
                 }
 
                 if ( allChecked )
-                {
                     return;
-                }
 
                 manualSet = true;
                 checkBox.IsChecked = null;
@@ -1858,7 +1894,7 @@ namespace KOTORModSync
             var header = new DockPanel();
             // ReSharper disable once PossibleNullReferenceException
             header.Children.Add( checkBox );
-            header.Children.Add( new TextBlock { Text = "Components" } );
+            header.Children.Add( new TextBlock { Text = "Available Mods" } );
             rootItem.Header = header;
 
             if ( ToggleButton.IsCheckedProperty != null )
@@ -1903,9 +1939,10 @@ namespace KOTORModSync
                 TreeViewItem rootItem = CreateRootTreeViewItem();
 
                 // Iterate over the components and create tree view items
-                foreach ( Component component in componentsList )
+                for ( int index = 0; index < componentsList.Count; index++ )
                 {
-                    CreateTreeViewItem( component, rootItem );
+                    Component component = componentsList[index];
+                    CreateTreeViewItem( component, rootItem, index );
                 }
 
                 // Set the root item as the single item of the tree view

@@ -14,17 +14,21 @@ namespace KOTORModSync.Core
     {
         private const string Separator = "__";
 
-        public static List<Component> ParseMods( string source ) => source
+        public static List<Component> ParseMods( [CanBeNull] string source ) => source?
             .Split( new[] { Separator }, StringSplitOptions.RemoveEmptyEntries )
             .Select( ParseMod )
             .ToList();
 
-        private static Component ParseMod( [CanBeNull] string modText )
+        private static Component ParseMod( [NotNull] string modText )
         {
+            if ( modText is null )
+                throw new ArgumentNullException( nameof( modText ) );
+
             var mod = new Component();
 
             (string, string) nameAndModLinks = GetNameAndModLink( modText );
             mod.Name = GetName( nameAndModLinks );
+            mod.Guid = new Guid(  );
             mod.ModLink = GetHyperlinkUrl( nameAndModLinks, "Name" );
             mod.Author = GetPropertyValue( modText, "Author" );
             mod.Description = GetPropertyValue( modText, "Description" );
@@ -36,8 +40,11 @@ namespace KOTORModSync.Core
             return mod;
         }
 
-        private static (string, string) GetNameAndModLink( string text )
+        private static (string, string) GetNameAndModLink( [NotNull] string text )
         {
+            if ( text is null )
+                throw new ArgumentNullException( nameof( text ) );
+
             const string pattern = @"\*\*(Name):\*\* \[([^]]+)\]\(([^)\s]+)\)(?: and \[\*\*Patch\*\*\]\(([^)\s]+)\))?";
             Match match = Regex.Match( text, pattern, RegexOptions.Singleline );
 
@@ -51,8 +58,14 @@ namespace KOTORModSync.Core
             return (name, modLink);
         }
 
-        private static string GetPropertyValue( string text, [CanBeNull] string propertyName )
+        [NotNull]
+        private static string GetPropertyValue( [NotNull] string text, [NotNull] string propertyName )
         {
+            if ( text is null )
+                throw new ArgumentNullException( nameof( text ) );
+            if ( propertyName is null )
+                throw new ArgumentNullException( nameof( propertyName ) );
+
             string pattern = $@"(?i)\*\*{propertyName}:\*\* ([^_*]+)";
             Match match = Regex.Match( text, pattern, RegexOptions.Singleline );
 
@@ -61,15 +74,22 @@ namespace KOTORModSync.Core
                 : match.Groups[1].Value.Trim();
         }
 
+        [NotNull]
         private static string GetName( (string, string) nameAndModLink ) => nameAndModLink.Item1;
 
+        [NotNull]
         private static string GetHyperlinkUrl( (string, string) nameAndModLink, [CanBeNull] string linkType ) =>
             string.Equals( linkType, "name", StringComparison.OrdinalIgnoreCase )
                 ? nameAndModLink.Item2
                 : string.Empty;
 
-        private static (string, string) GetCategoryAndTier( string text, [CanBeNull] string categoryTierName )
+        private static (string, string) GetCategoryAndTier( [NotNull] string text, [NotNull] string categoryTierName )
         {
+            if ( text is null )
+                throw new ArgumentNullException( nameof( text ) );
+            if ( categoryTierName is null )
+                throw new ArgumentNullException( nameof( categoryTierName ) );
+
             string pattern = $@"(?i)\*\*{categoryTierName}:\*\* ([^_*]+)";
             Match match = Regex.Match( text, pattern, RegexOptions.Singleline );
 
@@ -84,8 +104,13 @@ namespace KOTORModSync.Core
                 : (string.Empty, string.Empty);
         }
 
-        private static bool GetBoolValue( string text, [CanBeNull] string propertyName )
+        private static bool GetBoolValue( [NotNull] string text, [NotNull] string propertyName )
         {
+            if ( text is null )
+                throw new ArgumentNullException( nameof( text ) );
+            if ( propertyName is null )
+                throw new ArgumentNullException( nameof( propertyName ) );
+
             string pattern = $@"\*\*{propertyName}:\*\* (.+)";
             Match match = Regex.Match( text, pattern );
             while ( match.Success )

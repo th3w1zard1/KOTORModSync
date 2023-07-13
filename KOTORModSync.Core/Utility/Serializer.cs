@@ -135,7 +135,8 @@ namespace KOTORModSync.Core.Utility
 
         [NotNull]
         public static string PrefixPath( [NotNull] string path ) =>
-            !path.StartsWith( "<<modDirectory>>" ) && !path.StartsWith( "<<kotorDirectory>>" )
+            !path.StartsWith( "<<modDirectory>>", StringComparison.OrdinalIgnoreCase )
+            && !path.StartsWith( "<<kotorDirectory>>", StringComparison.OrdinalIgnoreCase )
                 ? FixPathFormatting( "<<modDirectory>>" + Environment.NewLine + path )
                 : path;
 
@@ -181,6 +182,9 @@ namespace KOTORModSync.Core.Utility
 
             foreach ( IEnumerable<object> list in lists )
             {
+                if ( list is null )
+                    continue;
+
                 mergedList.AddRange( list );
             }
 
@@ -193,9 +197,7 @@ namespace KOTORModSync.Core.Utility
             while ( enumerator.MoveNext() )
             {
                 if ( enumerator.Current is null )
-                {
                     continue;
-                }
 
                 var entry = (DictionaryEntry)enumerator.Current;
                 yield return new KeyValuePair<object, object>( entry.Key, entry.Value );
@@ -329,9 +331,7 @@ namespace KOTORModSync.Core.Utility
             foreach ( object item in list )
             {
                 if ( item is null )
-                {
                     continue;
-                }
 
                 if ( item.GetType().IsPrimitive || item is string )
                 {
@@ -340,13 +340,9 @@ namespace KOTORModSync.Core.Utility
                 }
 
                 if ( item is IList nestedList )
-                {
                     serializedList.Add( SerializeList( nestedList ) );
-                }
                 else
-                {
                     serializedList.Add( SerializeObject( item ) );
-                }
             }
 
             return serializedList;

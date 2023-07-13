@@ -43,14 +43,13 @@ namespace KOTORModSync.Core.Utility
         [CanBeNull]
         public static object GetEnumDescription( [NotNull] Enum value )
         {
-            if ( value is null ) throw new ArgumentNullException( nameof( value ) );
+            if ( value is null )
+                throw new ArgumentNullException( nameof( value ) );
 
             Type type = value.GetType();
             string name = Enum.GetName( type, value );
             if ( name is null )
-            {
                 return null;
-            }
 
             FieldInfo field = type.GetField( name );
 
@@ -59,17 +58,21 @@ namespace KOTORModSync.Core.Utility
         }
 
 
-        public static bool IsDirectoryWritable( [CanBeNull] DirectoryInfo dirPath )
+        public static bool IsDirectoryWritable( [NotNull] DirectoryInfo dirPath )
         {
-            if ( dirPath is null ) throw new ArgumentNullException( nameof( dirPath ) );
+            if ( dirPath is null )
+                throw new ArgumentNullException( nameof( dirPath ) );
 
             try
             {
-                using ( File.Create(
-                           Path.Combine( dirPath.FullName, Path.GetRandomFileName() ),
+                using ( FileStream fs = File.Create(
+                           Path.Combine(
+                               dirPath.FullName,
+                               Path.GetRandomFileName()
+                           ),
                            1,
-                           FileOptions.DeleteOnClose
-                       ) ) { }
+                           FileOptions.DeleteOnClose )
+                      ) { }
 
                 return true;
             }

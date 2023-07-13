@@ -9,15 +9,16 @@ using System.Threading;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
 
+
 namespace KOTORModSync.Core
 {
     public static class Logger
     {
-        private const string LogFileName = "kotormodsync_";
-
         private static bool s_isInitialized;
         private static readonly object s_initializationLock = new object();
         private static readonly SemaphoreSlim s_semaphore = new SemaphoreSlim( 1 );
+
+        public const string LogFileName = "kotormodsync_";
         public static event Action<string> Logged = delegate { };
         public static event Action<Exception> ExceptionLogged = delegate { };
 
@@ -30,24 +31,22 @@ namespace KOTORModSync.Core
 
             lock ( s_initializationLock )
             {
-                if ( s_isInitialized )
-                {
-                    return;
-                }
-
                 s_isInitialized = true;
 
                 Log( $"Logging initialized at {DateTime.Now}" );
 
                 // Set up unhandled exception handling
                 AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
+
                 TaskScheduler.UnobservedTaskException += TaskScheduler_UnobservedTaskException;
             }
         }
 
         public static void Log( [CanBeNull] string message, bool fileOnly = false )
+
         {
             string logMessage = $"[{DateTime.Now}] {message}";
+
             if ( !fileOnly )
             {
                 Console.WriteLine( logMessage );
@@ -63,6 +62,8 @@ namespace KOTORModSync.Core
 
         private static async Task LogInternalAsync( [CanBeNull] string internalMessage, bool fileOnly = false )
         {
+            internalMessage = internalMessage ?? string.Empty;
+
             await s_semaphore.WaitAsync();
             try
             {
@@ -87,6 +88,7 @@ namespace KOTORModSync.Core
                 _ = s_semaphore.Release();
             }
         }
+
 
         [NotNull] public static Task LogAsync( [CanBeNull] string message ) => LogInternalAsync( message );
 
@@ -114,10 +116,8 @@ namespace KOTORModSync.Core
             await Task.Run( () => LogException( ex ) );
 
         [NotNull]
-        public static async Task LogExceptionAsync(
-            [CanBeNull] Exception ex,
-            [CanBeNull] string customMessage
-        ) => await Task.Run( () => LogException( ex, customMessage ) );
+        public static async Task LogExceptionAsync( [CanBeNull] Exception ex, [CanBeNull] string customMessage ) =>
+            await Task.Run( () => LogException( ex, customMessage ) );
 
         public static void LogException( [CanBeNull] Exception exception, [CanBeNull] string customMessage )
         {

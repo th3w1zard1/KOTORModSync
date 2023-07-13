@@ -31,7 +31,8 @@ namespace KOTORModSync.Core.Utility
             _originalChecksums = originalChecksums;
         }
 
-        public static string Sha1ToString( [NotNull] SHA1 sha1 ) => string.Concat( sha1.Hash.Select( b => b.ToString( "x2" ) ) );
+        public static string Sha1ToString( [NotNull] SHA1 sha1 ) =>
+            string.Concat( sha1.Hash.Select( b => b.ToString( "x2" ) ) );
 
         public static string StringToSha1( [NotNull] string s ) => string.Concat(
             SHA1.Create()
@@ -52,7 +53,8 @@ namespace KOTORModSync.Core.Utility
                          .Where( fileInfo => fileInfo.Exists ) )
             {
                 SHA1 sha1 = await CalculateSha1Async( fileInfo );
-                actualChecksums[fileInfo.Name] = BitConverter.ToString( sha1.Hash ).Replace( "-", "" );
+                actualChecksums[fileInfo.Name] = BitConverter.ToString( sha1.Hash )
+                    .Replace( "-", "" );
             }
 
             bool allChecksumsMatch = actualChecksums.Count == _expectedChecksums.Count
@@ -73,7 +75,8 @@ namespace KOTORModSync.Core.Utility
             {
                 FileInfo expectedFileInfo = expectedChecksum.Key;
                 SHA1 expectedSha1 = expectedChecksum.Value;
-                string expectedSha1String = BitConverter.ToString( expectedSha1.Hash ).Replace( "-", "" );
+                string expectedSha1String = BitConverter.ToString( expectedSha1.Hash )
+                    .Replace( "-", "" );
 
                 if ( !actualChecksums.TryGetValue( expectedFileInfo.Name, out string actualSha1 ) )
                 {

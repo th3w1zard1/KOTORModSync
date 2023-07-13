@@ -134,7 +134,8 @@ namespace KOTORModSync.ConsoleApp
                             if ( MainConfig.LastOutputDirectory != null )
                             {
                                 Console.WriteLine( "Use same output path as last time? (y/N)" );
-                                key = Console.ReadKey().KeyChar;
+                                key = Console.ReadKey()
+                                    .KeyChar;
                                 if ( char.ToLower( key ) == 'n' )
                                 {
                                     MainConfigInstance.lastOutputDirectory = null;
@@ -166,7 +167,8 @@ namespace KOTORModSync.ConsoleApp
                             if ( MainConfig.LastOutputDirectory != null )
                             {
                                 Console.WriteLine( "Use same output path as last time? (y/N)" );
-                                key = Console.ReadKey().KeyChar;
+                                key = Console.ReadKey()
+                                    .KeyChar;
                                 if ( char.ToLower( key ) == 'n' )
                                 {
                                     MainConfigInstance.lastOutputDirectory = null;

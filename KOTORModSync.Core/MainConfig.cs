@@ -45,7 +45,8 @@ namespace KOTORModSync.Core
         [UsedImplicitly]
         [NotNull]
         public IEnumerable<CompatibilityLevel> AllCompatibilityLevels =>
-            Enum.GetValues( typeof( CompatibilityLevel ) ).Cast<CompatibilityLevel>();
+            Enum.GetValues( typeof( CompatibilityLevel ) )
+                .Cast<CompatibilityLevel>();
 
 
         public enum AvailablePatchers
@@ -61,7 +62,8 @@ namespace KOTORModSync.Core
         [UsedImplicitly]
         [NotNull]
         public IEnumerable<AvailablePatchers> AllAvailablePatchers =>
-            Enum.GetValues( typeof( AvailablePatchers ) ).Cast<AvailablePatchers>();
+            Enum.GetValues( typeof( AvailablePatchers ) )
+                .Cast<AvailablePatchers>();
 
 
         public static DirectoryInfo SourcePath { get; private set; }

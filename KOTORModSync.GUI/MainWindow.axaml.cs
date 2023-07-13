@@ -19,11 +19,13 @@ using Avalonia.Controls.Primitives;
 using Avalonia.Data;
 using Avalonia.Input;
 using Avalonia.Interactivity;
+using Avalonia.Layout;
 using Avalonia.LogicalTree;
 using Avalonia.Markup.Xaml;
 using Avalonia.Markup.Xaml.Styling;
 using Avalonia.Styling;
 using Avalonia.Threading;
+using Avalonia.VisualTree;
 using JetBrains.Annotations;
 using KOTORModSync.CallbackDialogs;
 using KOTORModSync.Core;
@@ -38,7 +40,7 @@ namespace KOTORModSync
 {
     public partial class MainWindow : Window
     {
-        public List<Component> ComponentsList => MainConfig.AllComponents;
+        public static List<Component> ComponentsList => MainConfig.AllComponents;
 
         public MainWindow()
         {
@@ -53,11 +55,22 @@ namespace KOTORModSync
                 new ConfirmationDialogCallback( this ),
                 new OptionsDialogCallback( this )
             );
-
-#if DEBUG
-            this.AttachDevTools();
-#endif
+            PropertyChanged += SearchText_PropertyChanged;
         }
+
+        private void SearchText_PropertyChanged( object sender, PropertyChangedEventArgs e )
+        {
+            if ( e.PropertyName != nameof( SearchText ) )
+                return;
+
+            string searchText = SearchText;
+
+            // Get the root item of the TreeView
+            var rootItem = (TreeViewItem)LeftTreeView.ItemContainerGenerator.ContainerFromIndex( 0 );
+
+            FilterControlListItems( rootItem, searchText );
+        }
+
 
         private MainConfig MainConfigInstance { get; set; }
         private Component _currentComponent;
@@ -68,6 +81,52 @@ namespace KOTORModSync
         private bool _ignoreWindowMoveWhenClickingComboBox;
         private bool _mouseDownForWindowMoving;
         private PointerPoint _originalPoint;
+
+
+        public new event PropertyChangedEventHandler PropertyChanged;
+        private string _searchText;
+
+        public string SearchText
+        {
+            get => _searchText;
+            set
+            {
+                if ( _searchText == value ) return; // prevent recursion problems
+
+                _searchText = value;
+                PropertyChanged?.Invoke( this, new PropertyChangedEventArgs( nameof( SearchText ) ) );
+            }
+        }
+
+        public void FilterControlListItems( [CanBeNull] object item, [NotNull] string searchText )
+        {
+            if ( searchText is null )
+                throw new ArgumentNullException( nameof( searchText ) );
+
+            if ( !( item is Control controlItem ) ) // no components loaded/created
+                return;
+
+            if ( controlItem.Tag is Component thisComponent )
+                ApplySearchVisibility( controlItem, thisComponent.Name, searchText );
+
+            // Iterate through the child items (TreeViewItem only)
+            foreach (
+                TreeViewItem childItem in (
+                    controlItem.GetLogicalChildren() ?? Array.Empty<ILogical>()
+                ).OfType<TreeViewItem>()
+            )
+            {
+                // Recursively filter the child item (TreeViewItem only)
+                FilterControlListItems( childItem, searchText );
+            }
+        }
+
+        private static void ApplySearchVisibility( IVisual item, string itemName, string searchText )
+        {
+            // Check if the item matches the search text
+            // Show or hide the item based on the match
+            item.IsVisible = itemName.ToLower().Contains( searchText.ToLower() );
+        }
 
         // test the options dialog for use with the 'Options' IDictionary<string, object>.
         public async void Testwindow()
@@ -141,19 +200,19 @@ namespace KOTORModSync
 
             MainConfigStackPanel.DataContext = MainConfigInstance;
 
-            Logger.LogVerboseAsync( "Setup window move event handlers..." );
+            _ = Logger.LogVerboseAsync( "Setup window move event handlers..." );
             // Attach event handlers
-            this.PointerPressed += InputElement_OnPointerPressed;
-            this.PointerMoved += InputElement_OnPointerMoved;
-            this.PointerReleased += InputElement_OnPointerReleased;
-            this.PointerLeave += InputElement_OnPointerReleased;
+            PointerPressed += InputElement_OnPointerPressed;
+            PointerMoved += InputElement_OnPointerMoved;
+            PointerReleased += InputElement_OnPointerReleased;
+            PointerLeave += InputElement_OnPointerReleased;
             FindComboBoxesInWindow( this );
         }
 
         // Prevents a combobox from dragging the window around.
         private void FindComboBoxes( [CanBeNull] Control control )
         {
-            if ( !( control is ILogical visual ) ) throw new ArgumentNullException( nameof(control) );
+            if ( !( control is ILogical visual ) ) throw new ArgumentNullException( nameof( control ) );
 
             if ( control is ComboBox _ )
             {
@@ -177,9 +236,9 @@ namespace KOTORModSync
             }
         }
 
-        public void FindComboBoxesInWindow( [NotNull] Window thisWindow)
+        public void FindComboBoxesInWindow( [NotNull] Window thisWindow )
         {
-            if ( thisWindow is null ) throw new ArgumentNullException( nameof(thisWindow) );
+            if ( thisWindow is null ) throw new ArgumentNullException( nameof( thisWindow ) );
 
             FindComboBoxes( thisWindow );
         }
@@ -202,25 +261,30 @@ namespace KOTORModSync
             }
 
             PointerPoint currentPoint = e.GetCurrentPoint( this );
-            Position = new PixelPoint( Position.X + (int)( currentPoint.Position.X - _originalPoint.Position.X ),
-                Position.Y + (int)( currentPoint.Position.Y - _originalPoint.Position.Y ) );
+            Position = new PixelPoint(
+                Position.X + (int)( currentPoint.Position.X - _originalPoint.Position.X ),
+                Position.Y + (int)( currentPoint.Position.Y - _originalPoint.Position.Y )
+            );
         }
 
         private void InputElement_OnPointerPressed( [NotNull] object sender, [NotNull] PointerEventArgs e )
         {
             if ( WindowState == WindowState.Maximized || WindowState == WindowState.FullScreen )
+            {
                 return;
+            }
+
             if ( sender is ComboBox )
+            {
                 return;
+            }
 
             _mouseDownForWindowMoving = true;
             _originalPoint = e.GetCurrentPoint( this );
         }
 
-        private void InputElement_OnPointerReleased( [NotNull] object sender, [NotNull] PointerEventArgs e )
-        {
+        private void InputElement_OnPointerReleased( [NotNull] object sender, [NotNull] PointerEventArgs e ) =>
             _mouseDownForWindowMoving = false;
-        }
 
         private void CloseButton_Click( object sender, RoutedEventArgs e ) => Close();
 
@@ -249,10 +313,7 @@ namespace KOTORModSync
             return null;
         }
 
-        private void MinimizeButton_Click( object sender, RoutedEventArgs e )
-        {
-            WindowState = WindowState.Minimized;
-        }
+        private void MinimizeButton_Click( object sender, RoutedEventArgs e ) => WindowState = WindowState.Minimized;
 
         [ItemCanBeNull]
         private async Task<List<string>> OpenFiles()
@@ -381,7 +442,7 @@ namespace KOTORModSync
             return null;
         }
 
-        private async Task<bool> FindDuplicateComponents( [NotNull] List<Component> components )
+        private async Task<bool> FindDuplicateComponents( [NotNull][ItemNotNull] List<Component> components )
         {
             if ( components == null )
             {
@@ -499,8 +560,7 @@ namespace KOTORModSync
                 using ( var reader = new StreamReader( filePath ) )
                 {
                     string fileContents = await reader.ReadToEndAsync();
-                    if (
-                        MainConfig.AllComponents.Count > 0
+                    if ( MainConfig.AllComponents.Count > 0
                         && await ConfirmationDialog.ShowConfirmationDialog(
                             this,
                             "You already have a config loaded. Do you want to load the markdown anyway?"
@@ -726,11 +786,7 @@ namespace KOTORModSync
                         continue;
                     }
 
-                    if (
-                        component.Restrictions != null
-                        && component.Restrictions.Count > 0
-                        && component.IsSelected
-                    )
+                    if ( component.Restrictions != null && component.Restrictions.Count > 0 && component.IsSelected )
                     {
                         List<Component> restrictedComponentsList = Component.FindComponentsFromGuidList(
                             component.Restrictions,
@@ -748,11 +804,7 @@ namespace KOTORModSync
                         }
                     }
 
-                    if (
-                        component.Dependencies != null
-                        && component.Dependencies.Count > 0
-                        && component.IsSelected
-                    )
+                    if ( component.Dependencies != null && component.Dependencies.Count > 0 && component.IsSelected )
                     {
                         List<Component> dependencyComponentsList = Component.FindComponentsFromGuidList(
                             component.Dependencies,
@@ -1473,7 +1525,8 @@ namespace KOTORModSync
                     return;
                 }
 
-                TreeViewItem rootItem = LeftTreeView.Items.OfType<TreeViewItem>().FirstOrDefault();
+                TreeViewItem rootItem = LeftTreeView.Items.OfType<TreeViewItem>()
+                    .FirstOrDefault();
                 if ( rootItem is null )
                 {
                     return;
@@ -1590,11 +1643,13 @@ namespace KOTORModSync
                 }
 
                 // handle root item's checkbox
-                TreeViewItem rootItem = LeftTreeView.Items.OfType<TreeViewItem>().FirstOrDefault();
+                TreeViewItem rootItem = LeftTreeView.Items.OfType<TreeViewItem>()
+                    .FirstOrDefault();
                 if ( rootItem != null )
                 {
                     var headerPanel = rootItem.Header as DockPanel;
-                    CheckBox checkBox = headerPanel?.Children.OfType<CheckBox>().FirstOrDefault();
+                    CheckBox checkBox = headerPanel?.Children.OfType<CheckBox>()
+                        .FirstOrDefault();
 
                     if ( checkBox != null && !suppressErrors )
                     {
@@ -1672,12 +1727,14 @@ namespace KOTORModSync
             {
                 Header = CreateComponentHeader( component ),
                 Tag = component,
-                IsExpanded = true
+                IsExpanded = true,
+                HorizontalAlignment = HorizontalAlignment.Left
             };
 
             componentItem.Tapped += ( sender, e ) =>
             {
-                ItemClickCommand.Execute( component );
+                ItemClickCommand?.Execute( component );
+                // ReSharper disable once PossibleNullReferenceException
                 e.Handled = true; // Prevent event bubbling
             };
 
@@ -1685,8 +1742,11 @@ namespace KOTORModSync
         }
 
         [CanBeNull]
-        private static TreeViewItem FindExistingItem( ItemsControl parentItem, [CanBeNull] Component component )
+        private static TreeViewItem FindExistingItem( [NotNull] ItemsControl parentItem, [CanBeNull] Component component )
         {
+            if ( parentItem is null ) throw new ArgumentNullException( nameof(parentItem) );
+            if ( parentItem.Items is null ) return null;
+
             foreach ( object item in parentItem.Items )
             {
                 if ( !( item is TreeViewItem treeViewItem ) )
@@ -1702,30 +1762,6 @@ namespace KOTORModSync
 
             return null;
         }
-
-        [CanBeNull]
-        private static Component GetComponentFromGuid( List<Component> componentsList, Guid guid ) =>
-            componentsList.Find( c => c.Guid == guid );
-
-        private void CreateDependencyItems( [NotNull] Component component, [NotNull] ItemsControl parentItem )
-        {
-            if ( component?.Dependencies is null || component.Dependencies.Count == 0 )
-            {
-                return;
-            }
-
-            foreach ( Guid dependencyGuid in component.Dependencies )
-            {
-                Component dependency = GetComponentFromGuid( MainConfig.AllComponents, dependencyGuid );
-                if ( dependency is null )
-                {
-                    continue;
-                }
-
-                CreateTreeViewItem( dependency, parentItem );
-            }
-        }
-
 
         private void CreateTreeViewItem( [NotNull] Component component, [NotNull] ItemsControl parentItem )
         {
@@ -1756,22 +1792,8 @@ namespace KOTORModSync
                     return;
                 }
 
-                // Remove the TreeViewItem from the top level LeftTreeView if it needs to be nested as a dependency.
-                if ( parentItem.Parent is ItemsControl parentParentItem )
-                {
-                    var parentParentItems = (AvaloniaList<object>)parentParentItem.Items;
-                    TreeViewItem secondToTopLevelItem = FindExistingItem( parentParentItem, component );
-
-                    if ( secondToTopLevelItem != null )
-                    {
-                        _ = parentParentItems.Remove( secondToTopLevelItem );
-                    }
-                }
-
                 TreeViewItem componentItem = CreateComponentItem( component );
                 parentItemItems.Add( componentItem );
-
-                CreateDependencyItems( component, componentItem );
             }
             catch ( Exception ex )
             {
@@ -1779,6 +1801,7 @@ namespace KOTORModSync
             }
         }
 
+        [NotNull]
         private TreeViewItem CreateRootTreeViewItem()
         {
             var rootItem = new TreeViewItem { IsExpanded = true };
@@ -1833,6 +1856,7 @@ namespace KOTORModSync
             };
 
             var header = new DockPanel();
+            // ReSharper disable once PossibleNullReferenceException
             header.Children.Add( checkBox );
             header.Children.Add( new TextBlock { Text = "Components" } );
             rootItem.Header = header;
@@ -1845,7 +1869,7 @@ namespace KOTORModSync
             return rootItem;
         }
 
-        private async Task ProcessComponentsAsync( [NotNull] List<Component> componentsList )
+        private async Task ProcessComponentsAsync( [NotNull][ItemNotNull] List<Component> componentsList )
         {
             try
             {
@@ -1924,7 +1948,7 @@ namespace KOTORModSync
                     throw new NullReferenceException( "Cannot find instruction instance from button." );
                 }
 
-                _currentComponent.Instructions = _currentComponent.Instructions ?? new List<Instruction>(); //todo
+                _currentComponent.Instructions = _currentComponent.Instructions; //todo
 
                 int index;
                 if ( thisInstruction is null )
@@ -1940,12 +1964,9 @@ namespace KOTORModSync
                 _currentComponent.CreateInstruction( index );
                 if ( thisInstruction.Action != null )
                 {
-                    if ( _currentComponent.Name != null )
-                    {
-                        await Logger.LogVerboseAsync(
-                            $"Component '{_currentComponent.Name}': Instruction '{thisInstruction.Action}' created at index #{index}"
-                        );
-                    }
+                    await Logger.LogVerboseAsync(
+                        $"Component '{_currentComponent.Name}': Instruction '{thisInstruction.Action}' created at index #{index}"
+                    );
                 }
 
                 LoadComponentDetails( _currentComponent );
@@ -1971,7 +1992,7 @@ namespace KOTORModSync
 
                 _currentComponent.DeleteInstruction( index );
                 await Logger.LogVerboseAsync(
-                    $"Component '{_currentComponent.Name}': instruction '{thisInstruction.Action}' deleted at index #{index}"
+                    $"Component '{_currentComponent.Name}': instruction '{thisInstruction?.Action}' deleted at index #{index}"
                 );
 
                 LoadComponentDetails( _currentComponent );
@@ -2078,7 +2099,7 @@ namespace KOTORModSync
                 {
                     InvalidateArrange(); // force repaint of entire window.
                     InvalidateMeasure(); // force repaint of entire window.
-                    InvalidateVisual(); // force repaint of entire window.
+                    InvalidateVisual();  // force repaint of entire window.
                     TraverseControls( this, (ISupportInitialize)sender );
                     return;
                 }
@@ -2089,7 +2110,7 @@ namespace KOTORModSync
                 Styles[0] = new StyleInclude( styleUriPath ) { Source = styleUriPath };
                 InvalidateArrange(); // force repaint of entire window.
                 InvalidateMeasure(); // force repaint of entire window.
-                InvalidateVisual(); // force repaint of entire window.
+                InvalidateVisual();  // force repaint of entire window.
                 TraverseControls( this, (ISupportInitialize)sender );
             }
             catch ( Exception exception )
@@ -2103,15 +2124,10 @@ namespace KOTORModSync
             [NotNull] ISupportInitialize styleControlComboBox
         )
         {
-            if ( control is null )
-            {
-                throw new ArgumentNullException( nameof( control ) );
-            }
+            if ( control is null ) throw new ArgumentNullException( nameof( control ) );
 
-            if ( control == styleControlComboBox )
-            {
-                return; // fixes a crash that can happen while spamming the combobox style options.
-            }
+            // fixes a crash that can happen while spamming the combobox style options.
+            if ( control == styleControlComboBox ) return;
 
             // Reload the style of the control
             control.ApplyTemplate();
@@ -2123,10 +2139,27 @@ namespace KOTORModSync
                 .ToList()
                 .ForEach(
                     childControl => TraverseControls(
-                        childControl ?? throw new ArgumentNullException( nameof( childControl ) ),
+                        childControl ?? throw new NullReferenceException( nameof( childControl ) ),
                         styleControlComboBox
                     )
                 );
+        }
+
+        private void ToggleMaximizeButton_Click( object sender, RoutedEventArgs e )
+        {
+            if ( !( sender is Button maximizeButton ) )
+                return;
+
+            if ( this.WindowState == WindowState.Maximized )
+            {
+                this.WindowState = WindowState.Normal;
+                maximizeButton.Content = "▢";
+            }
+            else
+            {
+                this.WindowState = WindowState.Maximized;
+                maximizeButton.Content = "▣";
+            }
         }
     }
 }

@@ -38,7 +38,7 @@ namespace KOTORModSync
 {
     public partial class MainWindow : Window
     {
-        public List<Component> ComponentsList => MainConfig.AllComponents;
+        public static List<Component> ComponentsList => MainConfig.AllComponents;
 
         public MainWindow()
         {
@@ -141,7 +141,7 @@ namespace KOTORModSync
 
             MainConfigStackPanel.DataContext = MainConfigInstance;
 
-            Logger.LogVerboseAsync( "Setup window move event handlers..." );
+            _ = Logger.LogVerboseAsync( "Setup window move event handlers..." );
             // Attach event handlers
             this.PointerPressed += InputElement_OnPointerPressed;
             this.PointerMoved += InputElement_OnPointerMoved;
@@ -153,7 +153,7 @@ namespace KOTORModSync
         // Prevents a combobox from dragging the window around.
         private void FindComboBoxes( [CanBeNull] Control control )
         {
-            if ( !( control is ILogical visual ) ) throw new ArgumentNullException( nameof(control) );
+            if ( !( control is ILogical visual ) ) throw new ArgumentNullException( nameof( control ) );
 
             if ( control is ComboBox _ )
             {
@@ -177,9 +177,9 @@ namespace KOTORModSync
             }
         }
 
-        public void FindComboBoxesInWindow( [NotNull] Window thisWindow)
+        public void FindComboBoxesInWindow( [NotNull] Window thisWindow )
         {
-            if ( thisWindow is null ) throw new ArgumentNullException( nameof(thisWindow) );
+            if ( thisWindow is null ) throw new ArgumentNullException( nameof( thisWindow ) );
 
             FindComboBoxes( thisWindow );
         }

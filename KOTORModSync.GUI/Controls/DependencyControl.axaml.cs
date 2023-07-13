@@ -33,7 +33,7 @@ namespace KOTORModSync.Controls
 
         [NotNull]
         public static readonly StyledProperty<List<Guid>> ThisGuidListProperty
-            = AvaloniaProperty.Register<DependencyControl, List<Guid>>( nameof(ThisGuidList) );
+            = AvaloniaProperty.Register<DependencyControl, List<Guid>>( nameof( ThisGuidList ) );
 
         [NotNull]
         public List<Guid> ThisGuidList

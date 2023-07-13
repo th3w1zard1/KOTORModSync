@@ -449,27 +449,27 @@ namespace KOTORModSync.Core
 
             if ( value is string valueStr )
             {
-                if (string.IsNullOrEmpty(valueStr))
+                if ( string.IsNullOrEmpty( valueStr ) )
                 {
-                    if (required)
+                    if ( required )
                     {
-                        throw new KeyNotFoundException($"'{key}' field cannot be empty.");
+                        throw new KeyNotFoundException( $"'{key}' field cannot be empty." );
                     }
 
                     return default;
                 }
 
-                if (targetType == typeof(Guid) )
+                if ( targetType == typeof( Guid ) )
                 {
-                    string guidStr = Serializer.FixGuidString(valueStr);
-                    if (!string.IsNullOrEmpty(guidStr) && Guid.TryParse(guidStr, out Guid guid))
+                    string guidStr = Serializer.FixGuidString( valueStr );
+                    if ( !string.IsNullOrEmpty( guidStr ) && Guid.TryParse( guidStr, out Guid guid ) )
                     {
                         return (T)(object)guid;
                     }
 
                     if ( required )
                     {
-                        throw new ArgumentException($"'{key}' field is not a valid Guid!");
+                        throw new ArgumentException( $"'{key}' field is not a valid Guid!" );
                     }
 
                     return (T)(object)Guid.Empty;

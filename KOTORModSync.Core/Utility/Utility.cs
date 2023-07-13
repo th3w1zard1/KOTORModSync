@@ -23,6 +23,23 @@ namespace KOTORModSync.Core.Utility
             fullPath?.Replace( MainConfig.SourcePath.FullName, "<<modDirectory>>" )
                 .Replace( MainConfig.DestinationPath.FullName, "<<kotorDirectory>>" );
 
+        [NotNull]
+        public static string GetExecutingAssemblyDirectory()
+        {
+            string executingAssemblyLocation = Assembly.GetEntryAssembly()?.Location;
+            if ( string.IsNullOrEmpty( executingAssemblyLocation ) )
+            {
+                executingAssemblyLocation = Assembly.GetExecutingAssembly().Location;
+            }
+
+            if ( string.IsNullOrEmpty( executingAssemblyLocation ) )
+            {
+                executingAssemblyLocation = AppDomain.CurrentDomain.BaseDirectory;
+            }
+
+            return Path.GetDirectoryName( executingAssemblyLocation ) ?? throw new InvalidOperationException("Could not determine the path to the program!");
+        }
+
         [CanBeNull]
         public static object GetEnumDescription( [NotNull] Enum value )
         {

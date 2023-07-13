@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Globalization;
 using Avalonia;
 /* Unmerged change from project 'KOTORModSync (net462)'
@@ -13,14 +14,19 @@ using Avalonia.Controls;
 using Avalonia.Interactivity;
 using JetBrains.Annotations;
 using KOTORModSync.Core;
+using Component = KOTORModSync.Core.Component;
 
 namespace KOTORModSync.Controls
 {
     public partial class DependencyControl : UserControl
     {
-        public DependencyControl() => InitializeComponent();
+        public DependencyControl()
+        {
+            InitializeComponent();
+            DependenciesListBox = this.FindControl<ListBox>( "DependenciesListBox" );
+        }
 
-        // used to fix the move window code with comboboxes.
+        // used to fix the move window code with combo boxes.
         protected override void OnAttachedToVisualTree( VisualTreeAttachmentEventArgs e )
         {
             base.OnAttachedToVisualTree( e );
@@ -31,6 +37,34 @@ namespace KOTORModSync.Controls
             }
         }
 
+        public event PropertyChangedEventHandler PropertyChanged2;
+        private string _searchText;
+
+        public string SearchText
+        {
+            get => _searchText;
+            set
+            {
+                if ( _searchText == value ) return; // prevent recursion problems
+
+                _searchText = value;
+                PropertyChanged2?.Invoke( this, new PropertyChangedEventArgs( nameof( SearchText ) ) );
+            }
+        }
+
+        private void SearchText_PropertyChanged( object sender, PropertyChangedEventArgs e )
+        {
+            if ( e.PropertyName != nameof( SearchText ) ) return;
+
+            if ( !( VisualRoot is MainWindow mainWindow ) )
+            {
+                throw new NullReferenceException( "Could not get main window instance" );
+            }
+
+            string searchText = SearchText;
+            mainWindow.FilterControlListItems( DependenciesListBox, searchText );
+        }
+
         [NotNull]
         public static readonly StyledProperty<List<Guid>> ThisGuidListProperty
             = AvaloniaProperty.Register<DependencyControl, List<Guid>>( nameof( ThisGuidList ) );
@@ -38,7 +72,7 @@ namespace KOTORModSync.Controls
         [NotNull]
         public List<Guid> ThisGuidList
         {
-            get => GetValue( ThisGuidListProperty ) ?? throw new InvalidOperationException();
+            get => GetValue( ThisGuidListProperty ) ?? throw new NullReferenceException( "Could not retrieve property 'ThisGuidListProperty'" );
             set => SetValue( ThisGuidListProperty, value );
         }
 
@@ -49,7 +83,7 @@ namespace KOTORModSync.Controls
         [NotNull]
         public List<Component> ThisComponentList
         {
-            get => GetValue( ThisComponentListProperty ) ?? throw new InvalidOperationException();
+            get => GetValue( ThisComponentListProperty ) ?? throw new NullReferenceException( "Could not retrieve property 'ThisComponentListProperty'" );
             set => SetValue( ThisComponentListProperty, value );
         }
 

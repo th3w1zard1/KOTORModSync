@@ -8,19 +8,17 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
-using KOTORModSync.Core;
 
 
 namespace KOTORModSync.Core
 {
     public static class Logger
     {
-        private const string LogFileName = "kotormodsync_";
-
         private static bool s_isInitialized;
         private static readonly object s_initializationLock = new object();
         private static readonly SemaphoreSlim s_semaphore = new SemaphoreSlim( 1 );
 
+        public const string LogFileName = "kotormodsync_";
         public static event Action<string> Logged = delegate { };
         public static event Action<Exception> ExceptionLogged = delegate { };
 

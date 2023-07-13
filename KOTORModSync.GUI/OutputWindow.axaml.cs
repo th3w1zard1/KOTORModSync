@@ -2,12 +2,13 @@
 // Licensed under the GNU General Public License v3.0 (GPLv3).
 // See LICENSE.txt file in the project root for full license information.
 
+using System;
+using System.IO;
+using System.Linq;
 using System.Text;
-using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 using Avalonia.Threading;
-using JetBrains.Annotations;
 using KOTORModSync.Core;
 
 namespace KOTORModSync
@@ -15,8 +16,7 @@ namespace KOTORModSync
     public partial class OutputWindow : Window
     {
         private StringBuilder _logBuilder;
-        private ScrollViewer _logScrollViewer;
-        private TextBox _logTextBox;
+        private readonly int _maxLinesShown = 1000;
 
         public OutputWindow()
         {
@@ -28,8 +28,8 @@ namespace KOTORModSync
 
         private void InitializeControls()
         {
-            _logTextBox = this.FindControl<TextBox>( "LogTextBox" );
-            _logScrollViewer = this.FindControl<ScrollViewer>( "LogScrollViewer" );
+            LogTextBox = this.FindControl<TextBox>( "LogTextBox" );
+            LogScrollViewer = this.FindControl<ScrollViewer>( "LogScrollViewer" );
 
             _logBuilder = new StringBuilder( 65535 );
 
@@ -51,6 +51,21 @@ namespace KOTORModSync
                     .AppendLine( ex.StackTrace );
                 UpdateLogText();
             };
+
+            // Open the file and retrieve the last 200 lines
+            string logfileName = $"{Logger.LogFileName}{DateTime.Now:yyyy-MM-dd}";
+            string executingDirectory = Core.Utility.Utility.GetExecutingAssemblyDirectory();
+            string filePath = Path.Combine(executingDirectory, logfileName + ".txt");
+            if ( !File.Exists( filePath ) )
+                return;
+
+            string[] lines = File.ReadAllLines( filePath );
+            int startIndex = Math.Max( 0, lines.Length - _maxLinesShown );
+            string recentLines = string.Join( Environment.NewLine, lines, startIndex, lines.Length - startIndex );
+
+            _ = _logBuilder.AppendLine( recentLines );
+            UpdateLogText();
+            LogScrollViewer.ScrollToEnd();
         }
 
         private void UpdateLogText()
@@ -60,21 +75,26 @@ namespace KOTORModSync
                 // Create a local copy of _logBuilder to avoid accessing it from multiple threads
                 string logText = _logBuilder.ToString();
 
+                // Split the log text into lines
+                string[] lines = logText.Split( new[] { Environment.NewLine }, StringSplitOptions.None );
+
+                // Trim the lines if they exceed the desired line count
+                if ( lines.Length > _maxLinesShown )
+                {
+                    lines = lines.Skip( lines.Length - _maxLinesShown ).ToArray();
+                    logText = string.Join( Environment.NewLine, lines );
+                }
+
                 _ = Dispatcher.UIThread.InvokeAsync(
                     () =>
                     {
-                        _logTextBox.Text = logText;
+                        LogTextBox.Text = logText;
 
                         // Scroll to the end of the content
-                        _logScrollViewer?.ScrollToEnd();
+                        LogScrollViewer.ScrollToEnd();
                     }
                 );
             }
         }
-
-        private void logTextBox_TextChanged(
-            [CanBeNull] object sender,
-            [CanBeNull] AvaloniaPropertyChangedEventArgs e
-        ) => UpdateLogText();
     }
 }

@@ -188,21 +188,21 @@ namespace KOTORModSync.Core
             Name = GetRequiredValue<string>( componentDict, "Name" );
             _ = Logger.LogAsync( $"{Environment.NewLine}== Deserialize next component '{Name}' ==" );
             Guid = GetRequiredValue<Guid>( componentDict, "Guid" );
-            Description = GetValueOrDefault<string>( componentDict, "Description" );
-            Directions = GetValueOrDefault<string>( componentDict, "Directions" );
-            Category = GetValueOrDefault<string>( componentDict, "Category" );
-            Tier = GetValueOrDefault<string>( componentDict, "Tier" );
-            Language = GetValueOrDefault<List<string>>( componentDict, "Language" );
-            Author = GetValueOrDefault<string>( componentDict, "Author" );
-            Dependencies = GetValueOrDefault<List<Guid>>( componentDict, "Dependencies" );
-            Restrictions = GetValueOrDefault<List<Guid>>( componentDict, "Restrictions" );
-            InstallBefore = GetValueOrDefault<List<Guid>>( componentDict, "InstallBefore" );
-            InstallAfter = GetValueOrDefault<List<Guid>>( componentDict, "InstallAfter" );
-            ModLink = GetValueOrDefault<string>( componentDict, "Modlink" );
+            Description = GetValueOrDefault<string>( componentDict, "Description" ) ?? string.Empty;
+            Directions = GetValueOrDefault<string>( componentDict, "Directions" ) ?? string.Empty;
+            Category = GetValueOrDefault<string>( componentDict, "Category" ) ?? string.Empty;
+            Tier = GetValueOrDefault<string>( componentDict, "Tier" ) ?? string.Empty;
+            Language = GetValueOrDefault<List<string>>( componentDict, "Language" ) ?? new List<string>();
+            Author = GetValueOrDefault<string>( componentDict, "Author" ) ?? string.Empty;
+            Dependencies = GetValueOrDefault<List<Guid>>( componentDict, "Dependencies" ) ?? new List<Guid>();
+            Restrictions = GetValueOrDefault<List<Guid>>( componentDict, "Restrictions" ) ?? new List<Guid>();
+            InstallBefore = GetValueOrDefault<List<Guid>>( componentDict, "InstallBefore" ) ?? new List<Guid>();
+            InstallAfter = GetValueOrDefault<List<Guid>>( componentDict, "InstallAfter" ) ?? new List<Guid>();
+            ModLink = GetValueOrDefault<string>( componentDict, "Modlink" ) ?? string.Empty;
             IsSelected = GetValueOrDefault<bool>( componentDict, "IsSelected" );
 
             Instructions = DeserializeInstructions( GetValueOrDefault<IList<object>>( componentDict, "Instructions" ) );
-            Instructions.ForEach( instruction => instruction?.SetParentComponent( this ) );
+            Instructions.ForEach( instruction => instruction.SetParentComponent( this ) );
 
 
             Options = DeserializeOptions(
@@ -404,15 +404,21 @@ namespace KOTORModSync.Core
         }
 
         [NotNull]
-        private static T GetRequiredValue<T>( [NotNull] IDictionary<string, object> dict, [NotNull] string key ) =>
-            GetValue<T>( dict, key, true );
+        private static T GetRequiredValue<T>( IDictionary<string, object> dict, string key )
+        {
+            T value = GetValue<T>( dict, key, true );
+            return value == null
+                ? throw new InvalidOperationException( "GetValue cannot return null for a required value." )
+                : value;
+        }
 
-        [NotNull]
+
+        [CanBeNull]
         private static T GetValueOrDefault<T>( [NotNull] IDictionary<string, object> dict, [NotNull] string key ) =>
             GetValue<T>( dict, key, false );
 
         // why did I do this...
-        [NotNull]
+        [CanBeNull]
         private static T GetValue<T>( [NotNull] IDictionary<string, object> dict, [NotNull] string key, bool required )
         {
             if ( dict is null ) throw new ArgumentNullException( nameof( dict ) );

@@ -666,21 +666,11 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
 
                     if ( tslPatcherCliPath is null )
                     {
-                        string executingAssemblyLocation = Assembly.GetEntryAssembly()?.Location;
-                        if ( string.IsNullOrEmpty( executingAssemblyLocation ) )
-                        {
-                            executingAssemblyLocation = Assembly.GetExecutingAssembly().Location;
-                        }
-
-                        if ( string.IsNullOrEmpty( executingAssemblyLocation ) )
-                        {
-                            executingAssemblyLocation = AppDomain.CurrentDomain.BaseDirectory;
-                        }
+                        string executingAssemblyLocation = Utility.Utility.GetExecutingAssemblyDirectory();
 
                         tslPatcherCliPath = new FileInfo(
                             Path.Combine(
-                                Path.GetDirectoryName( executingAssemblyLocation )
-                                ?? throw new InvalidOperationException(),
+                                executingAssemblyLocation,
                                 thisExe
                             )
                         );

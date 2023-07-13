@@ -202,19 +202,11 @@ namespace KOTORModSync.Core
             IsSelected = GetValueOrDefault<bool>( componentDict, "IsSelected" );
 
             Instructions = DeserializeInstructions( GetValueOrDefault<IList<object>>( componentDict, "Instructions" ) );
-            Instructions.ForEach( instruction => instruction.SetParentComponent( this ) );
-
+            Instructions.ForEach( instruction => instruction?.SetParentComponent( this ) );
 
             Options = DeserializeOptions(
                 GetValueOrDefault<IList<IDictionary<string, object>>>( componentDict, "Options" )
             );
-
-            // can't validate anything if directories aren't set.
-            if ( string.IsNullOrWhiteSpace( MainConfig.SourcePath?.FullName )
-                || string.IsNullOrWhiteSpace( MainConfig.DestinationPath?.FullName ) )
-            {
-                return;
-            }
 
             // Validate and log additional errors/warnings.
             _ = Logger.LogAsync( $"Successfully deserialized component '{Name}'" );
@@ -357,8 +349,10 @@ namespace KOTORModSync.Core
                 instruction.Arguments = GetValueOrDefault<string>( instructionDict, "Arguments" );
                 instruction.Overwrite = GetValueOrDefault<bool>( instructionDict, "Overwrite" );
 
-                instruction.Restrictions = GetValueOrDefault<List<Guid>>( instructionDict, "Restrictions" );
-                instruction.Dependencies = GetValueOrDefault<List<Guid>>( instructionDict, "Dependencies" );
+                instruction.Restrictions
+                    = GetValueOrDefault<List<Guid>>( instructionDict, "Restrictions" ) ?? new List<Guid>();
+                instruction.Dependencies
+                    = GetValueOrDefault<List<Guid>>( instructionDict, "Dependencies" ) ?? new List<Guid>();
                 instruction.Source = GetValueOrDefault<List<string>>( instructionDict, "Source" );
                 instruction.Destination = GetValueOrDefault<string>( instructionDict, "Destination" );
                 instructions.Add( instruction );
@@ -393,8 +387,8 @@ namespace KOTORModSync.Core
                     Source = GetRequiredValue<List<string>>( optionDict, "Source" ),
                     Guid = GetValueOrDefault<Guid>( optionDict, "Guid" ),
                     Destination = GetRequiredValue<string>( optionDict, "Destination" ),
-                    Restrictions = GetValueOrDefault<List<Guid>>( optionDict, "Restrictions" ),
-                    Dependencies = GetValueOrDefault<List<Guid>>( optionDict, "Dependencies" )
+                    Restrictions = GetValueOrDefault<List<Guid>>( optionDict, "Restrictions" ) ?? new List<Guid>(),
+                    Dependencies = GetValueOrDefault<List<Guid>>( optionDict, "Dependencies" ) ?? new List<Guid>()
                 };
 
                 options.Add( Guid.NewGuid(), option ); // Generate a new GUID key for each option

@@ -89,9 +89,9 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
             }
         }
 
-        private List<Guid> _dependencies;
+        [NotNull] private List<Guid> _dependencies = new List<Guid>();
 
-        [CanBeNull]
+        [NotNull]
         public List<Guid> Dependencies
         {
             get => _dependencies;
@@ -103,9 +103,9 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
         }
 
 
-        private List<Guid> _restrictions;
+        [NotNull] private List<Guid> _restrictions = new List<Guid>();
 
-        [CanBeNull]
+        [NotNull]
         public List<Guid> Restrictions
         {
             get => _restrictions;
@@ -160,6 +160,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
             if ( Source is null ) throw new NullReferenceException( nameof( Source ) );
 
             RealSourcePaths = Source.ConvertAll( Utility.Utility.ReplaceCustomVariables );
+            // ReSharper disable once AssignNullToNotNullAttribute // we already check for null below.
             RealSourcePaths = FileHelper.EnumerateFilesWithWildcards( RealSourcePaths );
 
             if ( Destination != null )

@@ -102,20 +102,16 @@
                                         </DockPanel>
 
                                         <TextBlock Text="Description:" />
-                                        <ScrollViewer HorizontalScrollBarVisibility="Disabled">
                                             <TextBox Margin="5,0"
                                                      Focusable="True" HorizontalAlignment="Stretch" TextWrapping="Wrap"
                                                      AcceptsTab="True" AcceptsReturn="True"
                                                      Text="{Binding Description}" />
-                                        </ScrollViewer>
 
                                         <TextBlock Text="Directions:" />
-                                        <ScrollViewer HorizontalScrollBarVisibility="Disabled">
                                             <TextBox Margin="5,0"
                                                      Focusable="True" HorizontalAlignment="Stretch" TextWrapping="Wrap"
                                                      AcceptsTab="True" AcceptsReturn="True"
                                                      Text="{Binding Directions}" />
-                                        </ScrollViewer>
 
                                         <TextBlock Text="Author:" />
                                         <TextBox

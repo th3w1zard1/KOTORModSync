@@ -10,6 +10,8 @@ using System.ComponentModel;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Reactive.Linq;
+using System.Reactive.Subjects;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using Avalonia;
@@ -53,7 +55,18 @@ namespace KOTORModSync
                 new ConfirmationDialogCallback( this ),
                 new OptionsDialogCallback( this )
             );
+            PropertyChanged += SearchText_PropertyChanged;
         }
+
+        private void SearchText_PropertyChanged( object sender, PropertyChangedEventArgs e )
+        {
+            if ( e.PropertyName == nameof( SearchText ) )
+            {
+                string searchText = SearchText;
+                FilterTreeView( searchText );
+            }
+        }
+
 
         private MainConfig MainConfigInstance { get; set; }
         private Component _currentComponent;
@@ -64,6 +77,52 @@ namespace KOTORModSync
         private bool _ignoreWindowMoveWhenClickingComboBox;
         private bool _mouseDownForWindowMoving;
         private PointerPoint _originalPoint;
+
+        private string _searchText;
+
+        public string SearchText
+        {
+            get => _searchText;
+            set
+            {
+                if ( _searchText != value )
+                {
+                    _searchText = value;
+                    PropertyChanged?.Invoke( this, new PropertyChangedEventArgs( nameof( SearchText ) ) );
+                }
+            }
+        }
+
+        public new event PropertyChangedEventHandler PropertyChanged;
+
+
+        private void FilterTreeView( string searchText )
+        {
+            // Get the root item of the TreeView
+            var rootItem = (TreeViewItem)LeftTreeView.ItemContainerGenerator.ContainerFromIndex( 0 );
+
+            // Start filtering from the root item
+            FilterTreeViewItem( rootItem, searchText );
+        }
+
+        private void FilterTreeViewItem( TreeViewItem item, string searchText )
+        {
+            // Check if the item matches the search text
+            bool isMatch = item.Header.ToString().IndexOf( searchText, StringComparison.OrdinalIgnoreCase ) >= 0;
+
+            // Show or hide the item based on the match
+            item.IsVisible = isMatch;
+
+            // Iterate through the child items
+            foreach ( var childItem in item.GetLogicalChildren().OfType<TreeViewItem>() )
+            {
+                // Recursively filter the child item
+                FilterTreeViewItem( childItem, searchText );
+            }
+        }
+
+
+
 
         // test the options dialog for use with the 'Options' IDictionary<string, object>.
         public async void Testwindow()
@@ -379,7 +438,7 @@ namespace KOTORModSync
             return null;
         }
 
-        private async Task<bool> FindDuplicateComponents( [NotNull] List<Component> components )
+        private async Task<bool> FindDuplicateComponents( [NotNull][ItemNotNull] List<Component> components )
         {
             if ( components == null )
             {

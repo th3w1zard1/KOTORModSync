@@ -76,7 +76,8 @@ namespace KOTORModSync.Converters
 
                 if ( targetType != typeof( List<Guid> ) )
                 {
-                    return text.Split( new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries ).ToList();
+                    return text.Split( new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries )
+                        .ToList();
                 }
 
                 string[] lines = RemoveSpacesExceptNewLine( text )

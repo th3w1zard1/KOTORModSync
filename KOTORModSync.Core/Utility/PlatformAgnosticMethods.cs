@@ -309,8 +309,10 @@ namespace KOTORModSync.Core.Utility
                 return maxSpeed;
             }
 
-            string speedString = match.Groups[1].Value;
-            string unit = match.Groups[2].Value.ToLower();
+            string speedString = match.Groups[1]
+                .Value;
+            string unit = match.Groups[2]
+                .Value.ToLower();
 
             if ( !double.TryParse( speedString.Replace( ",", "" ), out double speed ) )
             {

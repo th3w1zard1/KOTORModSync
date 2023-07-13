@@ -207,7 +207,8 @@ namespace KOTORModSync.Core.Utility
             pattern = Regex.Escape( pattern );
 
             // Replace * with .* and ? with . in the pattern
-            pattern = pattern.Replace( @"\*", ".*" ).Replace( @"\?", "." );
+            pattern = pattern.Replace( @"\*", ".*" )
+                .Replace( @"\?", "." );
 
             // Use regex to perform the wildcard matching
             return Regex.IsMatch( input, $"^{pattern}$" );

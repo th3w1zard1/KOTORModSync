@@ -19,9 +19,9 @@ namespace KOTORModSync.Core.Utility
             ?? string.Empty;
 
         [NotNull]
-        public static string RestoreCustomVariables( [CanBeNull] string fullPath ) => fullPath
-            ?.Replace( MainConfig.SourcePath.FullName, "<<modDirectory>>" )
-            .Replace( MainConfig.DestinationPath.FullName, "<<kotorDirectory>>" );
+        public static string RestoreCustomVariables( [CanBeNull] string fullPath ) =>
+            fullPath?.Replace( MainConfig.SourcePath.FullName, "<<modDirectory>>" )
+                .Replace( MainConfig.DestinationPath.FullName, "<<kotorDirectory>>" );
 
         [CanBeNull]
         public static object GetEnumDescription( [NotNull] Enum value )

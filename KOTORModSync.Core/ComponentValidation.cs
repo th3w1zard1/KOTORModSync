@@ -50,7 +50,9 @@ namespace KOTORModSync.Core
             _validationResults.Add( new ValidationResult( this, instruction, message, false ) );
 
         public List<string> GetErrors() =>
-            _validationResults.Where( r => r.IsError ).Select( r => r.Message ).ToList();
+            _validationResults.Where( r => r.IsError )
+                .Select( r => r.Message )
+                .ToList();
 
         public List<string> GetErrors( int instructionIndex ) =>
             _validationResults.Where( r => r.InstructionIndex == instructionIndex && r.IsError )
@@ -63,7 +65,9 @@ namespace KOTORModSync.Core
                 .ToList();
 
         public List<string> GetWarnings() =>
-            _validationResults.Where( r => !r.IsError ).Select( r => r.Message ).ToList();
+            _validationResults.Where( r => !r.IsError )
+                .Select( r => r.Message )
+                .ToList();
 
         public List<string> GetWarnings( int instructionIndex ) =>
             _validationResults.Where( r => r.InstructionIndex == instructionIndex && !r.IsError )
@@ -156,7 +160,8 @@ namespace KOTORModSync.Core
                             // Add the first part of the path and repeat it at the beginning
                             // i.e. archive/my/custom/path becomes archive/archive/my/custom/path
                             string duplicatedPart = parts[1] + Path.DirectorySeparatorChar + parts[1];
-                            string[] remainingParts = parts.Skip( 2 ).ToArray();
+                            string[] remainingParts = parts.Skip( 2 )
+                                .ToArray();
 
                             string path = string.Join(
                                 Path.DirectorySeparatorChar.ToString(),
@@ -213,7 +218,8 @@ namespace KOTORModSync.Core
                 );
                 foreach ( string realSourcePath in realPaths )
                 {
-                    if ( Path.GetExtension( realSourcePath ).Equals( ".exe", StringComparison.OrdinalIgnoreCase ) )
+                    if ( Path.GetExtension( realSourcePath )
+                        .Equals( ".exe", StringComparison.OrdinalIgnoreCase ) )
                     {
                         allArchives.Add( realSourcePath );
                         continue; // no way to verify self-extracting executables.

@@ -30,7 +30,9 @@ namespace KOTORModSync.Converters
             int index = -1;
             if ( itemsRepeater.Tag is IEnumerable itemList )
             {
-                index = itemList.Cast<object>().ToList().IndexOf( value );
+                index = itemList.Cast<object>()
+                    .ToList()
+                    .IndexOf( value );
             }
 
             return index.ToString();
@@ -53,8 +55,10 @@ namespace KOTORModSync.Converters
                 return null;
             }
 
-            IEnumerable enumerable = itemList.Cast<object>().ToList();
-            var itemList2 = enumerable.Cast<object>().ToList();
+            IEnumerable enumerable = itemList.Cast<object>()
+                .ToList();
+            var itemList2 = enumerable.Cast<object>()
+                .ToList();
             return index < 0 || index >= itemList2.Count
                 ? null
                 : itemList2[index];

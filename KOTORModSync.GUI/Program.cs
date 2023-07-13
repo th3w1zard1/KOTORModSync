@@ -15,10 +15,13 @@ namespace KOTORModSync
         // yet and stuff might break.
         [STAThread]
         public static void Main( [CanBeNull] string[] args ) =>
-            BuildAvaloniaApp().StartWithClassicDesktopLifetime( args );
+            BuildAvaloniaApp()
+                .StartWithClassicDesktopLifetime( args );
 
         // Avalonia configuration, don't remove; also used by visual designer.
         [CanBeNull]
-        public static AppBuilder BuildAvaloniaApp() => AppBuilder.Configure<App>().UsePlatformDetect().LogToTrace();
+        public static AppBuilder BuildAvaloniaApp() => AppBuilder.Configure<App>()
+            .UsePlatformDetect()
+            .LogToTrace();
     }
 }

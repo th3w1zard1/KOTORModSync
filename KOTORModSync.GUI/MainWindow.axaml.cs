@@ -53,10 +53,6 @@ namespace KOTORModSync
                 new ConfirmationDialogCallback( this ),
                 new OptionsDialogCallback( this )
             );
-
-#if DEBUG
-            this.AttachDevTools();
-#endif
         }
 
         private MainConfig MainConfigInstance { get; set; }
@@ -143,10 +139,10 @@ namespace KOTORModSync
 
             _ = Logger.LogVerboseAsync( "Setup window move event handlers..." );
             // Attach event handlers
-            this.PointerPressed += InputElement_OnPointerPressed;
-            this.PointerMoved += InputElement_OnPointerMoved;
-            this.PointerReleased += InputElement_OnPointerReleased;
-            this.PointerLeave += InputElement_OnPointerReleased;
+            PointerPressed += InputElement_OnPointerPressed;
+            PointerMoved += InputElement_OnPointerMoved;
+            PointerReleased += InputElement_OnPointerReleased;
+            PointerLeave += InputElement_OnPointerReleased;
             FindComboBoxesInWindow( this );
         }
 
@@ -202,25 +198,30 @@ namespace KOTORModSync
             }
 
             PointerPoint currentPoint = e.GetCurrentPoint( this );
-            Position = new PixelPoint( Position.X + (int)( currentPoint.Position.X - _originalPoint.Position.X ),
-                Position.Y + (int)( currentPoint.Position.Y - _originalPoint.Position.Y ) );
+            Position = new PixelPoint(
+                Position.X + (int)( currentPoint.Position.X - _originalPoint.Position.X ),
+                Position.Y + (int)( currentPoint.Position.Y - _originalPoint.Position.Y )
+            );
         }
 
         private void InputElement_OnPointerPressed( [NotNull] object sender, [NotNull] PointerEventArgs e )
         {
             if ( WindowState == WindowState.Maximized || WindowState == WindowState.FullScreen )
+            {
                 return;
+            }
+
             if ( sender is ComboBox )
+            {
                 return;
+            }
 
             _mouseDownForWindowMoving = true;
             _originalPoint = e.GetCurrentPoint( this );
         }
 
-        private void InputElement_OnPointerReleased( [NotNull] object sender, [NotNull] PointerEventArgs e )
-        {
+        private void InputElement_OnPointerReleased( [NotNull] object sender, [NotNull] PointerEventArgs e ) =>
             _mouseDownForWindowMoving = false;
-        }
 
         private void CloseButton_Click( object sender, RoutedEventArgs e ) => Close();
 
@@ -249,10 +250,7 @@ namespace KOTORModSync
             return null;
         }
 
-        private void MinimizeButton_Click( object sender, RoutedEventArgs e )
-        {
-            WindowState = WindowState.Minimized;
-        }
+        private void MinimizeButton_Click( object sender, RoutedEventArgs e ) => WindowState = WindowState.Minimized;
 
         [ItemCanBeNull]
         private async Task<List<string>> OpenFiles()
@@ -499,8 +497,7 @@ namespace KOTORModSync
                 using ( var reader = new StreamReader( filePath ) )
                 {
                     string fileContents = await reader.ReadToEndAsync();
-                    if (
-                        MainConfig.AllComponents.Count > 0
+                    if ( MainConfig.AllComponents.Count > 0
                         && await ConfirmationDialog.ShowConfirmationDialog(
                             this,
                             "You already have a config loaded. Do you want to load the markdown anyway?"
@@ -726,11 +723,7 @@ namespace KOTORModSync
                         continue;
                     }
 
-                    if (
-                        component.Restrictions != null
-                        && component.Restrictions.Count > 0
-                        && component.IsSelected
-                    )
+                    if ( component.Restrictions != null && component.Restrictions.Count > 0 && component.IsSelected )
                     {
                         List<Component> restrictedComponentsList = Component.FindComponentsFromGuidList(
                             component.Restrictions,
@@ -748,11 +741,7 @@ namespace KOTORModSync
                         }
                     }
 
-                    if (
-                        component.Dependencies != null
-                        && component.Dependencies.Count > 0
-                        && component.IsSelected
-                    )
+                    if ( component.Dependencies != null && component.Dependencies.Count > 0 && component.IsSelected )
                     {
                         List<Component> dependencyComponentsList = Component.FindComponentsFromGuidList(
                             component.Dependencies,
@@ -1473,7 +1462,8 @@ namespace KOTORModSync
                     return;
                 }
 
-                TreeViewItem rootItem = LeftTreeView.Items.OfType<TreeViewItem>().FirstOrDefault();
+                TreeViewItem rootItem = LeftTreeView.Items.OfType<TreeViewItem>()
+                    .FirstOrDefault();
                 if ( rootItem is null )
                 {
                     return;
@@ -1590,11 +1580,13 @@ namespace KOTORModSync
                 }
 
                 // handle root item's checkbox
-                TreeViewItem rootItem = LeftTreeView.Items.OfType<TreeViewItem>().FirstOrDefault();
+                TreeViewItem rootItem = LeftTreeView.Items.OfType<TreeViewItem>()
+                    .FirstOrDefault();
                 if ( rootItem != null )
                 {
                     var headerPanel = rootItem.Header as DockPanel;
-                    CheckBox checkBox = headerPanel?.Children.OfType<CheckBox>().FirstOrDefault();
+                    CheckBox checkBox = headerPanel?.Children.OfType<CheckBox>()
+                        .FirstOrDefault();
 
                     if ( checkBox != null && !suppressErrors )
                     {

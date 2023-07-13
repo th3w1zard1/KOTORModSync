@@ -18,8 +18,11 @@ namespace KOTORModSync.Core
     // Everyone else has readonly GET access.
     [SuppressMessage( "Performance", "CA1822:Mark members as static", Justification = "<Pending>" )]
     [SuppressMessage( "CodeQuality", "IDE0079:Remove unnecessary suppression", Justification = "<Pending>" )]
+    [SuppressMessage( "ReSharper", "InconsistentNaming" )]
     public class MainConfig : INotifyPropertyChanged
     {
+        public static string CurrentVersion => "0.8.0";
+
         public MainConfig()
         {
             currentCompatibilityLevel = CompatibilityLevel.Compatible;
@@ -161,8 +164,6 @@ namespace KOTORModSync.Core
             get => NoAdmin;
             set => NoAdmin = value;
         }
-
-        public static string CurrentVersion => "0.7.2.01";
 
         public event PropertyChangedEventHandler PropertyChanged;
 

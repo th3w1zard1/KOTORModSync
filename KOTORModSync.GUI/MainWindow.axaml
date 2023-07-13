@@ -67,7 +67,7 @@
                         Grid.ColumnSpan="2" x:Name="ApplyEditorButton" Content="Apply Editor Changes"
                         Click="SaveButton_Click" />
                 <Button Grid.Row="4" Grid.Column="0" HorizontalContentAlignment="Center" HorizontalAlignment="Stretch"
-                        Grid.ColumnSpan="2" Content="Install Selected Mod" Click="InstallModSingle_Click" />
+                        Grid.ColumnSpan="2" Content="Test Install Single Mod" Click="InstallModSingle_Click" />
             </Grid>
         </Grid>
         <GridSplitter Grid.Column="0" Grid.Row="1" Width="5" HorizontalAlignment="Right" />
@@ -78,7 +78,58 @@
                     <TextBlock>Please load an instructions file or create a new instructions file by using the controls on the left.</TextBlock>
                 </TabItem.Content>
             </TabItem>
-            <TabItem x:Name="GuiEditTabItem" Header="GUI Edit">
+			<TabItem Header="Summary">
+				<TabItem.Content>
+					<ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+						<ItemsControl x:Name="ComponentsItemsControl2" Items="{Binding Components}">
+							<ItemsControl.ItemTemplate>
+								<DataTemplate DataType="core:Component">
+									<StackPanel>
+										<TextBlock Text="Name:" FontWeight="Bold" />
+										<TextBlock Text="{Binding Name}" Margin="10,0,0,0" />
+
+										<TextBlock Text="Description:" FontWeight="Bold" Margin="0,10,0,0" />
+										<TextBlock Text="{Binding Description}" Margin="10,0,0,0" TextWrapping="Wrap" />
+
+										<TextBlock Text="Directions:" FontWeight="Bold" Margin="0,10,0,0" />
+										<TextBlock Text="{Binding Directions}" Margin="10,0,0,0" TextWrapping="Wrap" />
+
+                                        <TextBlock Text="Mod Homepage:" FontWeight="DemiBold" Margin="0, 10, 0, 0"/>
+                                        <TextBlock Text="{Binding ModLink}"
+                                                   TextDecorations="Underline" Tapped="OpenLink_Click" Margin="10,0,0,0" TextWrapping="Wrap"
+                                                   Tag="{Binding ModLink}" />
+
+                                        <ItemsRepeater
+                                            x:Name="instructionsRepeater" Items="{Binding Instructions}">
+                                            <ItemsRepeater.ItemTemplate>
+                                                <DataTemplate DataType="core:Instruction">
+													<Border BorderThickness="2" BorderBrush="LightGray" Margin="10,10,0,0" Padding="10">
+														<Grid RowDefinitions="Auto,Auto" ColumnDefinitions="Auto,*">
+                                                            <TextBlock Grid.Column="0" Grid.Row="0"
+                                                                        Text="{Binding Converter={StaticResource IndexConverter}, ConverterParameter={Binding Instructions, ElementName=instructionsRepeater}}"
+                                                                        FontWeight="Bold" />
+															<DockPanel Grid.Row="0" Grid.RowSpan="2" Grid.Column="1" >
+																<TextBlock Text="{Binding Action}"
+                                                                           Margin="10,0,0,0" TextWrapping="Wrap"/>
+                                                                <TextBlock Text="{Binding Source, Converter={StaticResource ListToStringConverter}}"
+                                                                           Margin="10,0,0,0" TextWrapping="Wrap"/>
+                                                                <TextBlock Text="{Binding Arguments, Converter={StaticResource ListToStringConverter}}"
+                                                                           Margin="10,0,0,0" TextWrapping="Wrap"/>
+															</DockPanel>
+														</Grid>
+													</Border>
+                                                </DataTemplate>
+                                            </ItemsRepeater.ItemTemplate>
+                                        </ItemsRepeater>
+									</StackPanel>
+								</DataTemplate>
+							</ItemsControl.ItemTemplate>
+						</ItemsControl>
+					</ScrollViewer>
+				</TabItem.Content>
+			</TabItem>
+
+			<TabItem x:Name="GuiEditTabItem" Header="GUI Edit">
                 <TabItem.Content>
                     <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
                         <ItemsControl x:Name="ComponentsItemsControl" Items="{Binding Components}">
@@ -111,7 +162,7 @@
                                             <TextBox Margin="5,0"
                                                      Focusable="True" HorizontalAlignment="Stretch" TextWrapping="Wrap"
                                                      AcceptsTab="True" AcceptsReturn="True"
-                                                     Text="{Binding Directions}" />
+                                                     Text="{Binding Directions}"/>
 
                                         <TextBlock Text="Author:" />
                                         <TextBox
@@ -266,7 +317,7 @@
                 </TabItem.Content>
             </TabItem>
             <TabItem x:Name="RawEditTabItem" Header="Raw Edit"
-                     ToolTip.Tip="Click 'Apply Editor Config' to save raw changes!">
+                     ToolTip.Tip="Click 'Apply Editor Changes' to save raw changes!">
                 <TextBox x:Name="RawEditTextBox" Margin="10" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="400" />
             </TabItem>
         </TabControl>

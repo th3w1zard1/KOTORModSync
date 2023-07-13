@@ -108,13 +108,13 @@ namespace KOTORModSync
         private void FilterTreeViewItem( TreeViewItem item, string searchText )
         {
             // Check if the item matches the search text
-            bool isMatch = item.Header.ToString().IndexOf( searchText, StringComparison.OrdinalIgnoreCase ) >= 0;
+            bool isMatch = item.Header.ToString().Contains( searchText, StringComparison.OrdinalIgnoreCase );
 
             // Show or hide the item based on the match
             item.IsVisible = isMatch;
 
             // Iterate through the child items
-            foreach ( var childItem in item.GetLogicalChildren().OfType<TreeViewItem>() )
+            foreach ( TreeViewItem childItem in item.GetLogicalChildren().OfType<TreeViewItem>() )
             {
                 // Recursively filter the child item
                 FilterTreeViewItem( childItem, searchText );

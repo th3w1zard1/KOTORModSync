@@ -705,7 +705,7 @@ namespace KOTORModSync.Core
         }
 
         private async Task<(InstallExitCode, Dictionary<SHA1, FileInfo>)> ExecuteInstructionsAsync(
-            [NotNull] [ItemNotNull] List<Component> componentsList
+            [NotNull][ItemNotNull] List<Component> componentsList
         )
         {
             if ( componentsList is null ) throw new ArgumentNullException( nameof( componentsList ) );
@@ -1006,7 +1006,7 @@ namespace KOTORModSync.Core
         //The component has no dependencies or restrictions.
         //The component has dependencies, and all of the required components are being installed.
         //The component has restrictions, but none of the restricted components are being installed.
-        public bool ShouldInstallComponent( [NotNull] [ItemNotNull] List<Component> componentsList, bool isInstall = true )
+        public bool ShouldInstallComponent( [NotNull][ItemNotNull] List<Component> componentsList, bool isInstall = true )
         {
             if ( componentsList is null ) throw new ArgumentNullException( nameof( componentsList ) );
 
@@ -1085,7 +1085,7 @@ namespace KOTORModSync.Core
         }
 
         public static (bool isCorrectOrder, List<Component> reorderedComponents) ConfirmComponentsInstallOrder(
-            [NotNull] [ItemNotNull] List<Component> components
+            [NotNull][ItemNotNull] List<Component> components
         )
         {
             if ( components is null ) throw new ArgumentNullException( nameof( components ) );

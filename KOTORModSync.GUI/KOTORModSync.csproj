@@ -89,14 +89,9 @@
     <Compile Update="OptionsDialog.axaml.cs">
       <DependentUpon>OptionsDialog.axaml</DependentUpon>
     </Compile>
-    <Compile Update="ComponentViewModel.cs">
-      <DependentUpon>SelectInstallComponents.axaml_unfinished</DependentUpon>
-    </Compile>
     <Compile Update="Controls\DependencyControl.axaml.cs">
       <DependentUpon>DependencyControl.axaml</DependentUpon>
     </Compile>
-    <None Remove="SelectInstallComponents.axaml_unfinished" />
-    <AvaloniaXaml Include="SelectInstallComponents.axaml_unfinished" />
   </ItemGroup>
 
   <PropertyGroup Condition=" '$(OS)' == 'Windows_NT' ">
@@ -118,37 +113,27 @@
   <Target Name="PostBuild" AfterTargets="PostBuildEvent" Condition=" '$(OS)' == 'Windows_NT'">
     <!-- <Exec Condition=" '$(RuntimeIdentifier)' == 'linux-x64' OR '$(RuntimeIdentifier)' == 'osx-x64' "
           Command="$(CopyCommand) $(SolutionDir)vendor\bin\TSLPatcherCLI $(TargetDir)Resources$(DirectorySeparatorChar)" /> TODO-->
-    <Exec Condition=" '$(RuntimeIdentifier)' == 'linux-x64' OR '$(RuntimeIdentifier)' == 'osx-x64' "
-          Command="$(CopyCommand) $(SolutionDir)vendor\bin\pykotorcli $(TargetDir)Resources$(DirectorySeparatorChar)" />
-    <Exec Condition=" '$(RuntimeIdentifier)' == 'linux-x64' OR '$(RuntimeIdentifier)' == 'osx-x64' "
-          Command="$(CopyCommand) $(SolutionDir)vendor\bin\pykotorcli $(PublishDir)Resources$(DirectorySeparatorChar)" />
+    <Exec Condition=" '$(RuntimeIdentifier)' == 'linux-x64' OR '$(RuntimeIdentifier)' == 'osx-x64' " Command="$(CopyCommand) $(SolutionDir)vendor\bin\pykotorcli $(TargetDir)Resources$(DirectorySeparatorChar)" />
+    <Exec Condition=" '$(RuntimeIdentifier)' == 'linux-x64' OR '$(RuntimeIdentifier)' == 'osx-x64' " Command="$(CopyCommand) $(SolutionDir)vendor\bin\pykotorcli $(PublishDir)Resources$(DirectorySeparatorChar)" />
 
     <!-- <Exec Condition=" '$(RuntimeIdentifier)' != 'linux-x64' AND '$(RuntimeIdentifier)' != 'osx-x64' "
           Command="$(CopyCommand) $(SolutionDir)vendor\bin\TSLPatcherCLI.exe $(TargetDir)Resources$(DirectorySeparatorChar)" />
     <Exec Condition=" '$(RuntimeIdentifier)' != 'linux-x64' AND '$(RuntimeIdentifier)' != 'osx-x64' "
           Command="$(CopyCommand) $(SolutionDir)vendor\bin\TSLPatcherCLI.exe $(PublishDir)Resources$(DirectorySeparatorChar)" /> -->
 
-    <Exec Condition=" '$(RuntimeIdentifier)' != 'linux-x64' AND '$(RuntimeIdentifier)' != 'osx-x64' "
-          Command="$(CopyCommand) $(SolutionDir)vendor\bin\pykotorcli.exe $(TargetDir)Resources$(DirectorySeparatorChar)" />
-    <Exec Condition=" '$(RuntimeIdentifier)' != 'linux-x64' AND '$(RuntimeIdentifier)' != 'osx-x64' "
-          Command="$(CopyCommand) $(SolutionDir)vendor\bin\pykotorcli.exe $(PublishDir)Resources$(DirectorySeparatorChar)" />
+    <Exec Condition=" '$(RuntimeIdentifier)' != 'linux-x64' AND '$(RuntimeIdentifier)' != 'osx-x64' " Command="$(CopyCommand) $(SolutionDir)vendor\bin\pykotorcli.exe $(TargetDir)Resources$(DirectorySeparatorChar)" />
+    <Exec Condition=" '$(RuntimeIdentifier)' != 'linux-x64' AND '$(RuntimeIdentifier)' != 'osx-x64' " Command="$(CopyCommand) $(SolutionDir)vendor\bin\pykotorcli.exe $(PublishDir)Resources$(DirectorySeparatorChar)" />
 
 
     <!-- WindowsDeleteString returntype changes from int to IntPtr HRESULT after net framework 4.x.x, replace with our patches. -->
-    <Exec Condition=" '$(Platform)'=='x86' AND '$(TargetFramework)' == 'net462' "
-          Command="$(CopyCommand) $(SolutionDir)vendor$(DirectorySeparatorChar)lib$(DirectorySeparatorChar)Avalonia.Win32_net4.x_x86.dll $(TargetDir)" />
-    <Exec Condition=" '$(Platform)'=='x86' AND '$(TargetFramework)' == 'net462' "
-          Command="$(CopyCommand) $(SolutionDir)vendor$(DirectorySeparatorChar)lib$(DirectorySeparatorChar)Avalonia.Win32_net4.x_x86.dll $(PublishDir)" />
+    <Exec Condition=" '$(Platform)'=='x86' AND '$(TargetFramework)' == 'net462' " Command="$(CopyCommand) $(SolutionDir)vendor$(DirectorySeparatorChar)lib$(DirectorySeparatorChar)Avalonia.Win32_net4.x_x86.dll $(TargetDir)" />
+    <Exec Condition=" '$(Platform)'=='x86' AND '$(TargetFramework)' == 'net462' " Command="$(CopyCommand) $(SolutionDir)vendor$(DirectorySeparatorChar)lib$(DirectorySeparatorChar)Avalonia.Win32_net4.x_x86.dll $(PublishDir)" />
 
-    <Exec Condition=" '$(Platform)'=='x86' AND '$(TargetFramework)' == 'net462' "
-          Command="$(DeleteCommand) $(TargetDir)Avalonia.Win32.dll" />
-    <Exec Condition=" '$(Platform)'=='x86' AND '$(TargetFramework)' == 'net462' "
-          Command="$(DeleteCommand) $(PublishDir)Avalonia.Win32.dll" />
+    <Exec Condition=" '$(Platform)'=='x86' AND '$(TargetFramework)' == 'net462' " Command="$(DeleteCommand) $(TargetDir)Avalonia.Win32.dll" />
+    <Exec Condition=" '$(Platform)'=='x86' AND '$(TargetFramework)' == 'net462' " Command="$(DeleteCommand) $(PublishDir)Avalonia.Win32.dll" />
 
-    <Exec Condition=" '$(Platform)'=='x86' AND '$(TargetFramework)' == 'net462' "
-          Command="$(RenameCommand) $(TargetDir)Avalonia.Win32_net4.x_x86.dll Avalonia.Win32.dll" />
-    <Exec Condition=" '$(Platform)'=='x86' AND '$(TargetFramework)' == 'net462' "
-          Command="$(RenameCommand) $(PublishDir)Avalonia.Win32_net4.x_x86.dll Avalonia.Win32.dll" />
+    <Exec Condition=" '$(Platform)'=='x86' AND '$(TargetFramework)' == 'net462' " Command="$(RenameCommand) $(TargetDir)Avalonia.Win32_net4.x_x86.dll Avalonia.Win32.dll" />
+    <Exec Condition=" '$(Platform)'=='x86' AND '$(TargetFramework)' == 'net462' " Command="$(RenameCommand) $(PublishDir)Avalonia.Win32_net4.x_x86.dll Avalonia.Win32.dll" />
   </Target>
 
   <!-- Delete logs and other temp output -->
@@ -161,8 +146,7 @@
   </ItemGroup>
   <Target Name="MyDistClean" AfterTargets="Clean">
     <Message Importance="High" Text=" ## Running custom Clean target..." />
-    <Exec Condition=" '$(OS)' == 'Windows_NT' "
-          Command="if not exist &quot;$(SolutionDir)logs_and_data_saved_from_dotnet_clean&quot; mkdir &quot;$(SolutionDir)logs_and_data_saved_from_dotnet_clean&quot;" />
+    <Exec Condition=" '$(OS)' == 'Windows_NT' " Command="if not exist &quot;$(SolutionDir)logs_and_data_saved_from_dotnet_clean&quot; mkdir &quot;$(SolutionDir)logs_and_data_saved_from_dotnet_clean&quot;" />
     <Move SourceFiles="@(TextFiles)" DestinationFolder="@(BackupFolder)" />
     <Move SourceFiles="@(TmlFiles)" DestinationFolder="@(BackupFolder)" />
     <Move SourceFiles="@(TomlFiles)" DestinationFolder="@(BackupFolder)" />
@@ -183,21 +167,17 @@
     </ItemGroup>
     <MakeDir Directories="@(ZipArchiveItems->'%(RootDir)%(Directory)')" />
     <PropertyGroup>
-      <SevenZipExecuted
-        Condition="'$(SevenZipExecuted)' != 'true' and '$(OS)' == 'Windows_NT' and !Exists('C:\Program Files\7-Zip\7z.exe')">
+      <SevenZipExecuted Condition="'$(SevenZipExecuted)' != 'true' and '$(OS)' == 'Windows_NT' and !Exists('C:\Program Files\7-Zip\7z.exe')">
         true
       </SevenZipExecuted>
-      <SevenZipExecuted
-        Condition="'$(SevenZipExecuted)' != 'true' and '$(OS)' != 'Windows_NT' and !Exists('/usr/bin/7z')">
+      <SevenZipExecuted Condition="'$(SevenZipExecuted)' != 'true' and '$(OS)' != 'Windows_NT' and !Exists('/usr/bin/7z')">
         true
       </SevenZipExecuted>
     </PropertyGroup>
-    <Exec Command="7z a &quot;%(ZipArchiveItems.Identity)&quot; &quot;%(ZipFiles.FullPath)&quot;" IgnoreExitCode="true"
-          Condition="'$(SevenZipExecuted)' == 'true'">
+    <Exec Command="7z a &quot;%(ZipArchiveItems.Identity)&quot; &quot;%(ZipFiles.FullPath)&quot;" IgnoreExitCode="true" Condition="'$(SevenZipExecuted)' == 'true'">
       <Output TaskParameter="ExitCode" PropertyName="SevenZipExitCode" />
     </Exec>
-    <Message Text="7-Zip command not found. Skipping zip portion." Importance="High"
-             Condition="'$(SevenZipExecuted)' == 'true' and '$(SevenZipExitCode)' != '0'" />
+    <Message Text="7-Zip command not found. Skipping zip portion." Importance="High" Condition="'$(SevenZipExecuted)' == 'true' and '$(SevenZipExitCode)' != '0'" />
   </Target>
 
   <!-- Licensing -->

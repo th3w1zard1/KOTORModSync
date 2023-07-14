@@ -94,6 +94,7 @@ namespace KOTORModSync
             ComponentsItemsControl2 = this.FindControl<ItemsControl>("ComponentsItemsControl2");
             TabControl = this.FindControl<TabControl>("TabControl");
             InitialTab = this.FindControl<TabItem>("InitialTab");
+            SummaryTabItem = this.FindControl<TabItem>( "SummaryTabItem" );
             GuiEditTabItem = this.FindControl<TabItem>("GuiEditTabItem");
             RawEditTabItem = this.FindControl<TabItem>("RawEditTabItem");
             RawEditTextBox = this.FindControl<TextBox>("RawEditTextBox")
@@ -1421,10 +1422,10 @@ namespace KOTORModSync
                     }
                 }
 
-                // default to GuiEditTabItem.
+                // default to SummaryTabItem.
                 if ( InitialTab.IsSelected || TabControl.SelectedIndex == int.MaxValue )
                 {
-                    TabControl.SelectedItem = GuiEditTabItem;
+                    TabControl.SelectedItem = SummaryTabItem;
                 }
 
                 // populate raw editor

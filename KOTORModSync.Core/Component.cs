@@ -556,10 +556,11 @@ namespace KOTORModSync.Core
                 }
                 catch ( Exception e )
                 {
+                    Logger.LogError( $"Could not deserialize key '{key}'" );
                     if ( required )
                         throw;
 
-                    Logger.LogError( e.Message );
+                    Logger.LogException( e );
                 }
             }
             catch ( RuntimeBinderException )

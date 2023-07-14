@@ -80,7 +80,7 @@
                     <TextBlock>Please load an instructions file or create a new instructions file by using the controls on the left.</TextBlock>
                 </TabItem.Content>
             </TabItem>
-			<TabItem Header="Summary">
+			<TabItem x:Name="SummaryTabItem" Header="Summary">
 				<TabItem.Content>
 					<ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
 						<ItemsControl x:Name="ComponentsItemsControl2" Items="{Binding Components}">
@@ -96,7 +96,7 @@
 										<TextBlock Text="Directions:" FontWeight="Bold" Margin="0,10,0,0" />
 										<TextBlock Text="{Binding Directions}" Margin="10,0,0,0" TextWrapping="Wrap" />
 
-                                        <TextBlock Text="Mod Homepage:" FontWeight="DemiBold" Margin="0, 10, 0, 0"/>
+                                        <TextBlock Text="Mod Download Links:" FontWeight="DemiBold" Margin="0, 10, 0, 0"/>
                                         <ItemsRepeater Items="{Binding ModLink}">
                                             <ItemsRepeater.ItemTemplate>
                                                 <DataTemplate>

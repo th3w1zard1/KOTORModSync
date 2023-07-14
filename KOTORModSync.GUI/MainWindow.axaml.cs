@@ -589,20 +589,18 @@ namespace KOTORModSync
             }
         }
 
-        [SuppressMessage( "ReSharper", "AssignNullToNotNullAttribute" )]
         private void OpenLink_Click(object sender, RoutedEventArgs e)
         {
             if ( !( sender is TextBlock textBlock ) )
                 return;
 
-            string url = textBlock.Text;
-            if ( !Uri.TryCreate(url, UriKind.Absolute, out Uri _) )
-                throw new ArgumentException("Invalid URL");
-
-
             try
             {
-                if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                string url = textBlock.Text;
+                if ( !Uri.TryCreate( url, UriKind.Absolute, out Uri _ ) )
+                    throw new ArgumentException( "Invalid URL" );
+
+                if ( RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
                 {
                     _ = Process.Start(
                         new ProcessStartInfo

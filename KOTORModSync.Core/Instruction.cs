@@ -5,7 +5,9 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Data;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -24,6 +26,46 @@ namespace KOTORModSync.Core
 {
     public class Instruction : INotifyPropertyChanged
     {
+        public static List<string> AvailableActions = new List<string>()
+        {
+            "execute",
+            "tslpatcher",
+            "move",
+            "rename",
+            "delete",
+            "delduplicate",
+        };
+
+        public string Action { get; set; }
+        [NotNull][ItemNotNull] public List<string> Source { get => _source; set { _source = value; OnPropertyChanged(); } }
+        [NotNull] public string Destination { get => _destination; set { _destination = value; OnPropertyChanged(); } }
+        [NotNull] public List<Guid> Dependencies { get => _dependencies; set { _dependencies = value; OnPropertyChanged(); } }
+        [NotNull] public List<Guid> Restrictions { get => _restrictions; set { _restrictions = value; OnPropertyChanged(); } }
+        public bool Overwrite { get; set; }
+        public string Arguments { get; set; }
+        private Component ParentComponent { get; set; }
+        public Dictionary<FileInfo, SHA1> ExpectedChecksums { get; set; }
+        public Dictionary<FileInfo, SHA1> OriginalChecksums { get; internal set; }
+
+        public enum ActionExitCode
+        {
+            UnauthorizedAccessException = -1,
+            Success,
+            InvalidSelfExtractingExecutable,
+            InvalidArchive,
+            ArchiveParseError,
+            FileNotFoundPost,
+            IOException,
+            RenameTargetAlreadyExists,
+            TSLPatcherCLIError,
+            ChildProcessError,
+            UnknownError,
+            UnknownInnerError,
+            TSLPatcherError,
+            UnknownInstruction,
+            TSLPatcherLogNotFound
+        }
+
         public static readonly string DefaultInstructions = @"
 [[thisMod.instructions]]
 action = ""extract""
@@ -61,94 +103,16 @@ source = [""<<modDirectory>>\\path\\to\\mod\\TSLPatcher directory""]
 arguments = ""any command line arguments to pass (in TSLPatcher, this is the index of the desired option in namespaces.ini))""
 ";
 
-        public string Action { get; set; }
-
-        private List<string> _source;
-
-        [CanBeNull]
-        public List<string> Source
-        {
-            get => _source;
-            set
-            {
-                _source = value;
-                OnPropertyChanged();
-            }
-        }
-
-        private string _destination;
-
-        [CanBeNull]
-        public string Destination
-        {
-            get => _destination;
-            set
-            {
-                _destination = value;
-                OnPropertyChanged();
-            }
-        }
-
+        [NotNull][ItemNotNull] private List<string> _source = new List<string>();
+        [NotNull] private string _destination = string.Empty;
         [NotNull] private List<Guid> _dependencies = new List<Guid>();
-
-        [NotNull]
-        public List<Guid> Dependencies
-        {
-            get => _dependencies;
-            set
-            {
-                _dependencies = value;
-                OnPropertyChanged();
-            }
-        }
-
-
         [NotNull] private List<Guid> _restrictions = new List<Guid>();
-
-        [NotNull]
-        public List<Guid> Restrictions
-        {
-            get => _restrictions;
-            set
-            {
-                _restrictions = value;
-                OnPropertyChanged();
-            }
-        }
-
-        public bool Overwrite { get; set; }
-        public string Arguments { get; set; }
-        private Component ParentComponent { get; set; }
-        public Dictionary<FileInfo, SHA1> ExpectedChecksums { get; set; }
-        public Dictionary<FileInfo, SHA1> OriginalChecksums { get; internal set; }
-
-        public enum ActionExitCode
-        {
-            UnauthorizedAccessException = -1,
-            Success,
-            InvalidSelfExtractingExecutable,
-            InvalidArchive,
-            ArchiveParseError,
-            FileNotFoundPost,
-            IOException,
-            RenameTargetAlreadyExists,
-            TSLPatcherCLIError,
-            ChildProcessError,
-            UnknownError,
-            UnknownInnerError,
-            TSLPatcherError,
-            UnknownInstruction,
-            TSLPatcherLogNotFound
-        }
+        [NotNull][ItemNotNull] private List<string> RealSourcePaths { get; set; } = new List<string>();
+        [CanBeNull] private DirectoryInfo RealDestinationPath { get; set; }
 
         public void SetParentComponent( [CanBeNull] Component parentComponent ) => ParentComponent = parentComponent;
-
         public static async Task<bool> ExecuteInstructionAsync( [NotNull] Func<Task<bool>> instructionMethod ) =>
-            await instructionMethod().ConfigureAwait( false );
-
-        [NotNull][ItemNotNull] private List<string> RealSourcePaths { get; set; } = new List<string>();
-        private DirectoryInfo RealDestinationPath { get; set; }
-
+            await (instructionMethod() ?? throw new ArgumentNullException( nameof(instructionMethod) )).ConfigureAwait( false );
 
         // This method will replace custom variables such as <<modDirectory>> and <<kotorDirectory>> with their actual paths.
         // This method should not be ran before an instruction is executed.
@@ -160,24 +124,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
             if ( Source is null ) throw new NullReferenceException( nameof( Source ) );
 
             RealSourcePaths = Source.ConvertAll( Utility.Utility.ReplaceCustomVariables );
-            // ReSharper disable once AssignNullToNotNullAttribute // we already check for null below.
             RealSourcePaths = FileHelper.EnumerateFilesWithWildcards( RealSourcePaths );
-
-            if ( Destination != null )
-            {
-                string destinationPath = Utility.Utility.ReplaceCustomVariables( Destination );
-                var thisDestination = new DirectoryInfo( destinationPath );
-                if ( !thisDestination.Exists )
-                {
-                    (FileSystemInfo caseSensitiveDestination, List<string> isMultiple)
-                        = PlatformAgnosticMethods.GetClosestMatchingEntry( thisDestination.FullName );
-
-                    thisDestination = (DirectoryInfo)caseSensitiveDestination
-                        ?? throw new DirectoryNotFoundException( "Could not find the 'Destination' path!" );
-                }
-
-                RealDestinationPath = thisDestination;
-            }
 
             if ( RealSourcePaths is null || ( !noValidate && RealSourcePaths.Count == 0 ) )
             {
@@ -185,6 +132,22 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                     $"Could not find any files in the 'Source' path! Got [{string.Join( ", ", Source )}]"
                 );
             }
+
+            string destinationPath = Utility.Utility.ReplaceCustomVariables( Destination );
+            if ( string.IsNullOrWhiteSpace( destinationPath ) )
+                return;
+
+            var thisDestination = new DirectoryInfo( destinationPath );
+            if ( !thisDestination.Exists )
+            {
+                (FileSystemInfo caseSensitiveDestination, List<string> isMultiple)
+                    = PlatformAgnosticMethods.GetClosestMatchingEntry( thisDestination.FullName );
+
+                thisDestination = (DirectoryInfo)caseSensitiveDestination
+                    ?? throw new DirectoryNotFoundException( "Could not find the 'Destination' path!" );
+            }
+
+            RealDestinationPath = thisDestination;
         }
 
         public async Task<ActionExitCode> ExtractFileAsync(
@@ -196,7 +159,8 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
             {
                 if ( argSourcePaths is null )
                 {
-                    argSourcePaths = RealSourcePaths ?? throw new NullReferenceException( nameof( RealSourcePaths ) );
+                    argSourcePaths = RealSourcePaths
+                        ?? throw new NullReferenceException( nameof( RealSourcePaths ) );
                     //argDestinationPath = RealDestinationPath; // not used in this action.
                 }
 
@@ -229,9 +193,13 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
 
                             if ( !ArchiveHelper.IsArchive( thisFile ) )
                             {
-                                _ = Logger.LogAsync(
-                                    $"[Error] '{ParentComponent.Name}' failed to extract file '{thisFile.Name}'. Invalid archive?"
-                                );
+                                if ( !( ParentComponent is null ) )
+                                {
+                                    _ = Logger.LogAsync(
+                                        $"[Error] '{ParentComponent.Name}' failed to extract file '{thisFile.Name}'. Invalid archive?"
+                                    );
+                                }
+
                                 exitCode = ActionExitCode.InvalidArchive;
                                 return;
                             }
@@ -887,5 +855,32 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
             OnPropertyChanged( propertyName );
             return true;
         }
+
+        [NotNull]
+        public Option GetChosenOption()
+        {
+            if ( ParentComponent is null )
+                throw new NullReferenceException( "ParentComponent not found for this instruction!" );
+
+            foreach ( KeyValuePair<Guid, Option> kvp in ParentComponent.ChosenOptions )
+            {
+                Guid optionGuid = kvp.Key;
+                Option thisOption = kvp.Value;
+
+                Option thisInstructionOption = this.Options.FirstOrDefault( o => o.Guid == optionGuid );
+                if ( thisInstructionOption is null )
+                    continue;
+
+                if ( thisOption != thisInstructionOption )
+                    throw new DuplicateNameException( "This guid already corresponds to another option." );
+
+                return thisInstructionOption;
+            }
+
+            throw new KeyNotFoundException("Could not find chosen option for this instruction");
+        }
+
+
+        [NotNull][ItemNotNull] public List<Option> Options = new List<Option>();
     }
 }

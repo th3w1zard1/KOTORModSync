@@ -24,14 +24,14 @@ namespace KOTORModSync.Core
         }
 
         [NotNull] private readonly List<ValidationResult> _validationResults = new List<ValidationResult>();
-        public readonly Component Component;
+        [NotNull] public readonly Component ComponentToValidate;
 
         [NotNull]
         public readonly List<Component> ComponentsList;
 
         public ComponentValidation( [NotNull] Component component, [NotNull] List<Component> componentsList )
         {
-            Component = component ?? throw new ArgumentNullException( nameof( component ) );
+            ComponentToValidate = component ?? throw new ArgumentNullException( nameof( component ) );
             ComponentsList = new List<Component>(
                 componentsList ?? throw new ArgumentNullException( nameof( componentsList ) )
             );
@@ -39,9 +39,9 @@ namespace KOTORModSync.Core
 
         public bool Run() =>
             // Verify all the instructions' paths line up with hierarchy of the archives
-            VerifyExtractPaths( Component )
+            VerifyExtractPaths()
             // Ensure all the 'Destination' keys are valid for their respective action.
-            && ParseDestinationWithAction( Component );
+            && ParseDestinationWithAction();
 
         private void AddError( [CanBeNull] string message, [CanBeNull] Instruction instruction ) =>
             _validationResults.Add( new ValidationResult( this, instruction, message, true ) );
@@ -79,21 +79,19 @@ namespace KOTORModSync.Core
                 .Select( r => r.Message )
                 .ToList();
 
-        public bool VerifyExtractPaths( [NotNull] Component component )
+        public bool VerifyExtractPaths()
         {
-            if ( component is null ) throw new ArgumentNullException( nameof( component ) );
-
             try
             {
                 bool success = true;
 
                 // Confirm that all Dependencies are found in either InstallBefore and InstallAfter:
-                List<string> allArchives = GetAllArchivesFromInstructions( component );
+                List<string> allArchives = GetAllArchivesFromInstructions( );
 
                 // probably something wrong if there's no archives found.
                 if ( allArchives == null || allArchives.Count == 0 )
                 {
-                    foreach ( Instruction instruction in component.Instructions )
+                    foreach ( Instruction instruction in ComponentToValidate.Instructions )
                     {
                         if ( !( instruction.Action is null )
                             && !instruction.Action.Equals( "extract", StringComparison.OrdinalIgnoreCase ) )
@@ -111,7 +109,7 @@ namespace KOTORModSync.Core
                     return success;
                 }
 
-                foreach ( Instruction instruction in component.Instructions )
+                foreach ( Instruction instruction in ComponentToValidate.Instructions )
                 {
                     // we already checked if the archive exists in GetAllArchivesFromInstructions.
                     if ( instruction.Action.Equals( "extract", StringComparison.OrdinalIgnoreCase ) )
@@ -199,13 +197,11 @@ namespace KOTORModSync.Core
             }
         }
 
-        public List<string> GetAllArchivesFromInstructions( [NotNull] Component component )
+        public List<string> GetAllArchivesFromInstructions( )
         {
-            if ( component is null ) throw new ArgumentNullException( nameof( component ) );
-
             var allArchives = new List<string>();
 
-            foreach ( Instruction instruction in component.Instructions )
+            foreach ( Instruction instruction in ComponentToValidate.Instructions )
             {
                 if ( instruction.Source is null || instruction.Action != "extract" )
                 {
@@ -255,12 +251,10 @@ namespace KOTORModSync.Core
             return allArchives;
         }
 
-        public bool ParseDestinationWithAction( [NotNull] Component component )
+        public bool ParseDestinationWithAction()
         {
-            if ( component is null ) throw new ArgumentNullException( nameof( component ) );
-
             bool success = true;
-            foreach ( Instruction instruction in component.Instructions )
+            foreach ( Instruction instruction in ComponentToValidate.Instructions )
             {
                 switch ( instruction.Action )
                 {
@@ -447,7 +441,7 @@ namespace KOTORModSync.Core
             }
 
             // todo, stop displaying errors for self extracting executables. This is the only mod using one that I've seen out of 200-some.
-            if ( Component.Name.Equals( "Improved AI", StringComparison.OrdinalIgnoreCase ) )
+            if ( ComponentToValidate.Name.Equals( "Improved AI", StringComparison.OrdinalIgnoreCase ) )
             {
                 return (true, true);
             }

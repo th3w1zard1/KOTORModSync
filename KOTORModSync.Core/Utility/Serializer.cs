@@ -48,6 +48,7 @@ namespace KOTORModSync.Core.Utility
             return guidString;
         }
 
+        // converts accidental lists into strings and vice versa
         public static void DeserializePathInDictionary( IDictionary<string, object> dict, string key )
         {
             if ( !dict.TryGetValue( key, out object pathValue ) )
@@ -77,6 +78,7 @@ namespace KOTORModSync.Core.Utility
             }
         }
 
+        // converts accidental lists into strings and vice versa
         public static void DeserializeGuidDictionary( [NotNull] IDictionary<string, object> dict, [NotNull] string key )
         {
             if ( !dict.TryGetValue( key, out object value ) )

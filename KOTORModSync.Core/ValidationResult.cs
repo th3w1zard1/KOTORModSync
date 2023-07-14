@@ -11,7 +11,7 @@ namespace KOTORModSync.Core
             bool isError
         )
         {
-            Component = validator.Component;
+            Component = validator.ComponentToValidate;
             Instruction = instruction;
             InstructionIndex = Component.Instructions.IndexOf( instruction );
             Message = message;

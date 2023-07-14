@@ -4,16 +4,16 @@
 
 using System;
 using System.Collections.Generic;
+using JetBrains.Annotations;
 
 namespace KOTORModSync.Core
 {
     public class Option
     {
-        public string Name { get; set; }
-        public List<string> Source { get; set; }
-        public string Destination { get; set; }
-        public List<Guid> Dependencies { get; set; }
-        public List<Guid> Restrictions { get; set; }
-        public Guid Guid { get; set; }
+        [NotNull] public string Name { get; set; } = string.Empty;
+        [NotNull] public Guid Guid { get; set; } = Guid.Empty;
+        [NotNull] public List<Guid> Dependencies { get; set; } = new List<Guid>();
+        [NotNull] public List<Guid> Restrictions { get; set; } = new List<Guid>();
+        [NotNull][ItemNotNull] public List<Instruction> Instructions { get ; set ; } = new List<Instruction>();
     }
 }

@@ -596,7 +596,7 @@ namespace KOTORModSync
 
             try
             {
-                string url = textBlock.Text;
+                string url = textBlock.Text ?? string.Empty;
                 if ( !Uri.TryCreate( url, UriKind.Absolute, out Uri _ ) )
                     throw new ArgumentException( "Invalid URL" );
 

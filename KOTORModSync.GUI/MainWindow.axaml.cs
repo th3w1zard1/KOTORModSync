@@ -65,60 +65,60 @@ namespace KOTORModSync
 
         private void InitializeComponent()
         {
-            AvaloniaXamlLoader.Load(this);
+            AvaloniaXamlLoader.Load( this );
 
-            MainGrid = this.FindControl<Grid>("MainGrid")
-                ?? throw new NullReferenceException("MainGrid undefined in MainWindow.");
-            if (MainGrid.ColumnDefinitions == null || MainGrid.ColumnDefinitions.Count != 3)
+            MainGrid = this.FindControl<Grid>( "MainGrid" )
+                ?? throw new NullReferenceException( "MainGrid undefined in MainWindow." );
+            if ( MainGrid.ColumnDefinitions == null || MainGrid.ColumnDefinitions.Count != 3 )
             {
-                throw new NullReferenceException("MainGrid incorrectly defined, expected 3 columns.");
+                throw new NullReferenceException( "MainGrid incorrectly defined, expected 3 columns." );
             }
 
             // set title and version
             Title = $"KOTORModSync v{MainConfig.CurrentVersion}";
-            TitleTextBlock = this.FindControl<TextBlock>("TitleTextBlock");
+            TitleTextBlock = this.FindControl<TextBlock>( "TitleTextBlock" );
             TitleTextBlock.Text = Title;
 
             ColumnDefinition componentListColumn = MainGrid.ColumnDefinitions[0]
-                ?? throw new NullReferenceException("Column 0 of MainGrid (component list column) not defined.");
+                ?? throw new NullReferenceException( "Column 0 of MainGrid (component list column) not defined." );
             ColumnDefinition configColumn = MainGrid.ColumnDefinitions[2]
-                ?? throw new NullReferenceException("Column 2 of MainGrid (component list column) not defined.");
+                ?? throw new NullReferenceException( "Column 2 of MainGrid (component list column) not defined." );
 
 
             // Column 0
-            componentListColumn.Width = new GridLength(250);
-            LeftTreeView = this.FindControl<TreeView>("LeftTreeView");
-            ApplyEditorButton = this.FindControl<Button>("ApplyEditorButton");
+            componentListColumn.Width = new GridLength( 250 );
+            LeftTreeView = this.FindControl<TreeView>( "LeftTreeView" );
+            ApplyEditorButton = this.FindControl<Button>( "ApplyEditorButton" );
             // Column 1
-            ComponentsItemsControl = this.FindControl<ItemsControl>("ComponentsItemsControl");
-            ComponentsItemsControl2 = this.FindControl<ItemsControl>("ComponentsItemsControl2");
-            TabControl = this.FindControl<TabControl>("TabControl");
-            InitialTab = this.FindControl<TabItem>("InitialTab");
+            ComponentsItemsControl = this.FindControl<ItemsControl>( "ComponentsItemsControl" );
+            ComponentsItemsControl2 = this.FindControl<ItemsControl>( "ComponentsItemsControl2" );
+            TabControl = this.FindControl<TabControl>( "TabControl" );
+            InitialTab = this.FindControl<TabItem>( "InitialTab" );
             SummaryTabItem = this.FindControl<TabItem>( "SummaryTabItem" );
-            GuiEditTabItem = this.FindControl<TabItem>("GuiEditTabItem");
-            RawEditTabItem = this.FindControl<TabItem>("RawEditTabItem");
-            RawEditTextBox = this.FindControl<TextBox>("RawEditTextBox")
-                ?? throw new NullReferenceException("RawEditTextBox not defined for MainWindow.");
+            GuiEditTabItem = this.FindControl<TabItem>( "GuiEditTabItem" );
+            RawEditTabItem = this.FindControl<TabItem>( "RawEditTabItem" );
+            RawEditTextBox = this.FindControl<TextBox>( "RawEditTextBox" )
+                ?? throw new NullReferenceException( "RawEditTextBox not defined for MainWindow." );
 
             RawEditTextBox.LostFocus
                 += RawEditTextBox_LostFocus; // Prevents RawEditTextBox from being cleared when clicking elsewhere(?)
             RawEditTextBox.DataContext = new ObservableCollection<string>();
 
             // Column 3
-            configColumn.Width = new GridLength(250);
+            configColumn.Width = new GridLength( 250 );
             MainConfigInstance = new MainConfig();
-            MainConfigStackPanel = this.FindControl<StackPanel>("MainConfigStackPanel")
-                ?? throw new NullReferenceException("MainConfigStackPanel not defined for MainWindow.");
+            MainConfigStackPanel = this.FindControl<StackPanel>( "MainConfigStackPanel" )
+                ?? throw new NullReferenceException( "MainConfigStackPanel not defined for MainWindow." );
 
             MainConfigStackPanel.DataContext = MainConfigInstance;
 
-            _ = Logger.LogVerboseAsync("Setup window move event handlers...");
+            _ = Logger.LogVerboseAsync( "Setup window move event handlers..." );
             // Attach event handlers
             PointerPressed += InputElement_OnPointerPressed;
             PointerMoved += InputElement_OnPointerMoved;
             PointerReleased += InputElement_OnPointerReleased;
             PointerLeave += InputElement_OnPointerReleased;
-            FindComboBoxesInWindow(this);
+            FindComboBoxesInWindow( this );
         }
 
         private MainConfig MainConfigInstance { get; set; }
@@ -131,16 +131,16 @@ namespace KOTORModSync
         private bool _mouseDownForWindowMoving;
         private PointerPoint _originalPoint;
 
-        private void SearchText_PropertyChanged(object sender, PropertyChangedEventArgs e)
+        private void SearchText_PropertyChanged( object sender, PropertyChangedEventArgs e )
         {
-            if (e.PropertyName != nameof(SearchText))
+            if ( e.PropertyName != nameof( SearchText ) )
                 return;
 
             // Get the root item of the TreeView
-            var rootItem = (TreeViewItem)LeftTreeView.ItemContainerGenerator.ContainerFromIndex(0);
+            var rootItem = (TreeViewItem)LeftTreeView.ItemContainerGenerator.ContainerFromIndex( 0 );
 
             // ReSharper disable once AssignNullToNotNullAttribute
-            FilterControlListItems(rootItem, SearchText);
+            FilterControlListItems( rootItem, SearchText );
         }
 
         public new event PropertyChangedEventHandler PropertyChanged;
@@ -590,7 +590,7 @@ namespace KOTORModSync
             }
         }
 
-        private void OpenLink_Click(object sender, RoutedEventArgs e)
+        private void OpenLink_Click( object sender, RoutedEventArgs e )
         {
             if ( !( sender is TextBlock textBlock ) )
                 return;
@@ -601,7 +601,7 @@ namespace KOTORModSync
                 if ( !Uri.TryCreate( url, UriKind.Absolute, out Uri _ ) )
                     throw new ArgumentException( "Invalid URL" );
 
-                if ( RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                if ( RuntimeInformation.IsOSPlatform( OSPlatform.Windows ) )
                 {
                     _ = Process.Start(
                         new ProcessStartInfo
@@ -611,20 +611,20 @@ namespace KOTORModSync
                         }
                     );
                 }
-                else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+                else if ( RuntimeInformation.IsOSPlatform( OSPlatform.OSX ) )
                 {
                     _ = Process.Start( "open", url );
                 }
-                else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+                else if ( RuntimeInformation.IsOSPlatform( OSPlatform.Linux ) )
                 {
                     _ = Process.Start( "xdg-open", url );
                 }
                 else
                 {
-                    Logger.LogError("Unsupported platform, cannot open link.");
+                    Logger.LogError( "Unsupported platform, cannot open link." );
                 }
             }
-            catch (Exception ex)
+            catch ( Exception ex )
             {
                 Logger.LogException( ex, $"Failed to open URL: {ex.Message}" );
             }
@@ -1645,7 +1645,7 @@ namespace KOTORModSync
                 );
 
                 // Handling conflicts based on what's defined for THIS component
-                if ( conflicts.TryGetValue( "Dependency", out List<Component> dependencyConflicts) && !( dependencyConflicts is null ))
+                if ( conflicts.TryGetValue( "Dependency", out List<Component> dependencyConflicts ) && !( dependencyConflicts is null ) )
                 {
                     foreach ( Component conflictComponent in dependencyConflicts )
                     {
@@ -1775,7 +1775,7 @@ namespace KOTORModSync
             if ( component is null )
                 throw new ArgumentNullException( nameof( component ) );
 
-            CheckBox checkBox = CreateComponentCheckbox(component);
+            CheckBox checkBox = CreateComponentCheckbox( component );
             var header = new DockPanel
             {
                 Children =
@@ -1841,7 +1841,7 @@ namespace KOTORModSync
             if ( !( parentItem?.Items is IEnumerable items ) )
                 return null;
 
-            foreach ( object item in items)
+            foreach ( object item in items )
             {
                 if ( !( item is TreeViewItem treeViewItem ) )
                 {
@@ -1864,7 +1864,7 @@ namespace KOTORModSync
                 if ( parentItem is null )
                     throw new ArgumentNullException( nameof( parentItem ) );
 
-                if ( component is null ) 
+                if ( component is null )
                     throw new ArgumentNullException( nameof( component ) );
 
                 if ( !( parentItem.Items is AvaloniaList<object> parentItemItems ) )

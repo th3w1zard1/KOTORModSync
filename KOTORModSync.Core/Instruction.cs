@@ -112,7 +112,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
 
         public void SetParentComponent( [CanBeNull] Component parentComponent ) => ParentComponent = parentComponent;
         public static async Task<bool> ExecuteInstructionAsync( [NotNull] Func<Task<bool>> instructionMethod ) =>
-            await (instructionMethod() ?? throw new ArgumentNullException( nameof(instructionMethod) )).ConfigureAwait( false );
+            await ( instructionMethod() ?? throw new ArgumentNullException( nameof( instructionMethod ) ) ).ConfigureAwait( false );
 
         // This method will replace custom variables such as <<modDirectory>> and <<kotorDirectory>> with their actual paths.
         // This method should not be ran before an instruction is executed.
@@ -877,7 +877,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                 return thisInstructionOption;
             }
 
-            throw new KeyNotFoundException("Could not find chosen option for this instruction");
+            throw new KeyNotFoundException( "Could not find chosen option for this instruction" );
         }
 
 

@@ -14,6 +14,6 @@ namespace KOTORModSync.Core
         [NotNull] public Guid Guid { get; set; } = Guid.Empty;
         [NotNull] public List<Guid> Dependencies { get; set; } = new List<Guid>();
         [NotNull] public List<Guid> Restrictions { get; set; } = new List<Guid>();
-        [NotNull][ItemNotNull] public List<Instruction> Instructions { get ; set ; } = new List<Instruction>();
+        [NotNull][ItemNotNull] public List<Instruction> Instructions { get; set; } = new List<Instruction>();
     }
 }

@@ -28,7 +28,7 @@ namespace KOTORModSync.Core
 
             (string, string) nameAndModLinks = GetNameAndModLink( modText );
             mod.Name = GetName( nameAndModLinks );
-            mod.Guid = new Guid(  );
+            mod.Guid = new Guid();
             mod.ModLink = new List<string>() { GetHyperlinkUrl( nameAndModLinks, "Name" ) };
             mod.Author = GetPropertyValue( modText, "Author" );
             mod.Description = GetPropertyValue( modText, "Description" );

@@ -5,7 +5,6 @@
         xmlns:local="clr-namespace:KOTORModSync"
         x:Class="KOTORModSync.MainWindow"
         xmlns:control="clr-namespace:KOTORModSync.Controls"
-        xmlns:system="clr-namespace:System;assembly=System.Runtime"
         Title="KOTORModSync"
         Width="1280" Height="720" MinWidth="600" MinHeight="400"
         ExtendClientAreaToDecorationsHint="True"
@@ -23,7 +22,6 @@
         <converters:ActionConverter x:Key="ActionConverter" />
         <converters:EnumDescriptionConverter x:Key="EnumConverter" />
         <converters:StringToGuidConverter x:Key="GuidConverter" />
-        <converters:OpenLinkConverter x:Key="OpenLinkConverter"/>
     </Window.Resources>
     <Grid x:Name="MainGrid" MinWidth="200" RowDefinitions="Auto,*">
         <Grid.ColumnDefinitions>

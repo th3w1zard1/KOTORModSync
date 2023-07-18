@@ -289,7 +289,7 @@ namespace KOTORModSync.Core
                     // extract and delete cannot use the 'Destination' key.
                     case "extract":
                     case "delete":
-                        if ( string.IsNullOrEmpty(instruction.Destination) )
+                        if ( string.IsNullOrEmpty( instruction.Destination ) )
                             break;
 
                         success = false;

@@ -43,7 +43,7 @@ namespace KOTORModSync.Core.Utility
             {
                 var castedCollection = emptySubcollection as IEnumerable;
 
-                foreach ( object _ in castedCollection.Cast<object>().ToArray() )
+                foreach ( object unused in castedCollection.Cast<object>().ToArray() )
                 {
                     _ = castedCollection.GetEnumerator().MoveNext();
                     castedCollection.GetEnumerator().Reset();

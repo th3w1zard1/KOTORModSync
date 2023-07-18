@@ -19,12 +19,105 @@ namespace KOTORModSync.Core.Utility
 {
     public static class PlatformAgnosticMethods
     {
+        [NotNull]
+        public static List<FileSystemInfo> FindCaseInsensitiveDuplicates( [NotNull] DirectoryInfo directory )
+        {
+            if ( directory is null )
+                throw new ArgumentNullException( nameof( directory ) );
+
+            var duplicates = new List<FileSystemInfo>();
+            var fileDict = new Dictionary<string, List<FileSystemInfo>>( StringComparer.OrdinalIgnoreCase );
+            var folderDict = new Dictionary<string, List<FileSystemInfo>>( StringComparer.OrdinalIgnoreCase );
+
+            try
+            {
+                FindDuplicatesRecursively( directory, ref fileDict, ref folderDict );
+            }
+            catch ( Exception ex)
+            {
+                Logger.LogException( ex );
+                return duplicates;
+            }
+
+            foreach ( List<FileSystemInfo> fileList in fileDict.Values )
+            {
+                if ( fileList?.Count > 1 )
+                    duplicates.AddRange( fileList );
+            }
+
+            foreach ( List<FileSystemInfo> folderList in folderDict.Values )
+            {
+                if ( folderList?.Count > 1 )
+                    duplicates.AddRange( folderList );
+            }
+
+            return duplicates;
+        }
+
+        private static void FindDuplicatesRecursively(
+            [NotNull] DirectoryInfo directory,
+            [NotNull] ref Dictionary<string, List<FileSystemInfo>> fileDict,
+            [NotNull] ref Dictionary<string, List<FileSystemInfo>> folderDict
+        )
+        {
+            if ( fileDict is null )
+                throw new ArgumentNullException( nameof( fileDict ) );
+            if ( folderDict is null )
+                throw new ArgumentNullException( nameof( folderDict ) );
+
+            // Check if the directory exists and if we have access to it.
+            if ( directory?.Exists != true )
+                throw new DirectoryNotFoundException( "Directory not found." );
+
+            // Search for files and add them to the file dictionary.
+            foreach ( FileInfo file in directory.GetFiles() )
+            {
+                if ( file?.Exists != true )
+                    continue;
+
+                if ( !fileDict.TryGetValue( file.Name, out List<FileSystemInfo> fileList ) )
+                {
+                    fileList = new List<FileSystemInfo>();
+                    fileDict.Add( file.Name, fileList );
+                }
+
+                fileList.Add( file );
+            }
+
+            // Search for subdirectories and add them to the folder dictionary.
+            foreach ( DirectoryInfo subdirectory in directory.GetDirectories() )
+            {
+                if ( subdirectory?.Exists != true )
+                    continue;
+
+                if ( !folderDict.TryGetValue( subdirectory.Name, out List<FileSystemInfo> folderList ) )
+                {
+                    folderList = new List<FileSystemInfo>();
+                    folderDict.Add( subdirectory.Name, folderList );
+                }
+
+                folderList?.Add( subdirectory );
+
+                // Recursively search the sub-directory.
+                FindDuplicatesRecursively( subdirectory, ref fileDict, ref folderDict );
+            }
+        }
+
+        // Overload for a string representation of the folder path.
+        [NotNull]
+        public static List<FileSystemInfo> FindCaseInsensitiveDuplicates( [NotNull] string path )
+        {
+            if ( path is null )
+                throw new ArgumentNullException( nameof( path ) );
+
+            var directory = new DirectoryInfo( path );
+            return FindCaseInsensitiveDuplicates( directory );
+        }
+
         public static (FileSystemInfo, List<string>) GetClosestMatchingEntry( [NotNull] string path )
         {
             if ( path is null )
-            {
                 throw new ArgumentNullException( nameof( path ) );
-            }
 
             string directoryName = Path.GetDirectoryName( path );
             string searchPattern = Path.GetFileName( path );
@@ -43,9 +136,7 @@ namespace KOTORModSync.Core.Utility
             foreach ( FileSystemInfo entry in directory.EnumerateFileSystemInfos( searchPattern ) )
             {
                 if ( string.IsNullOrWhiteSpace( entry?.FullName ) )
-                {
                     continue;
-                }
 
                 int matchingCharacters = GetMatchingCharactersCount( entry.FullName, path );
                 if ( matchingCharacters == path.Length )
@@ -71,27 +162,19 @@ namespace KOTORModSync.Core.Utility
         private static int GetMatchingCharactersCount( [NotNull] string str1, [NotNull] string str2 )
         {
             if ( str1 is null )
-            {
                 throw new ArgumentNullException( nameof( str1 ) );
-            }
 
             if ( str2 is null )
-            {
                 throw new ArgumentNullException( nameof( str2 ) );
-            }
 
             int matchingCount = 0;
 
             for ( int i = 0; i < str1.Length && i < str2.Length; i++ )
             {
-                if ( str1[i] == str2[i] )
-                {
-                    matchingCount++;
-                }
-                else
-                {
+                if ( str1[i] != str2[i] )
                     break;
-                }
+
+                matchingCount++;
             }
 
             return matchingCount;

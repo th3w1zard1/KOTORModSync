@@ -21,13 +21,13 @@ namespace KOTORModSync.Core
     [SuppressMessage( "ReSharper", "InconsistentNaming" )]
     public class MainConfig : INotifyPropertyChanged
     {
-        public static string CurrentVersion => "0.8.2";
+        public static string CurrentVersion => "0.8.3";
 
         public MainConfig()
         {
             currentCompatibilityLevel = CompatibilityLevel.Compatible;
             debugLogging = true;
-            patcherOption = AvailablePatchers.TSLPatcher;
+            patcherOption = AvailablePatchers.PyKotorCLI;
             attemptFixes = true;
             defaultInstall = true;
             noAdmin = false;
@@ -54,12 +54,12 @@ namespace KOTORModSync.Core
 
         public enum AvailablePatchers
         {
-            [DefaultValue( true )]
             [Description( "Use TSLPatcher" )]
             TSLPatcher = 0,
 
+            [DefaultValue( true )]
             [Description( "Use PyKotorCLI" )]
-            PyKotorCLI = 2
+            PyKotorCLI = 1
         }
 
         [UsedImplicitly]

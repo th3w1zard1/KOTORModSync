@@ -392,7 +392,7 @@ namespace KOTORModSync.Core
                 instruction.Dependencies
                     = GetValueOrDefault<List<Guid>>( instructionDict, "Dependencies" ) ?? new List<Guid>();
                 instruction.Source = GetValueOrDefault<List<string>>( instructionDict, "Source" ) ?? new List<string>();
-                instruction.Destination = GetValueOrDefault<string>( instructionDict, "Destination" );
+                instruction.Destination = GetValueOrDefault<string>( instructionDict, "Destination" ) ?? string.Empty;
                 instructions.Add( instruction );
             }
 

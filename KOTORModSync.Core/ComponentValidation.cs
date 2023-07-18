@@ -203,19 +203,22 @@ namespace KOTORModSync.Core
 
             foreach ( Instruction instruction in ComponentToValidate.Instructions )
             {
-                if ( instruction.Source is null || instruction.Action != "extract" )
-                {
+                if ( instruction.Action != "extract" )
                     continue;
-                }
 
                 List<string> realPaths = FileHelper.EnumerateFilesWithWildcards(
                     instruction.Source.ConvertAll( Utility.Utility.ReplaceCustomVariables ),
                     true
                 );
+                if ( realPaths is null )
+                {
+                    AddError( "Could not find real paths", instruction );
+                    continue;
+                }
+
                 foreach ( string realSourcePath in realPaths )
                 {
-                    if ( Path.GetExtension( realSourcePath )
-                        .Equals( ".exe", StringComparison.OrdinalIgnoreCase ) )
+                    if ( Path.GetExtension( realSourcePath ).Equals( ".exe", StringComparison.OrdinalIgnoreCase ) )
                     {
                         allArchives.Add( realSourcePath );
                         continue; // no way to verify self-extracting executables.
@@ -261,7 +264,8 @@ namespace KOTORModSync.Core
                     case null:
                         continue;
                     // tslpatcher must always use <<kotorDirectory>> and nothing else.
-                    case "tslpatcher" when instruction.Destination is null:
+                    case "tslpatcher" when string.IsNullOrEmpty( instruction.Destination ):
+                        AddWarning( "Destination must be <<kotorDirectory>> with 'TSLPatcher' action, setting it now automatically.", instruction );
                         instruction.Destination = "<<kotorDirectory>>";
                         break;
 
@@ -285,10 +289,8 @@ namespace KOTORModSync.Core
                     // extract and delete cannot use the 'Destination' key.
                     case "extract":
                     case "delete":
-                        if ( instruction.Destination is null )
-                        {
+                        if ( string.IsNullOrEmpty(instruction.Destination) )
                             break;
-                        }
 
                         success = false;
                         AddError(
@@ -302,14 +304,14 @@ namespace KOTORModSync.Core
                         }
 
                         Logger.Log( "Fixing the above issue automatically." );
-                        instruction.Destination = null;
+                        instruction.Destination = string.Empty;
 
                         break;
                     // rename should never use <<kotorDirectory>>\\Override
                     case "rename":
-                        if ( instruction.Destination?.Equals(
+                        if ( instruction.Destination.Equals(
                                 $"<<kotorDirectory>>{Path.DirectorySeparatorChar}Override",
-                                StringComparison.Ordinal
+                                StringComparison.OrdinalIgnoreCase
                             )
                             != false )
                         {
@@ -326,7 +328,7 @@ namespace KOTORModSync.Core
                     default:
 
                         string destinationPath = string.Empty;
-                        if ( instruction.Destination != null )
+                        if ( !string.IsNullOrEmpty( instruction.Destination ) )
                         {
                             destinationPath = Utility.Utility.ReplaceCustomVariables( instruction.Destination );
                         }
@@ -337,17 +339,6 @@ namespace KOTORModSync.Core
                         {
                             success = false;
                             AddError( "Destination cannot be found!" + $" Got '{destinationPath}'", instruction );
-
-                            /*if ( !MainConfig.AttemptFixes )
-                            {
-                                break;
-                            }
-
-                            Logger.Log(
-                                "Fixing the above issue automatically"
-                                + $" (setting Destination to '<<kotorDirectory>>{Path.DirectorySeparatorChar}Override')"
-                            );
-                            instruction.Destination = $"<<kotorDirectory>>{Path.DirectorySeparatorChar}Override";*/
                         }
 
                         break;
@@ -385,9 +376,12 @@ namespace KOTORModSync.Core
             [NotNull] Instruction instruction
         )
         {
-            if ( sourcePath is null ) throw new ArgumentNullException( nameof( sourcePath ) );
-            if ( allArchives is null ) throw new ArgumentNullException( nameof( allArchives ) );
-            if ( instruction is null ) throw new ArgumentNullException( nameof( instruction ) );
+            if ( sourcePath is null )
+                throw new ArgumentNullException( nameof( sourcePath ) );
+            if ( allArchives is null )
+                throw new ArgumentNullException( nameof( allArchives ) );
+            if ( instruction is null )
+                throw new ArgumentNullException( nameof( instruction ) );
 
             bool foundInAnyArchive = false;
             bool hasError = false;

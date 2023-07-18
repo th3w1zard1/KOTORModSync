@@ -126,7 +126,11 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
             RealSourcePaths = Source.ConvertAll( Utility.Utility.ReplaceCustomVariables );
             RealSourcePaths = FileHelper.EnumerateFilesWithWildcards( RealSourcePaths );
 
-            if ( RealSourcePaths is null || ( !noValidate && RealSourcePaths.Count == 0 ) )
+            if (
+                RealSourcePaths is null
+                || ( !noValidate && RealSourcePaths.Count == 0 )
+                && !Action.Equals( "delete", StringComparison.OrdinalIgnoreCase )
+            )
             {
                 throw new FileNotFoundException(
                     $"Could not find any files in the 'Source' path! Got [{string.Join( ", ", Source )}]"
@@ -538,21 +542,22 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                     string destinationFilePath = Path.Combine( RealDestinationPath.FullName, fileName );
 
                     // Check if the destination file already exists
-                    if ( !Overwrite && File.Exists( destinationFilePath ) )
-                    {
-                        Logger.Log(
-                            $"Skipping file '{Path.GetFileName( destinationFilePath )}' ( Overwrite set to False )"
-                        );
-
-                        continue;
-                    }
-
-                    // Check if the destination file already exists
                     if ( File.Exists( destinationFilePath ) )
                     {
-                        Logger.Log( $"File already exists, deleting pre-existing file '{destinationFilePath}'" );
-                        // Delete the existing file
-                        File.Delete( destinationFilePath );
+                        if ( !Overwrite )
+                        {
+                            Logger.Log(
+                                $"Skipping file '{Path.GetFileName( destinationFilePath )}' ( Overwrite set to False )"
+                            );
+                        }
+                        else
+                        {
+                            Logger.Log( $"File already exists, deleting pre-existing file '{destinationFilePath}'" );
+                            // Delete the existing file
+                            File.Delete( destinationFilePath );
+                        }
+
+                        continue;
                     }
 
                     // Move the file

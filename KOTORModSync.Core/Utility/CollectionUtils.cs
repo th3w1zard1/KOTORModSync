@@ -45,7 +45,7 @@ namespace KOTORModSync.Core.Utility
 
                 foreach ( object _ in castedCollection.Cast<object>().ToArray() )
                 {
-                    castedCollection.GetEnumerator().MoveNext();
+                    _ = castedCollection.GetEnumerator().MoveNext();
                     castedCollection.GetEnumerator().Reset();
                 }
             }

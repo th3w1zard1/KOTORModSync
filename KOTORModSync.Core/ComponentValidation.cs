@@ -86,7 +86,7 @@ namespace KOTORModSync.Core
                 bool success = true;
 
                 // Confirm that all Dependencies are found in either InstallBefore and InstallAfter:
-                List<string> allArchives = GetAllArchivesFromInstructions( );
+                List<string> allArchives = GetAllArchivesFromInstructions();
 
                 // probably something wrong if there's no archives found.
                 if ( allArchives == null || allArchives.Count == 0 )
@@ -197,7 +197,7 @@ namespace KOTORModSync.Core
             }
         }
 
-        public List<string> GetAllArchivesFromInstructions( )
+        public List<string> GetAllArchivesFromInstructions()
         {
             var allArchives = new List<string>();
 

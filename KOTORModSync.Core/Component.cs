@@ -231,7 +231,7 @@ namespace KOTORModSync.Core
             if ( ModLink.Count == 0 )
             {
                 string modLink = GetValueOrDefault<string>( componentDict, "ModLink" ) ?? string.Empty;
-                if ( string.IsNullOrEmpty( modLink ))
+                if ( string.IsNullOrEmpty( modLink ) )
                     Logger.LogError( "Could not deserialize key 'ModLink'" );
                 else
                     ModLink = modLink.Split( new[] { "\r\n", "\n" }, StringSplitOptions.None ).ToList();

@@ -549,15 +549,13 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                             Logger.Log(
                                 $"Skipping file '{Path.GetFileName( destinationFilePath )}' ( Overwrite set to False )"
                             );
-                        }
-                        else
-                        {
-                            Logger.Log( $"File already exists, deleting pre-existing file '{destinationFilePath}'" );
-                            // Delete the existing file
-                            File.Delete( destinationFilePath );
+
+                            continue;
                         }
 
-                        continue;
+                        Logger.Log( $"File already exists, deleting pre-existing file '{destinationFilePath}'" );
+                        // Delete the existing file
+                        File.Delete( destinationFilePath );
                     }
 
                     // Move the file

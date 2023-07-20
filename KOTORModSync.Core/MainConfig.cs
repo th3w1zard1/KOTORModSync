@@ -21,7 +21,7 @@ namespace KOTORModSync.Core
     [SuppressMessage( "ReSharper", "InconsistentNaming" )]
     public class MainConfig : INotifyPropertyChanged
     {
-        public static string CurrentVersion => "0.8.3";
+        public static string CurrentVersion => "0.8.4";
 
         public MainConfig()
         {

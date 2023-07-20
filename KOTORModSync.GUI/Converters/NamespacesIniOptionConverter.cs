@@ -11,7 +11,18 @@ namespace KOTORModSync.Converters
 {
     public class NamespacesIniOptionConverter : IValueConverter
     {
-        public object Convert( object value, Type targetType, object parameter, CultureInfo culture ) => ( value as Component )?.Name;
-        public object ConvertBack( object value, Type targetType, object parameter, CultureInfo culture ) => value as List<Component> ?? new object();
+        public object Convert(
+            object value,
+            Type targetType,
+            object parameter,
+            CultureInfo culture
+        ) => ( value as Component )?.Name;
+
+        public object ConvertBack(
+            object value,
+            Type targetType,
+            object parameter,
+            CultureInfo culture
+        ) => value as List<Component> ?? new object();
     }
 }

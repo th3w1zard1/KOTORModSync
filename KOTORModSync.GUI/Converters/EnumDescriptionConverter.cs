@@ -18,8 +18,7 @@ namespace KOTORModSync.Converters
         [CanBeNull]
         private static string GetEnumDescription( Enum enumObj )
         {
-            FieldInfo fieldInfo = enumObj.GetType()
-                .GetField( enumObj.ToString() );
+            FieldInfo fieldInfo = enumObj.GetType().GetField( enumObj.ToString() );
             if ( fieldInfo is null )
             {
                 Logger.LogException( new ArgumentNullException( nameof( enumObj ) ) );
@@ -29,21 +28,19 @@ namespace KOTORModSync.Converters
             object[] attribArray = fieldInfo.GetCustomAttributes( false );
 
             if ( attribArray.Length == 0 )
-            {
                 return enumObj.ToString();
-            }
 
             DescriptionAttribute attrib = null;
 
             foreach ( object att in attribArray )
             {
                 if ( att is DescriptionAttribute attribute )
-                {
                     attrib = attribute;
-                }
             }
 
-            return attrib != null ? attrib.Description : enumObj.ToString();
+            return attrib != null
+                ? attrib.Description
+                : enumObj.ToString();
         }
 
         object IValueConverter.Convert(

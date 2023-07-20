@@ -16,11 +16,11 @@ namespace KOTORModSync.Converters
             Type targetType,
             object parameter,
             CultureInfo culture
-        )
-        {
+        ) =>
             // Convert Guid to string
-            return value is Guid guid ? guid.ToString() : (object)null;
-        }
+            value is Guid guid
+                ? guid.ToString()
+                : (object)null;
 
         public object ConvertBack(
             object value,
@@ -37,10 +37,7 @@ namespace KOTORModSync.Converters
             }
             catch ( FormatException e )
             {
-                return new BindingNotification(
-                    new FormatException( e.Message ),
-                    BindingErrorType.DataValidationError
-                );
+                return new BindingNotification( new FormatException( e.Message ), BindingErrorType.DataValidationError );
             }
             catch ( Exception ex )
             {

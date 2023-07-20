@@ -19,9 +19,7 @@ namespace KOTORModSync.Tests
         public override void WriteJson( JsonWriter writer, object? value, JsonSerializer serializer )
         {
             if ( value is not FileInfo fileInfo )
-            {
                 return;
-            }
 
             writer.WriteValue( fileInfo.FullName );
         }

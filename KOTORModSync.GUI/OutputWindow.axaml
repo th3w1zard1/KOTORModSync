@@ -10,8 +10,9 @@
                    FontSize="20"
                    FontWeight="Bold"
                    HorizontalAlignment="Center"
-                   Padding="5"/>
-        <ScrollViewer Grid.Row="1" x:Name="LogScrollViewer" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+                   Padding="5" />
+        <ScrollViewer Grid.Row="1" x:Name="LogScrollViewer" HorizontalScrollBarVisibility="Disabled"
+                      VerticalScrollBarVisibility="Auto">
             <TextBox x:Name="LogTextBox"
                      FontSize="14"
                      HorizontalAlignment="Stretch"
@@ -20,7 +21,7 @@
                      TextWrapping="Wrap"
                      AcceptsReturn="True"
                      Padding="5"
-                     IsReadOnly="True"/>
+                     IsReadOnly="True" />
         </ScrollViewer>
     </Grid>
 </Window>

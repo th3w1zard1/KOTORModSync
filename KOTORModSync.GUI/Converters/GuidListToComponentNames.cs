@@ -27,12 +27,12 @@ namespace KOTORModSync.Converters
                 foreach ( Component component in componentsList )
                 {
                     if ( guids.Contains( component.Guid ) )
-                    {
                         selectedComponentNames.Add( component.Name );
-                    }
                 }
 
-                return selectedComponentNames.Count == 0 ? new List<string> { "None Selected" } : (object)selectedComponentNames;
+                return selectedComponentNames.Count == 0
+                    ? new List<string> { "None Selected" }
+                    : (object)selectedComponentNames;
             }
             catch ( Exception e )
             {

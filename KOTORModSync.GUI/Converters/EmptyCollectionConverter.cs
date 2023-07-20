@@ -22,9 +22,7 @@ namespace KOTORModSync.Converters
         )
         {
             if ( value is ICollection collection && collection.Count == 0 )
-            {
                 return new List<string> { string.Empty }; // Create a new collection with a default value
-            }
 
             return value;
         }

@@ -1,14 +1,20 @@
-﻿// Licensed to the .NET Foundation under one or more agreements.
+﻿// Copyright 2021-2023 KOTORModSync
+// Licensed under the GNU General Public License v3.0 (GPLv3).
+// See LICENSE.txt file in the project root for full license information.
+
+/* Unmerged change from project 'KOTORModSync (net462)'
+Before:
 // The .NET Foundation licenses this file to you under the MIT license.
+After:
+// The .txt file in the you under the MIT license.
+*/
+// See LICENSE.txt file in the project root for full license information.
 
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.Runtime.InteropServices;
-using Avalonia.Controls;
 using Avalonia.Data.Converters;
-using Avalonia.Interactivity;
 using JetBrains.Annotations;
 using KOTORModSync.Core;
 

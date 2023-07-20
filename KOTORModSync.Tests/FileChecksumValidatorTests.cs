@@ -6,6 +6,7 @@ using System.Diagnostics;
 using System.Security.Cryptography;
 using KOTORModSync.Core.Utility;
 using Newtonsoft.Json;
+#pragma warning disable CS8604
 
 namespace KOTORModSync.Tests
 {

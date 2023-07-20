@@ -590,11 +590,27 @@ namespace KOTORModSync.Core.Utility
                         {
                             process.OutputDataReceived += ( sender, e ) =>
                             {
-                                _ = e.Data is null ? outputWaitHandle.Set() : output.AppendLine( e.Data );
+#pragma warning disable IDE0045 // Convert to conditional expression
+                                if ( e.Data is null )
+                                {
+                                    _ = outputWaitHandle.Set();
+                                }
+                                else
+                                {
+                                    _ = output.AppendLine( e.Data );
+                                }
                             };
                             process.ErrorDataReceived += ( sender, e ) =>
                             {
-                                _ = e.Data is null ? errorWaitHandle.Set() : error.AppendLine( e.Data );
+                                if ( e.Data is null )
+                                {
+                                    _ = errorWaitHandle.Set();
+                                }
+                                else
+                                {
+                                    _ = error.AppendLine( e.Data );
+                                }
+#pragma warning restore IDE0045 // Convert to conditional expression
                             };
 
                             if ( !process.Start() )

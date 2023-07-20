@@ -8,7 +8,6 @@ using System.ComponentModel;
 using System.Data;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
@@ -128,8 +127,8 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
 
             if (
                 RealSourcePaths is null
-                || ( !noValidate && RealSourcePaths.Count == 0 
-                && !Action.Equals( value: "delete", StringComparison.OrdinalIgnoreCase ))
+                || ( !noValidate && RealSourcePaths.Count == 0
+                && !Action.Equals( value: "delete", StringComparison.OrdinalIgnoreCase ) )
             )
             {
                 throw new FileNotFoundException(

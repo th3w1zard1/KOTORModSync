@@ -31,16 +31,20 @@
         </Grid.ColumnDefinitions>
 
         <TextBlock Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3"
-                              x:Name="TitleTextBlock" Text="KOTORModSync" FontSize="24"
-                              FontWeight="Bold" HorizontalAlignment="Center" Margin="0,10" />
-        <DockPanel Grid.Row="0" Grid.ColumnSpan="3" Grid.Column="0" HorizontalAlignment="Right" VerticalAlignment="Center">
-            <Button Content="-" HorizontalContentAlignment="Center" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Click="MinimizeButton_Click" />
-            <Button Content="▢" HorizontalContentAlignment="Center" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Click="ToggleMaximizeButton_Click" />
-            <Button Content="X" HorizontalContentAlignment="Center" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Click="CloseButton_Click" />
+                   x:Name="TitleTextBlock" Text="KOTORModSync" FontSize="24"
+                   FontWeight="Bold" HorizontalAlignment="Center" Margin="0,10" />
+        <DockPanel Grid.Row="0" Grid.ColumnSpan="3" Grid.Column="0" HorizontalAlignment="Right"
+                   VerticalAlignment="Center">
+            <Button Content="-" HorizontalContentAlignment="Center" VerticalAlignment="Stretch"
+                    HorizontalAlignment="Stretch" Click="MinimizeButton_Click" />
+            <Button Content="▢" HorizontalContentAlignment="Center" VerticalAlignment="Stretch"
+                    HorizontalAlignment="Stretch" Click="ToggleMaximizeButton_Click" />
+            <Button Content="X" HorizontalContentAlignment="Center" VerticalAlignment="Stretch"
+                    HorizontalAlignment="Stretch" Click="CloseButton_Click" />
         </DockPanel>
 
         <Grid Grid.Row="1" Grid.Column="0" RowDefinitions="Auto,*,Auto">
-            <TextBox Grid.Row="0" Name="SearchBox" HorizontalAlignment="Stretch" Text="{Binding SearchText}"/>
+            <TextBox Grid.Row="0" Name="SearchBox" HorizontalAlignment="Stretch" Text="{Binding SearchText}" />
             <ScrollViewer Grid.Row="1">
                 <TreeView x:Name="LeftTreeView" />
             </ScrollViewer>
@@ -78,29 +82,31 @@
                     <TextBlock>Please load an instructions file or create a new instructions file by using the controls on the left.</TextBlock>
                 </TabItem.Content>
             </TabItem>
-			<TabItem x:Name="SummaryTabItem" Header="Summary">
-				<TabItem.Content>
-					<ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
-						<ItemsControl x:Name="ComponentsItemsControl2" Items="{Binding Components}">
-							<ItemsControl.ItemTemplate>
-								<DataTemplate DataType="core:Component">
-									<StackPanel>
-										<TextBlock Text="Name:" FontWeight="Bold" />
-										<TextBlock Text="{Binding Name}" Margin="10,0,0,0" />
+            <TabItem x:Name="SummaryTabItem" Header="Summary">
+                <TabItem.Content>
+                    <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+                        <ItemsControl x:Name="ComponentsItemsControl2" Items="{Binding Components}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate DataType="core:Component">
+                                    <StackPanel>
+                                        <TextBlock Text="Name:" FontWeight="Bold" />
+                                        <TextBlock Text="{Binding Name}" Margin="10,0,0,0" />
 
-										<TextBlock Text="Description:" FontWeight="Bold" Margin="0,10,0,0" />
-										<TextBlock Text="{Binding Description}" Margin="10,0,0,0" TextWrapping="Wrap" />
+                                        <TextBlock Text="Description:" FontWeight="Bold" Margin="0,10,0,0" />
+                                        <TextBlock Text="{Binding Description}" Margin="10,0,0,0" TextWrapping="Wrap" />
 
-										<TextBlock Text="Directions:" FontWeight="Bold" Margin="0,10,0,0" />
-										<TextBlock Text="{Binding Directions}" Margin="10,0,0,0" TextWrapping="Wrap" />
+                                        <TextBlock Text="Directions:" FontWeight="Bold" Margin="0,10,0,0" />
+                                        <TextBlock Text="{Binding Directions}" Margin="10,0,0,0" TextWrapping="Wrap" />
 
-                                        <TextBlock Text="Mod Download Links:" FontWeight="DemiBold" Margin="0, 10, 0, 0"/>
+                                        <TextBlock Text="Mod Download Links:" FontWeight="DemiBold"
+                                                   Margin="0, 10, 0, 0" />
                                         <ItemsRepeater Items="{Binding ModLink}">
                                             <ItemsRepeater.ItemTemplate>
                                                 <DataTemplate>
                                                     <StackPanel>
                                                         <TextBlock Text="{Binding }"
-                                                                   TextDecorations="Underline" Tapped="OpenLink_Click" Margin="10,0,0,0" TextWrapping="Wrap"/>
+                                                                   TextDecorations="Underline" Tapped="OpenLink_Click"
+                                                                   Margin="10,0,0,0" TextWrapping="Wrap" />
                                                     </StackPanel>
                                                 </DataTemplate>
                                             </ItemsRepeater.ItemTemplate>
@@ -111,33 +117,36 @@
                                             x:Name="instructionsRepeater" Items="{Binding Instructions}">
                                             <ItemsRepeater.ItemTemplate>
                                                 <DataTemplate DataType="core:Instruction">
-													<Border BorderThickness="2" BorderBrush="LightGray" Margin="10,10,0,0" Padding="10">
-														<Grid RowDefinitions="Auto,Auto" ColumnDefinitions="Auto,*">
+                                                    <Border BorderThickness="2" BorderBrush="LightGray"
+                                                            Margin="10,10,0,0" Padding="10">
+                                                        <Grid RowDefinitions="Auto,Auto" ColumnDefinitions="Auto,*">
                                                             <TextBlock Grid.Column="0" Grid.Row="0"
-                                                                        Text="{Binding Converter={StaticResource IndexConverter}, ConverterParameter={Binding Instructions, ElementName=instructionsRepeater}}"
-                                                                        FontWeight="Bold" />
-															<DockPanel Grid.Row="0" Grid.RowSpan="2" Grid.Column="1" >
-																<TextBlock Text="{Binding Action}"
-                                                                           Margin="10,0,0,0" TextWrapping="Wrap"/>
-                                                                <TextBlock Text="{Binding Source, Converter={StaticResource ListToStringConverter}}"
-                                                                           Margin="10,0,0,0" TextWrapping="Wrap"/>
-                                                                <TextBlock Text="{Binding Arguments, Converter={StaticResource ListToStringConverter}}"
-                                                                           Margin="10,0,0,0" TextWrapping="Wrap"/>
-															</DockPanel>
-														</Grid>
-													</Border>
+                                                                       Text="{Binding Converter={StaticResource IndexConverter}, ConverterParameter={Binding Instructions, ElementName=instructionsRepeater}}"
+                                                                       FontWeight="Bold" />
+                                                            <DockPanel Grid.Row="0" Grid.RowSpan="2" Grid.Column="1">
+                                                                <TextBlock Text="{Binding Action}"
+                                                                           Margin="10,0,0,0" TextWrapping="Wrap" />
+                                                                <TextBlock
+                                                                    Text="{Binding Source, Converter={StaticResource ListToStringConverter}}"
+                                                                    Margin="10,0,0,0" TextWrapping="Wrap" />
+                                                                <TextBlock
+                                                                    Text="{Binding Arguments, Converter={StaticResource ListToStringConverter}}"
+                                                                    Margin="10,0,0,0" TextWrapping="Wrap" />
+                                                            </DockPanel>
+                                                        </Grid>
+                                                    </Border>
                                                 </DataTemplate>
                                             </ItemsRepeater.ItemTemplate>
                                         </ItemsRepeater>
-									</StackPanel>
-								</DataTemplate>
-							</ItemsControl.ItemTemplate>
-						</ItemsControl>
-					</ScrollViewer>
-				</TabItem.Content>
-			</TabItem>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </TabItem.Content>
+            </TabItem>
 
-			<TabItem x:Name="GuiEditTabItem" Header="GUI Edit">
+            <TabItem x:Name="GuiEditTabItem" Header="GUI Edit">
                 <TabItem.Content>
                     <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
                         <ItemsControl x:Name="ComponentsItemsControl" Items="{Binding Components}">
@@ -161,32 +170,32 @@
                                         </DockPanel>
 
                                         <TextBlock Text="Description:" />
-                                            <TextBox Margin="5,0"
-                                                     Focusable="True" HorizontalAlignment="Stretch" TextWrapping="Wrap"
-                                                     AcceptsTab="True" AcceptsReturn="True"
-                                                     Text="{Binding Description}" />
+                                        <TextBox Margin="5,0"
+                                                 Focusable="True" HorizontalAlignment="Stretch" TextWrapping="Wrap"
+                                                 AcceptsTab="True" AcceptsReturn="True"
+                                                 Text="{Binding Description}" />
 
                                         <TextBlock Text="Directions:" />
-                                            <TextBox Margin="5,0"
-                                                     Focusable="True" HorizontalAlignment="Stretch" TextWrapping="Wrap"
-                                                     AcceptsTab="True" AcceptsReturn="True"
-                                                     Text="{Binding Directions}"/>
+                                        <TextBox Margin="5,0"
+                                                 Focusable="True" HorizontalAlignment="Stretch" TextWrapping="Wrap"
+                                                 AcceptsTab="True" AcceptsReturn="True"
+                                                 Text="{Binding Directions}" />
 
                                         <TextBlock Text="Author:" />
                                         <TextBox
                                             Focusable="True" HorizontalAlignment="Stretch" AcceptsReturn="True"
-                                                 Text="{Binding Author}" />
+                                            Text="{Binding Author}" />
 
                                         <TextBlock Text="Category:" />
                                         <TextBox
                                             Focusable="True" HorizontalAlignment="Stretch" AcceptsTab="True"
-                                                 AcceptsReturn="True"
-                                                 Text="{Binding Category}" />
+                                            AcceptsReturn="True"
+                                            Text="{Binding Category}" />
 
                                         <TextBlock Text="Tier:" />
                                         <TextBox
                                             Focusable="True" HorizontalAlignment="Stretch"
-                                                 Text="{Binding Tier}" />
+                                            Text="{Binding Tier}" />
 
                                         <TextBlock Text="Mod Website:" />
                                         <TextBox
@@ -197,29 +206,29 @@
                                                    Margin="0, 15, 0, 5" />
                                         <control:DependencyControl
                                             ThisGuidList="{Binding Dependencies}"
-                                                                   ThisComponentList="{Binding RelativeSource={RelativeSource AncestorType={x:Type local:MainWindow}}, Path=ComponentsList}" />
+                                            ThisComponentList="{Binding RelativeSource={RelativeSource AncestorType={x:Type local:MainWindow}}, Path=ComponentsList}" />
 
                                         <TextBlock Text="Restrictions:"
                                                    Margin="0, 15, 0, 5" />
                                         <control:DependencyControl
                                             ThisGuidList="{Binding Restrictions}"
-                                                                   ThisComponentList="{Binding RelativeSource={RelativeSource AncestorType={x:Type local:MainWindow}}, Path=ComponentsList}" />
+                                            ThisComponentList="{Binding RelativeSource={RelativeSource AncestorType={x:Type local:MainWindow}}, Path=ComponentsList}" />
 
                                         <TextBlock Text="InstallBefore:"
                                                    Margin="0, 15, 0, 5" />
                                         <control:DependencyControl
                                             ThisGuidList="{Binding InstallBefore}"
-                                                                   ThisComponentList="{Binding RelativeSource={RelativeSource AncestorType={x:Type local:MainWindow}}, Path=ComponentsList}" />
+                                            ThisComponentList="{Binding RelativeSource={RelativeSource AncestorType={x:Type local:MainWindow}}, Path=ComponentsList}" />
 
                                         <TextBlock Text="InstallAfter:"
                                                    Margin="0, 15, 0, 5" />
                                         <control:DependencyControl
                                             ThisGuidList="{Binding InstallAfter}"
-                                                                   ThisComponentList="{Binding RelativeSource={RelativeSource AncestorType={x:Type local:MainWindow}}, Path=ComponentsList}" />
+                                            ThisComponentList="{Binding RelativeSource={RelativeSource AncestorType={x:Type local:MainWindow}}, Path=ComponentsList}" />
 
                                         <TextBlock
                                             Text="Instructions" FontSize="22" HorizontalAlignment="Left"
-                                                   VerticalAlignment="Bottom" Margin="0,40,0,0" />
+                                            VerticalAlignment="Bottom" Margin="0,40,0,0" />
                                         <ItemsRepeater
                                             x:Name="instructionsRepeater" Items="{Binding Instructions}">
                                             <ItemsRepeater.ItemTemplate>
@@ -316,7 +325,7 @@
                                         </ItemsRepeater>
                                         <Button
                                             Content="Create Instructions"
-                                                Click="AddNewInstruction_Click" Tag="{Binding}" />
+                                            Click="AddNewInstruction_Click" Tag="{Binding}" />
                                     </StackPanel>
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>

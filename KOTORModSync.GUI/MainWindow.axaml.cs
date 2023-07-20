@@ -140,7 +140,7 @@ namespace KOTORModSync
         private bool _mouseDownForWindowMoving;
         private PointerPoint _originalPoint;
 
-        private void SearchText_PropertyChanged([NotNull] object sender, [NotNull] PropertyChangedEventArgs e)
+        private void SearchText_PropertyChanged( [NotNull] object sender, [NotNull] PropertyChangedEventArgs e )
         {
             if ( e.PropertyName != nameof( SearchText ) )
                 return;
@@ -148,7 +148,7 @@ namespace KOTORModSync
             // Get the root item of the TreeView
             var rootItem = (TreeViewItem)LeftTreeView.ItemContainerGenerator.ContainerFromIndex( 0 );
 
-            FilterControlListItems(rootItem, SearchText);
+            FilterControlListItems( rootItem, SearchText );
         }
 
         public new event PropertyChangedEventHandler PropertyChanged;
@@ -797,30 +797,6 @@ namespace KOTORModSync
             {
                 await Logger.LogExceptionAsync( ex );
             }
-        }
-
-        private async Task<bool> ResolveInsensitiveDuplicatesAsync()
-        {
-            List<FileSystemInfo> duplicates = PlatformAgnosticMethods.FindCaseInsensitiveDuplicates( "" );
-            foreach ( FileSystemInfo duplicate in duplicates )
-            {
-                if ( !duplicate.Exists )
-                    continue;
-
-                bool? confirm = await ConfirmationDialog.ShowConfirmationDialog(
-                    this,
-                    $"The file '{duplicate.Name}' has a case-insensitive duplicate in the same folder. Please resolve this before continuing."
-                    + Environment.NewLine
-                    + "Continue anyway?"
-                );
-                if ( confirm == true )
-                {
-                    return true;
-                }
-
-                return false;
-            }
-            return true;
         }
 
         private async Task<(bool success, string informationMessage)> PreinstallValidation()

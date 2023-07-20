@@ -33,7 +33,7 @@ namespace KOTORModSync.Core.Utility
             {
                 FindDuplicatesRecursively( directory, ref fileDict, ref folderDict );
             }
-            catch ( Exception ex)
+            catch ( Exception ex )
             {
                 Logger.LogException( ex );
                 return duplicates;

@@ -22,10 +22,10 @@ namespace KOTORModSync.Core.Utility
         public static string FixGuidString( string guidString )
         {
             // Remove any whitespace characters
-            guidString = Regex.Replace( guidString, @"\s", "" );
+            guidString = Regex.Replace( guidString, pattern: @"\s", replacement: "" );
 
             // Remove all non-base16 characters.
-            guidString = Regex.Replace( guidString, @"[^0-9A-Fa-f]", "" );
+            guidString = Regex.Replace( guidString, pattern: @"[^0-9A-Fa-f]", replacement: "" );
 
             // not even close to a guid.
             if ( guidString.Length != 32 )
@@ -34,15 +34,15 @@ namespace KOTORModSync.Core.Utility
             }
 
             // Insert necessary dashes between the GUID sections
-            guidString = Regex.Replace( guidString, @"(\w{8})(\w{4})(\w{4})(\w{4})(\w{12})", "$1-$2-$3-$4-$5" );
+            guidString = Regex.Replace( guidString, pattern: @"(\w{8})(\w{4})(\w{4})(\w{4})(\w{12})", replacement: "$1-$2-$3-$4-$5" );
 
             // Attempt to fix common issues with GUID strings
-            if ( !guidString.StartsWith( "{", StringComparison.Ordinal ) )
+            if ( !guidString.StartsWith( value: "{", StringComparison.Ordinal ) )
             {
                 guidString = "{" + guidString;
             }
 
-            if ( !guidString.EndsWith( "}", StringComparison.Ordinal ) ) guidString += "}";
+            if ( !guidString.EndsWith( value: "}", StringComparison.Ordinal ) ) guidString += "}";
 
 
             return guidString;
@@ -137,8 +137,8 @@ namespace KOTORModSync.Core.Utility
 
         [NotNull]
         public static string PrefixPath( [NotNull] string path ) =>
-            !path.StartsWith( "<<modDirectory>>", StringComparison.OrdinalIgnoreCase )
-            && !path.StartsWith( "<<kotorDirectory>>", StringComparison.OrdinalIgnoreCase )
+            !path.StartsWith( value: "<<modDirectory>>", StringComparison.OrdinalIgnoreCase )
+            && !path.StartsWith( value: "<<kotorDirectory>>", StringComparison.OrdinalIgnoreCase )
                 ? FixPathFormatting( "<<modDirectory>>" + Environment.NewLine + path )
                 : path;
 
@@ -147,8 +147,8 @@ namespace KOTORModSync.Core.Utility
         {
             // Replace backslashes with forward slashes
             string formattedPath = path.Replace( Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar )
-                .Replace( '\\', Path.DirectorySeparatorChar )
-                .Replace( '/', Path.DirectorySeparatorChar );
+                .Replace( oldChar: '\\', Path.DirectorySeparatorChar )
+                .Replace( oldChar: '/', Path.DirectorySeparatorChar );
 
             // Fix repeated slashes
             formattedPath = Regex.Replace(
@@ -166,9 +166,9 @@ namespace KOTORModSync.Core.Utility
         [NotNull]
         public static string FixWhitespaceIssues( [NotNull] string strContents )
         {
-            strContents = strContents.Replace( "\r\n", "\n" )
-                .Replace( "\r", Environment.NewLine )
-                .Replace( "\n", Environment.NewLine );
+            strContents = strContents.Replace( oldValue: "\r\n", newValue: "\n" )
+                .Replace( oldValue: "\r", Environment.NewLine )
+                .Replace( oldValue: "\n", Environment.NewLine );
 
             string[] lines = Regex.Split( strContents, $"(?<!\r){Regex.Escape( Environment.NewLine )}" )
                 .Select( line => line.Trim() )

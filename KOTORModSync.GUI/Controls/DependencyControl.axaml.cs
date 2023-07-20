@@ -116,7 +116,7 @@ namespace KOTORModSync.Controls
                 var convertedItems = new Converters.GuidListToComponentNames().Convert(
                     new object[] { ThisGuidList, ThisComponentList },
                     ThisGuidList.GetType(),
-                    null,
+                    parameter: null,
                     CultureInfo.CurrentCulture
                 ) as List<string>;
 
@@ -155,7 +155,7 @@ namespace KOTORModSync.Controls
                 var convertedItems = new Converters.GuidListToComponentNames().Convert(
                     new object[] { ThisGuidList, ThisComponentList },
                     ThisGuidList.GetType(),
-                    null,
+                    parameter: null,
                     CultureInfo.CurrentCulture
                 ) as List<string>;
 

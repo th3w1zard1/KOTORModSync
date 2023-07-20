@@ -27,7 +27,7 @@ namespace KOTORModSync.Converters
             }
 
             string pattern = $@"(?:(?!{Environment.NewLine})[^\S{Environment.NewLine}])+";
-            string result = Regex.Replace( input, pattern, "" );
+            string result = Regex.Replace( input, pattern, replacement: "" );
 
             return result;
         }

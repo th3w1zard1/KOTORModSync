@@ -320,7 +320,7 @@ namespace KOTORModSync
                     new FileDialogFilter { Name = "All Files", Extensions = { "*" } }
                 };
 
-                string[] result = await ShowFileDialog( false, filters );
+                string[] result = await ShowFileDialog( isFolderDialog: false, filters );
                 if ( result?.Length > 0 )
                     return result[0]; // Retrieve the first selected file path
             }
@@ -344,7 +344,7 @@ namespace KOTORModSync
                     new FileDialogFilter { Name = "All Files", Extensions = { "*" } }
                 };
 
-                string[] filePaths = await ShowFileDialog( false, filters, true );
+                string[] filePaths = await ShowFileDialog( isFolderDialog: false, filters, allowMultiple: true );
                 if ( filePaths is null )
                 {
                     await Logger.LogVerboseAsync( "User did not select any files." );
@@ -366,7 +366,7 @@ namespace KOTORModSync
         {
             try
             {
-                string[] thisFolder = await ShowFileDialog( true, null );
+                string[] thisFolder = await ShowFileDialog( isFolderDialog: true, filters: null );
                 return thisFolder?[0];
             }
             catch ( Exception ex )
@@ -449,7 +449,7 @@ namespace KOTORModSync
                 }
 
                 await Logger.LogAsync(
-                    $"Selected {( isFolderDialog ? "folder" : "file" )}: {string.Join( ", ", results )}"
+                    $"Selected {( isFolderDialog ? "folder" : "file" )}: {string.Join( separator: ", ", results )}"
                 );
                 return results;
             }
@@ -578,7 +578,7 @@ namespace KOTORModSync
                     if ( MainConfig.AllComponents.Count > 0
                         && await ConfirmationDialog.ShowConfirmationDialog(
                             this,
-                            "You already have a config loaded. Do you want to load the markdown anyway?"
+                            confirmText: "You already have a config loaded. Do you want to load the markdown anyway?"
                         )
                         != true )
                     {
@@ -619,11 +619,11 @@ namespace KOTORModSync
                 }
                 else if ( RuntimeInformation.IsOSPlatform( OSPlatform.OSX ) )
                 {
-                    _ = Process.Start( "open", url );
+                    _ = Process.Start( fileName: "open", url );
                 }
                 else if ( RuntimeInformation.IsOSPlatform( OSPlatform.Linux ) )
                 {
-                    _ = Process.Start( "xdg-open", url );
+                    _ = Process.Start( fileName: "xdg-open", url );
                 }
                 else
                 {
@@ -659,7 +659,7 @@ namespace KOTORModSync
                 {
                     throw new ArgumentOutOfRangeException(
                         nameof( files ),
-                        $"Invalid files found. Please report this issue to the developer: [{string.Join( ",", files )}]"
+                        $"Invalid files found. Please report this issue to the developer: [{string.Join( separator: ",", files )}]"
                     );
                 }
 
@@ -687,7 +687,7 @@ namespace KOTORModSync
                     string convertedItems = new Converters.ListToStringConverter().Convert(
                         files,
                         typeof( string ),
-                        null,
+                        parameter: null,
                         CultureInfo.CurrentCulture
                     ) as string;
 
@@ -763,7 +763,7 @@ namespace KOTORModSync
                 {
                     await InformationDialog.ShowInformationDialog(
                         this,
-                        "Please select a component from the list or create a new one before saving."
+                        message: "Please select a component from the list or create a new one before saving."
                     );
                     return;
                 }
@@ -778,7 +778,7 @@ namespace KOTORModSync
 
                 bool? confirmationResult = await ConfirmationDialog.ShowConfirmationDialog(
                     this,
-                    "Are you sure you want to save?"
+                    confirmText: "Are you sure you want to save?"
                 );
                 if ( confirmationResult != true )
                 {
@@ -932,13 +932,10 @@ namespace KOTORModSync
                     await Logger.LogErrorAsync( informationMessage );
                 }
 
-                if ( informationMessage.Equals( string.Empty ) )
-                {
-                    return (true,
-                        "No issues found. If you encounter any problems during the installation, please contact the developer.");
-                }
-
-                return (false, informationMessage);
+                return informationMessage.Equals( string.Empty )
+                    ? ((bool success, string informationMessage))(true,
+                        "No issues found. If you encounter any problems during the installation, please contact the developer.")
+                    : ((bool success, string informationMessage))(false, informationMessage);
             }
             catch ( Exception e )
             {
@@ -1032,7 +1029,7 @@ namespace KOTORModSync
             {
                 await InformationDialog.ShowInformationDialog(
                     this,
-                    "Please select your KOTOR(2) directory. (e.g. \"C:\\Program Files (x86)\\Steam\\steamapps\\common\\Knights of the Old Republic II\")"
+                    message: "Please select your KOTOR(2) directory. (e.g. \"C:\\Program Files (x86)\\Steam\\steamapps\\common\\Knights of the Old Republic II\")"
                 );
                 string chosenFolder = await OpenFolder();
                 if ( chosenFolder != null )
@@ -1043,7 +1040,7 @@ namespace KOTORModSync
 
                 await InformationDialog.ShowInformationDialog(
                     this,
-                    "Please select your mod directory (where ALL your mods are downloaded)."
+                    message: "Please select your mod directory (where ALL your mods are downloaded)."
                 );
                 chosenFolder = await OpenFolder();
                 if ( chosenFolder is null )
@@ -1061,7 +1058,7 @@ namespace KOTORModSync
             }
             catch ( Exception ex )
             {
-                await Logger.LogExceptionAsync( ex, "Unknown error - please report to a developer" );
+                await Logger.LogExceptionAsync( ex, customMessage: "Unknown error - please report to a developer" );
             }
         }
 
@@ -1073,7 +1070,7 @@ namespace KOTORModSync
                 {
                     await InformationDialog.ShowInformationDialog(
                         this,
-                        "There's already another installation running, please check the output window."
+                        message: "There's already another installation running, please check the output window."
                     );
                     return;
                 }
@@ -1117,7 +1114,7 @@ namespace KOTORModSync
                 {
                     await InformationDialog.ShowInformationDialog(
                         this,
-                        "This component could not be validated, please check the output window."
+                        message: "This component could not be validated, please check the output window."
                     );
                 }
 
@@ -1169,7 +1166,7 @@ namespace KOTORModSync
                 {
                     await InformationDialog.ShowInformationDialog(
                         this,
-                        "There's already an installation running, please check the output window."
+                        message: "There's already an installation running, please check the output window."
                     );
                     return;
                 }
@@ -1195,7 +1192,7 @@ namespace KOTORModSync
                     return;
                 }
 
-                if ( await ConfirmationDialog.ShowConfirmationDialog( this, "Really install all mods?" ) != true )
+                if ( await ConfirmationDialog.ShowConfirmationDialog( this, confirmText: "Really install all mods?" ) != true )
                 {
                     return;
                 }
@@ -1334,10 +1331,10 @@ namespace KOTORModSync
             }
             catch ( Exception ex )
             {
-                await Logger.LogExceptionAsync( ex, "Error generating and saving documentation" );
+                await Logger.LogExceptionAsync( ex, customMessage: "Error generating and saving documentation" );
                 await InformationDialog.ShowInformationDialog(
                     this,
-                    "An unexpected error occurred while generating and saving documentation."
+                    message: "An unexpected error occurred while generating and saving documentation."
                 );
             }
         }
@@ -1422,7 +1419,7 @@ namespace KOTORModSync
                 {
                     bool? confirmResult = await ConfirmationDialog.ShowConfirmationDialog(
                         this,
-                        "You're attempting to load the component, but there may be unsaved changes still in the editor. Really continue?"
+                        confirmText: "You're attempting to load the component, but there may be unsaved changes still in the editor. Really continue?"
                     );
 
                     // double check with user before overwrite
@@ -1561,7 +1558,7 @@ namespace KOTORModSync
                     return;
                 }
 
-                MoveComponentListItem( selectedTreeViewItem, -1 );
+                MoveComponentListItem( selectedTreeViewItem, relativeIndex: -1 );
             }
             catch ( Exception ex )
             {
@@ -1579,7 +1576,7 @@ namespace KOTORModSync
                     return;
                 }
 
-                MoveComponentListItem( selectedTreeViewItem, 1 );
+                MoveComponentListItem( selectedTreeViewItem, relativeIndex: 1 );
             }
             catch ( Exception ex )
             {
@@ -1657,7 +1654,7 @@ namespace KOTORModSync
                 );
 
                 // Handling conflicts based on what's defined for THIS component
-                if ( conflicts.TryGetValue( "Dependency", out List<Component> dependencyConflicts ) && !( dependencyConflicts is null ) )
+                if ( conflicts.TryGetValue( key: "Dependency", out List<Component> dependencyConflicts ) && !( dependencyConflicts is null ) )
                 {
                     foreach ( Component conflictComponent in dependencyConflicts )
                     {
@@ -1670,7 +1667,7 @@ namespace KOTORModSync
                     }
                 }
 
-                if ( conflicts.TryGetValue( "Restriction", out List<Component> restrictionConflicts ) && !( restrictionConflicts is null ) )
+                if ( conflicts.TryGetValue( key: "Restriction", out List<Component> restrictionConflicts ) && !( restrictionConflicts is null ) )
                 {
                     foreach ( Component conflictComponent in restrictionConflicts )
                     {
@@ -1796,7 +1793,7 @@ namespace KOTORModSync
                         VerticalAlignment = VerticalAlignment.Center,
                         Text = $"{index + 1}: ",
                         FontWeight = FontWeight.DemiBold,
-                        Margin = new Thickness(0, 0, 5, 0)
+                        Margin = new Thickness(left: 0, top: 0, right: 5, bottom: 0)
                     },
                     checkBox,
                     new TextBlock
@@ -1898,7 +1895,7 @@ namespace KOTORModSync
             }
             catch ( Exception ex )
             {
-                Logger.LogException( ex, "Unexpected exception while creating tree view item" );
+                Logger.LogException( ex, customMessage: "Unexpected exception while creating tree view item" );
             }
         }
 
@@ -1922,7 +1919,7 @@ namespace KOTORModSync
                 foreach ( Component component in MainConfig.AllComponents )
                 {
                     component.IsSelected = true;
-                    ComponentCheckboxChecked( component, finishedComponents, true );
+                    ComponentCheckboxChecked( component, finishedComponents, suppressErrors: true );
                 }
 
                 foreach ( Component component in MainConfig.AllComponents )
@@ -1947,7 +1944,7 @@ namespace KOTORModSync
                 foreach ( Component component in MainConfig.AllComponents )
                 {
                     component.IsSelected = false;
-                    ComponentCheckboxUnchecked( component, finishedComponents, true );
+                    ComponentCheckboxUnchecked( component, finishedComponents, suppressErrors: true );
                 }
             };
 
@@ -2033,7 +2030,7 @@ namespace KOTORModSync
             {
                 if ( _currentComponent is null )
                 {
-                    await InformationDialog.ShowInformationDialog( this, "Load a component first" );
+                    await InformationDialog.ShowInformationDialog( this, message: "Load a component first" );
                     return;
                 }
 
@@ -2080,7 +2077,7 @@ namespace KOTORModSync
             {
                 if ( _currentComponent is null )
                 {
-                    await InformationDialog.ShowInformationDialog( this, "Load a component first" );
+                    await InformationDialog.ShowInformationDialog( this, message: "Load a component first" );
                     return;
                 }
 
@@ -2106,7 +2103,7 @@ namespace KOTORModSync
             {
                 if ( _currentComponent is null )
                 {
-                    await InformationDialog.ShowInformationDialog( this, "Load a component first" );
+                    await InformationDialog.ShowInformationDialog( this, message: "Load a component first" );
                     return;
                 }
 
@@ -2128,7 +2125,7 @@ namespace KOTORModSync
             {
                 if ( _currentComponent is null )
                 {
-                    await InformationDialog.ShowInformationDialog( this, "Load a component first" );
+                    await InformationDialog.ShowInformationDialog( this, message: "Load a component first" );
                     return;
                 }
 

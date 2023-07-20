@@ -129,11 +129,11 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
             if (
                 RealSourcePaths is null
                 || ( !noValidate && RealSourcePaths.Count == 0 )
-                && !Action.Equals( "delete", StringComparison.OrdinalIgnoreCase )
+                && !Action.Equals( value: "delete", StringComparison.OrdinalIgnoreCase )
             )
             {
                 throw new FileNotFoundException(
-                    $"Could not find any files in the 'Source' path! Got [{string.Join( ", ", Source )}]"
+                    $"Could not find any files in the 'Source' path! Got [{string.Join( separator: ", ", Source )}]"
                 );
             }
 
@@ -208,7 +208,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                                 return;
                             }
 
-                            if ( thisFile.Extension.Equals( ".exe", StringComparison.OrdinalIgnoreCase ) )
+                            if ( thisFile.Extension.Equals( value: ".exe", StringComparison.OrdinalIgnoreCase ) )
                             {
                                 (int, string, string) result = await PlatformAgnosticMethods.ExecuteProcessAsync(
                                     thisFile,
@@ -327,7 +327,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
             }
             else if ( !directoryPath.Exists )
             {
-                throw new ArgumentException( "Invalid directory path.", nameof( directoryPath ) );
+                throw new ArgumentException( message: "Invalid directory path.", nameof( directoryPath ) );
             }
 
             if ( string.IsNullOrEmpty( fileExtension ) )
@@ -345,8 +345,8 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                 if ( string.IsNullOrEmpty( fileNameWithoutExtension ) ) continue;
 
                 string extension = Path.GetExtension( filePath );
-                if ( !extension.Equals( ".tga", StringComparison.OrdinalIgnoreCase )
-                    && !extension.Equals( ".tpc", StringComparison.OrdinalIgnoreCase ) )
+                if ( !extension.Equals( value: ".tga", StringComparison.OrdinalIgnoreCase )
+                    && !extension.Equals( value: ".tpc", StringComparison.OrdinalIgnoreCase ) )
                 {
                     continue;
                 }
@@ -592,7 +592,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                     }
 
                     //PlaintextLog=0
-                    string fullInstallLogFile = Path.Combine( tslPatcherDirectory.FullName, "installlog.rtf" );
+                    string fullInstallLogFile = Path.Combine( tslPatcherDirectory.FullName, path2: "installlog.rtf" );
                     if ( File.Exists( fullInstallLogFile ) )
                     {
                         if ( File.Exists( fullInstallLogFile ) )
@@ -602,7 +602,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                     }
 
                     //PlaintextLog=1
-                    fullInstallLogFile = Path.Combine( tslPatcherDirectory.FullName, "installlog.txt" );
+                    fullInstallLogFile = Path.Combine( tslPatcherDirectory.FullName, path2: "installlog.txt" );
                     if ( File.Exists( fullInstallLogFile ) )
                     {
                         File.Delete( fullInstallLogFile );
@@ -624,7 +624,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                     {
                         case MainConfig.AvailablePatchers.PyKotorCLI:
                             thisExe = Path.Combine(
-                                "Resources",
+                                path1: "Resources",
                                 RuntimeInformation.IsOSPlatform( OSPlatform.Windows )
                                     ? "pykotorcli.exe" // windows
                                     : "pykotorcli" // linux/mac
@@ -771,15 +771,15 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                     );
 
                 //PlaintextLog=0
-                string fullInstallLogFile = Path.Combine( tslPatcherDirPath, "installlog.rtf" );
+                string fullInstallLogFile = Path.Combine( tslPatcherDirPath, path2: "installlog.rtf" );
 
                 if ( !File.Exists( fullInstallLogFile ) )
                 {
                     //PlaintextLog=1
-                    fullInstallLogFile = Path.Combine( tslPatcherDirPath, "installlog.txt" );
+                    fullInstallLogFile = Path.Combine( tslPatcherDirPath, path2: "installlog.txt" );
                     if ( !File.Exists( fullInstallLogFile ) )
                     {
-                        throw new FileNotFoundException( "Install log file not found.", fullInstallLogFile );
+                        throw new FileNotFoundException( message: "Install log file not found.", fullInstallLogFile );
                     }
                 }
 
@@ -818,12 +818,12 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                     );
 
                 //PlaintextLog=0
-                string fullInstallLogFile = Path.Combine( tslPatcherDirPath, "installlog.rtf" );
+                string fullInstallLogFile = Path.Combine( tslPatcherDirPath, path2: "installlog.rtf" );
 
                 if ( !File.Exists( fullInstallLogFile ) )
                 {
                     //PlaintextLog=1
-                    fullInstallLogFile = Path.Combine( tslPatcherDirPath, "installlog.txt" );
+                    fullInstallLogFile = Path.Combine( tslPatcherDirPath, path2: "installlog.txt" );
                     if ( !File.Exists( fullInstallLogFile ) )
                     {
                         Logger.LogVerbose( $"No prior install found for {sourcePath}" );
@@ -874,10 +874,9 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                 if ( thisInstructionOption is null )
                     continue;
 
-                if ( thisOption != thisInstructionOption )
-                    throw new DuplicateNameException( "This guid already corresponds to another option." );
-
-                return thisInstructionOption;
+                return thisOption != thisInstructionOption
+                    ? throw new DuplicateNameException( "This guid already corresponds to another option." )
+                    : thisInstructionOption;
             }
 
             throw new KeyNotFoundException( "Could not find chosen option for this instruction" );

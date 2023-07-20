@@ -132,7 +132,7 @@ namespace KOTORModSync.Tests
         private static string CreateTemporaryArchive( string fileName )
         {
             string archivePath = Path.Combine( Path.GetTempPath(), fileName );
-            ZipFile.CreateFromDirectory( "SourceDirectory", archivePath );
+            ZipFile.CreateFromDirectory( sourceDirectoryName: "SourceDirectory", archivePath );
             return archivePath;
         }
 

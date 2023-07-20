@@ -188,7 +188,7 @@ namespace KOTORModSync.Core.Utility
             const long memoryThreshold = 2L * 1024 * 1024 * 1024; // 2GB threshold
             if ( availableMemory < memoryThreshold )
             {
-                Parallel.Invoke( () => maxParallelism = Math.Max( 1, maxParallelism / 2 ) );
+                Parallel.Invoke( () => maxParallelism = Math.Max( val1: 1, maxParallelism / 2 ) );
             }
 
             var maxDiskSpeedTask = Task.Run( () => GetMaxDiskSpeed( Path.GetPathRoot( thisDir.FullName ) ) );
@@ -198,7 +198,7 @@ namespace KOTORModSync.Core.Utility
             if ( maxDiskSpeed < diskSpeedThreshold )
             {
                 maxParallelism = Math.Max(
-                    1,
+                    val1: 1,
                     maxParallelism / 2
                 ); // Reduce parallelism by half if disk speed is below the threshold
             }
@@ -397,7 +397,7 @@ namespace KOTORModSync.Core.Utility
             string unit = match.Groups[2]
                 .Value.ToLower();
 
-            if ( !double.TryParse( speedString.Replace( ",", "" ), out double speed ) )
+            if ( !double.TryParse( speedString.Replace( oldValue: ",", newValue: "" ), out double speed ) )
             {
                 return maxSpeed;
             }
@@ -629,12 +629,9 @@ namespace KOTORModSync.Core.Utility
                             process.WaitForExit();
                         }
 
-                        if ( timeout > 0 && cancellationTokenSource.Token.IsCancellationRequested )
-                        {
-                            throw new TimeoutException( "Process timed out" );
-                        }
-
-                        return (process.ExitCode, output.ToString(), error.ToString());
+                        return timeout > 0 && cancellationTokenSource.Token.IsCancellationRequested
+                            ? throw new TimeoutException( "Process timed out" )
+                            : ((int, string, string))(process.ExitCode, output.ToString(), error.ToString());
                     }
                 }
                 catch ( Win32Exception localException )

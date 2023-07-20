@@ -60,7 +60,7 @@ namespace KOTORModSync
                 return;
 
             string[] lines = File.ReadAllLines( filePath );
-            int startIndex = Math.Max( 0, lines.Length - _maxLinesShown );
+            int startIndex = Math.Max( val1: 0, lines.Length - _maxLinesShown );
             string recentLines = string.Join( Environment.NewLine, lines, startIndex, lines.Length - startIndex );
 
             _ = _logBuilder.AppendLine( recentLines );

@@ -17,12 +17,12 @@ namespace KOTORModSync.Tests
         [OneTimeSetUp]
         public void CreateTestDirectory()
         {
-            _testDirectory = Path.Combine( Path.GetTempPath(), "FileChecksumTests" );
+            _testDirectory = Path.Combine( Path.GetTempPath(), path2: "FileChecksumTests" );
             _ = Directory.CreateDirectory( _testDirectory );
         }
 
         [OneTimeTearDown]
-        public void DeleteTestDirectory() => Directory.Delete( _testDirectory, true );
+        public void DeleteTestDirectory() => Directory.Delete( _testDirectory, recursive: true );
 
         [Test]
         public async Task ValidateChecksumsAsync_AllMatch_ReturnsTrue()
@@ -35,7 +35,7 @@ namespace KOTORModSync.Tests
             for ( int i = 1; i <= 5; i++ )
             {
                 string filePath = Path.Combine( _testDirectory, $"TestFile{i}.txt" );
-                await File.WriteAllTextAsync( filePath, "test content" );
+                await File.WriteAllTextAsync( filePath, contents: "test content" );
                 expectedChecksums.Add( new FileInfo( filePath ), SHA1.Create() );
             }
 
@@ -60,7 +60,7 @@ namespace KOTORModSync.Tests
         public async Task ValidateChecksumsAsync_MismatchedChecksums_ReturnsFalse()
         {
             // Arrange
-            string testFolderPath = Path.Combine( Path.GetTempPath(), "KOTORModSyncTests" );
+            string testFolderPath = Path.Combine( Path.GetTempPath(), path2: "KOTORModSyncTests" );
             _ = Directory.CreateDirectory( testFolderPath );
 
             var expectedChecksums = new Dictionary<FileInfo, SHA1>();
@@ -88,7 +88,7 @@ namespace KOTORModSync.Tests
                 File.Delete( fileInfo.FullName );
             }
 
-            Directory.Delete( testFolderPath, true );
+            Directory.Delete( testFolderPath, recursive: true );
 
             // Act
             var validator = new FileChecksumValidator( testFolderPath, expectedChecksums, actualChecksums );
@@ -106,8 +106,8 @@ namespace KOTORModSync.Tests
             {
                 _ = Directory.CreateDirectory( _testDirectory );
 
-                string filePath = Path.Combine( _testDirectory, "TestFile.txt" );
-                await File.WriteAllTextAsync( filePath, "test content" );
+                string filePath = Path.Combine( _testDirectory, path2: "TestFile.txt" );
+                await File.WriteAllTextAsync( filePath, contents: "test content" );
 
                 // Calculate expected checksum
                 var expectedSha1 = SHA1.Create();
@@ -118,11 +118,11 @@ namespace KOTORModSync.Tests
                     do
                     {
                         bytesRead = await stream.ReadAsync( buffer );
-                        _ = expectedSha1.TransformBlock( buffer, 0, bytesRead, null, 0 );
+                        _ = expectedSha1.TransformBlock( buffer, inputOffset: 0, bytesRead, outputBuffer: null, outputOffset: 0 );
                     } while ( bytesRead > 0 );
                 }
 
-                _ = expectedSha1.TransformFinalBlock( Array.Empty<byte>(), 0, 0 );
+                _ = expectedSha1.TransformFinalBlock( Array.Empty<byte>(), inputOffset: 0, inputCount: 0 );
                 string expectedChecksum = FileChecksumValidator.Sha1ToString( expectedSha1 );
 
                 // Act
@@ -140,7 +140,7 @@ namespace KOTORModSync.Tests
         public async Task CalculateSHA1Async_FileDoesNotExist_ReturnsNull()
         {
             // Arrange
-            string filePath = Path.Combine( _testDirectory, "NonExistentFile.txt" );
+            string filePath = Path.Combine( _testDirectory, path2: "NonExistentFile.txt" );
 
             try
             {
@@ -166,8 +166,8 @@ namespace KOTORModSync.Tests
             // Arrange
             _ = Directory.CreateDirectory( _testDirectory );
 
-            string filePath = Path.Combine( _testDirectory, "TestFile.txt" );
-            await File.WriteAllTextAsync( filePath, "test content" );
+            string filePath = Path.Combine( _testDirectory, path2: "TestFile.txt" );
+            await File.WriteAllTextAsync( filePath, contents: "test content" );
 
             string expectedChecksum = string.Empty;
 
@@ -182,11 +182,11 @@ namespace KOTORModSync.Tests
                     do
                     {
                         bytesRead = await stream.ReadAsync( buffer );
-                        _ = expectedSha1.TransformBlock( buffer, 0, bytesRead, null, 0 );
+                        _ = expectedSha1.TransformBlock( buffer, inputOffset: 0, bytesRead, outputBuffer: null, outputOffset: 0 );
                     } while ( bytesRead > 0 );
                 }
 
-                _ = expectedSha1.TransformFinalBlock( Array.Empty<byte>(), 0, 0 );
+                _ = expectedSha1.TransformFinalBlock( Array.Empty<byte>(), inputOffset: 0, inputCount: 0 );
                 string currentChecksum = FileChecksumValidator.Sha1ToString( expectedSha1 );
 
                 if ( i == 0 )
@@ -198,7 +198,7 @@ namespace KOTORModSync.Tests
                     Assert.That(
                         currentChecksum,
                         Is.EqualTo( expectedChecksum ),
-                        "Checksum consistency check failed."
+                        message: "Checksum consistency check failed."
                     );
                 }
             }
@@ -224,12 +224,7 @@ namespace KOTORModSync.Tests
                 JsonSerializer serializer
             )
             {
-                if ( reader.Value is string path )
-                {
-                    return new DirectoryInfo( path );
-                }
-
-                return null;
+                return reader.Value is string path ? new DirectoryInfo( path ) : null;
             }
 
             public override void WriteJson( JsonWriter writer, DirectoryInfo? value, JsonSerializer serializer ) =>
@@ -242,7 +237,7 @@ namespace KOTORModSync.Tests
         public async Task SaveChecksumsToFileAsync_ValidData_SavesChecksumsToFile()
         {
             // Arrange
-            string filePath = Path.Combine( _testDirectory, "Checksums.json" );
+            string filePath = Path.Combine( _testDirectory, path2: "Checksums.json" );
             var checksums = new Dictionary<string, string>
             {
                 { _testDirectory, FileChecksumValidator.Sha1ToString( SHA1.Create() ) }
@@ -281,13 +276,13 @@ namespace KOTORModSync.Tests
             {
                 Console.SetOut( sw );
                 // Arrange
-                string testFolderPath = Path.Combine( Path.GetTempPath(), "KOTORModSyncTests" );
+                string testFolderPath = Path.Combine( Path.GetTempPath(), path2: "KOTORModSyncTests" );
                 _ = Directory.CreateDirectory( testFolderPath );
 
-                string filePath = Path.Combine( testFolderPath, "Checksums.txt" );
+                string filePath = Path.Combine( testFolderPath, path2: "Checksums.txt" );
                 var checksums = new Dictionary<string, string>
                 {
-                    { Path.Combine( testFolderPath, "TestFile.txt" ), "SHA1HashValue" }
+                    { Path.Combine( testFolderPath, path2: "TestFile.txt" ), "SHA1HashValue" }
                 };
 
                 // Write checksums to the file
@@ -335,7 +330,7 @@ namespace KOTORModSync.Tests
         public async Task LoadChecksumsFromFileAsync_FileDoesNotExist_ReturnsEmptyDictionary()
         {
             // Arrange
-            string filePath = Path.Combine( _testDirectory, "NonExistentChecksums.json" );
+            string filePath = Path.Combine( _testDirectory, path2: "NonExistentChecksums.json" );
 
             // Act
             Dictionary<FileInfo, SHA1> loadedChecksums

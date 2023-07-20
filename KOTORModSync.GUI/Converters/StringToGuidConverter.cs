@@ -19,12 +19,7 @@ namespace KOTORModSync.Converters
         )
         {
             // Convert Guid to string
-            if ( value is Guid guid )
-            {
-                return guid.ToString();
-            }
-
-            return null;
+            return value is Guid guid ? guid.ToString() : (object)null;
         }
 
         public object ConvertBack(

@@ -43,12 +43,7 @@ namespace KOTORModSync.Converters
                 }
             }
 
-            if ( attrib != null )
-            {
-                return attrib.Description;
-            }
-
-            return enumObj.ToString();
+            return attrib != null ? attrib.Description : enumObj.ToString();
         }
 
         object IValueConverter.Convert(

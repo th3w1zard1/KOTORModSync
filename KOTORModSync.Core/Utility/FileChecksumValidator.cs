@@ -37,9 +37,9 @@ namespace KOTORModSync.Core.Utility
         public static string StringToSha1( [NotNull] string s ) => string.Concat(
             SHA1.Create()
                 .ComputeHash(
-                    Enumerable.Range( 0, s.Length )
+                    Enumerable.Range( start: 0, s.Length )
                         .Where( x => x % 2 == 0 )
-                        .Select( x => Convert.ToByte( s.Substring( x, 2 ), 16 ) )
+                        .Select( x => Convert.ToByte( s.Substring( x, length: 2 ), fromBase: 16 ) )
                         .ToArray()
                 )
                 .Select( b => b.ToString( "x2" ) )
@@ -54,7 +54,7 @@ namespace KOTORModSync.Core.Utility
             {
                 SHA1 sha1 = await CalculateSha1Async( fileInfo );
                 actualChecksums[fileInfo.Name] = BitConverter.ToString( sha1.Hash )
-                    .Replace( "-", "" );
+                    .Replace( oldValue: "-", newValue: "" );
             }
 
             bool allChecksumsMatch = actualChecksums.Count == _expectedChecksums.Count
@@ -64,7 +64,7 @@ namespace KOTORModSync.Core.Utility
                             out SHA1 expectedSha1
                         )
                         && BitConverter.ToString( expectedSha1.Hash )
-                            .Replace( "-", "" )
+                            .Replace( oldValue: "-", newValue: "" )
                             .Equals( x.Value, StringComparison.OrdinalIgnoreCase )
                 );
 
@@ -76,7 +76,7 @@ namespace KOTORModSync.Core.Utility
                 FileInfo expectedFileInfo = expectedChecksum.Key;
                 SHA1 expectedSha1 = expectedChecksum.Value;
                 string expectedSha1String = BitConverter.ToString( expectedSha1.Hash )
-                    .Replace( "-", "" );
+                    .Replace( oldValue: "-", newValue: "" );
 
                 if ( !actualChecksums.TryGetValue( expectedFileInfo.Name, out string actualSha1 ) )
                 {
@@ -109,14 +109,14 @@ namespace KOTORModSync.Core.Utility
 
                 int bytesRead;
 
-                while ( ( bytesRead = await stream.ReadAsync( buffer, 0, buffer.Length ) ) > 0 )
+                while ( ( bytesRead = await stream.ReadAsync( buffer, offset: 0, buffer.Length ) ) > 0 )
                 {
                     byte[] data = new byte[bytesRead];
-                    Buffer.BlockCopy( buffer, 0, data, 0, bytesRead );
+                    Buffer.BlockCopy( buffer, srcOffset: 0, data, dstOffset: 0, bytesRead );
 
                     int read = bytesRead;
 
-                    tasks.Add( Task.Run( () => { _ = sha1.TransformBlock( data, 0, read, null, 0 ); } ) );
+                    tasks.Add( Task.Run( () => { _ = sha1.TransformBlock( data, inputOffset: 0, read, outputBuffer: null, outputOffset: 0 ); } ) );
 
                     if ( tasks.Count < Environment.ProcessorCount * 2 )
                     {
@@ -129,7 +129,7 @@ namespace KOTORModSync.Core.Utility
 
                 await Task.WhenAll( tasks );
 
-                _ = sha1.TransformFinalBlock( buffer, 0, 0 );
+                _ = sha1.TransformFinalBlock( buffer, inputOffset: 0, inputCount: 0 );
 
                 return sha1;
             }
@@ -180,7 +180,7 @@ namespace KOTORModSync.Core.Utility
                     using ( FileStream fileStream = fileInfo.OpenRead() )
                     {
                         byte[] fileBytes = new byte[fileStream.Length];
-                        _ = await fileStream.ReadAsync( fileBytes, 0, fileBytes.Length );
+                        _ = await fileStream.ReadAsync( fileBytes, offset: 0, fileBytes.Length );
 
                         if ( !TryConvertHexStringToBytes( hash, out byte[] hashBytes ) )
                         {
@@ -219,7 +219,7 @@ namespace KOTORModSync.Core.Utility
             bytes = new byte[numberChars / 2];
             for ( int i = 0; i < numberChars; i += 2 )
             {
-                if ( byte.TryParse( hexString.Substring( i, 2 ), NumberStyles.HexNumber, null, out bytes[i / 2] ) )
+                if ( byte.TryParse( hexString.Substring( i, length: 2 ), NumberStyles.HexNumber, provider: null, out bytes[i / 2] ) )
                 {
                     continue;
                 }

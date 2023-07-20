@@ -76,7 +76,7 @@ namespace KOTORModSync.Core
                 Debug.WriteLine( logMessage );
 
                 string formattedDate = DateTime.Now.ToString( "yyyy-MM-dd" );
-                using ( var writer = new StreamWriter( LogFileName + formattedDate + ".txt", true ) )
+                using ( var writer = new StreamWriter( LogFileName + formattedDate + ".txt", append: true ) )
                 {
                     await writer.WriteLineAsync( logMessage + Environment.NewLine );
                 }

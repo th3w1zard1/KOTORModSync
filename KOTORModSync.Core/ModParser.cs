@@ -29,13 +29,13 @@ namespace KOTORModSync.Core
             (string, string) nameAndModLinks = GetNameAndModLink( modText );
             mod.Name = GetName( nameAndModLinks );
             mod.Guid = new Guid();
-            mod.ModLink = new List<string>() { GetHyperlinkUrl( nameAndModLinks, "Name" ) };
-            mod.Author = GetPropertyValue( modText, "Author" );
-            mod.Description = GetPropertyValue( modText, "Description" );
-            (mod.Category, mod.Tier) = GetCategoryAndTier( modText, "Category & Tier" );
-            mod.NonEnglishFunctionality = GetBoolValue( modText, "Non-English Functionality" );
-            mod.InstallationMethod = GetPropertyValue( modText, "Installation Method" );
-            mod.Directions = GetPropertyValue( modText, "Installation Instructions" );
+            mod.ModLink = new List<string>() { GetHyperlinkUrl( nameAndModLinks, linkType: "Name" ) };
+            mod.Author = GetPropertyValue( modText, propertyName: "Author" );
+            mod.Description = GetPropertyValue( modText, propertyName: "Description" );
+            (mod.Category, mod.Tier) = GetCategoryAndTier( modText, categoryTierName: "Category & Tier" );
+            mod.NonEnglishFunctionality = GetBoolValue( modText, propertyName: "Non-English Functionality" );
+            mod.InstallationMethod = GetPropertyValue( modText, propertyName: "Installation Method" );
+            mod.Directions = GetPropertyValue( modText, propertyName: "Installation Instructions" );
 
             return mod;
         }
@@ -79,7 +79,7 @@ namespace KOTORModSync.Core
 
         [NotNull]
         private static string GetHyperlinkUrl( (string, string) nameAndModLink, [CanBeNull] string linkType ) =>
-            string.Equals( linkType, "name", StringComparison.OrdinalIgnoreCase )
+            string.Equals( linkType, b: "name", StringComparison.OrdinalIgnoreCase )
                 ? nameAndModLink.Item2
                 : string.Empty;
 
@@ -118,7 +118,7 @@ namespace KOTORModSync.Core
                 string value = match.Groups[1].Value.Trim();
                 if ( !string.IsNullOrWhiteSpace( value ) )
                 {
-                    return value.Equals( "YES", StringComparison.OrdinalIgnoreCase );
+                    return value.Equals( value: "YES", StringComparison.OrdinalIgnoreCase );
                 }
 
                 match = match.NextMatch();

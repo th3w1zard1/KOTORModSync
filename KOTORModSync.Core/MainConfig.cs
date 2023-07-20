@@ -16,9 +16,9 @@ namespace KOTORModSync.Core
     // there should only ever be one MainConfig instance created at any one time.
     // instance has GET and SET access.
     // Everyone else has readonly GET access.
-    [SuppressMessage( "Performance", "CA1822:Mark members as static", Justification = "<Pending>" )]
-    [SuppressMessage( "CodeQuality", "IDE0079:Remove unnecessary suppression", Justification = "<Pending>" )]
-    [SuppressMessage( "ReSharper", "InconsistentNaming" )]
+    [SuppressMessage( category: "Performance", checkId: "CA1822:Mark members as static", Justification = "<Pending>" )]
+    [SuppressMessage( category: "CodeQuality", checkId: "IDE0079:Remove unnecessary suppression", Justification = "<Pending>" )]
+    [SuppressMessage( category: "ReSharper", checkId: "InconsistentNaming" )]
     public class MainConfig : INotifyPropertyChanged
     {
         public static string CurrentVersion => "0.8.4";

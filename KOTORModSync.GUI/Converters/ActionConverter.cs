@@ -54,7 +54,7 @@ namespace KOTORModSync.Converters
                     return result;
                 }
 
-                string msg = $"Valid actions are [{string.Join( ", ", validActions )}]";
+                string msg = $"Valid actions are [{string.Join( separator: ", ", validActions )}]";
                 return new BindingNotification( new ArgumentException( msg ), BindingErrorType.Error );
             }
 

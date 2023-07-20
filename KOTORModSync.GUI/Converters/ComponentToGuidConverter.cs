@@ -18,12 +18,7 @@ namespace KOTORModSync.Converters
             CultureInfo culture
         )
         {
-            if ( !( value is Component selectedComponent ) )
-            {
-                return null;
-            }
-
-            return selectedComponent.Name;
+            return !( value is Component selectedComponent ) ? null : (object)selectedComponent.Name;
         }
 
         public object ConvertBack(
@@ -33,12 +28,7 @@ namespace KOTORModSync.Converters
             CultureInfo culture
         )
         {
-            if ( !( value is List<Component> ) )
-            {
-                return null;
-            }
-
-            return new object();
+            return !( value is List<Component> ) ? null : new object();
         }
     }
 }

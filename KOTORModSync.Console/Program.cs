@@ -77,7 +77,7 @@ namespace KOTORModSync.ConsoleApp
 
                             string[] modFiles = Directory.GetFiles(
                                     modDownloads.FullName,
-                                    "*.*",
+                                    searchPattern: "*.*",
                                     SearchOption.TopDirectoryOnly
                                 )
                                 .Where( static file => ArchiveHelper.IsArchive( file ) )
@@ -150,7 +150,7 @@ namespace KOTORModSync.ConsoleApp
 
                             string outputPath = Path.Combine(
                                 MainConfig.LastOutputDirectory.FullName,
-                                "modtreeoutput.json"
+                                path2: "modtreeoutput.json"
                             );
                             ArchiveHelper.OutputModTree( MainConfig.SourcePath, outputPath );
                             Console.WriteLine( "Press any key to continue..." );
@@ -181,7 +181,7 @@ namespace KOTORModSync.ConsoleApp
                                 MainConfigInstance.lastOutputDirectory = Utility.ChooseDirectory();
                             }
 
-                            _ = Path.Combine( MainConfig.LastOutputDirectory.FullName, "kotor_checksums.json" );
+                            _ = Path.Combine( MainConfig.LastOutputDirectory.FullName, path2: "kotor_checksums.json" );
                             break;
 
                         case "6":

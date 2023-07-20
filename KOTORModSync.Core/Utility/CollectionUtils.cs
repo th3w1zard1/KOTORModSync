@@ -21,7 +21,7 @@ namespace KOTORModSync.Core.Utility
                 return;
 
             MethodInfo method = removeMethod.MakeGenericMethod( itemType );
-            _ = method.Invoke( null, new[] { collection } );
+            _ = method.Invoke( obj: null, new[] { collection } );
         }
 
         public static void RemoveEmptySubcollections<T>( IEnumerable<T> collection )

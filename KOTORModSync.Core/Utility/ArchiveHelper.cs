@@ -27,17 +27,10 @@ namespace KOTORModSync.Core.Utility
 
         public static bool IsArchive( FileInfo thisFile )
         {
-            if ( // speeds up execution to do these checks rather than throw exceptions
-                thisFile.Extension.Equals( ".zip" )
+            return thisFile.Extension.Equals( ".zip" )
                 || thisFile.Extension.Equals( ".7z" )
                 || thisFile.Extension.Equals( ".rar" )
-                || thisFile.Extension.Equals( ".exe" ) // assume self-extracting executable?
-               )
-            {
-                return true;
-            }
-
-            return false;
+                || thisFile.Extension.Equals( ".exe" );
         }
 
         [CanBeNull]
@@ -121,7 +114,7 @@ namespace KOTORModSync.Core.Utility
 
             try
             {
-                foreach ( FileInfo file in directory.EnumerateFiles( "*.*", SearchOption.TopDirectoryOnly ) )
+                foreach ( FileInfo file in directory.EnumerateFiles( searchPattern: "*.*", SearchOption.TopDirectoryOnly ) )
                 {
                     if ( file == null || !IsArchive( file.Extension ) )
                     {

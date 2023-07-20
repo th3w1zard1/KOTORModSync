@@ -53,11 +53,11 @@ namespace KOTORModSync.Converters
                 }
                 else if ( RuntimeInformation.IsOSPlatform( OSPlatform.OSX ) )
                 {
-                    _ = Process.Start( "open", url );
+                    _ = Process.Start( fileName: "open", url );
                 }
                 else if ( RuntimeInformation.IsOSPlatform( OSPlatform.Linux ) )
                 {
-                    _ = Process.Start( "xdg-open", url );
+                    _ = Process.Start( fileName: "xdg-open", url );
                 }
                 else
                 {

@@ -69,7 +69,7 @@ namespace KOTORModSync.Tests
 
             // Create a copy of unorderedList with the expected order
             var componentsListExpectedOrder = new List<Component>( unorderedList );
-            Swap( componentsListExpectedOrder, 0, 1 );
+            Swap( componentsListExpectedOrder, index1: 0, index2: 1 );
 
             // Assert
             foreach ( Component component in reorderedComponents )
@@ -149,7 +149,7 @@ namespace KOTORModSync.Tests
 
             // Create a copy of unorderedList with the expected order
             var componentsListExpectedOrder = new List<Component>( unorderedList );
-            Swap( componentsListExpectedOrder, 0, 1 );
+            Swap( componentsListExpectedOrder, index1: 0, index2: 1 );
 
             // Assert
             foreach ( Component component in reorderedComponents )
@@ -422,9 +422,9 @@ namespace KOTORModSync.Tests
             }
 
             Assert.That(
-                false,
+                actual: false,
                 Is.True,
-                "ConfirmComponentsInstallOrder should have raised an ArgumentOutOfRangeException"
+                message: "ConfirmComponentsInstallOrder should have raised an ArgumentOutOfRangeException"
             );
         }
 

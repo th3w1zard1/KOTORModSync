@@ -19,7 +19,7 @@ namespace KOTORModSync.Core.TSLPatcher
                 throw new ArgumentNullException( nameof( directory ) );
             }
 
-            FileInfo[] iniFiles = directory.GetFiles( "*.ini", SearchOption.AllDirectories );
+            FileInfo[] iniFiles = directory.GetFiles( searchPattern: "*.ini", SearchOption.AllDirectories );
             if ( iniFiles.Length == 0 )
             {
                 throw new InvalidOperationException( "No .ini files found!" );
@@ -41,7 +41,7 @@ namespace KOTORModSync.Core.TSLPatcher
 
                 Logger.Log( $"Preventing tslpatcher automatic game lookups '{file.Name}'" );
                 Logger.LogVerbose( $"change 'LookupGameFolder' from 1 to 0 in '{file.Name}'" );
-                fileContents = Regex.Replace( fileContents, pattern, "LookupGameFolder=0" );
+                fileContents = Regex.Replace( fileContents, pattern, replacement: "LookupGameFolder=0" );
 
                 // Write the modified file contents back to the file
                 File.WriteAllText( filePath, fileContents );
@@ -57,7 +57,7 @@ namespace KOTORModSync.Core.TSLPatcher
                 throw new ArgumentNullException( nameof( directory ) );
             }
 
-            FileInfo[] iniFiles = directory.GetFiles( "*.ini", SearchOption.AllDirectories );
+            FileInfo[] iniFiles = directory.GetFiles( searchPattern: "*.ini", SearchOption.AllDirectories );
             if ( iniFiles.Length == 0 )
             {
                 throw new InvalidOperationException( "No .ini files found!" );
@@ -79,7 +79,7 @@ namespace KOTORModSync.Core.TSLPatcher
 
                 Logger.Log( $"Redirecting TSLPatcher logging from '{file.Name}' to 'installlog.txt'" );
                 Logger.LogVerbose( $"change 'PlaintextLog' from 0 to 1 in '{file.Name}'" );
-                fileContents = Regex.Replace( fileContents, pattern, "PlaintextLog=1" );
+                fileContents = Regex.Replace( fileContents, pattern, replacement: "PlaintextLog=1" );
 
                 // Write the modified file contents back to the file
                 File.WriteAllText( filePath, fileContents );

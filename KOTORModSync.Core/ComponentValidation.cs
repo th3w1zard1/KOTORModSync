@@ -44,10 +44,10 @@ namespace KOTORModSync.Core
             && ParseDestinationWithAction();
 
         private void AddError( [CanBeNull] string message, [CanBeNull] Instruction instruction ) =>
-            _validationResults.Add( new ValidationResult( this, instruction, message, true ) );
+            _validationResults.Add( new ValidationResult( this, instruction, message, isError: true ) );
 
         private void AddWarning( [CanBeNull] string message, [CanBeNull] Instruction instruction ) =>
-            _validationResults.Add( new ValidationResult( this, instruction, message, false ) );
+            _validationResults.Add( new ValidationResult( this, instruction, message, isError: false ) );
 
         public List<string> GetErrors() =>
             _validationResults.Where( r => r.IsError )
@@ -94,13 +94,13 @@ namespace KOTORModSync.Core
                     foreach ( Instruction instruction in ComponentToValidate.Instructions )
                     {
                         if ( !( instruction.Action is null )
-                            && !instruction.Action.Equals( "extract", StringComparison.OrdinalIgnoreCase ) )
+                            && !instruction.Action.Equals( value: "extract", StringComparison.OrdinalIgnoreCase ) )
                         {
                             continue;
                         }
 
                         AddError(
-                            $"Missing Required Archives for 'Extract' action: [{string.Join( ",", instruction.Source )}]",
+                            $"Missing Required Archives for 'Extract' action: [{string.Join( separator: ",", instruction.Source )}]",
                             instruction
                         );
                         success = false;
@@ -112,7 +112,7 @@ namespace KOTORModSync.Core
                 foreach ( Instruction instruction in ComponentToValidate.Instructions )
                 {
                     // we already checked if the archive exists in GetAllArchivesFromInstructions.
-                    if ( instruction.Action.Equals( "extract", StringComparison.OrdinalIgnoreCase ) )
+                    if ( instruction.Action.Equals( value: "extract", StringComparison.OrdinalIgnoreCase ) )
                     {
                         continue;
                     }
@@ -120,7 +120,7 @@ namespace KOTORModSync.Core
                     bool archiveNameFound = true;
                     if ( instruction.Source is null )
                     {
-                        AddWarning( "Instruction does not have a 'Source' key defined", instruction );
+                        AddWarning( message: "Instruction does not have a 'Source' key defined", instruction );
                         success = false;
                         continue;
                     }
@@ -130,17 +130,17 @@ namespace KOTORModSync.Core
                         string sourcePath = Serializer.FixPathFormatting( instruction.Source[index] );
 
                         // todo
-                        if ( sourcePath.StartsWith( "<<kotorDirectory>>", StringComparison.OrdinalIgnoreCase ) )
+                        if ( sourcePath.StartsWith( value: "<<kotorDirectory>>", StringComparison.OrdinalIgnoreCase ) )
                         {
                             continue;
                         }
 
                         // ensure tslpatcher.exe sourcePaths use the action 'tslpatcher'
-                        if ( sourcePath.EndsWith( "tslpatcher.exe", StringComparison.OrdinalIgnoreCase )
-                            && !instruction.Action.Equals( "tslpatcher", StringComparison.OrdinalIgnoreCase ) )
+                        if ( sourcePath.EndsWith( value: "tslpatcher.exe", StringComparison.OrdinalIgnoreCase )
+                            && !instruction.Action.Equals( value: "tslpatcher", StringComparison.OrdinalIgnoreCase ) )
                         {
                             AddWarning(
-                                "'tslpatcher.exe' used in Source path without the action 'tslpatcher', was this intentional?",
+                                message: "'tslpatcher.exe' used in Source path without the action 'tslpatcher', was this intentional?",
                                 instruction
                             );
                         }
@@ -208,17 +208,17 @@ namespace KOTORModSync.Core
 
                 List<string> realPaths = FileHelper.EnumerateFilesWithWildcards(
                     instruction.Source.ConvertAll( Utility.Utility.ReplaceCustomVariables ),
-                    true
+                    topLevelOnly: true
                 );
                 if ( realPaths is null )
                 {
-                    AddError( "Could not find real paths", instruction );
+                    AddError( message: "Could not find real paths", instruction );
                     continue;
                 }
 
                 foreach ( string realSourcePath in realPaths )
                 {
-                    if ( Path.GetExtension( realSourcePath ).Equals( ".exe", StringComparison.OrdinalIgnoreCase ) )
+                    if ( Path.GetExtension( realSourcePath ).Equals( value: ".exe", StringComparison.OrdinalIgnoreCase ) )
                     {
                         allArchives.Add( realSourcePath );
                         continue; // no way to verify self-extracting executables.
@@ -265,12 +265,12 @@ namespace KOTORModSync.Core
                         continue;
                     // tslpatcher must always use <<kotorDirectory>> and nothing else.
                     case "tslpatcher" when string.IsNullOrEmpty( instruction.Destination ):
-                        AddWarning( "Destination must be <<kotorDirectory>> with 'TSLPatcher' action, setting it now automatically.", instruction );
+                        AddWarning( message: "Destination must be <<kotorDirectory>> with 'TSLPatcher' action, setting it now automatically.", instruction );
                         instruction.Destination = "<<kotorDirectory>>";
                         break;
 
                     case "tslpatcher" when !instruction.Destination.Equals(
-                        "<<kotorDirectory>>",
+                        value: "<<kotorDirectory>>",
                         StringComparison.OrdinalIgnoreCase
                     ):
                         success = false;
@@ -389,8 +389,8 @@ namespace KOTORModSync.Core
             string errorDescription = string.Empty;
 
             sourcePath = Serializer.FixPathFormatting( sourcePath )
-                .Replace( $"<<modDirectory>>{Path.DirectorySeparatorChar}", "" )
-                .Replace( $"<<kotorDirectory>>{Path.DirectorySeparatorChar}", "" );
+                .Replace( $"<<modDirectory>>{Path.DirectorySeparatorChar}", newValue: "" )
+                .Replace( $"<<kotorDirectory>>{Path.DirectorySeparatorChar}", newValue: "" );
 
             foreach ( string archivePath in allArchives )
             {
@@ -435,13 +435,13 @@ namespace KOTORModSync.Core
             }
 
             // todo, stop displaying errors for self extracting executables. This is the only mod using one that I've seen out of 200-some.
-            if ( ComponentToValidate.Name.Equals( "Improved AI", StringComparison.OrdinalIgnoreCase ) )
+            if ( ComponentToValidate.Name.Equals( value: "Improved AI", StringComparison.OrdinalIgnoreCase ) )
             {
                 return (true, true);
             }
 
             // archive not required if instruction isn't running.
-            if ( !Component.ShouldRunInstruction( instruction, ComponentsList, false ) )
+            if ( !Component.ShouldRunInstruction( instruction, ComponentsList, isInstall: false ) )
             {
                 return (true, true);
             }
@@ -470,15 +470,15 @@ namespace KOTORModSync.Core
             {
                 IArchive archive = null;
 
-                if ( archivePath.EndsWith( ".zip", StringComparison.OrdinalIgnoreCase ) )
+                if ( archivePath.EndsWith( value: ".zip", StringComparison.OrdinalIgnoreCase ) )
                 {
                     archive = SharpCompress.Archives.Zip.ZipArchive.Open( stream );
                 }
-                else if ( archivePath.EndsWith( ".rar", StringComparison.OrdinalIgnoreCase ) )
+                else if ( archivePath.EndsWith( value: ".rar", StringComparison.OrdinalIgnoreCase ) )
                 {
                     archive = RarArchive.Open( stream );
                 }
-                else if ( archivePath.EndsWith( ".7z", StringComparison.OrdinalIgnoreCase ) )
+                else if ( archivePath.EndsWith( value: ".7z", StringComparison.OrdinalIgnoreCase ) )
                 {
                     archive = SevenZipArchive.Open( stream );
                 }

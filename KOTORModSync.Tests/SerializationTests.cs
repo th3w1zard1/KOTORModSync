@@ -21,7 +21,7 @@ namespace KOTORModSync.Tests
         [Test]
         public void TestSerializeInt()
         {
-            int thisInt = new Random().Next( 1, 65535 );
+            int thisInt = new Random().Next( minValue: 1, maxValue: 65535 );
             object? serialized = Serializer.SerializeObject( thisInt );
 
             Assert.That( serialized, Is.EqualTo( thisInt.ToString() ) );
@@ -76,14 +76,14 @@ namespace KOTORModSync.Tests
                     Assert.That(
                         HasStackOverflow( () => Serializer.SerializeObject( instance1 ) ),
                         Is.False,
-                        "Serialization should not cause a stack overflow"
+                        message: "Serialization should not cause a stack overflow"
                     );
                     Assert.That(
                         HasStackOverflow(
                             () => Serializer.SerializeObject( new List<object> { instance1, instance2 } )
                         ),
                         Is.False,
-                        "Serialization should not cause a stack overflow"
+                        message: "Serialization should not cause a stack overflow"
                     );
                 }
             );

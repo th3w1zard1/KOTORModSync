@@ -98,10 +98,9 @@ namespace KOTORModSync.Core
             RemoveEmptyCollections( rootTable["thisMod"] );
 
             string tomlString = Nett.Toml.WriteString( rootTable );
-            if ( string.IsNullOrWhiteSpace( tomlString ) )
-                throw new InvalidOperationException( "Could not serialize into a valid toml string" );
-
-            return Serializer.FixWhitespaceIssues( tomlString );
+            return string.IsNullOrWhiteSpace( tomlString )
+                ? throw new InvalidOperationException( "Could not serialize into a valid toml string" )
+                : Serializer.FixWhitespaceIssues( tomlString );
         }
 
         private void RemoveEmptyCollections( [NotNull] IDictionary<string, object> thisTable )
@@ -213,33 +212,33 @@ namespace KOTORModSync.Core
 
             _tempPath = new DirectoryInfo( Path.GetTempPath() );
 
-            Name = GetRequiredValue<string>( componentDict, "Name" );
+            Name = GetRequiredValue<string>( componentDict, key: "Name" );
             _ = Logger.LogAsync( $"{Environment.NewLine}== Deserialize next component '{Name}' ==" );
-            Guid = GetRequiredValue<Guid>( componentDict, "Guid" );
-            Description = GetValueOrDefault<string>( componentDict, "Description" ) ?? string.Empty;
-            Directions = GetValueOrDefault<string>( componentDict, "Directions" ) ?? string.Empty;
-            Category = GetValueOrDefault<string>( componentDict, "Category" ) ?? string.Empty;
-            Tier = GetValueOrDefault<string>( componentDict, "Tier" ) ?? string.Empty;
-            Language = GetValueOrDefault<List<string>>( componentDict, "Language" ) ?? new List<string>();
-            Author = GetValueOrDefault<string>( componentDict, "Author" ) ?? string.Empty;
-            Dependencies = GetValueOrDefault<List<Guid>>( componentDict, "Dependencies" ) ?? new List<Guid>();
-            Restrictions = GetValueOrDefault<List<Guid>>( componentDict, "Restrictions" ) ?? new List<Guid>();
-            InstallBefore = GetValueOrDefault<List<Guid>>( componentDict, "InstallBefore" ) ?? new List<Guid>();
-            InstallAfter = GetValueOrDefault<List<Guid>>( componentDict, "InstallAfter" ) ?? new List<Guid>();
+            Guid = GetRequiredValue<Guid>( componentDict, key: "Guid" );
+            Description = GetValueOrDefault<string>( componentDict, key: "Description" ) ?? string.Empty;
+            Directions = GetValueOrDefault<string>( componentDict, key: "Directions" ) ?? string.Empty;
+            Category = GetValueOrDefault<string>( componentDict, key: "Category" ) ?? string.Empty;
+            Tier = GetValueOrDefault<string>( componentDict, key: "Tier" ) ?? string.Empty;
+            Language = GetValueOrDefault<List<string>>( componentDict, key: "Language" ) ?? new List<string>();
+            Author = GetValueOrDefault<string>( componentDict, key: "Author" ) ?? string.Empty;
+            Dependencies = GetValueOrDefault<List<Guid>>( componentDict, key: "Dependencies" ) ?? new List<Guid>();
+            Restrictions = GetValueOrDefault<List<Guid>>( componentDict, key: "Restrictions" ) ?? new List<Guid>();
+            InstallBefore = GetValueOrDefault<List<Guid>>( componentDict, key: "InstallBefore" ) ?? new List<Guid>();
+            InstallAfter = GetValueOrDefault<List<Guid>>( componentDict, key: "InstallAfter" ) ?? new List<Guid>();
 
-            ModLink = GetValueOrDefault<List<string>>( componentDict, "ModLink" ) ?? new List<string>();
+            ModLink = GetValueOrDefault<List<string>>( componentDict, key: "ModLink" ) ?? new List<string>();
             if ( ModLink.Count == 0 )
             {
-                string modLink = GetValueOrDefault<string>( componentDict, "ModLink" ) ?? string.Empty;
+                string modLink = GetValueOrDefault<string>( componentDict, key: "ModLink" ) ?? string.Empty;
                 if ( string.IsNullOrEmpty( modLink ) )
                     Logger.LogError( "Could not deserialize key 'ModLink'" );
                 else
                     ModLink = modLink.Split( new[] { "\r\n", "\n" }, StringSplitOptions.None ).ToList();
             }
 
-            IsSelected = GetValueOrDefault<bool>( componentDict, "IsSelected" );
+            IsSelected = GetValueOrDefault<bool>( componentDict, key: "IsSelected" );
 
-            Instructions = DeserializeInstructions( GetValueOrDefault<IList<object>>( componentDict, "Instructions" ) );
+            Instructions = DeserializeInstructions( GetValueOrDefault<IList<object>>( componentDict, key: "Instructions" ) );
             Instructions.ForEach( instruction => instruction?.SetParentComponent( this ) );
 
             /*Options = DeserializeOptions(
@@ -294,7 +293,7 @@ namespace KOTORModSync.Core
                     .Append( component.Tier )
                     .Append( " - " )
                     .AppendLine( component.Category );
-                _ = string.Equals( component.Language.FirstOrDefault(), "All", StringComparison.OrdinalIgnoreCase )
+                _ = string.Equals( component.Language.FirstOrDefault(), b: "All", StringComparison.OrdinalIgnoreCase )
                     ? sb.AppendLine( "**Supported Languages**: ALL" )
                     : sb.Append( "**Supported Languages**: [" )
                         .AppendLine()
@@ -320,9 +319,12 @@ namespace KOTORModSync.Core
                     )
                 )
                 {
+                    if ( instruction is null )
+                        continue;
+
                     _ = sb.Append( "**Action**: " )
                         .AppendLine( instruction?.Action );
-                    if ( instruction?.Action == "move" )
+                    if ( instruction.Action == "move" )
                     {
                         _ = sb.Append( "**Overwrite existing files?**: " )
                             .AppendLine(
@@ -332,20 +334,17 @@ namespace KOTORModSync.Core
                             );
                     }
 
-                    if ( instruction?.Source != null )
+                    string thisLine
+                        = $"Source: [{Environment.NewLine}{string.Join( $",{Environment.NewLine}", instruction.Source.Select( item => $"{indentation}{item}" ) )}{Environment.NewLine}]";
+
+                    if ( instruction.Action != "move" )
                     {
-                        string thisLine
-                            = $"Source: [{Environment.NewLine}{string.Join( $",{Environment.NewLine}", instruction.Source.Select( item => $"{indentation}{item}" ) )}{Environment.NewLine}]";
-
-                        if ( instruction.Action != "move" )
-                        {
-                            thisLine = thisLine.Replace( "Source: ", "" );
-                        }
-
-                        _ = sb.AppendLine( thisLine );
+                        thisLine = thisLine.Replace( oldValue: "Source: ", newValue: "" );
                     }
 
-                    if ( instruction?.Destination != null && instruction.Action == "move" )
+                    _ = sb.AppendLine( thisLine );
+
+                    if ( !string.IsNullOrEmpty(instruction.Destination) && instruction.Action == "move")
                     {
                         _ = sb.Append( "Destination: " )
                             .AppendLine( instruction.Destination );
@@ -375,24 +374,24 @@ namespace KOTORModSync.Core
                 var instructionDict = (IDictionary<string, object>)instructionsSerializedList[index];
                 if ( instructionDict is null ) continue;
 
-                Serializer.DeserializePathInDictionary( instructionDict, "Source" );
-                Serializer.DeserializeGuidDictionary( instructionDict, "Restrictions" );
-                Serializer.DeserializeGuidDictionary( instructionDict, "Dependencies" );
+                Serializer.DeserializePathInDictionary( instructionDict, key: "Source" );
+                Serializer.DeserializeGuidDictionary( instructionDict, key: "Restrictions" );
+                Serializer.DeserializeGuidDictionary( instructionDict, key: "Dependencies" );
 
                 var instruction = new Instruction();
-                instruction.Action = GetRequiredValue<string>( instructionDict, "Action" );
+                instruction.Action = GetRequiredValue<string>( instructionDict, key: "Action" );
                 _ = Logger.LogAsync(
                     $"{Environment.NewLine}-- Deserialize instruction #{index + 1} action {instruction.Action}"
                 );
-                instruction.Arguments = GetValueOrDefault<string>( instructionDict, "Arguments" );
-                instruction.Overwrite = GetValueOrDefault<bool>( instructionDict, "Overwrite" );
+                instruction.Arguments = GetValueOrDefault<string>( instructionDict, key: "Arguments" );
+                instruction.Overwrite = GetValueOrDefault<bool>( instructionDict, key: "Overwrite" );
 
                 instruction.Restrictions
-                    = GetValueOrDefault<List<Guid>>( instructionDict, "Restrictions" ) ?? new List<Guid>();
+                    = GetValueOrDefault<List<Guid>>( instructionDict, key: "Restrictions" ) ?? new List<Guid>();
                 instruction.Dependencies
-                    = GetValueOrDefault<List<Guid>>( instructionDict, "Dependencies" ) ?? new List<Guid>();
-                instruction.Source = GetValueOrDefault<List<string>>( instructionDict, "Source" ) ?? new List<string>();
-                instruction.Destination = GetValueOrDefault<string>( instructionDict, "Destination" ) ?? string.Empty;
+                    = GetValueOrDefault<List<Guid>>( instructionDict, key: "Dependencies" ) ?? new List<Guid>();
+                instruction.Source = GetValueOrDefault<List<string>>( instructionDict, key: "Source" ) ?? new List<string>();
+                instruction.Destination = GetValueOrDefault<string>( instructionDict, key: "Destination" ) ?? string.Empty;
                 instructions.Add( instruction );
             }
 
@@ -418,23 +417,23 @@ namespace KOTORModSync.Core
                 var optionsDict = (IDictionary<string, object>)optionsSerializedList[index];
                 if ( optionsDict is null ) continue;
 
-                Serializer.DeserializeGuidDictionary( optionsDict, "Restrictions" );
-                Serializer.DeserializeGuidDictionary( optionsDict, "Dependencies" );
+                Serializer.DeserializeGuidDictionary( optionsDict, key: "Restrictions" );
+                Serializer.DeserializeGuidDictionary( optionsDict, key: "Dependencies" );
 
                 var option = new Option();
                 _ = Logger.LogAsync(
                     $"{Environment.NewLine}-- Deserialize option #{index + 1}"
                 );
 
-                option.Name = GetRequiredValue<string>( optionsDict, "Name" );
+                option.Name = GetRequiredValue<string>( optionsDict, key: "Name" );
                 _ = Logger.LogAsync( $"{Environment.NewLine}== Deserialize next component '{Name}' ==" );
-                option.Guid = GetRequiredValue<Guid>( optionsDict, "Guid" );
+                option.Guid = GetRequiredValue<Guid>( optionsDict, key: "Guid" );
                 option.Restrictions
-                    = GetValueOrDefault<List<Guid>>( optionsDict, "Restrictions" ) ?? new List<Guid>();
+                    = GetValueOrDefault<List<Guid>>( optionsDict, key: "Restrictions" ) ?? new List<Guid>();
                 option.Dependencies
-                    = GetValueOrDefault<List<Guid>>( optionsDict, "Dependencies" ) ?? new List<Guid>();
+                    = GetValueOrDefault<List<Guid>>( optionsDict, key: "Dependencies" ) ?? new List<Guid>();
                 option.Instructions
-                    = Instructions = DeserializeInstructions( GetValueOrDefault<IList<object>>( optionsDict, "Instructions" ) );
+                    = Instructions = DeserializeInstructions( GetValueOrDefault<IList<object>>( optionsDict, key: "Instructions" ) );
                 options.Add( option );
             }
 
@@ -444,7 +443,7 @@ namespace KOTORModSync.Core
         [NotNull]
         private static T GetRequiredValue<T>( [NotNull] IDictionary<string, object> dict, [NotNull] string key )
         {
-            T value = GetValue<T>( dict, key, true );
+            T value = GetValue<T>( dict, key, required: true );
             // ReSharper disable once CompareNonConstrainedGenericWithNull
             return value == null
                 ? throw new InvalidOperationException( "GetValue cannot return null for a required value." )
@@ -454,7 +453,7 @@ namespace KOTORModSync.Core
 
         [CanBeNull]
         private static T GetValueOrDefault<T>( [NotNull] IDictionary<string, object> dict, [NotNull] string key ) =>
-            GetValue<T>( dict, key, false );
+            GetValue<T>( dict, key, required: false );
 
         // why did I do this...
         [CanBeNull]
@@ -489,27 +488,18 @@ namespace KOTORModSync.Core
                         return t;
                     case string valueStr when string.IsNullOrEmpty( valueStr ):
                         {
-                            if ( required )
-                            {
-                                throw new KeyNotFoundException( $"'{key}' field cannot be empty." );
-                            }
-
-                            return default;
+                            return required
+                                ? throw new KeyNotFoundException( $"'{key}' field cannot be empty." )
+                                : (T)default;
                         }
                     case string valueStr when targetType == typeof( Guid ):
                         {
                             string guidStr = Serializer.FixGuidString( valueStr );
-                            if ( !string.IsNullOrEmpty( guidStr ) && Guid.TryParse( guidStr, out Guid guid ) )
-                            {
-                                return (T)(object)guid;
-                            }
-
-                            if ( required )
-                            {
-                                throw new ArgumentException( $"'{key}' field is not a valid Guid!" );
-                            }
-
-                            return (T)(object)Guid.Empty;
+                            return !string.IsNullOrEmpty( guidStr ) && Guid.TryParse( guidStr, out Guid guid )
+                                ? (T)(object)guid
+                                : required
+                                    ? throw new ArgumentException( $"'{key}' field is not a valid Guid!" )
+                                    : (T)(object)Guid.Empty;
                         }
                     case string valueStr when targetType == typeof( string ):
                         return (T)(object)valueStr;
@@ -638,8 +628,8 @@ namespace KOTORModSync.Core
                 string tomlString = File.ReadAllText( filePath )
                     // the code expects instructions to always be defined. When it's not, code errors and prevents a save.
                     // make the user experience better by just removing the empty instructions key.
-                    .Replace( "Instructions = []", string.Empty )
-                    .Replace( "Options = []", string.Empty );
+                    .Replace( oldValue: "Instructions = []", string.Empty )
+                    .Replace( oldValue: "Options = []", string.Empty );
 
                 if ( string.IsNullOrWhiteSpace( tomlString ) )
                 {
@@ -700,7 +690,7 @@ namespace KOTORModSync.Core
             }
             catch ( Exception ex )
             {
-                Logger.LogException( ex, "There was a problem serializing the components in the file." );
+                Logger.LogException( ex, customMessage: "There was a problem serializing the components in the file." );
                 throw;
             }
         }
@@ -948,23 +938,20 @@ namespace KOTORModSync.Core
 
                 _ = Logger.LogAsync( $"Successfully completed instruction #{instructionIndex} '{instruction.Action}'" );
 
-                async Task<bool?> PromptUserInstallError( string message )
-                {
-                    return await ConfirmCallback.ShowConfirmationDialog(
-                        message
-                        + Environment.NewLine
-                        + $"Instruction #{index} action '{instruction.Action}'"
-                        + Environment.NewLine
-                        + "Retry this Instruction?"
-                        + Environment.NewLine
-                        + Environment.NewLine
-                        + " 'YES': RETRY this Instruction"
-                        + Environment.NewLine
-                        + " 'NO':  SKIP this Instruction"
-                        + Environment.NewLine
-                        + $" or CLOSE THIS WINDOW to ABORT the installation of '{Name}'."
-                    );
-                }
+                async Task<bool?> PromptUserInstallError( string message ) => await ConfirmCallback.ShowConfirmationDialog(
+                    message
+                    + Environment.NewLine
+                    + $"Instruction #{index} action '{instruction.Action}'"
+                    + Environment.NewLine
+                    + "Retry this Instruction?"
+                    + Environment.NewLine
+                    + Environment.NewLine
+                    + " 'YES': RETRY this Instruction"
+                    + Environment.NewLine
+                    + " 'NO':  SKIP this Instruction"
+                    + Environment.NewLine
+                    + $" or CLOSE THIS WINDOW to ABORT the installation of '{Name}'."
+                );
             }
 
             return (installExitCode, new Dictionary<SHA1, FileInfo>());
@@ -986,23 +973,20 @@ namespace KOTORModSync.Core
 
             if ( dependencyGuids.Count > 0 )
             {
-                var dependencyConflicts = new List<Component>();
-
-                foreach ( Guid requiredGuid in dependencyGuids )
-                {
-                    Component checkComponent = componentsList.FirstOrDefault( c => c.Guid == requiredGuid );
-
-                    if ( checkComponent?.IsSelected == false )
-                    {
-                        dependencyConflicts.Add( checkComponent );
-                    }
-                }
+                var dependencyConflicts = dependencyGuids.Select(
+                    requiredGuid =>
+                        componentsList.FirstOrDefault( c =>
+                            c.Guid == requiredGuid
+                        )
+                ).Where( checkComponent =>
+                    checkComponent?.IsSelected == false
+                ).ToList();
 
 
                 if ( isInstall && dependencyConflicts.Count > 0 )
                 {
                     Logger.Log(
-                        $"Skipping, required components not selected for install: [{string.Join( ",", dependencyConflicts.Select( component => component.Name ).ToList() )}]"
+                        $"Skipping, required components not selected for install: [{string.Join( separator: ",", dependencyConflicts.Select( component => component.Name ).ToList() )}]"
                     );
                 }
 
@@ -1012,6 +996,7 @@ namespace KOTORModSync.Core
                 }
             }
 
+            // ReSharper disable once InvertIf
             if ( restrictionGuids.Count > 0 )
             {
                 var restrictionConflicts = new List<Component>();
@@ -1029,7 +1014,7 @@ namespace KOTORModSync.Core
                 if ( isInstall && restrictionConflicts.Count > 0 )
                 {
                     Logger.Log(
-                        $"Skipping due to restricted components in install queue: [{string.Join( ",", restrictionConflicts.Select( component => component.Name ).ToList() )}]"
+                        $"Skipping due to restricted components in install queue: [{string.Join( separator: ",", restrictionConflicts.Select( component => component.Name ).ToList() )}]"
                     );
                 }
 

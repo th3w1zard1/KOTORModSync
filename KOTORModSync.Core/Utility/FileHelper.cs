@@ -26,8 +26,8 @@ namespace KOTORModSync.Core.Utility
                        FileMode.Open,
                        FileAccess.Read,
                        FileShare.Read,
-                       4096,
-                       true
+                       bufferSize: 4096,
+                       useAsync: true
                    ) )
             {
                 using ( var destinationStream = new FileStream(
@@ -35,8 +35,8 @@ namespace KOTORModSync.Core.Utility
                            FileMode.CreateNew,
                            FileAccess.Write,
                            FileShare.None,
-                           4096,
-                           true
+                           bufferSize: 4096,
+                           useAsync: true
                        ) )
                 {
                     await sourceStream.CopyToAsync( destinationStream );
@@ -81,7 +81,7 @@ namespace KOTORModSync.Core.Utility
 
                         IEnumerable<string> matchingFiles = Directory.EnumerateFiles(
                             formattedPath,
-                            "*",
+                            searchPattern: "*",
                             topLevelOnly
                                 ? SearchOption.TopDirectoryOnly
                                 : SearchOption.AllDirectories
@@ -131,7 +131,7 @@ namespace KOTORModSync.Core.Utility
 
                     IEnumerable<string> checkFiles = Directory.EnumerateFiles(
                         currentDirectory,
-                        "*",
+                        searchPattern: "*",
                         topLevelOnly
                             ? SearchOption.TopDirectoryOnly
                             : SearchOption.AllDirectories
@@ -207,8 +207,8 @@ namespace KOTORModSync.Core.Utility
             pattern = Regex.Escape( pattern );
 
             // Replace * with .* and ? with . in the pattern
-            pattern = pattern.Replace( @"\*", ".*" )
-                .Replace( @"\?", "." );
+            pattern = pattern.Replace( oldValue: @"\*", newValue: ".*" )
+                .Replace( oldValue: @"\?", newValue: "." );
 
             // Use regex to perform the wildcard matching
             return Regex.IsMatch( input, $"^{pattern}$" );

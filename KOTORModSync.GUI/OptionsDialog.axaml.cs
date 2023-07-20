@@ -118,7 +118,7 @@ namespace KOTORModSync
                         _ = tcs.TrySetResult( null );
                     }
 
-                    optionsDialog.OptionSelected += ( sender, option ) => { _ = tcs.TrySetResult( option ); };
+                    optionsDialog.OptionSelected += ( sender, option ) => _ = tcs.TrySetResult( option );
 
                     await optionsDialog.ShowDialog( parentWindow );
                 }

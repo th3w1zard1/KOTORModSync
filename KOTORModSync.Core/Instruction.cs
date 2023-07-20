@@ -128,8 +128,8 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
 
             if (
                 RealSourcePaths is null
-                || ( !noValidate && RealSourcePaths.Count == 0 )
-                && !Action.Equals( value: "delete", StringComparison.OrdinalIgnoreCase )
+                || ( !noValidate && RealSourcePaths.Count == 0 
+                && !Action.Equals( value: "delete", StringComparison.OrdinalIgnoreCase ))
             )
             {
                 throw new FileNotFoundException(
@@ -870,7 +870,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                 Guid optionGuid = kvp.Key;
                 Option thisOption = kvp.Value;
 
-                Option thisInstructionOption = this.Options.FirstOrDefault( o => o.Guid == optionGuid );
+                Option thisInstructionOption = Options.FirstOrDefault( o => o.Guid == optionGuid );
                 if ( thisInstructionOption is null )
                     continue;
 

@@ -16,19 +16,13 @@ namespace KOTORModSync.Converters
             Type targetType,
             object parameter,
             CultureInfo culture
-        )
-        {
-            return !( value is Component selectedComponent ) ? null : (object)selectedComponent.Name;
-        }
+        ) => !( value is Component selectedComponent ) ? null : (object)selectedComponent.Name;
 
         public object ConvertBack(
             object value,
             Type targetType,
             object parameter,
             CultureInfo culture
-        )
-        {
-            return !( value is List<Component> ) ? null : new object();
-        }
+        ) => !( value is List<Component> ) ? null : new object();
     }
 }

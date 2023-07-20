@@ -344,7 +344,7 @@ namespace KOTORModSync.Core
 
                     _ = sb.AppendLine( thisLine );
 
-                    if ( !string.IsNullOrEmpty(instruction.Destination) && instruction.Action == "move")
+                    if ( !string.IsNullOrEmpty( instruction.Destination ) && instruction.Action == "move" )
                     {
                         _ = sb.Append( "Destination: " )
                             .AppendLine( instruction.Destination );

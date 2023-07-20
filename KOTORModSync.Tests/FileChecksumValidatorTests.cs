@@ -222,10 +222,7 @@ namespace KOTORModSync.Tests
                 DirectoryInfo? existingValue,
                 bool hasExistingValue,
                 JsonSerializer serializer
-            )
-            {
-                return reader.Value is string path ? new DirectoryInfo( path ) : null;
-            }
+            ) => reader.Value is string path ? new DirectoryInfo( path ) : null;
 
             public override void WriteJson( JsonWriter writer, DirectoryInfo? value, JsonSerializer serializer ) =>
                 writer.WriteValue( value!.FullName );

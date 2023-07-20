@@ -116,7 +116,7 @@ namespace KOTORModSync.Core.Utility
 
                     int read = bytesRead;
 
-                    tasks.Add( Task.Run( () => { _ = sha1.TransformBlock( data, inputOffset: 0, read, outputBuffer: null, outputOffset: 0 ); } ) );
+                    tasks.Add( Task.Run( () => _ = sha1.TransformBlock( data, inputOffset: 0, read, outputBuffer: null, outputOffset: 0 ) ) );
 
                     if ( tasks.Count < Environment.ProcessorCount * 2 )
                     {

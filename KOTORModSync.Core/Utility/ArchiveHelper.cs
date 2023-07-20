@@ -25,13 +25,10 @@ namespace KOTORModSync.Core.Utility
             new FileInfo( filePath ?? throw new ArgumentNullException( nameof( filePath ) ) )
         );
 
-        public static bool IsArchive( FileInfo thisFile )
-        {
-            return thisFile.Extension.Equals( ".zip" )
+        public static bool IsArchive( FileInfo thisFile ) => thisFile.Extension.Equals( ".zip" )
                 || thisFile.Extension.Equals( ".7z" )
                 || thisFile.Extension.Equals( ".rar" )
                 || thisFile.Extension.Equals( ".exe" );
-        }
 
         [CanBeNull]
         public static IArchive OpenArchive( [NotNull] string archivePath )

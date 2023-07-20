@@ -2244,14 +2244,14 @@ namespace KOTORModSync
             if ( !( sender is Button maximizeButton ) )
                 return;
 
-            if ( this.WindowState == WindowState.Maximized )
+            if ( WindowState == WindowState.Maximized )
             {
-                this.WindowState = WindowState.Normal;
+                WindowState = WindowState.Normal;
                 maximizeButton.Content = "▢";
             }
             else
             {
-                this.WindowState = WindowState.Maximized;
+                WindowState = WindowState.Maximized;
                 maximizeButton.Content = "▣";
             }
         }

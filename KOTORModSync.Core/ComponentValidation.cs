@@ -316,8 +316,7 @@ namespace KOTORModSync.Core
                         if ( instruction.Destination.Equals(
                                 $"<<kotorDirectory>>{Path.DirectorySeparatorChar}Override",
                                 StringComparison.OrdinalIgnoreCase
-                            )
-                            != false )
+                            ) )
                         {
                             success = false;
                             AddError(
@@ -400,7 +399,7 @@ namespace KOTORModSync.Core
             {
                 if ( archivePath is null )
                 {
-                    AddError( $"Archive is not a valid file path", instruction );
+                    AddError( "Archive is not a valid file path", instruction );
                     continue;
                 }
 

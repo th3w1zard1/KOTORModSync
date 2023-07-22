@@ -36,7 +36,7 @@ namespace KOTORModSync.Core
         [Description( "Only components with the selected compatibility level will be installed" )]
         public enum CompatibilityLevel
         {
-            [Description( "Fully Compatibile" )] Compatible = 0,
+            [Description( "Fully Compatible" )] Compatible = 0,
 
             [Description( "Mostly Compatible" )] MostlyCompatible = 1,
 
@@ -50,7 +50,6 @@ namespace KOTORModSync.Core
         public IEnumerable<CompatibilityLevel> AllCompatibilityLevels =>
             Enum.GetValues( typeof( CompatibilityLevel ) )
                 .Cast<CompatibilityLevel>();
-
 
         public enum AvailablePatchers
         {
@@ -67,7 +66,6 @@ namespace KOTORModSync.Core
         public IEnumerable<AvailablePatchers> AllAvailablePatchers =>
             Enum.GetValues( typeof( AvailablePatchers ) )
                 .Cast<AvailablePatchers>();
-
 
         public static DirectoryInfo SourcePath { get; private set; }
         public static DirectoryInfo DestinationPath { get; private set; }
@@ -166,7 +164,6 @@ namespace KOTORModSync.Core
         }
 
         public event PropertyChangedEventHandler PropertyChanged;
-
 
         // used for the ui.
         protected virtual void OnPropertyChanged( [CallerMemberName][CanBeNull] string propertyName = null ) =>

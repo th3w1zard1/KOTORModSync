@@ -126,7 +126,6 @@ namespace KOTORModSync.Core.Utility
             int maxMatchingCharacters = -1;
             var duplicatePaths = new List<string>();
 
-
             if ( directoryName is null )
             {
                 return (null, duplicatePaths);
@@ -263,7 +262,6 @@ namespace KOTORModSync.Core.Utility
                 : 0;
         }
 
-
         public static (int ExitCode, string Output, string Error) TryExecuteCommand( [CanBeNull] string command )
         {
             string shellPath = GetShellExecutable();
@@ -323,7 +321,6 @@ namespace KOTORModSync.Core.Utility
                     return fullExecutablePath;
                 }
             }
-
 
             return string.Empty;
         }

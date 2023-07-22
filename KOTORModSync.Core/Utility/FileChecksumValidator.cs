@@ -135,7 +135,6 @@ namespace KOTORModSync.Core.Utility
             }
         }
 
-
         public static async Task SaveChecksumsToFileAsync(
             string filePath,
             [CanBeNull] Dictionary<DirectoryInfo, SHA1> checksums

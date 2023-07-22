@@ -32,7 +32,6 @@ namespace KOTORModSync.Converters
             return result;
         }
 
-
         public object Convert(
             object value,
             Type targetType,
@@ -58,7 +57,6 @@ namespace KOTORModSync.Converters
 
             return serializedList.ToString();
         }
-
 
         public object ConvertBack(
             object value,

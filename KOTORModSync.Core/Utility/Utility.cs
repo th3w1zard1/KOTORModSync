@@ -57,7 +57,6 @@ namespace KOTORModSync.Core.Utility
             return attribute?.Description;
         }
 
-
         public static bool IsDirectoryWritable( [NotNull] DirectoryInfo dirPath )
         {
             if ( dirPath is null )

@@ -92,6 +92,9 @@
                                         <TextBlock Text="Name:" FontWeight="Bold" />
                                         <TextBlock Text="{Binding Name}" Margin="10,0,0,0" />
 
+                                        <TextBlock Text="Author(s):" FontWeight="Bold" Margin="0,10,0,0" />
+                                        <TextBlock Text="{Binding Author}" Margin="10,0,0,0" />
+
                                         <TextBlock Text="Description:" FontWeight="Bold" Margin="0,10,0,0" />
                                         <TextBlock Text="{Binding Description}" Margin="10,0,0,0" TextWrapping="Wrap" />
 

@@ -70,7 +70,6 @@ namespace KOTORModSync.Core.Utility
             }
         }
 
-
         public static void OutputModTree( [NotNull] DirectoryInfo directory, [NotNull] string outputPath )
         {
             if ( directory == null )

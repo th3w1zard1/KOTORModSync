@@ -73,5 +73,4 @@ namespace KOTORModSync.Converters
             }
         }
     }
-
 }

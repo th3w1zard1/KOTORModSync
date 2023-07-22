@@ -6,6 +6,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -15,7 +16,6 @@ using System.Threading.Tasks;
 using JetBrains.Annotations;
 using KOTORModSync.Core.Utility;
 using Microsoft.CSharp.RuntimeBinder;
-using Newtonsoft.Json;
 using Tomlyn;
 using Tomlyn.Model;
 using Tomlyn.Syntax;
@@ -36,7 +36,7 @@ namespace KOTORModSync.Core
         }
 
         /*
-        public DateTime SourceLastModified { get; internal set; }
+        public DateTime SourceLastModified { get; set; }
         public event EventHandler<PropertyChangedEventArgs> PropertyChanged;
         protected virtual void OnPropertyChanged(string propertyName) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         */
@@ -58,32 +58,45 @@ namespace KOTORModSync.Core
     ]
     installOrder = 3";
 
-        [NotNull] private DirectoryInfo _tempPath;
-        [NotNull] public string Name { get; set; } = string.Empty;
+        [NotNull]
+        public string Name { get; set; } = string.Empty;
         public Guid Guid { get; set; }
-        [NotNull] public string Author { get; set; } = string.Empty;
-        [NotNull] public string Category { get; set; } = string.Empty;
-        [NotNull] public string Tier { get; set; } = string.Empty;
-        [NotNull] public string Description { get; set; } = string.Empty;
-        [NotNull] public string Directions { get; set; } = string.Empty;
-        [NotNull] public List<Guid> Dependencies { get => _dependencies; set { _dependencies = value; OnPropertyChanged(); } }
-        [NotNull] public List<Guid> Restrictions { get => _restrictions; set { _restrictions = value; OnPropertyChanged(); } }
+        [NotNull]
+        public string Author { get; set; } = string.Empty;
+        [NotNull]
+        public string Category { get; set; } = string.Empty;
+        [NotNull]
+        public string Tier { get; set; } = string.Empty;
+        [NotNull]
+        public string Description { get; set; } = string.Empty;
+        [NotNull]
+        public string Directions { get; set; } = string.Empty;
+        [NotNull]
+        public List<Guid> Dependencies { get => _dependencies; set { _dependencies = value; OnPropertyChanged(); } }
+        [NotNull]
+        public List<Guid> Restrictions { get => _restrictions; set { _restrictions = value; OnPropertyChanged(); } }
 
+        [NotNull]
+        public List<Guid> InstallBefore { get; set; } = new List<Guid>();
 
-        [NotNull] public List<Guid> InstallBefore { get; set; } = new List<Guid>();
-        [NotNull] public List<Guid> InstallAfter { get; set; } = new List<Guid>();
+        [NotNull]
+        public List<Guid> InstallAfter { get; set; } = new List<Guid>();
+
         public bool NonEnglishFunctionality { get; set; }
-        [NotNull] public string InstallationMethod { get; set; } = string.Empty;
+
+        [NotNull]
+        public string InstallationMethod { get; set; } = string.Empty;
 
         [NotNull]
         [ItemNotNull]
         public List<Instruction> Instructions { get; set; } = new List<Instruction>();
 
         [NotNull]
-        [ItemNotNull]
         public Dictionary<Guid, Option> Options { get; set; } = new Dictionary<Guid, Option>();
 
-        [NotNull][ItemNotNull] public List<string> Language { get; private set; } = new List<string>();
+        [NotNull]
+        [ItemNotNull]
+        public List<string> Language { get; set; } = new List<string>();
 
         [NotNull] public List<string> ModLink { get; set; } = new List<string>();
         public bool IsSelected { get => _isSelected; set { _isSelected = value; OnPropertyChanged(); } }
@@ -91,8 +104,12 @@ namespace KOTORModSync.Core
         [NotNull]
         public Dictionary<Guid, Option> ChosenOptions { get; set; } = new Dictionary<Guid, Option>();
 
-        [NotNull] private List<Guid> _dependencies = new List<Guid>();
-        [NotNull] private List<Guid> _restrictions = new List<Guid>();
+        [NotNull]
+        private DirectoryInfo _tempPath;
+        [NotNull]
+        private List<Guid> _dependencies = new List<Guid>();
+        [NotNull]
+        private List<Guid> _restrictions = new List<Guid>();
         private bool _isSelected;
 
         [NotNull]
@@ -108,7 +125,7 @@ namespace KOTORModSync.Core
 
             string tomlString = Nett.Toml.WriteString( rootTable );
             return string.IsNullOrWhiteSpace( tomlString )
-                ? throw new InvalidOperationException( "Could not serialize into a valid toml string" )
+                ? throw new InvalidOperationException( message: "Could not serialize into a valid tomlin string" )
                 : Serializer.FixWhitespaceIssues( tomlString );
         }
 
@@ -217,8 +234,7 @@ namespace KOTORModSync.Core
             }
         }
 
-
-        public void DeserializeComponent( [NotNull] IDictionary<string, object> componentDict )
+        private void DeserializeComponent( [NotNull] IDictionary<string, object> componentDict )
         {
             if ( !( componentDict is TomlTable _ ) )
             {
@@ -269,8 +285,10 @@ namespace KOTORModSync.Core
             [NotNull] string filePath
         )
         {
-            if ( components is null ) throw new ArgumentNullException( nameof( components ) );
-            if ( filePath is null ) throw new ArgumentNullException( nameof( filePath ) );
+            if ( components is null )
+                throw new ArgumentNullException( nameof( components ) );
+            if ( filePath is null )
+                throw new ArgumentNullException( nameof( filePath ) );
 
             var stringBuilder = new StringBuilder();
 
@@ -279,10 +297,13 @@ namespace KOTORModSync.Core
                 _ = stringBuilder.AppendLine( thisComponent.SerializeComponent() );
             }
 
-            string tomlString = stringBuilder.ToString();
-            File.WriteAllText( filePath, tomlString );
+            string tomlinString = stringBuilder.ToString();
+            File.WriteAllText( filePath, tomlinString );
         }
 
+        [NotNull]
+        [SuppressMessage("ReSharper", "ArgumentsStyleStringLiteral")]
+        [SuppressMessage("ReSharper", "ArgumentsStyleLiteral")]
         public static string GenerateModDocumentation( [NotNull][ItemNotNull] List<Component> componentsList )
         {
             if ( componentsList is null ) throw new ArgumentNullException( nameof( componentsList ) );
@@ -310,15 +331,13 @@ namespace KOTORModSync.Core
                     .AppendLine( component.Category );
                 _ = string.Equals( component.Language.FirstOrDefault(), b: "All", StringComparison.OrdinalIgnoreCase )
                     ? sb.AppendLine( "**Supported Languages**: ALL" )
-                    : sb.Append( "**Supported Languages**: [" )
-                        .AppendLine()
-                        .Append(
+                    : sb.AppendLine( "**Supported Languages**: [" )
+                        .AppendLine(
                             string.Join(
                                 $",{Environment.NewLine}",
                                 component.Language.Select( item => $"{indentation}{item}" )
                             )
                         )
-                        .AppendLine()
                         .Append( ']' )
                         .AppendLine();
 
@@ -328,13 +347,9 @@ namespace KOTORModSync.Core
                 // Instructions
                 _ = sb.AppendLine();
                 _ = sb.AppendLine( "**Installation Instructions:**" );
-                foreach (
-                    Instruction instruction in component.Instructions.Where(
-                        instruction => instruction.Action != "extract"
-                    )
-                )
+                foreach ( Instruction instruction in component.Instructions )
                 {
-                    if ( instruction is null )
+                    if ( instruction.Action == "extract" )
                         continue;
 
                     _ = sb.Append( "**Action**: " )
@@ -342,15 +357,12 @@ namespace KOTORModSync.Core
                     if ( instruction.Action == "move" )
                     {
                         _ = sb.Append( "**Overwrite existing files?**: " )
-                            .AppendLine(
-                                instruction.Overwrite
-                                    ? "NO"
-                                    : "YES"
-                            );
+                            .AppendLine( instruction.Overwrite
+                                ? "NO"
+                                : "YES" );
                     }
 
-                    string thisLine
-                        = $"Source: [{Environment.NewLine}{string.Join( $",{Environment.NewLine}", instruction.Source.Select( item => $"{indentation}{item}" ) )}{Environment.NewLine}]";
+                    string thisLine = $"Source: [{Environment.NewLine}{string.Join( $",{Environment.NewLine}", instruction.Source.Select( item => $"{indentation}{item}" ) )}{Environment.NewLine}]";
 
                     if ( instruction.Action != "move" )
                     {
@@ -464,7 +476,6 @@ namespace KOTORModSync.Core
                 : value;
         }
 
-
         [CanBeNull]
         private static T GetValueOrDefault<T>( [NotNull] IDictionary<string, object> dict, [NotNull] string key ) =>
             GetValue<T>( dict, key, required: false );
@@ -497,12 +508,14 @@ namespace KOTORModSync.Core
                     case T t:
                         return t;
                     case string valueStr when string.IsNullOrEmpty( valueStr ):
+                        if ( string.IsNullOrEmpty( valueStr ) )
                         {
                             return required
                                 ? throw new KeyNotFoundException( $"'{key}' field cannot be empty." )
                                 : (T)default;
                         }
-                    case string valueStr when targetType == typeof( Guid ):
+
+                        if ( targetType == typeof( Guid ) )
                         {
                             string guidStr = Serializer.FixGuidString( valueStr );
                             return !string.IsNullOrEmpty( guidStr ) && Guid.TryParse( guidStr, out Guid guid )
@@ -511,8 +524,11 @@ namespace KOTORModSync.Core
                                     ? throw new ArgumentException( $"'{key}' field is not a valid Guid!" )
                                     : (T)(object)Guid.Empty;
                         }
-                    case string valueStr when targetType == typeof( string ):
-                        return (T)(object)valueStr;
+
+                        if ( targetType == typeof( string ) )
+                            return (T)(object)valueStr;
+
+                        break;
                 }
                 // probably some sort of array at this point
                 var tomlArray = value as IList<object>;
@@ -558,23 +574,16 @@ namespace KOTORModSync.Core
                     Logger.LogException( e );
                 }
             }
-            catch ( RuntimeBinderException )
+            catch ( RuntimeBinderException ) when ( !required )
             {
-                if ( required )
-                    throw;
-
                 return default;
             }
-            catch ( InvalidCastException )
+            catch ( InvalidCastException ) when ( !required )
             {
-                if ( required )
-                    throw;
-
                 return default;
             }
             return default;
         }
-
 
         [CanBeNull]
         public static Component DeserializeTomlComponent( [NotNull] string tomlString )
@@ -624,7 +633,6 @@ namespace KOTORModSync.Core
 
             return component;
         }
-
 
         [NotNull]
         [ItemNotNull]
@@ -711,7 +719,7 @@ namespace KOTORModSync.Core
             [Description( "Completed Successfully" )]
             Success,
 
-            [Description( "A dependency or restriction violation between components has occured." )]
+            [Description( "A dependency or restriction violation between components has occurred." )]
             DependencyViolation,
 
             [Description( "User cancelled the installation." )]
@@ -887,7 +895,6 @@ namespace KOTORModSync.Core
                         break;
                 }
 
-
                 _ = Logger.LogVerboseAsync(
                     $"Instruction #{instructionIndex} '{instruction.Action}' exited with code {Instruction.ActionExitCode.Success}"
                 );
@@ -906,7 +913,7 @@ namespace KOTORModSync.Core
                     {
                         // repeat instruction
                         case true:
-                            instructionIndex -= 1;
+                            instructionIndex--;
                             continue;
 
                         // execute next instruction
@@ -986,18 +993,17 @@ namespace KOTORModSync.Core
             {
                 var dependencyConflicts = dependencyGuids.Select(
                     requiredGuid =>
-                        componentsList.FirstOrDefault( c =>
+                        componentsList.Find( c =>
                             c.Guid == requiredGuid
                         )
                 ).Where( checkComponent =>
                     checkComponent?.IsSelected == false
                 ).ToList();
 
-
                 if ( isInstall && dependencyConflicts.Count > 0 )
                 {
                     Logger.Log(
-                        $"Skipping, required components not selected for install: [{string.Join( separator: ",", dependencyConflicts.Select( component => component?.Name ).ToList() )}]"
+                        $"Skipping, required components not selected for install: [{string.Join( separator: ",", dependencyConflicts.ConvertAll( component => component?.Name ))}]"
                     );
                 }
 
@@ -1014,7 +1020,7 @@ namespace KOTORModSync.Core
 
                 foreach ( Guid restrictedGuid in restrictionGuids )
                 {
-                    Component checkComponent = componentsList.FirstOrDefault( c => c.Guid == restrictedGuid );
+                    Component checkComponent = componentsList.Find( c => c.Guid == restrictedGuid );
 
                     if ( checkComponent?.IsSelected == true )
                     {
@@ -1025,10 +1031,9 @@ namespace KOTORModSync.Core
                 if ( isInstall && restrictionConflicts.Count > 0 )
                 {
                     Logger.Log(
-                        $"Skipping due to restricted components in install queue: [{string.Join( separator: ",", restrictionConflicts.Select( component => component?.Name ).ToList() )}]"
+                        $"Skipping due to restricted components in install queue: [{string.Join( separator: ",", restrictionConflicts.ConvertAll( component => component?.Name ))}]"
                     );
                 }
-
 
                 if ( restrictionConflicts.Count > 0 )
                 {

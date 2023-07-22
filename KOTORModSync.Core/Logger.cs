@@ -9,7 +9,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
 
-
 namespace KOTORModSync.Core
 {
     public static class Logger
@@ -88,7 +87,6 @@ namespace KOTORModSync.Core
                 _ = s_semaphore.Release();
             }
         }
-
 
         [NotNull] public static Task LogAsync( [CanBeNull] string message ) => LogInternalAsync( message );
 

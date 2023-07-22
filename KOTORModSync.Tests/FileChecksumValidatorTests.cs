@@ -56,7 +56,6 @@ namespace KOTORModSync.Tests
             Assert.That( result );
         }
 
-
         [Test]
         public async Task ValidateChecksumsAsync_MismatchedChecksums_ReturnsFalse()
         {
@@ -136,7 +135,6 @@ namespace KOTORModSync.Tests
             }
         }
 
-
         [Test]
         public async Task CalculateSHA1Async_FileDoesNotExist_ReturnsNull()
         {
@@ -213,7 +211,6 @@ namespace KOTORModSync.Tests
             Console.WriteLine( $"Expected: {expectedChecksum} Actual: {actualChecksum}" );
         }
 
-
         // Custom converter for DirectoryInfo
         public class DirectoryInfoConverter : JsonConverter<DirectoryInfo>
         {
@@ -264,7 +261,6 @@ namespace KOTORModSync.Tests
             // Clean up
             File.Delete( filePath );
         }
-
 
         [Test]
         [Ignore( "NotFinished" )]

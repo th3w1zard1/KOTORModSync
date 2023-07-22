@@ -91,7 +91,6 @@ namespace KOTORModSync.ConsoleApp
                                 return;
                             }
 
-
                             Console.WriteLine(
                                 $"Found {modFiles.Length} mod files in directory '{modDownloads.FullName}':"
                             );

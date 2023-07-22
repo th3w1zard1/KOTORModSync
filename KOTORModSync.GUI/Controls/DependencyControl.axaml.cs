@@ -41,7 +41,7 @@ namespace KOTORModSync.Controls
             }
         }
 
-        public event PropertyChangedEventHandler PropertyChanged2;
+        public event EventHandler<PropertyChangedEventArgs> PropertyChanged2;
         private string _searchText;
 
         public string SearchText

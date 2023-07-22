@@ -317,7 +317,6 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
             }
         }
 
-
         public void DeleteDuplicateFile( DirectoryInfo directoryPath = null, string fileExtension = "" )
         {
             if ( directoryPath is null )
@@ -336,7 +335,6 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
 
             string[] files = Directory.GetFiles( directoryPath.FullName );
             var fileNameCounts = new Dictionary<string, int>( StringComparer.OrdinalIgnoreCase );
-            ;
 
             foreach ( string filePath in files )
             {
@@ -583,7 +581,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                         ? new FileInfo( t ).Directory // It's a file, get the parent folder.
                         : new DirectoryInfo( t ); // It's a folder, create a DirectoryInfo instance
 
-                    if ( tslPatcherDirectory is null || !tslPatcherDirectory.Exists )
+                    if ( tslPatcherDirectory?.Exists != true )
                     {
                         throw new DirectoryNotFoundException(
                             $"The directory '{t}' could not be located on the disk."
@@ -647,7 +645,6 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                         );
                     }
 
-
                     await Logger.LogAsync( "Starting TSLPatcher instructions..." );
                     if ( MainConfig.PatcherOption != MainConfig.AvailablePatchers.TSLPatcher )
                     {
@@ -678,7 +675,6 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                         await Logger.LogAsync( "No TSLPatcher log file found!" );
                         return ActionExitCode.TSLPatcherLogNotFound;
                     }
-
 
                     return exitCode == 0
                         ? ActionExitCode.Success
@@ -869,7 +865,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                 Guid optionGuid = kvp.Key;
                 Option thisOption = kvp.Value;
 
-                Option thisInstructionOption = Options.FirstOrDefault( o => o.Guid == optionGuid );
+                Option thisInstructionOption = Options.Find( o => o.Guid == optionGuid );
                 if ( thisInstructionOption is null )
                     continue;
 
@@ -880,7 +876,6 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
 
             throw new KeyNotFoundException( "Could not find chosen option for this instruction" );
         }
-
 
         [NotNull][ItemNotNull] public List<Option> Options = new List<Option>();
     }

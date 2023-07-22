@@ -348,7 +348,7 @@ namespace KOTORModSync.Tests
                 componentG,
                 componentH,
                 componentI,
-                componentJ
+                componentJ,
             };
             var correctOrderedComponentsList = new List<Component>
             {
@@ -361,7 +361,7 @@ namespace KOTORModSync.Tests
                 componentH,
                 componentI,
                 componentG,
-                componentJ
+                componentJ,
             };
 
             // Act
@@ -373,7 +373,7 @@ namespace KOTORModSync.Tests
             {
                 int actualIndex = reorderedComponents.FindIndex( c => c.Guid == component.Guid );
                 int expectedIndex = correctOrderedComponentsList.FindIndex( c => c.Guid == component.Guid );
-                Assert.That( actualIndex, Is.EqualTo( expectedIndex ), $"Component {component.Name} is out of order." );
+                Assert.That( actualIndex, Is.EqualTo( expectedIndex ), $"Component '{component.Name}' is out of order." );
             }
 
             Assert.Multiple(
@@ -393,20 +393,20 @@ namespace KOTORModSync.Tests
             {
                 Name = "A",
                 Guid = Guid.NewGuid(),
-                InstallBefore = new List<Guid> { Guid.NewGuid() }
+                InstallBefore = new List<Guid> { Guid.NewGuid() },
             };
             var componentB = new Component
             {
                 Name = "B",
                 Guid = Guid.NewGuid(),
-                InstallAfter = new List<Guid> { componentA.Guid }
+                InstallAfter = new List<Guid> { componentA.Guid },
             };
             var componentC = new Component
             {
                 Name = "C",
                 Guid = Guid.NewGuid(),
                 InstallAfter = new List<Guid> { componentB.Guid },
-                InstallBefore = new List<Guid> { componentA.Guid }
+                InstallBefore = new List<Guid> { componentA.Guid },
             };
 
             var componentsList = new List<Component> { componentA, componentB, componentC };
@@ -425,10 +425,9 @@ namespace KOTORModSync.Tests
             Assert.That(
                 actual: false,
                 Is.True,
-                message: "ConfirmComponentsInstallOrder should have raised an ArgumentOutOfRangeException"
+                message: "ConfirmComponentsInstallOrder should have raised a KeyNotFoundException"
             );
         }
-
 
         private static void Swap<T>( IList<T> list, int index1, int index2 ) =>
             (list[index1], list[index2]) = (list[index2], list[index1]);

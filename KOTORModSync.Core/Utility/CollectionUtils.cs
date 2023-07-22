@@ -12,14 +12,14 @@ namespace KOTORModSync.Core.Utility
 {
     public static class CollectionUtils
     {
-        public static void RemoveEmptySubcollections( object collection )
+        public static void RemoveEmptySubCollections( object collection )
         {
             if ( !( collection is IEnumerable ) )
                 return;
 
             Type enumerableType = collection.GetType();
             Type itemType = enumerableType.GetGenericArguments().FirstOrDefault();
-            MethodInfo removeMethod = typeof( CollectionUtils ).GetMethod( "RemoveEmptySubcollections" );
+            MethodInfo removeMethod = typeof( CollectionUtils ).GetMethod( "RemoveEmptySubCollections" );
 
             if ( itemType == null || removeMethod == null )
                 return;
@@ -28,26 +28,26 @@ namespace KOTORModSync.Core.Utility
             _ = method.Invoke( obj: null, new[] { collection } );
         }
 
-        public static void RemoveEmptySubcollections<T>( IEnumerable<T> collection )
+        public static void RemoveEmptySubCollections<T>( IEnumerable<T> collection )
         {
             if ( collection == null )
                 return;
 
-            var emptySubcollections = new List<object>();
+            var emptySubCollections = new List<object>();
 
             foreach ( T item in collection )
             {
-                if ( item is IEnumerable subcollection && !subcollection.Cast<object>().Any() )
-                    emptySubcollections.Add( subcollection );
+                if ( item is IEnumerable subCollection && !subCollection.Cast<object>().Any() )
+                    emptySubCollections.Add( subCollection );
 
-                RemoveEmptySubcollections( item );
+                RemoveEmptySubCollections( item );
             }
 
-            foreach ( object emptySubcollection in emptySubcollections )
+            foreach ( object emptySubCollection in emptySubCollections )
             {
-                var castedCollection = emptySubcollection as IEnumerable;
+                var castedCollection = emptySubCollection as IEnumerable;
 
-                foreach ( object unused in castedCollection.Cast<object>().ToArray() )
+                for ( int i = 0; i < castedCollection.Cast<object>().ToArray().Length; i++ )
                 {
                     _ = castedCollection.GetEnumerator().MoveNext();
                     castedCollection.GetEnumerator().Reset();
@@ -55,5 +55,4 @@ namespace KOTORModSync.Core.Utility
             }
         }
     }
-
 }

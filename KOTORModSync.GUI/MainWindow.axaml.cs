@@ -92,7 +92,6 @@ namespace KOTORModSync
             ColumnDefinition configColumn = MainGrid.ColumnDefinitions[2]
                 ?? throw new NullReferenceException( "Column 2 of MainGrid (component list column) not defined." );
 
-
             // Column 0
             componentListColumn.Width = new GridLength( 250 );
             LeftTreeView = this.FindControl<TreeView>( "LeftTreeView" );
@@ -150,7 +149,7 @@ namespace KOTORModSync
             FilterControlListItems( rootItem, SearchText );
         }
 
-        public new event PropertyChangedEventHandler PropertyChanged;
+        public new event EventHandler<PropertyChangedEventArgs> PropertyChanged;
         private string _searchText;
 
         public string SearchText
@@ -201,7 +200,7 @@ namespace KOTORModSync
 
             // Check if the item matches the search text
             // Show or hide the item based on the match
-            item.IsVisible = itemName.ToLower().Contains( searchText.ToLower() );
+            item.IsVisible = itemName.Contains( searchText, StringComparison.OrdinalIgnoreCase );
         }
 
         // test the options dialog for use with the 'Options' IDictionary<string, object>.
@@ -375,7 +374,6 @@ namespace KOTORModSync
             }
         }
 
-
         [ItemCanBeNull]
         private async Task<string> SaveFile( [CanBeNull] List<string> defaultExt = null )
         {
@@ -418,7 +416,6 @@ namespace KOTORModSync
 
             return null;
         }
-
 
         [ItemCanBeNull]
         private async Task<string[]> ShowFileDialog(
@@ -471,7 +468,7 @@ namespace KOTORModSync
             foreach ( Component component in components )
             {
                 Component duplicateComponent
-                    = components.FirstOrDefault( c => c.Guid == component.Guid && c != component );
+                    = components.Find( c => c.Guid == component.Guid && c != component );
 
                 if ( duplicateComponent is null )
                     continue;
@@ -547,7 +544,7 @@ namespace KOTORModSync
                 {
                     bool? confirm = await ConfirmationDialog.ShowConfirmationDialog(
                         this,
-                        "You already have a config loaded." + " Do you want to load this instruction file anyway?"
+                        "You already have a config loaded. Do you want to load this instruction file anyway?"
                     );
                     if ( confirm != true )
                         return;
@@ -1002,7 +999,7 @@ namespace KOTORModSync
 
                 // todo:
                 if ( MainConfig.AllComponents.Any(
-                        c => c.Dependencies.Any( g => g == _currentComponent.Guid ) == true
+                        c => c.Dependencies.Any( g => g == _currentComponent.Guid )
                     ) )
                 {
                     await InformationDialog.ShowInformationDialog(
@@ -1109,7 +1106,6 @@ namespace KOTORModSync
                     return;
                 }
 
-
                 var validator = new ComponentValidation( _currentComponent, MainConfig.AllComponents );
                 await Logger.LogVerboseAsync( $" == Validating '{name}' == " );
                 if ( !validator.Run() )
@@ -1199,7 +1195,6 @@ namespace KOTORModSync
                     return;
                 }
 
-
                 try
                 {
                     _ = Logger.LogAsync( "Start installing all mods..." );
@@ -1236,7 +1231,6 @@ namespace KOTORModSync
                                 progressWindow.InstalledRemaining.Text
                                     = $"{index}/{MainConfig.AllComponents.Count + 1} Components Installed";
                                 progressWindow.PercentCompleted.Text = $"{Math.Round( percentComplete * 100 )}%";
-
 
                                 // Additional fallback options
                                 await Task.Delay( 100 ); // Introduce a small delay
@@ -1685,7 +1679,7 @@ namespace KOTORModSync
                 // Handling OTHER component's defined restrictions based on the change to THIS component.
                 foreach ( Component c in MainConfig.AllComponents )
                 {
-                    if ( !c.IsSelected || c.Restrictions.Contains( component.Guid ) != true )
+                    if ( !c.IsSelected || !c.Restrictions.Contains( component.Guid ) )
                     {
                         continue;
                     }
@@ -1745,7 +1739,7 @@ namespace KOTORModSync
                 // Handling OTHER component's defined dependencies based on the change to THIS component.
                 foreach ( Component c in MainConfig.AllComponents )
                 {
-                    if ( c.IsSelected && c.Dependencies.Contains( component.Guid ) == true )
+                    if ( c.IsSelected && c.Dependencies.Contains( component.Guid ) )
                     {
                         c.IsSelected = false;
                         ComponentCheckboxUnchecked( c, visitedComponents );
@@ -1809,7 +1803,6 @@ namespace KOTORModSync
                     }
                 }
             };
-
 
             return header;
         }
@@ -1972,7 +1965,7 @@ namespace KOTORModSync
         {
             try
             {
-                if ( !( componentsList.Count > 0 ) )
+                if (  componentsList.Count == 0  )
                 {
                     return;
                 }
@@ -2164,10 +2157,9 @@ namespace KOTORModSync
             public void Execute( object parameter ) => _execute( parameter );
         }
 
-
         private void OpenOutputWindow_Click( [NotNull] object sender, [NotNull] RoutedEventArgs e )
         {
-            if ( _outputWindow != null && _outputWindow.IsVisible )
+            if ( _outputWindow?.IsVisible == true )
             {
                 _outputWindow.Close();
             }

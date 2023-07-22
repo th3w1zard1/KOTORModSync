@@ -24,7 +24,7 @@ namespace KOTORModSync.Core.Utility
             guidString = Regex.Replace( guidString, pattern: @"\s", replacement: "" );
 
             // Remove all non-base16 characters.
-            guidString = Regex.Replace( guidString, pattern: @"[^0-9A-Fa-f]", replacement: "" );
+            guidString = Regex.Replace( guidString, pattern: "[^0-9A-Fa-f]", replacement: "" );
 
             // not even close to a guid.
             if ( guidString.Length != 32 )
@@ -42,7 +42,6 @@ namespace KOTORModSync.Core.Utility
             }
 
             if ( !guidString.EndsWith( value: "}", StringComparison.Ordinal ) ) guidString += "}";
-
 
             return guidString;
         }
@@ -268,7 +267,6 @@ namespace KOTORModSync.Core.Utility
                 ? throw new ArgumentNullException( nameof( jObject ) )
                 : jObject.Properties()
                     .ToDictionary( property => property.Name, property => ConvertJTokenToObject( property.Value ) );
-
 
         [CanBeNull]
         public static List<object> SerializeIntoList( [CanBeNull] object obj )

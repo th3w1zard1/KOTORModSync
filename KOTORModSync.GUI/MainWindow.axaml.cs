@@ -130,7 +130,7 @@ namespace KOTORModSync
         }
 
         private MainConfig MainConfigInstance { get; set; }
-        [NotNull] private Component _currentComponent = new Component(); // todo: NotNull or CanBeNull? Update code to be consistent.
+        [CanBeNull] private Component _currentComponent;
         private bool _installRunning;
 
         private string _originalContent;
@@ -745,6 +745,9 @@ namespace KOTORModSync
         {
             try
             {
+                if ( _currentComponent is null )
+                    return;
+
                 _currentComponent.Guid = Guid.NewGuid();
                 LoadComponentDetails( _currentComponent );
             }
@@ -947,7 +950,7 @@ namespace KOTORModSync
         {
             try
             {
-                (bool success, string informationMessage) = await PreinstallValidation();
+                ( bool success, string informationMessage ) = await PreinstallValidation();
                 await InformationDialog.ShowInformationDialog( this, informationMessage );
             }
             catch ( Exception ex )
@@ -999,7 +1002,7 @@ namespace KOTORModSync
 
                 // todo:
                 if ( MainConfig.AllComponents.Any(
-                        c => c.Dependencies?.Any( g => g == _currentComponent.Guid ) == true
+                        c => c.Dependencies.Any( g => g == _currentComponent.Guid ) == true
                     ) )
                 {
                     await InformationDialog.ShowInformationDialog(
@@ -1478,7 +1481,7 @@ namespace KOTORModSync
                 // if not selected, find the index of the _currentComponent.
                 if ( index < 0 || index >= MainConfig.AllComponents.Count )
                 {
-                    index = MainConfig.AllComponents.FindIndex( c => c.Equals( _currentComponent ) );
+                    index = MainConfig.AllComponents.FindIndex( c => c == _currentComponent );
                 }
 
                 if ( index < 0 && _currentComponent is null )
@@ -1490,7 +1493,7 @@ namespace KOTORModSync
                         + " Ensure you single-clicked on a component on the left before pressing save."
                         + " Please back up your work and try again.";
 
-                    return (false, errorMessage);
+                    return ( false, errorMessage );
                 }
 
                 // Update the properties of the component
@@ -1552,7 +1555,7 @@ namespace KOTORModSync
             try
             {
                 if ( !( LeftTreeView.SelectedItem is TreeViewItem selectedTreeViewItem )
-                    || !( selectedTreeViewItem.Parent is ItemsControl parentItemsControl ) )
+                    || !( selectedTreeViewItem.Parent is ItemsControl ) )
                 {
                     return;
                 }
@@ -1706,6 +1709,7 @@ namespace KOTORModSync
             if ( component is null )
                 throw new ArgumentNullException( nameof( component ) );
 
+            visitedComponents = visitedComponents ?? new HashSet<Component>();
             try
             {
                 // Check if the component has already been visited
@@ -1725,8 +1729,8 @@ namespace KOTORModSync
                     .FirstOrDefault();
                 if ( rootItem != null )
                 {
-                    var headerPanel = rootItem.Header as DockPanel;
-                    CheckBox checkBox = headerPanel.Children.OfType<CheckBox>()
+                    var headerPanel = (DockPanel)rootItem.Header ?? throw new InvalidCastException("Your TreeView isn't supported.");
+                    CheckBox checkBox = headerPanel.Children?.OfType<CheckBox>()
                         .FirstOrDefault();
 
                     if ( checkBox != null && !suppressErrors )
@@ -1754,8 +1758,11 @@ namespace KOTORModSync
             }
         }
 
-        private CheckBox CreateComponentCheckbox( [CanBeNull] Component component )
+        private CheckBox CreateComponentCheckbox( [NotNull] Component component )
         {
+            if ( component is null )
+                throw new ArgumentNullException( nameof( component ) );
+
             var checkBox = new CheckBox
             {
                 Name = "IsSelected",
@@ -2142,8 +2149,8 @@ namespace KOTORModSync
 
         public class RelayCommand : ICommand
         {
-            private readonly Func<object, bool> _canExecute;
-            private readonly Action<object> _execute;
+            [CanBeNull] private readonly Func<object, bool> _canExecute;
+            [NotNull] private readonly Action<object> _execute;
 
             public RelayCommand( [NotNull] Action<object> execute, [CanBeNull] Func<object, bool> canExecute = null )
             {
@@ -2153,8 +2160,8 @@ namespace KOTORModSync
 
             [UsedImplicitly] public event EventHandler CanExecuteChanged;
 
-            public bool CanExecute( object parameter ) => _canExecute == null || _canExecute( parameter );
-            public void Execute( object parameter ) => _execute?.Invoke( parameter );
+            public bool CanExecute( object parameter ) => _canExecute?.Invoke( parameter ) == true;
+            public void Execute( object parameter ) => _execute( parameter );
         }
 
 

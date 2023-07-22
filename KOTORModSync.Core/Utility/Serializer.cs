@@ -7,11 +7,10 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Text.RegularExpressions;
 using JetBrains.Annotations;
 using Newtonsoft.Json;
-using Tomlyn.Model;
+using Newtonsoft.Json.Linq;
 
 // ReSharper disable UnusedMember.Global
 namespace KOTORModSync.Core.Utility
@@ -209,164 +208,74 @@ namespace KOTORModSync.Core.Utility
         [CanBeNull]
         public static object SerializeObject( [CanBeNull] object obj )
         {
-            Type type = obj.GetType();
-
             switch ( obj )
             {
-                // do nothing if it's already a simple type.
+                case null:
+                    return null;
                 case IConvertible _:
                 case IFormattable _:
                 case IComparable _:
                     return obj.ToString();
-                // handle generic list types
                 case IList objList:
-                    return SerializeList( objList );
-            }
-
-            var serializedProperties = new Dictionary<string, object>();
-
-            IEnumerable<object> members;
-            switch ( obj )
-            {
-                // IDictionary types
-                case IDictionary mainDictionary:
-                    IEnumerator enumerator = mainDictionary.GetEnumerator();
-                    members = EnumerateDictionaryEntries( enumerator );
-                    break;
-
-                // class instance types
+                    return SerializeIntoList( objList );
+                case IDictionary objDict:
+                    return SerializeIntoDictionary( objDict );
+                case var _ when obj.GetType().IsClass:
+                    return SerializeIntoDictionary( obj );
                 default:
-                    members = type.GetMembers(
-                        BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly
-                    );
-                    break;
+                    return obj.ToString();
             }
-
-            foreach ( object member in members )
-            {
-                object value = null;
-                string memberName = null;
-
-                switch ( member )
-                {
-                    case KeyValuePair<object, object> dictionaryEntry:
-                        memberName = dictionaryEntry.Key.ToString();
-                        value = dictionaryEntry.Value;
-                        break;
-                    case PropertyInfo property when property.CanRead
-                        && !property.GetMethod.IsStatic
-                        && !Attribute.IsDefined( property, typeof( JsonIgnoreAttribute ) )
-                        && property.DeclaringType == obj.GetType():
-                        {
-                            value = property.GetValue( obj );
-                            memberName = property.Name;
-                            break;
-                        }
-                    case FieldInfo field
-                        when !field.IsStatic && !Attribute.IsDefined( field, typeof( JsonIgnoreAttribute ) ):
-                        {
-                            value = field.GetValue( obj );
-                            memberName = field.Name;
-                            break;
-                        }
-                }
-
-                switch ( value )
-                {
-                    case null:
-                        continue;
-                    case string valueStr:
-                        serializedProperties[memberName] = valueStr;
-                        break;
-                    case IDictionary dictionary:
-                        {
-                            var newDictionary = new Dictionary<string, object>();
-
-                            foreach ( DictionaryEntry entry in dictionary )
-                            {
-                                string key = entry.Key.ToString();
-                                object value2 = SerializeObject( entry.Value );
-                                newDictionary.Add( key, value2 );
-                            }
-
-                            serializedProperties[memberName] = newDictionary;
-
-                            break;
-                        }
-
-                    case IList list:
-                        {
-                            serializedProperties[memberName] = SerializeList( list );
-                            break;
-                        }
-                    default:
-                        {
-                            if ( value.GetType().IsNested )
-                            {
-                                serializedProperties[memberName] = SerializeObject( value );
-                                continue;
-                            }
-
-                            serializedProperties[memberName] = value.ToString();
-
-                            break;
-                        }
-                }
-            }
-
-            return serializedProperties.Count > 0
-                ? serializedProperties
-                : (object)obj.ToString();
         }
 
-        // ReSharper disable once SuggestBaseTypeForParameter
+        [NotNull]
+        internal static Dictionary<string, object> SerializeIntoDictionary( [CanBeNull] object obj )
+        {
+            var settings = new JsonSerializerSettings
+            {
+                TypeNameHandling = TypeNameHandling.None,
+            };
+
+            string jsonString = JsonConvert.SerializeObject( obj, settings );
+            var jsonObject = JObject.Parse( jsonString );
+
+            return ConvertJObjectToDictionary( jsonObject );
+        }
+
         [CanBeNull]
-        private static TomlArray SerializeList( [CanBeNull][ItemCanBeNull] IList list )
+        private static object ConvertJTokenToObject( [CanBeNull] JToken token )
         {
-            var serializedList = new TomlArray();
-
-            if ( list is null )
+            switch ( token )
             {
-                return serializedList;
+                case JObject jObject:
+                    return ConvertJObjectToDictionary( jObject );
+                case JArray jArray:
+                    return ConvertJArrayToList( jArray );
+                default:
+                    return ( (JValue)token )?.Value;
             }
-
-            foreach ( object item in list )
-            {
-                if ( item is null )
-                    continue;
-
-                if ( item.GetType().IsPrimitive || item is string )
-                {
-                    serializedList.Add( item.ToString() );
-                    continue;
-                }
-
-                if ( item is IList nestedList )
-                    serializedList.Add( SerializeList( nestedList ) );
-                else
-                    serializedList.Add( SerializeObject( item ) );
-            }
-
-            return serializedList;
         }
 
-        /*
-        public static bool IsNonClassEnumerable( object obj )
+        [NotNull]
+        private static List<object> ConvertJArrayToList( [NotNull] JArray jArray ) =>
+            jArray is null
+                ? throw new ArgumentNullException( nameof( jArray ) )
+                : jArray.Select( ConvertJTokenToObject )
+                    .ToList();
+
+        [NotNull]
+        private static Dictionary<string, object> ConvertJObjectToDictionary( [NotNull] JObject jObject ) =>
+            jObject is null
+                ? throw new ArgumentNullException( nameof( jObject ) )
+                : jObject.Properties()
+                    .ToDictionary( property => property.Name, property => ConvertJTokenToObject( property.Value ) );
+
+
+        [CanBeNull]
+        public static List<object> SerializeIntoList( [CanBeNull] object obj )
         {
-            Type type = obj.GetType();
-
-            // Check if the type is assignable from IEnumerable, not a string, and not a class instance
-            bool isNonClassEnumerable = typeof( IEnumerable ).IsAssignableFrom( type )
-                && type != typeof( string )
-                && ( !type.IsClass || type.IsSealed || type.IsAbstract );
-
-            // Check if the object is a custom type (excluding dynamic types and proxy objects)
-            bool isCustomType = type.FullName != null
-                && ( type.Assembly.FullName.StartsWith( "Dynamic" )
-                    || type.FullName.Contains( "__TransparentProxy" ) );
-            isNonClassEnumerable &= !isCustomType;
-
-            return isNonClassEnumerable;
-        }*/
+            // Use Newtonsoft.Json for serialization and deserialization
+            string jsonString = JsonConvert.SerializeObject( obj );
+            return JsonConvert.DeserializeObject<List<object>>( jsonString );
+        }
     }
 }

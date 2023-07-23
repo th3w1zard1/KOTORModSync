@@ -4,6 +4,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using JetBrains.Annotations;
@@ -14,7 +15,7 @@ using SharpCompress.Archives.SevenZip;
 
 namespace KOTORModSync.Core
 {
-    public class ComponentValidation
+    public sealed class ComponentValidation
     {
         public enum ArchivePathCode
         {
@@ -30,8 +31,7 @@ namespace KOTORModSync.Core
         [NotNull] private readonly List<ValidationResult> _validationResults = new List<ValidationResult>();
         [NotNull] public readonly Component ComponentToValidate;
 
-        [NotNull]
-        public readonly List<Component> ComponentsList;
+        [NotNull] private readonly List<Component> ComponentsList;
 
         public ComponentValidation( [NotNull] Component component, [NotNull] List<Component> componentsList )
         {
@@ -53,37 +53,45 @@ namespace KOTORModSync.Core
         private void AddWarning( [CanBeNull] string message, [CanBeNull] Instruction instruction ) =>
             _validationResults.Add( new ValidationResult( this, instruction, message, isError: false ) );
 
+        [NotNull]
         public List<string> GetErrors() =>
             _validationResults.Where( r => r.IsError )
                 .Select( r => r.Message )
                 .ToList();
 
+        [NotNull]
         public List<string> GetErrors( int instructionIndex ) =>
             _validationResults.Where( r => r.InstructionIndex == instructionIndex && r.IsError )
                 .Select( r => r.Message )
                 .ToList();
 
+        [NotNull]
         public List<string> GetErrors( [CanBeNull] Instruction instruction ) =>
             _validationResults.Where( r => r.Instruction == instruction && r.IsError )
                 .Select( r => r.Message )
                 .ToList();
 
+        [NotNull]
         public List<string> GetWarnings() =>
             _validationResults.Where( r => !r.IsError )
                 .Select( r => r.Message )
                 .ToList();
 
+        [NotNull]
         public List<string> GetWarnings( int instructionIndex ) =>
             _validationResults.Where( r => r.InstructionIndex == instructionIndex && !r.IsError )
                 .Select( r => r.Message )
                 .ToList();
 
+        [NotNull]
         public List<string> GetWarnings( [CanBeNull] Instruction instruction ) =>
             _validationResults.Where( r => r.Instruction == instruction && !r.IsError )
                 .Select( r => r.Message )
                 .ToList();
 
-        public bool VerifyExtractPaths()
+        [SuppressMessage("ReSharper",
+            "HeuristicUnreachableCode")]
+        private bool VerifyExtractPaths()
         {
             try
             {
@@ -122,6 +130,7 @@ namespace KOTORModSync.Core
                     }
 
                     bool archiveNameFound = true;
+                    // ReSharper disable once ConditionIsAlwaysTrueOrFalse
                     if ( instruction.Source is null )
                     {
                         AddWarning( message: "Instruction does not have a 'Source' key defined", instruction );
@@ -201,7 +210,8 @@ namespace KOTORModSync.Core
             }
         }
 
-        public List<string> GetAllArchivesFromInstructions()
+        [NotNull]
+        private List<string> GetAllArchivesFromInstructions()
         {
             var allArchives = new List<string>();
 
@@ -250,15 +260,13 @@ namespace KOTORModSync.Core
                     }
 
                     AddError( "Missing required download:" + $" '{Path.GetFileName( realSourcePath )}'", instruction );
-
-                    continue;
                 }
             }
 
             return allArchives;
         }
 
-        public bool ParseDestinationWithAction()
+        private bool ParseDestinationWithAction()
         {
             bool success = true;
             foreach ( Instruction instruction in ComponentToValidate.Instructions )
@@ -351,6 +359,7 @@ namespace KOTORModSync.Core
             return success;
         }
 
+        [NotNull]
         private static string GetErrorDescription( ArchivePathCode code )
         {
             switch ( code )
@@ -373,7 +382,7 @@ namespace KOTORModSync.Core
             }
         }
 
-        public (bool, bool) IsSourcePathInArchives(
+        private (bool, bool) IsSourcePathInArchives(
             [NotNull] string sourcePath,
             [NotNull] List<string> allArchives,
             [NotNull] Instruction instruction
@@ -456,9 +465,9 @@ namespace KOTORModSync.Core
         private static ArchivePathCode IsPathInArchive( [NotNull] string relativePath, [NotNull] string archivePath )
         {
             if ( relativePath is null )
-throw new ArgumentNullException( nameof( relativePath ) );
+                throw new ArgumentNullException( nameof( relativePath ) );
             if ( archivePath is null )
-throw new ArgumentNullException( nameof( archivePath ) );
+                throw new ArgumentNullException( nameof( archivePath ) );
 
             if ( !ArchiveHelper.IsArchive( archivePath ) )
             {

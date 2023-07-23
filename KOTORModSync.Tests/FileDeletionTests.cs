@@ -86,14 +86,14 @@ namespace KOTORModSync.Tests
             // Arrange
             string directory = Path.Combine( _testDirectory, path2: "Duplicates" );
             _ = Directory.CreateDirectory( directory );
-            string file1 = Path.Combine( directory, path2: "FILE.Tga" );
-            string file2 = Path.Combine( directory, path2: "fIle.tPc" );
+            string file1 = Path.Combine( directory, path2: "FILE.tga" );
+            string file2 = Path.Combine( directory, path2: "fIle.tpc" );
             File.WriteAllText( file1, contents: "Content 1" );
             File.WriteAllText( file2, contents: "Content 2" );
             string fileExtension = ".tga";
 
             // Act
-            new Instruction().DeleteDuplicateFile( new DirectoryInfo( directory ), fileExtension );
+            new Instruction().DeleteDuplicateFile( new DirectoryInfo( directory ), fileExtension, caseInsensitive: true );
 
             // Assert
             Assert.Multiple(

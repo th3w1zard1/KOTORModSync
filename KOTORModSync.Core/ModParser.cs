@@ -14,11 +14,13 @@ namespace KOTORModSync.Core
     {
         private const string Separator = "__";
 
+        [CanBeNull]
         public static List<Component> ParseMods( [CanBeNull] string source ) => source?
             .Split( new[] { Separator }, StringSplitOptions.RemoveEmptyEntries )
             .Select( ParseMod )
             .ToList();
 
+        [NotNull]
         private static Component ParseMod( [NotNull] string modText )
         {
             if ( modText is null )

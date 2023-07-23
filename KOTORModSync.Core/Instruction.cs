@@ -317,13 +317,13 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
             // internal args
             if ( directoryPath is null )
                 directoryPath = RealDestinationPath;
+            if ( directoryPath?.Exists != true )
+                throw new ArgumentException( message: "Invalid directory path.", nameof( directoryPath ) );
+
             if ( string.IsNullOrEmpty( fileExtension ) )
                 fileExtension = Arguments;
 
-            if ( !directoryPath?.Exists != true )
-                throw new ArgumentException( message: "Invalid directory path.", nameof( directoryPath ) );
-
-            if (compatibleExtensions?.Count == 0)
+            if (compatibleExtensions is null || compatibleExtensions.Count == 0)
                 compatibleExtensions = new List<string> {".tga", ".tpc", ".dds", ".txi"};
 
             string[] files = Directory.GetFiles( directoryPath.FullName );
@@ -338,12 +338,18 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
 
                 bool compatibleExtensionFound = caseInsensitive
                     // ReSharper disable once AssignNullToNotNullAttribute
+                    // ReSharper disable once PossibleNullReferenceException
                     ? compatibleExtensions.Any(ext => ext.Equals(thisExtension, StringComparison.OrdinalIgnoreCase))
                     // ReSharper disable once PossibleNullReferenceException
                     : compatibleExtensions.Contains( thisExtension );
 
                 if ( compatibleExtensionFound )
-                    fileNameCounts[fileNameWithoutExtension]++;
+                {
+                    if ( fileNameCounts.TryGetValue(fileNameWithoutExtension, out int _) )
+                        fileNameCounts[fileNameWithoutExtension]++;
+                    else
+                        fileNameCounts[fileNameWithoutExtension] = 1;
+                }
             }
 
             foreach ( string filePath in files )
@@ -443,7 +449,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
         {
             if ( sourcePaths is null )
                 sourcePaths = Source;
-            if ( sourcePaths?.Count == 0 )
+            if ( sourcePaths.Count == 0 )
                 throw new ArgumentNullException( nameof( sourcePaths ) );
 
             try

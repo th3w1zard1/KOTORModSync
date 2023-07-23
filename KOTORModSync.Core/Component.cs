@@ -280,7 +280,7 @@ namespace KOTORModSync.Core
 
         private void DeserializeComponent( [NotNull] IDictionary<string, object> componentDict )
         {
-            if ( !( componentDict is TomlTable _ ) )
+            if ( !( componentDict is TomlTable ) )
             {
                 throw new ArgumentException( "[TomlError] Expected a TOML table for component data." );
             }
@@ -351,7 +351,7 @@ namespace KOTORModSync.Core
         public static string GenerateModDocumentation( [NotNull][ItemNotNull] List<Component> componentsList )
         {
             if ( componentsList is null )
-throw new ArgumentNullException( nameof( componentsList ) );
+                throw new ArgumentNullException( nameof( componentsList ) );
 
             var sb = new StringBuilder();
             const string indentation = "    ";
@@ -538,7 +538,7 @@ throw new ArgumentNullException( nameof( componentsList ) );
         /// for the specified key is required or not. If `required` is set to `true` and the value is missing or
         /// invalid, an exception will be thrown. If `required` is set to `false`, a default value</param>
         /// <returns>
-        /// The method `GetValue<T>` returns a value of type `T`.
+        /// The method `GetValue{T}` returns a value of type `T`.
         /// </returns>
         [CanBeNull]
         private static T GetValue<T>( [NotNull] IDictionary<string, object> dict, [NotNull] string key, bool required )
@@ -601,7 +601,7 @@ throw new ArgumentNullException( nameof( componentsList ) );
                     {
                         foreach ( object item in enumerableValue )
                         {
-                            if (System.Guid.TryParse( item?.ToString(), out Guid guidItem ))
+                            if (Guid.TryParse( item?.ToString(), out Guid guidItem ))
                                 _ = addMethod?.Invoke( list, new[] { (object)guidItem } );
                             else
                                 _ = addMethod?.Invoke( list, new[] { item } );
@@ -1195,6 +1195,7 @@ throw new ArgumentNullException( nameof( componentsList ) );
             return foundComponent;
         }
 
+        [NotNull]
         public static List<Component> FindComponentsFromGuidList(
             [NotNull] List<Guid> guidsToFind,
             [NotNull] List<Component> componentsList
@@ -1270,6 +1271,7 @@ throw new ArgumentNullException( nameof( componentsList ) );
             orderedComponents.Add( node.Component );
         }
 
+        [NotNull]
         private static Dictionary<Guid, GraphNode> CreateDependencyGraph( [NotNull][ItemNotNull] List<Component> components )
         {
             if ( components is null )
@@ -1303,12 +1305,12 @@ throw new ArgumentNullException( nameof( componentsList ) );
             return nodeMap;
         }
 
-        public class GraphNode
+        public sealed class GraphNode
         {
-            public Component Component { get; }
-            public HashSet<GraphNode> Dependencies { get; }
+            internal Component Component { get; }
+            internal HashSet<GraphNode> Dependencies { get; }
 
-            public GraphNode( [CanBeNull] Component component )
+            internal GraphNode( [CanBeNull] Component component )
             {
                 Component = component;
                 Dependencies = new HashSet<GraphNode>();
@@ -1336,7 +1338,7 @@ throw new ArgumentNullException( nameof( componentsList ) );
 
         public void DeleteInstruction( int index ) => Instructions.RemoveAt( index );
 
-        public void MoveInstructionToIndex( Instruction thisInstruction, int index )
+        public void MoveInstructionToIndex( [NotNull] Instruction thisInstruction, int index )
         {
             if ( thisInstruction is null || index < 0 || index >= Instructions.Count )
             {
@@ -1368,7 +1370,7 @@ throw new ArgumentNullException( nameof( componentsList ) );
         // used for the ui.
         public event PropertyChangedEventHandler PropertyChanged;
 
-        protected virtual void OnPropertyChanged( [CallerMemberName] string propertyName = null ) =>
+        protected virtual void OnPropertyChanged( [CallerMemberName] [CanBeNull] string propertyName = null ) =>
             PropertyChanged?.Invoke( this, new PropertyChangedEventArgs( propertyName ) );
     }
 }

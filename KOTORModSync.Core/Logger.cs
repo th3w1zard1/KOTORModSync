@@ -135,9 +135,9 @@ namespace KOTORModSync.Core
             ExceptionLogged.Invoke( ex ); // Raise the ExceptionLogged event
         }
 
-        private static void CurrentDomain_UnhandledException( [CanBeNull] object sender, UnhandledExceptionEventArgs e )
+        private static void CurrentDomain_UnhandledException( [NotNull] object sender, [NotNull] UnhandledExceptionEventArgs e )
         {
-            if ( !( e?.ExceptionObject is Exception ex ) )
+            if ( !( e.ExceptionObject is Exception ex ) )
             {
                 LogError( "appdomain's unhandledexception did not have a valid exception handle?" );
                 return;
@@ -147,11 +147,11 @@ namespace KOTORModSync.Core
         }
 
         private static void TaskScheduler_UnobservedTaskException(
-            [CanBeNull] object sender,
-            UnobservedTaskExceptionEventArgs e
+            [NotNull] object sender,
+            [NotNull] UnobservedTaskExceptionEventArgs e
         )
         {
-            if ( e?.Exception is null )
+            if ( e.Exception is null )
             {
                 LogError( "appdomain's unhandledexception did not have a valid exception handle?" );
                 return;

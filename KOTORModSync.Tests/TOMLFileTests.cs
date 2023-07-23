@@ -2,9 +2,7 @@
 // Licensed under the GNU General Public License v3.0 (GPLv3).
 // See LICENSE.txt file in the project root for full license information.
 
-using System.Collections;
 using System.Diagnostics;
-using System.Reflection;
 using System.Text;
 using JetBrains.Annotations;
 using KOTORModSync.Core;
@@ -205,7 +203,7 @@ namespace KOTORModSync.Tests
 
         private static string ConvertFieldNamesAndValuesToMixedCase( string tomlContents )
         {
-            var convertedContents = new StringBuilder( 10000 );
+            var convertedContents = new StringBuilder( );
             var random = new Random();
 
             bool isFieldName = true; // Flag to determine if the current item is a field name or field value
@@ -432,11 +430,11 @@ namespace KOTORModSync.Tests
             Logger.Log( Tomlyn.Toml.FromModel(rootTable) );
         }
 
-        private static void AssertComponentEquality( object obj, object another )
+        private static void AssertComponentEquality( object? obj, object? another )
         {
             if ( ReferenceEquals( obj, another ) )
                 return;
-            if ( ( obj == null ) || ( another == null ) )
+            if ( obj is null || another is null )
                 return;
             if ( obj.GetType() != another.GetType() )
                 return;

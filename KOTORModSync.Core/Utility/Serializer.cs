@@ -5,14 +5,12 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using JetBrains.Annotations;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using Tomlyn.Model;
 
 // ReSharper disable UnusedMember.Global
 namespace KOTORModSync.Core.Utility
@@ -54,7 +52,7 @@ namespace KOTORModSync.Core.Utility
         // converts accidental lists into strings and vice versa
         public static void DeserializePathInDictionary( [NotNull] IDictionary<string, object> dict, [NotNull] string key )
         {
-            if ( dict?.Count == 0 )
+            if ( dict.Count == 0 )
                 throw new ArgumentException( message: "Value cannot be null or empty.", nameof(dict) );
             if ( string.IsNullOrEmpty( key ) )
                 throw new ArgumentException( message: "Value cannot be null or empty.", nameof(key) );
@@ -266,86 +264,6 @@ namespace KOTORModSync.Core.Utility
             // Use Newtonsoft.Json for serialization and deserialization
             string jsonString = JsonConvert.SerializeObject( obj );
             return JsonConvert.DeserializeObject<List<object>>( jsonString );
-        }
-    }
-
-    public static class ObjectToDictionaryHelper
-    {
-        public static IDictionary<string, object> ToDictionary( this object source )
-        {
-            return source.ToDictionary<object>();
-        }
-
-        public static IDictionary<string, T> ToDictionary<T>( this object source )
-        {
-            if ( source == null )
-                ThrowExceptionWhenSourceArgumentIsNull();
-
-            var dictionary = new Dictionary<string, T>();
-            ConvertPropertiesToDictionary( source, dictionary );
-            return dictionary;
-        }
-
-        private static void ConvertPropertiesToDictionary<T>( object source, IDictionary<string, T> dictionary )
-        {
-            foreach ( PropertyDescriptor property in TypeDescriptor.GetProperties( source ) )
-            {
-                object value = property.GetValue( source );
-
-                if ( value == null )
-                {
-                    dictionary.Add( property.Name, default( T ) );
-                }
-                else if ( IsOfType<T>( value ) )
-                {
-                    dictionary.Add( property.Name, (T)value );
-                }
-                else if ( value is IDictionary nestedDictionary )
-                {
-                    var convertedNestedDictionary = ConvertNestedDictionary( nestedDictionary );
-                    dictionary.Add( property.Name, (T)Convert.ChangeType( convertedNestedDictionary, typeof( T ) ) );
-                }
-                else if ( value is IEnumerable enumerable )
-                {
-                    var convertedEnumerable = ConvertEnumerable( enumerable );
-                    dictionary.Add( property.Name, (T)Convert.ChangeType( convertedEnumerable, typeof( T ) ) );
-                }
-                else
-                {
-                    var convertedNestedObject = ToDictionary( value );
-                    dictionary.Add( property.Name, (T)Convert.ChangeType( convertedNestedObject, typeof( T ) ) );
-                }
-            }
-        }
-
-        private static IDictionary<string, object> ConvertNestedDictionary( IDictionary nestedDictionary )
-        {
-            var convertedNestedDictionary = new Dictionary<string, object>();
-            foreach ( DictionaryEntry entry in nestedDictionary )
-            {
-                convertedNestedDictionary.Add( entry.Key.ToString(), entry.Value );
-            }
-            return convertedNestedDictionary;
-        }
-
-        private static IEnumerable<object> ConvertEnumerable( IEnumerable enumerable )
-        {
-            var convertedEnumerable = new List<object>();
-            foreach ( var item in enumerable )
-            {
-                convertedEnumerable.Add( item );
-            }
-            return convertedEnumerable;
-        }
-
-        private static bool IsOfType<T>( object value )
-        {
-            return value is T;
-        }
-
-        private static void ThrowExceptionWhenSourceArgumentIsNull()
-        {
-            throw new ArgumentNullException( "source", "Unable to convert object to a dictionary. The source object is null." );
         }
     }
 }

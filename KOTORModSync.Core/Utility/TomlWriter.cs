@@ -4,7 +4,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Text;
 using JetBrains.Annotations;
 
@@ -15,7 +14,7 @@ namespace KOTORModSync.Core.Utility
         [NotNull]
         public static string WriteString( [NotNull] Dictionary<string, object> data )
         {
-            if ( data?.Count == 0 )
+            if ( data.Count == 0 )
             {
                 throw new ArgumentException( message: "Value cannot be null or an empty collection.",
                     nameof(data) );

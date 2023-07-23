@@ -66,7 +66,7 @@ namespace KOTORModSync.Core.Utility
                 throw new ArgumentNullException( nameof( folderDict ) );
 
             // Check if the directory exists and if we have access to it.
-            if ( directory?.Exists != true )
+            if ( directory.Exists != true )
                 throw new DirectoryNotFoundException( "Directory not found." );
 
             // Search for files and add them to the file dictionary.
@@ -79,9 +79,8 @@ namespace KOTORModSync.Core.Utility
                 {
                     fileList = new List<FileSystemInfo>();
                     fileDict.Add( file.Name, fileList );
+                    fileList.Add( file );
                 }
-
-                fileList.Add( file );
             }
 
             // Search for subdirectories and add them to the folder dictionary.
@@ -239,10 +238,13 @@ namespace KOTORModSync.Core.Utility
             return availableMemory;
         }
 
-        private static long ParseAvailableMemory( string output, [CanBeNull] string command )
+        private static long ParseAvailableMemory( [NotNull] string output, [CanBeNull] string command )
         {
-            string pattern = string.Empty;
+            if ( string.IsNullOrWhiteSpace( output ) )
+                throw new ArgumentException( message: "Value cannot be null or whitespace.",
+                    nameof(output) );
 
+            string pattern = string.Empty;
             switch ( command )
             {
                 case "sysctl":
@@ -314,6 +316,9 @@ namespace KOTORModSync.Core.Utility
                 {
                     return executable;
                 }
+
+                if ( executable == null )
+                    throw new NullReferenceException(nameof(executable));
 
                 string fullExecutablePath = Path.Combine( Environment.SystemDirectory, executable );
                 if ( File.Exists( fullExecutablePath ) )
@@ -463,60 +468,74 @@ namespace KOTORModSync.Core.Utility
 
         private static class Interop
         {
-            [DllImport( "libc" )]
+            [DllImport( dllName: "libc" )]
             public static extern uint geteuid();
         }
 
+        [NotNull]
         private static List<ProcessStartInfo> GetProcessStartInfos(
             [NotNull] FileInfo programFile,
-            [NotNull] string cmdlineArgs
-        ) => new List<ProcessStartInfo>
+            [CanBeNull] string cmdlineArgs
+        )
         {
-            // top-level, preferred ProcessStartInfo args. Provides the most flexibility with our code.
-            new ProcessStartInfo
+            if ( programFile == null )
+                throw new ArgumentNullException( nameof(programFile) );
+
+            cmdlineArgs = cmdlineArgs ?? string.Empty;
+
+            return new List<ProcessStartInfo>
             {
-                FileName = programFile.FullName,
-                Arguments = cmdlineArgs,
-                UseShellExecute = false,
-                CreateNoWindow = true,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                RedirectStandardInput = true,
-                ErrorDialog = false,
-                WindowStyle = ProcessWindowStyle.Hidden,
-            },
-            // perhaps the error dialog was the problem.
-            new ProcessStartInfo
-            {
-                FileName = programFile.FullName,
-                Arguments = cmdlineArgs,
-                UseShellExecute = false,
-                CreateNoWindow = false,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                RedirectStandardInput = true,
-                WindowStyle = ProcessWindowStyle.Hidden,
-            },
-            // if it's not a console app or command, it needs a window.
-            new ProcessStartInfo
-            {
-                FileName = programFile.FullName,
-                Arguments = cmdlineArgs,
-                UseShellExecute = false,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                RedirectStandardInput = true,
-            },
-            // try without redirecting output
-            new ProcessStartInfo { FileName = programFile.FullName, Arguments = cmdlineArgs, UseShellExecute = false },
-            // try using native shell (doesn't support output redirection, perhaps they need admin)
-            new ProcessStartInfo
-            {
-                FileName = programFile.FullName,
-                Arguments = cmdlineArgs,
-                UseShellExecute = IsShellExecutionSupported(), // not supported on all OS's.
-            },
-        };
+                // top-level, preferred ProcessStartInfo args. Provides the most flexibility with our code.
+                new ProcessStartInfo
+                {
+                    FileName = programFile.FullName,
+                    Arguments = cmdlineArgs,
+                    UseShellExecute = false,
+                    CreateNoWindow = true,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    RedirectStandardInput = true,
+                    ErrorDialog = false,
+                    WindowStyle = ProcessWindowStyle.Hidden,
+                },
+                // perhaps the error dialog was the problem.
+                new ProcessStartInfo
+                {
+                    FileName = programFile.FullName,
+                    Arguments = cmdlineArgs,
+                    UseShellExecute = false,
+                    CreateNoWindow = false,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    RedirectStandardInput = true,
+                    WindowStyle = ProcessWindowStyle.Hidden,
+                },
+                // if it's not a console app or command, it needs a window.
+                new ProcessStartInfo
+                {
+                    FileName = programFile.FullName,
+                    Arguments = cmdlineArgs,
+                    UseShellExecute = false,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    RedirectStandardInput = true,
+                },
+                // try without redirecting output
+                new ProcessStartInfo
+                {
+                    FileName = programFile.FullName,
+                    Arguments = cmdlineArgs,
+                    UseShellExecute = false,
+                },
+                // try using native shell (doesn't support output redirection, perhaps they need admin)
+                new ProcessStartInfo
+                {
+                    FileName = programFile.FullName,
+                    Arguments = cmdlineArgs,
+                    UseShellExecute = IsShellExecutionSupported(), // not supported on all OS's.
+                },
+            };
+        }
 
         public static async Task<(int, string, string)> ExecuteProcessAsync(
             [CanBeNull] FileInfo programFile,
@@ -661,9 +680,7 @@ namespace KOTORModSync.Core.Utility
 
             if ( startedProcess )
             {
-                return
-                    (-2, string.Empty,
-                        string.Empty); // todo: figure out what scenario this return code will happen in.
+                return (-2, string.Empty, string.Empty); // todo: figure out what scenario this return code will happen in.
             }
 
             await Logger.LogAsync( "Process failed to start with all possible combinations of arguments." );

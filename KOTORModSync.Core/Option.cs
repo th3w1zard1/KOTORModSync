@@ -11,7 +11,7 @@ namespace KOTORModSync.Core
     public class Option
     {
         [NotNull] public string Name { get; set; } = string.Empty;
-        [NotNull] public Guid Guid { get; set; } = Guid.Empty;
+        public Guid Guid { get; set; } = Guid.Empty;
         [NotNull] public List<Guid> Dependencies { get; set; } = new List<Guid>();
         [NotNull] public List<Guid> Restrictions { get; set; } = new List<Guid>();
         [NotNull][ItemNotNull] public List<Instruction> Instructions { get; set; } = new List<Instruction>();

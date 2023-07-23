@@ -33,9 +33,12 @@ namespace KOTORModSync
             decimal progress
         )
         {
-            var progressWindow = new ProgressWindow { Owner = parentWindow };
-            progressWindow.ProgressTextBlock.Text = message;
-            progressWindow.ProgressBar.Value = (double)progress;
+            var progressWindow = new ProgressWindow
+                {
+                    Owner = parentWindow,
+                    ProgressTextBlock = { Text = message },
+                    ProgressBar = { Value = (double)progress },
+                };
 
             _ = await progressWindow.ShowDialog<bool?>( parentWindow );
         }

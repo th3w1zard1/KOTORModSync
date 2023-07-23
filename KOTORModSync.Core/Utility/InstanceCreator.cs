@@ -57,10 +57,15 @@ namespace KOTORModSync.Core.Utility
         }
 
         private static bool AreParametersCompatible(
-            ParameterInfo[] parameters,
-            [CanBeNull] object[] constructorParameters
+            [NotNull] ParameterInfo[] parameters,
+            [NotNull] object[] constructorParameters
         )
         {
+            if ( parameters == null )
+                throw new ArgumentNullException( nameof(parameters) );
+            if ( constructorParameters == null )
+                throw new ArgumentNullException( nameof(constructorParameters) );
+
             for ( int i = 0; i < parameters.Length; i++ )
             {
                 ParameterInfo parameter = parameters[i];

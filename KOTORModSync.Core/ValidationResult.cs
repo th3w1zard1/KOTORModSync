@@ -2,6 +2,7 @@
 // Licensed under the GNU General Public License v3.0 (GPLv3).
 // See LICENSE.txt file in the project root for full license information.
 
+using System;
 using JetBrains.Annotations;
 
 namespace KOTORModSync.Core
@@ -9,14 +10,17 @@ namespace KOTORModSync.Core
     public class ValidationResult
     {
         public ValidationResult(
-            ComponentValidation validator,
-            Instruction instruction,
+            [NotNull] ComponentValidation validator,
+            [NotNull] Instruction instruction,
             [CanBeNull] string message,
             bool isError
         )
         {
+            if ( validator == null )
+                throw new ArgumentNullException( nameof(validator) );
+
             Component = validator.ComponentToValidate;
-            Instruction = instruction;
+            Instruction = instruction ?? throw new ArgumentNullException(nameof(instruction));
             InstructionIndex = Component.Instructions.IndexOf( instruction );
             Message = message;
             IsError = isError;

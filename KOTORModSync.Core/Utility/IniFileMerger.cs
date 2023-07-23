@@ -2,14 +2,22 @@
 // Licensed under the GNU General Public License v3.0 (GPLv3).
 // See LICENSE.txt file in the project root for full license information.
 
+using System;
 using IniParser.Model;
+using JetBrains.Annotations;
 
 namespace KOTORModSync.Core.Utility
 {
     public static class IniFileMerger
     {
-        public static IniData MergeIniFiles( IniData iniData1, IniData iniData2 )
+        [NotNull]
+        public static IniData MergeIniFiles( [NotNull] IniData iniData1, [NotNull] IniData iniData2 )
         {
+            if ( iniData1 == null )
+                throw new ArgumentNullException( nameof(iniData1) );
+            if ( iniData2 == null )
+                throw new ArgumentNullException( nameof(iniData2) );
+
             var mergedIniData = new IniData();
 
             // Merge sections and keys from iniData1

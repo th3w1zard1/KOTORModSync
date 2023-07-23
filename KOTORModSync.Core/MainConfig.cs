@@ -19,8 +19,13 @@ namespace KOTORModSync.Core
     [SuppressMessage( category: "Performance", checkId: "CA1822:Mark members as static", Justification = "<Pending>" )]
     [SuppressMessage( category: "CodeQuality", checkId: "IDE0079:Remove unnecessary suppression", Justification = "<Pending>" )]
     [SuppressMessage( category: "ReSharper", checkId: "InconsistentNaming" )]
+    [SuppressMessage("ReSharper",
+        "MemberCanBePrivate.Global")]
+    [SuppressMessage("ReSharper",
+        "MemberCanBeInternal")]
     public class MainConfig : INotifyPropertyChanged
     {
+        [NotNull]
         public static string CurrentVersion => "0.8.4";
 
         public MainConfig()

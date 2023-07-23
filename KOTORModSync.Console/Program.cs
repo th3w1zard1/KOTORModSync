@@ -14,7 +14,7 @@ namespace KOTORModSync.ConsoleApp
 {
     internal static class Program
     {
-        public static MainConfig MainConfigInstance;
+        private static MainConfig MainConfigInstance;
 
         private static void Main( string[] args )
         {

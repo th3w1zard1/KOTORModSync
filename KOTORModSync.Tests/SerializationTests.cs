@@ -59,14 +59,14 @@ namespace KOTORModSync.Tests
             instance1.NestedInstance = new MyNestedClass( instance1 );
             instance1.GuidNestedClassDict = new Dictionary<Guid, List<MyNestedClass>>
             {
-                { Guid.NewGuid(), new List<MyNestedClass> { new( instance1 ) } }
+                { Guid.NewGuid(), new List<MyNestedClass> { new( instance1 ) } },
             };
 
             var instance2 = new MyClass();
             instance2.NestedInstance = new MyNestedClass( instance2 );
             instance2.GuidNestedClassDict = new Dictionary<Guid, List<MyNestedClass>>
             {
-                { Guid.NewGuid(), new List<MyNestedClass> { new( instance2 ), new( instance2 ) } }
+                { Guid.NewGuid(), new List<MyNestedClass> { new( instance2 ), new( instance2 ) } },
             };
 
             // Act & Assert

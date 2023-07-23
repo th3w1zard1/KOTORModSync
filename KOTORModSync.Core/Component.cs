@@ -9,6 +9,7 @@ using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
 using System.Text;
@@ -32,7 +33,7 @@ namespace KOTORModSync.Core
             DirectoryPermissionDenied,
 
             [Description( "Component installation failed." )]
-            ComponentInstallationFailed
+            ComponentInstallationFailed,
         }
 
         /*
@@ -115,18 +116,61 @@ namespace KOTORModSync.Core
         [NotNull]
         public string SerializeComponent()
         {
-            var rootTable = new Dictionary<string, List<object>>( StringComparer.OrdinalIgnoreCase )
+            var serializedComponentDict = Serializer.SerializeObject( this ) as Dictionary<string, object>;
+            var tomlString = new StringBuilder();
+
+            RemoveEmptyCollections( serializedComponentDict );
+
+            // not the cleanest solution, but it works.
+            var keysCopy = serializedComponentDict.Keys.ToList();
+            foreach ( string key in keysCopy )
             {
-                ["thisMod"] = new List<object> { Serializer.SerializeObject( this ) },
+                object value = serializedComponentDict[key];
+                if ( value is List<dynamic> propertyList )
+                {
+                    Type listEntriesType = propertyList.GetType().GetGenericArguments()[0];
+                    if ( !listEntriesType.IsClass || listEntriesType == typeof(string) )
+                        continue;
+
+                    bool found = false;
+                    foreach ( object classInstanceObj in propertyList )
+                    {
+                        if ( classInstanceObj == null )
+                            continue;
+
+                        if ( classInstanceObj is string )
+                            break;
+
+                        found = true;
+                        _ = tomlString.AppendLine(
+                            Toml.FromModel(
+                                new Dictionary<string, object>
+                                {
+                                    { "thisMod", new Dictionary<string, object>
+                                    {
+                                        {key, classInstanceObj},
+                                    } },
+                                }
+                            ).Replace( $"thisMod.{key}", $"[thisMod.{key}]" )
+                        );
+                    }
+
+                    if ( found )
+                        serializedComponentDict.Remove( key );
+                }
+            }
+
+            RemoveEmptyCollections( serializedComponentDict );
+
+            var rootTable = new Dictionary<string, object>( StringComparer.OrdinalIgnoreCase )
+            {
+                { "thisMod", serializedComponentDict },
             };
 
-            // ReSharper disable once AssignNullToNotNullAttribute
-            RemoveEmptyCollections( rootTable["thisMod"] );
-
-            string tomlString = Nett.Toml.WriteString( rootTable );
-            return string.IsNullOrWhiteSpace( tomlString )
+            _ = tomlString.Insert( index: 0, Toml.FromModel( rootTable ).Replace( "[thisMod]", "[[thisMod]]" ) );
+            return string.IsNullOrWhiteSpace( tomlString.ToString() )
                 ? throw new InvalidOperationException( message: "Could not serialize into a valid tomlin string" )
-                : Serializer.FixWhitespaceIssues( tomlString );
+                : Serializer.FixWhitespaceIssues( tomlString.ToString() );
         }
 
         private void RemoveEmptyCollections( [NotNull] IDictionary<string, object> thisTable )
@@ -201,7 +245,7 @@ namespace KOTORModSync.Core
             }
         }
 
-        private void RemoveEmptyCollections( [NotNull] IList<object> list )
+        private void RemoveEmptyCollections( [NotNull][ItemCanBeNull] IList<object> list )
         {
             if ( list is null )
                 throw new ArgumentNullException( nameof( list ) );
@@ -306,7 +350,8 @@ namespace KOTORModSync.Core
         [SuppressMessage("ReSharper", "ArgumentsStyleLiteral")]
         public static string GenerateModDocumentation( [NotNull][ItemNotNull] List<Component> componentsList )
         {
-            if ( componentsList is null ) throw new ArgumentNullException( nameof( componentsList ) );
+            if ( componentsList is null )
+throw new ArgumentNullException( nameof( componentsList ) );
 
             var sb = new StringBuilder();
             const string indentation = "    ";
@@ -481,13 +526,29 @@ namespace KOTORModSync.Core
             GetValue<T>( dict, key, required: false );
 
         // why did I do this...
+        /// <summary>
+        /// The function `GetValue` is a generic method that retrieves a value from a dictionary and performs
+        /// type conversion if necessary.
+        /// </summary>
+        /// <param name="dict">A dictionary that maps string keys to object values. This dictionary contains the
+        /// data from which the value will be retrieved.</param>
+        /// <param name="key">The `key` parameter is a string that represents the key of the value to retrieve
+        /// from the dictionary.</param>
+        /// <param name="required">The `required` parameter is a boolean flag that indicates whether the value
+        /// for the specified key is required or not. If `required` is set to `true` and the value is missing or
+        /// invalid, an exception will be thrown. If `required` is set to `false`, a default value</param>
+        /// <returns>
+        /// The method `GetValue<T>` returns a value of type `T`.
+        /// </returns>
         [CanBeNull]
         private static T GetValue<T>( [NotNull] IDictionary<string, object> dict, [NotNull] string key, bool required )
         {
             try
             {
-                if ( dict is null ) throw new ArgumentNullException( nameof( dict ) );
-                if ( key is null ) throw new ArgumentNullException( nameof( key ) );
+                if ( dict is null )
+                    throw new ArgumentNullException( nameof( dict ) );
+                if ( key is null )
+                    throw new ArgumentNullException( nameof( key ) );
 
                 if ( !dict.TryGetValue( key, out object value ) )
                 {
@@ -507,7 +568,7 @@ namespace KOTORModSync.Core
                         throw new KeyNotFoundException( $"[Error] Missing or invalid '{key}' field." );
                     case T t:
                         return t;
-                    case string valueStr when string.IsNullOrEmpty( valueStr ):
+                    case string valueStr:
                         if ( string.IsNullOrEmpty( valueStr ) )
                         {
                             return required
@@ -526,10 +587,34 @@ namespace KOTORModSync.Core
                         }
 
                         if ( targetType == typeof( string ) )
-                            return (T)(object)valueStr;
+                            return (T)(valueStr as object);
 
                         break;
                 }
+
+                if ( targetType.IsGenericType && targetType.GetGenericTypeDefinition() == typeof( List<> ) )
+                {
+                    var list = (T)Activator.CreateInstance( targetType );
+                    MethodInfo addMethod = list?.GetType().GetMethod( name: "Add" );
+
+                    if ( value is IEnumerable<object> enumerableValue )
+                    {
+                        foreach ( object item in enumerableValue )
+                        {
+                            if (System.Guid.TryParse( item?.ToString(), out Guid guidItem ))
+                                _ = addMethod?.Invoke( list, new[] { (object)guidItem } );
+                            else
+                                _ = addMethod?.Invoke( list, new[] { item } );
+                        }
+                    }
+                    else
+                    {
+                        _ = addMethod?.Invoke( list, new[] { value } );
+                    }
+
+                    return list;
+                }
+
                 // probably some sort of array at this point
                 var tomlArray = value as IList<object>;
                 var tomlTableArray = value as IList<TomlTable>;
@@ -652,7 +737,7 @@ namespace KOTORModSync.Core
 
                 if ( string.IsNullOrWhiteSpace( tomlString ) )
                 {
-                    throw new Nett.Parser.ParseException(
+                    throw new InvalidDataException(
                         $"Expected an instructions file at '{filePath}' but the file was empty."
                     );
                 }
@@ -677,9 +762,10 @@ namespace KOTORModSync.Core
                 IDictionary<string, object> tomlTable = tomlDocument.ToModel();
 
                 // Get the array of Component tables
-                var componentTables = (IList<TomlTable>)tomlTable["thisMod"];
-                var components = new List<Component>();
+                var componentTables = (IList<TomlTable>)tomlTable[key: "thisMod"];
+
                 // Deserialize each IDictionary<string, object> into a Component object
+                var components = new List<Component>();
                 if ( componentTables is null )
                     return components;
 
@@ -738,12 +824,13 @@ namespace KOTORModSync.Core
             [Description(
                 "The files in the install directory do not match the expected contents provided by the instructions file"
             )]
-            ValidationPostInstallMismatch
+            ValidationPostInstallMismatch,
         }
 
         public async Task<InstallExitCode> InstallAsync( [NotNull] List<Component> componentsList )
         {
-            if ( componentsList is null ) throw new ArgumentNullException( nameof( componentsList ) );
+            if ( componentsList is null )
+                throw new ArgumentNullException( nameof( componentsList ) );
 
             try
             {
@@ -841,7 +928,7 @@ namespace KOTORModSync.Core
                         exitCode = await instruction.ExtractFileAsync();
                         break;
                     case "delete":
-                        instruction.SetRealPaths();
+                        instruction.SetRealPaths( true );
                         exitCode = instruction.DeleteFile();
                         break;
                     case "delduplicate":
@@ -983,9 +1070,12 @@ namespace KOTORModSync.Core
             bool isInstall = false
         )
         {
-            if ( dependencyGuids is null ) throw new ArgumentNullException( nameof( dependencyGuids ) );
-            if ( restrictionGuids is null ) throw new ArgumentNullException( nameof( restrictionGuids ) );
-            if ( componentsList == null ) throw new ArgumentNullException( nameof( componentsList ) );
+            if ( dependencyGuids is null )
+                throw new ArgumentNullException( nameof( dependencyGuids ) );
+            if ( restrictionGuids is null )
+                throw new ArgumentNullException( nameof( restrictionGuids ) );
+            if ( componentsList == null )
+                throw new ArgumentNullException( nameof( componentsList ) );
 
             var conflicts = new Dictionary<string, List<Component>>();
 
@@ -1050,7 +1140,8 @@ namespace KOTORModSync.Core
         //The component has restrictions, but none of the restricted components are being installed.
         public bool ShouldInstallComponent( [NotNull][ItemNotNull] List<Component> componentsList, bool isInstall = true )
         {
-            if ( componentsList is null ) throw new ArgumentNullException( nameof( componentsList ) );
+            if ( componentsList is null )
+                throw new ArgumentNullException( nameof( componentsList ) );
 
             Dictionary<string, List<Component>> conflicts = GetConflictingComponents(
                 Dependencies,
@@ -1071,8 +1162,10 @@ namespace KOTORModSync.Core
             bool isInstall = true
         )
         {
-            if ( instruction is null ) throw new ArgumentNullException( nameof( instruction ) );
-            if ( componentsList is null ) throw new ArgumentNullException( nameof( componentsList ) );
+            if ( instruction is null )
+                throw new ArgumentNullException( nameof( instruction ) );
+            if ( componentsList is null )
+                throw new ArgumentNullException( nameof( componentsList ) );
 
             Dictionary<string, List<Component>> conflicts = GetConflictingComponents(
                 instruction.Dependencies,
@@ -1086,7 +1179,8 @@ namespace KOTORModSync.Core
         [CanBeNull]
         public static Component FindComponentFromGuid( Guid guidToFind, [NotNull][ItemNotNull] List<Component> componentsList )
         {
-            if ( componentsList is null ) throw new ArgumentNullException( nameof( componentsList ) );
+            if ( componentsList is null )
+                throw new ArgumentNullException( nameof( componentsList ) );
 
             Component foundComponent = null;
             foreach ( Component component in componentsList )
@@ -1106,8 +1200,10 @@ namespace KOTORModSync.Core
             [NotNull] List<Component> componentsList
         )
         {
-            if ( guidsToFind is null ) throw new ArgumentNullException( nameof( guidsToFind ) );
-            if ( componentsList is null ) throw new ArgumentNullException( nameof( componentsList ) );
+            if ( guidsToFind is null )
+                throw new ArgumentNullException( nameof( guidsToFind ) );
+            if ( componentsList is null )
+                throw new ArgumentNullException( nameof( componentsList ) );
 
             var foundComponents = new List<Component>();
             foreach ( Guid guidToFind in guidsToFind )
@@ -1126,7 +1222,8 @@ namespace KOTORModSync.Core
             [NotNull][ItemNotNull] List<Component> components
         )
         {
-            if ( components is null ) throw new ArgumentNullException( nameof( components ) );
+            if ( components is null )
+                throw new ArgumentNullException( nameof( components ) );
 
             Dictionary<Guid, GraphNode> nodeMap = CreateDependencyGraph( components );
 
@@ -1153,9 +1250,12 @@ namespace KOTORModSync.Core
             [NotNull] ICollection<Component> orderedComponents
         )
         {
-            if ( node is null ) throw new ArgumentNullException( nameof( node ) );
-            if ( visitedNodes is null ) throw new ArgumentNullException( nameof( visitedNodes ) );
-            if ( orderedComponents is null ) throw new ArgumentNullException( nameof( orderedComponents ) );
+            if ( node is null )
+                throw new ArgumentNullException( nameof( node ) );
+            if ( visitedNodes is null )
+                throw new ArgumentNullException( nameof( visitedNodes ) );
+            if ( orderedComponents is null )
+                throw new ArgumentNullException( nameof( orderedComponents ) );
 
             _ = visitedNodes.Add( node );
 

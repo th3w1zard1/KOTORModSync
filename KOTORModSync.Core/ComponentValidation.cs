@@ -24,7 +24,7 @@ namespace KOTORModSync.Core
             NotFoundInArchive,
             FoundSuccessfully,
             NeedsAppendedArchiveName,
-            NoArchivesFound
+            NoArchivesFound,
         }
 
         [NotNull] private readonly List<ValidationResult> _validationResults = new List<ValidationResult>();
@@ -131,7 +131,7 @@ namespace KOTORModSync.Core
 
                     for ( int index = 0; index < instruction.Source.Count; index++ )
                     {
-                        string sourcePath = Serializer.FixPathFormatting( instruction.Source[index] );
+                        string sourcePath = PathHelper.FixPathFormatting( instruction.Source[index] );
 
                         // todo
                         if ( sourcePath.StartsWith( value: "<<kotorDirectory>>", StringComparison.OrdinalIgnoreCase ) )
@@ -210,7 +210,7 @@ namespace KOTORModSync.Core
                 if ( instruction.Action != "extract" )
                     continue;
 
-                List<string> realPaths = FileHelper.EnumerateFilesWithWildcards(
+                List<string> realPaths = PathHelper.EnumerateFilesWithWildcards(
                     instruction.Source.ConvertAll( Utility.Utility.ReplaceCustomVariables ),
                     topLevelOnly: true
                 );
@@ -391,7 +391,7 @@ namespace KOTORModSync.Core
             bool archiveNameFound = false;
             string errorDescription = string.Empty;
 
-            sourcePath = Serializer.FixPathFormatting( sourcePath )
+            sourcePath = PathHelper.FixPathFormatting( sourcePath )
                 .Replace( $"<<modDirectory>>{Path.DirectorySeparatorChar}", newValue: "" )
                 .Replace( $"<<kotorDirectory>>{Path.DirectorySeparatorChar}", newValue: "" );
 
@@ -408,7 +408,7 @@ namespace KOTORModSync.Core
 
                 string[] pathParts = sourcePath.Split( Path.DirectorySeparatorChar );
 
-                archiveNameFound = FileHelper.WildcardPathMatch( archiveName, pathParts[0] );
+                archiveNameFound = PathHelper.WildcardPathMatch( archiveName, pathParts[0] );
                 ArchivePathCode code = IsPathInArchive( sourcePath, archivePath );
 
                 if ( code == ArchivePathCode.FoundSuccessfully )
@@ -455,8 +455,10 @@ namespace KOTORModSync.Core
 
         private static ArchivePathCode IsPathInArchive( [NotNull] string relativePath, [NotNull] string archivePath )
         {
-            if ( relativePath is null ) throw new ArgumentNullException( nameof( relativePath ) );
-            if ( archivePath is null ) throw new ArgumentNullException( nameof( archivePath ) );
+            if ( relativePath is null )
+throw new ArgumentNullException( nameof( relativePath ) );
+            if ( archivePath is null )
+throw new ArgumentNullException( nameof( archivePath ) );
 
             if ( !ArchiveHelper.IsArchive( archivePath ) )
             {
@@ -495,7 +497,7 @@ namespace KOTORModSync.Core
                 string archiveNameAppend = Path.GetFileNameWithoutExtension( archivePath );
 
                 // if the Source key represents the top level extraction directory, check that first.
-                if ( FileHelper.WildcardPathMatch( archiveNameAppend, relativePath ) )
+                if ( PathHelper.WildcardPathMatch( archiveNameAppend, relativePath ) )
                 {
                     return ArchivePathCode.FoundSuccessfully;
                 }
@@ -511,7 +513,7 @@ namespace KOTORModSync.Core
 
                     // Some archives loop through folders while others don't.
                     // Check if itemInArchivePath has an extension to determine folderName.
-                    string folderName = FileHelper.GetFolderName( itemInArchivePath );
+                    string folderName = PathHelper.GetFolderName( itemInArchivePath );
 
                     // Add the folder path to the list, after removing trailing slashes.
                     if ( !string.IsNullOrEmpty( folderName ) )
@@ -522,7 +524,7 @@ namespace KOTORModSync.Core
                     }
 
                     // Check if itemInArchivePath matches relativePath using wildcard matching.
-                    if ( FileHelper.WildcardPathMatch( itemInArchivePath, relativePath ) )
+                    if ( PathHelper.WildcardPathMatch( itemInArchivePath, relativePath ) )
                     {
                         return ArchivePathCode.FoundSuccessfully;
                     }
@@ -531,7 +533,7 @@ namespace KOTORModSync.Core
                 // check if instruction.Source matches a folder.
                 foreach ( string folderPath in folderPaths )
                 {
-                    if ( !( folderPath is null ) && FileHelper.WildcardPathMatch( folderPath, relativePath ) )
+                    if ( !( folderPath is null ) && PathHelper.WildcardPathMatch( folderPath, relativePath ) )
                     {
                         return ArchivePathCode.FoundSuccessfully;
                     }

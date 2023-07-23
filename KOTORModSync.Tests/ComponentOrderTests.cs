@@ -20,10 +20,10 @@ namespace KOTORModSync.Tests
                 {
                     Name = "C1_InstallBefore_C2",
                     Guid = Guid.NewGuid(),
-                    InstallBefore = new List<Guid> { thisGuid }
+                    InstallBefore = new List<Guid> { thisGuid },
                 },
                 new() {Name = "C2", Guid = thisGuid},
-                new() {Name = "C3", Guid = Guid.NewGuid()}
+                new() {Name = "C3", Guid = Guid.NewGuid()},
             };
 
             // Act
@@ -59,9 +59,9 @@ namespace KOTORModSync.Tests
                 {
                     Name = "C1_InstallBefore_C2",
                     Guid = Guid.NewGuid(),
-                    InstallBefore = new List<Guid> { thisGuid }
+                    InstallBefore = new List<Guid> { thisGuid },
                 },
-                new() {Name = "C3", Guid = Guid.NewGuid()}
+                new() {Name = "C3", Guid = Guid.NewGuid()},
             };
 
             // Act
@@ -103,7 +103,7 @@ namespace KOTORModSync.Tests
                     Guid = Guid.NewGuid(),
                     InstallAfter = new List<Guid> { thisGuid },
                 },
-                new() {Name = "C3", Guid = Guid.NewGuid()}
+                new() {Name = "C3", Guid = Guid.NewGuid()},
             };
 
             // Act
@@ -141,7 +141,7 @@ namespace KOTORModSync.Tests
                     InstallAfter = new List<Guid> { thisGuid },
                 },
                 new() { Name = "C2", Guid = thisGuid },
-                new() {Name = "C3", Guid = Guid.NewGuid()}
+                new() {Name = "C3", Guid = Guid.NewGuid()},
             };
 
             // Act
@@ -176,25 +176,25 @@ namespace KOTORModSync.Tests
             var componentA = new Component
             {
                 Name = "A",
-                Guid = Guid.NewGuid()
+                Guid = Guid.NewGuid(),
             };
             var componentB = new Component
             {
                 Name = "B",
                 Guid = Guid.NewGuid(),
-                InstallAfter = new List<Guid> { componentA.Guid }
+                InstallAfter = new List<Guid> { componentA.Guid },
             };
             var componentC = new Component
             {
                 Name = "C",
                 Guid = Guid.NewGuid(),
-                InstallBefore = new List<Guid> { componentA.Guid }
+                InstallBefore = new List<Guid> { componentA.Guid },
             };
             var componentD = new Component
             {
                 Name = "D",
                 Guid = Guid.NewGuid(),
-                InstallBefore = new List<Guid> { componentB.Guid }
+                InstallBefore = new List<Guid> { componentB.Guid },
             };
             var componentFGuid = new Guid();
             var componentE = new Component
@@ -202,31 +202,31 @@ namespace KOTORModSync.Tests
                 Name = "E",
                 Guid = Guid.NewGuid(),
                 InstallAfter = new List<Guid> { componentB.Guid },
-                InstallBefore = new List<Guid> { componentFGuid }
+                InstallBefore = new List<Guid> { componentFGuid },
             };
             var componentF = new Component
             {
                 Name = "F",
                 Guid = componentFGuid,
-                InstallAfter = new List<Guid> { componentE.Guid, componentB.Guid }
+                InstallAfter = new List<Guid> { componentE.Guid, componentB.Guid },
             };
             var componentG = new Component
             {
                 Name = "G",
                 Guid = Guid.NewGuid(),
-                InstallAfter = new List<Guid> { componentD.Guid, componentF.Guid }
+                InstallAfter = new List<Guid> { componentD.Guid, componentF.Guid },
             };
             var componentH = new Component
             {
                 Name = "H",
                 Guid = Guid.NewGuid(),
-                InstallBefore = new List<Guid> { componentG.Guid }
+                InstallBefore = new List<Guid> { componentG.Guid },
             };
             var componentI = new Component
             {
                 Name = "I",
                 Guid = Guid.NewGuid(),
-                InstallBefore = new List<Guid> { componentG.Guid }
+                InstallBefore = new List<Guid> { componentG.Guid },
             };
             var componentJ = new Component
             {
@@ -246,7 +246,7 @@ namespace KOTORModSync.Tests
                 componentH,
                 componentI,
                 componentG,
-                componentJ
+                componentJ,
             };
 
             // Act
@@ -277,25 +277,25 @@ namespace KOTORModSync.Tests
             var componentA = new Component
             {
                 Name = "A",
-                Guid = Guid.NewGuid()
+                Guid = Guid.NewGuid(),
             };
             var componentB = new Component
             {
                 Name = "B",
                 Guid = Guid.NewGuid(),
-                InstallAfter = new List<Guid> { componentA.Guid }
+                InstallAfter = new List<Guid> { componentA.Guid },
             };
             var componentC = new Component
             {
                 Name = "C",
                 Guid = Guid.NewGuid(),
-                InstallBefore = new List<Guid> { componentA.Guid }
+                InstallBefore = new List<Guid> { componentA.Guid },
             };
             var componentD = new Component
             {
                 Name = "D",
                 Guid = Guid.NewGuid(),
-                InstallBefore = new List<Guid> { componentB.Guid }
+                InstallBefore = new List<Guid> { componentB.Guid },
             };
             var componentFGuid = new Guid();
             var componentE = new Component
@@ -303,38 +303,38 @@ namespace KOTORModSync.Tests
                 Name = "E",
                 Guid = Guid.NewGuid(),
                 InstallAfter = new List<Guid> { componentB.Guid },
-                InstallBefore = new List<Guid> { componentFGuid }
+                InstallBefore = new List<Guid> { componentFGuid },
             };
             var componentF = new Component
             {
                 Name = "F",
                 Guid = componentFGuid,
-                InstallAfter = new List<Guid> { componentE.Guid, componentB.Guid }
+                InstallAfter = new List<Guid> { componentE.Guid, componentB.Guid },
             };
             var componentG = new Component
             {
                 Name = "G",
                 Guid = Guid.NewGuid(),
-                InstallAfter = new List<Guid> { componentD.Guid, componentF.Guid }
+                InstallAfter = new List<Guid> { componentD.Guid, componentF.Guid },
             };
             var componentH = new Component
             {
                 Name = "H",
                 Guid = Guid.NewGuid(),
-                InstallBefore = new List<Guid> { componentG.Guid }
+                InstallBefore = new List<Guid> { componentG.Guid },
             };
             var componentI = new Component
             {
                 Name = "I",
                 Guid = Guid.NewGuid(),
                 InstallAfter = new List<Guid> { componentH.Guid },
-                InstallBefore = new List<Guid> { componentG.Guid }
+                InstallBefore = new List<Guid> { componentG.Guid },
             };
             var componentJ = new Component
             {
                 Name = "J",
                 Guid = Guid.NewGuid(),
-                InstallAfter = new List<Guid> { componentH.Guid, componentI.Guid }
+                InstallAfter = new List<Guid> { componentH.Guid, componentI.Guid },
             };
 
             var unorderedComponentsList = new List<Component>

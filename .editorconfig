@@ -68,6 +68,13 @@ resharper_enforce_for_statement_braces_highlighting = suggestion
 resharper_enforce_lock_statement_braces_highlighting = suggestion
 resharper_enforce_using_statement_braces_highlighting = suggestion
 resharper_enforce_while_statement_braces_highlighting = suggestion
+dotnet_style_coalesce_expression = true:suggestion
+dotnet_style_null_propagation = true:suggestion
+dotnet_style_prefer_is_null_check_over_reference_equality_method = true:suggestion
+dotnet_style_prefer_auto_properties = true:suggestion
+dotnet_style_object_initializer = false:suggestion
+end_of_line = crlf
+dotnet_diagnostic.CA2249.severity = silent
 
 [project.json]
 indent_size = 2

@@ -50,7 +50,7 @@ namespace KOTORModSync.Converters
                         new ProcessStartInfo
                         {
                             FileName = url,
-                            UseShellExecute = true
+                            UseShellExecute = true,
                         }
                     );
                 }

@@ -22,7 +22,7 @@ namespace KOTORModSync.Core.Utility
         {
             ExtractFullPath = false,
             Overwrite = true,
-            PreserveFileTime = true
+            PreserveFileTime = true,
         };
 
         public static bool IsArchive( string filePath ) => IsArchive(
@@ -73,14 +73,9 @@ namespace KOTORModSync.Core.Utility
         public static void OutputModTree( [NotNull] DirectoryInfo directory, [NotNull] string outputPath )
         {
             if ( directory == null )
-            {
                 throw new ArgumentNullException( nameof( directory ) );
-            }
-
             if ( outputPath == null )
-            {
                 throw new ArgumentNullException( nameof( outputPath ) );
-            }
 
             Dictionary<string, object> root = GenerateArchiveTreeJson( directory );
             try
@@ -103,13 +98,11 @@ namespace KOTORModSync.Core.Utility
         public static Dictionary<string, object> GenerateArchiveTreeJson( [NotNull] DirectoryInfo directory )
         {
             if ( directory == null )
-            {
                 throw new ArgumentNullException( nameof( directory ) );
-            }
 
             var root = new Dictionary<string, object>( 65535 )
             {
-                { "Name", directory.Name }, { "Type", "directory" }, { "Contents", new List<object>() }
+                { "Name", directory.Name }, { "Type", "directory" }, { "Contents", new List<object>() },
             };
 
             try
@@ -117,16 +110,14 @@ namespace KOTORModSync.Core.Utility
                 foreach ( FileInfo file in directory.EnumerateFiles( searchPattern: "*.*", SearchOption.TopDirectoryOnly ) )
                 {
                     if ( file == null || !IsArchive( file.Extension ) )
-                    {
                         continue;
-                    }
 
                     var fileInfo
                         = new Dictionary<string, object>( 65535 ) { { "Name", file.Name }, { "Type", "file" } };
                     List<ModDirectory.ArchiveEntry> archiveEntries = TraverseArchiveEntries( file.FullName );
                     var archiveRoot = new Dictionary<string, object>( 65535 )
                     {
-                        { "Name", file.Name }, { "Type", "directory" }, { "Contents", archiveEntries }
+                        { "Name", file.Name }, { "Type", "directory" }, { "Contents", archiveEntries },
                     };
 
                     fileInfo["Contents"] = archiveRoot["Contents"];
@@ -158,9 +149,7 @@ namespace KOTORModSync.Core.Utility
         public static List<ModDirectory.ArchiveEntry> TraverseArchiveEntries( [NotNull] string archivePath )
         {
             if ( archivePath == null )
-            {
                 throw new ArgumentNullException( nameof( archivePath ) );
-            }
 
             var archiveEntries = new List<ModDirectory.ArchiveEntry>( 65535 );
 
@@ -205,21 +194,22 @@ namespace KOTORModSync.Core.Utility
 
                 string name1 = name;
                 object existingChild = existingDirectory.Find(
-                    c => c is Dictionary<string, object> && FileHelper.IsDirectoryWithName( c, name1 )
+                    c => c is Dictionary<string, object> dict
+                    && dict.ContainsKey( "Name" )
+                    && dict["Name"] is string directoryName
+                    && directoryName.Equals( name, StringComparison.OrdinalIgnoreCase )
                 );
 
                 if ( existingChild != null )
                 {
                     if ( isFile )
-                    {
                         ( (Dictionary<string, object>)existingChild )["Type"] = "file";
-                    }
 
                     currentDirectory = (Dictionary<string, object>)existingChild;
                 }
                 else
                 {
-                    var child = new Dictionary<string, object>( 65535 )
+                    var child = new Dictionary<string, object>( )
                     {
                         { "Name", name },
                         {
@@ -227,7 +217,7 @@ namespace KOTORModSync.Core.Utility
                                 ? "file"
                                 : "directory"
                         },
-                        { "Contents", new List<object>() }
+                        { "Contents", new List<object>() },
                     };
                     existingDirectory.Add( child );
                     currentDirectory = child;

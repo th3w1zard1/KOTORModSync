@@ -62,7 +62,7 @@ namespace KOTORModSync.Core
             UnknownInnerError,
             TSLPatcherError,
             UnknownInstruction,
-            TSLPatcherLogNotFound
+            TSLPatcherLogNotFound,
         }
 
         public static readonly string DefaultInstructions = @"
@@ -120,16 +120,13 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
         public void SetRealPaths( bool noValidate = false )
         {
             // Get real path then enumerate the files/folders with wildcards and add them to the list
-            if ( Source is null ) throw new NullReferenceException( nameof( Source ) );
+            if ( Source is null )
+                throw new NullReferenceException( nameof( Source ) );
 
             RealSourcePaths = Source.ConvertAll( Utility.Utility.ReplaceCustomVariables );
-            RealSourcePaths = FileHelper.EnumerateFilesWithWildcards( RealSourcePaths );
+            RealSourcePaths = PathHelper.EnumerateFilesWithWildcards( RealSourcePaths );
 
-            if (
-                RealSourcePaths is null
-                || ( !noValidate && RealSourcePaths.Count == 0
-                && !Action.Equals( value: "delete", StringComparison.OrdinalIgnoreCase ) )
-            )
+            if ( RealSourcePaths?.Count != 0 || !noValidate )
             {
                 throw new FileNotFoundException(
                     $"Could not find any files in the 'Source' path! Got [{string.Join( separator: ", ", Source )}]"
@@ -163,8 +160,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                 if ( argSourcePaths is null )
                 {
                     argSourcePaths = RealSourcePaths
-                        ?? throw new NullReferenceException( nameof( RealSourcePaths ) );
-                    //argDestinationPath = RealDestinationPath; // not used in this action.
+                        ?? throw new NullReferenceException(nameof(RealSourcePaths));
                 }
 
                 var extractionTasks = new List<Task>( 25 );
@@ -192,7 +188,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                                 throw new ArgumentNullException( nameof( argDestinationPath ) );
                             }
 
-                            _ = Logger.LogAsync( $"File path: {thisFile.FullName}" );
+                            _ = Logger.LogAsync( $"File path: '{thisFile.FullName}'" );
 
                             if ( !ArchiveHelper.IsArchive( thisFile ) )
                             {
@@ -216,9 +212,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                                 );
 
                                 if ( result.Item1 == 0 )
-                                {
                                     return;
-                                }
 
                                 exitCode = ActionExitCode.InvalidSelfExtractingExecutable;
                                 throw new InvalidOperationException(
@@ -253,14 +247,10 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                                 while ( reader.MoveToNextEntry() )
                                 {
                                     if ( reader.Entry.IsDirectory )
-                                    {
                                         continue;
-                                    }
 
                                     if ( argDestinationPath?.FullName is null )
-                                    {
                                         continue;
-                                    }
 
                                     string extractFolderName = Path.GetFileNameWithoutExtension( thisFile.Name );
                                     string destinationItemPath = Path.Combine(
@@ -317,79 +307,106 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
             }
         }
 
-        public void DeleteDuplicateFile( DirectoryInfo directoryPath = null, string fileExtension = "" )
+        public void DeleteDuplicateFile(
+            DirectoryInfo directoryPath = null,
+            string fileExtension = null,
+            bool caseInsensitive = false,
+            List<string> compatibleExtensions = null
+        )
         {
+            // internal args
             if ( directoryPath is null )
-            {
                 directoryPath = RealDestinationPath;
-            }
-            else if ( !directoryPath.Exists )
-            {
-                throw new ArgumentException( message: "Invalid directory path.", nameof( directoryPath ) );
-            }
-
             if ( string.IsNullOrEmpty( fileExtension ) )
-            {
                 fileExtension = Arguments;
-            }
+
+            if ( !directoryPath?.Exists != true )
+                throw new ArgumentException( message: "Invalid directory path.", nameof( directoryPath ) );
+
+            if (compatibleExtensions?.Count == 0)
+                compatibleExtensions = new List<string> {".tga", ".tpc", ".dds", ".txi"};
 
             string[] files = Directory.GetFiles( directoryPath.FullName );
-            var fileNameCounts = new Dictionary<string, int>( StringComparer.OrdinalIgnoreCase );
+            Dictionary<string, int> fileNameCounts = caseInsensitive
+                ? new Dictionary<string, int>( StringComparer.OrdinalIgnoreCase )
+                : new Dictionary<string, int>();
 
             foreach ( string filePath in files )
             {
                 string fileNameWithoutExtension = Path.GetFileNameWithoutExtension( filePath );
-                if ( string.IsNullOrEmpty( fileNameWithoutExtension ) ) continue;
+                string thisExtension = Path.GetExtension( filePath );
 
-                string extension = Path.GetExtension( filePath );
-                if ( !extension.Equals( value: ".tga", StringComparison.OrdinalIgnoreCase )
-                    && !extension.Equals( value: ".tpc", StringComparison.OrdinalIgnoreCase ) )
-                {
-                    continue;
-                }
+                bool compatibleExtensionFound = caseInsensitive
+                    // ReSharper disable once AssignNullToNotNullAttribute
+                    ? compatibleExtensions.Any(ext => ext.Equals(thisExtension, StringComparison.OrdinalIgnoreCase))
+                    // ReSharper disable once PossibleNullReferenceException
+                    : compatibleExtensions.Contains( thisExtension );
 
-                if ( fileNameCounts.TryGetValue( fileNameWithoutExtension, out int count ) )
-                {
-                    fileNameCounts[fileNameWithoutExtension] = count + 1;
-                    continue;
-                }
-
-                fileNameCounts[fileNameWithoutExtension] = 1;
+                if ( compatibleExtensionFound )
+                    fileNameCounts[fileNameWithoutExtension]++;
             }
 
             foreach ( string filePath in files )
             {
-                string fileName = Path.GetFileName( filePath );
-                string fileNameWithoutExtension = Path.GetFileNameWithoutExtension( filePath );
-                string fileExtensionFromFile = Path.GetExtension( filePath );
-
-                if ( string.IsNullOrEmpty( fileNameWithoutExtension )
-                    || !fileNameCounts.ContainsKey( fileNameWithoutExtension )
-                    || fileNameCounts[fileNameWithoutExtension] <= 1
-                    || !string.Equals( fileExtensionFromFile, fileExtension, StringComparison.OrdinalIgnoreCase ) )
-                {
+                if ( !ShouldDeleteFile( filePath ) )
                     continue;
-                }
 
                 try
                 {
                     File.Delete( filePath );
-                    Logger.Log( $"Deleted file: '{fileName}'" );
+                    Logger.Log( $"Deleted file: '{Path.GetFileNameWithoutExtension(filePath)}'" );
                 }
                 catch ( Exception ex )
                 {
                     Logger.LogException( ex );
                 }
             }
+
+            bool ShouldDeleteFile(string filePath)
+            {
+                string fileName = Path.GetFileName( filePath );
+                string fileNameWithoutExtension = Path.GetFileNameWithoutExtension( filePath );
+                string fileExtensionFromFile = Path.GetExtension( filePath );
+
+                if ( string.IsNullOrEmpty(fileNameWithoutExtension) )
+                {
+                    Logger.LogVerbose($"Conditional 1: fileNameWithoutExtension from '{fileName}' is null or empty");
+                }
+                else if ( !fileNameCounts.ContainsKey(fileNameWithoutExtension) )
+                {
+                    Logger.LogError($"Conditional 2: '{fileNameWithoutExtension}' is not present in '{fileNameCounts}' somehow?");
+                }
+                else if ( fileNameCounts[fileNameWithoutExtension] <= 1 )
+                {
+                    Logger.LogVerbose($"Conditional 3: '{fileNameWithoutExtension}' is the only file with this name.");
+                }
+                else if ( !string.Equals(fileExtensionFromFile, fileExtension, StringComparison.OrdinalIgnoreCase) )
+                {
+                    string caseInsensitivity = caseInsensitive ? " (case-insensitive)" : string.Empty;
+                    string message = $"Conditional 4: '{fileExtensionFromFile}' is not equal to '{fileExtension}'{caseInsensitivity}";
+                    Logger.LogVerbose(message);
+                }
+                else
+                {
+                    return true;
+                }
+
+                return false;
+            }
         }
 
-        public ActionExitCode DeleteFile()
+        public ActionExitCode DeleteFile(List<string> sourcePaths = null)
         {
+            if ( sourcePaths?.Count == 0 )
+                sourcePaths = RealSourcePaths;
+            if ( sourcePaths?.Count == 0 )
+                throw new ArgumentNullException( nameof(sourcePaths) );
+
             try
             {
-                foreach ( string thisFilePath in RealSourcePaths )
+                foreach ( string thisFilePath in sourcePaths )
                 {
-                    var thisFile = new FileInfo( thisFilePath );
+                    var thisFile = new FileInfo( PathHelper.GetCaseSensitivePath(thisFilePath) );
 
                     if ( !Path.IsPathRooted( thisFilePath ) || !thisFile.Exists )
                     {
@@ -422,8 +439,13 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
             }
         }
 
-        public ActionExitCode RenameFile()
+        public ActionExitCode RenameFile(List<string> sourcePaths = null)
         {
+            if ( sourcePaths is null )
+                sourcePaths = Source;
+            if ( sourcePaths?.Count == 0 )
+                throw new ArgumentNullException( nameof( sourcePaths ) );
+
             try
             {
                 ActionExitCode exitCode = ActionExitCode.Success;
@@ -445,12 +467,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                     );
                     if ( File.Exists( destinationFilePath ) )
                     {
-                        if ( Overwrite )
-                        {
-                            Logger.Log( $"Replacing pre-existing '{destinationFilePath}'" );
-                            File.Delete( destinationFilePath );
-                        }
-                        else
+                        if ( !Overwrite )
                         {
                             exitCode = ActionExitCode.RenameTargetAlreadyExists;
                             Logger.LogException(
@@ -460,8 +477,12 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                                     + " already exists )"
                                 )
                             );
+
                             continue;
                         }
+
+                        Logger.Log( $"Replacing pre-existing '{destinationFilePath}'" );
+                        File.Delete( destinationFilePath );
                     }
 
                     // Move the file
@@ -498,25 +519,22 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                     string destinationFilePath = Path.Combine( RealDestinationPath.FullName, fileName );
 
                     // Check if the destination file already exists
-                    if ( !Overwrite && File.Exists( destinationFilePath ) )
-                    {
-                        Logger.Log(
-                            $"Skipping file '{Path.GetFileName( destinationFilePath )}' ( Overwrite set to False )"
-                        );
-                        continue;
-                    }
-
-                    // Check if the destination file already exists
                     if ( File.Exists( destinationFilePath ) )
                     {
-                        Logger.Log( $"File already exists, deleting existing file '{destinationFilePath}'" );
-                        // Delete the existing file
+                        if ( !Overwrite )
+                        {
+                            Logger.Log(
+                                $"Skipping file '{Path.GetFileName( destinationFilePath )}' ( Overwrite set to False )"
+                            );
+
+                            continue;
+                        }
+
+                        Logger.Log( $"File already exists, deleting pre-existing file '{destinationFilePath}'" );
                         File.Delete( destinationFilePath );
                     }
 
-                    // Copy the file
                     Logger.Log( $"Copy '{Path.GetFileName( sourcePath )}' to '{destinationFilePath}'" );
-
                     File.Copy( sourcePath, destinationFilePath );
                 }
 
@@ -529,14 +547,24 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
             }
         }
 
-        public ActionExitCode MoveFile()
+        public ActionExitCode MoveFile( [ItemNotNull] List<string> sourcePaths = null, DirectoryInfo destinationPath = null )
         {
+            if ( sourcePaths == null )
+                sourcePaths = RealSourcePaths;
+            if ( destinationPath == null )
+                destinationPath = RealDestinationPath;
+
+            if ( sourcePaths == null )
+                throw new ArgumentNullException( nameof( sourcePaths ) );
+            if ( destinationPath == null )
+                throw new ArgumentNullException( nameof(destinationPath) );
+
             try
             {
-                foreach ( string sourcePath in RealSourcePaths )
+                foreach ( string sourcePath in sourcePaths )
                 {
                     string fileName = Path.GetFileName( sourcePath );
-                    string destinationFilePath = Path.Combine( RealDestinationPath.FullName, fileName );
+                    string destinationFilePath = Path.Combine( destinationPath.FullName, fileName );
 
                     // Check if the destination file already exists
                     if ( File.Exists( destinationFilePath ) )
@@ -551,13 +579,10 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                         }
 
                         Logger.Log( $"File already exists, deleting pre-existing file '{destinationFilePath}'" );
-                        // Delete the existing file
                         File.Delete( destinationFilePath );
                     }
 
-                    // Move the file
                     Logger.Log( $"Move '{Path.GetFileName( sourcePath )}' to '{destinationFilePath}'" );
-
                     File.Move( sourcePath, destinationFilePath );
                 }
 
@@ -571,6 +596,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
         }
 
         // todo: define exit codes here.
+        // ReSharper disable once InconsistentNaming
         public async Task<ActionExitCode> ExecuteTSLPatcherAsync()
         {
             try
@@ -593,17 +619,13 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                     if ( File.Exists( fullInstallLogFile ) )
                     {
                         if ( File.Exists( fullInstallLogFile ) )
-                        {
                             File.Delete( fullInstallLogFile );
-                        }
                     }
 
                     //PlaintextLog=1
                     fullInstallLogFile = Path.Combine( tslPatcherDirectory.FullName, path2: "installlog.txt" );
                     if ( File.Exists( fullInstallLogFile ) )
-                    {
                         File.Delete( fullInstallLogFile );
-                    }
 
                     await Logger.LogAsync( " - Pre-installing TSLPatcher LookUpGameFolder hooks..." );
                     IniHelper.ReplacePlaintextLog( tslPatcherDirectory );
@@ -695,14 +717,17 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
             }
         }
 
-        public async Task<ActionExitCode> ExecuteProgramAsync()
+        public async Task<ActionExitCode> ExecuteProgramAsync( [ItemNotNull] List<string> sourcePaths = null)
         {
             try
             {
-                if ( RealSourcePaths is null ) throw new NullReferenceException( nameof( RealSourcePaths ) );
+                if ( sourcePaths == null )
+                    sourcePaths = RealSourcePaths;
+                if ( sourcePaths == null )
+                    throw new ArgumentNullException( nameof( sourcePaths ) );
 
                 ActionExitCode exitCode = ActionExitCode.Success; // Track the success status
-                foreach ( string sourcePath in RealSourcePaths )
+                foreach ( string sourcePath in sourcePaths )
                 {
                     try
                     {
@@ -722,9 +747,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
 
                         _ = Logger.LogVerboseAsync( output + Environment.NewLine + error );
                         if ( childExitCode == 0 )
-                        {
                             continue;
-                        }
 
                         exitCode = ActionExitCode.ChildProcessError;
                         break;
@@ -751,19 +774,20 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
         }
 
         // parse TSLPatcher's installlog.rtf (or installlog.txt) for errors when not using the CLI.
-        public List<string> VerifyInstall()
+        [NotNull]
+        private List<string> VerifyInstall( [ItemNotNull] List<string> sourcePaths = null )
         {
-            foreach ( string sourcePath in RealSourcePaths )
-            {
-                if ( sourcePath is null )
-                {
-                    continue;
-                }
+            if ( sourcePaths == null )
+                sourcePaths = RealSourcePaths;
+            if ( sourcePaths == null )
+                throw new ArgumentNullException( nameof(sourcePaths) );
 
+            foreach ( string sourcePath in sourcePaths )
+            {
                 string tslPatcherDirPath = Path.GetDirectoryName( sourcePath )
-                    ?? throw new DirectoryNotFoundException(
-                        $"Could not retrieve parent directory of '{sourcePath}'."
-                    );
+                   ?? throw new DirectoryNotFoundException(
+                       $"Could not retrieve parent directory of '{sourcePath}'."
+                   );
 
                 //PlaintextLog=0
                 string fullInstallLogFile = Path.Combine( tslPatcherDirPath, path2: "installlog.rtf" );
@@ -780,32 +804,30 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
 
                 string installLogContent = File.ReadAllText( fullInstallLogFile );
                 var installErrors = new List<string>();
-                foreach ( string thisLine in installLogContent.Split(
-                             Path.DirectorySeparatorChar,
-                             Path.AltDirectorySeparatorChar
-                         ) )
+                foreach ( string thisLine in installLogContent.Split( Environment.NewLine.ToCharArray() ) )
                 {
-                    if ( !thisLine.Contains( "Error: " ) && !thisLine.Contains( "[Error]" ) )
-                    {
-                        continue;
-                    }
-
-                    installErrors.Add( thisLine );
+                    if ( thisLine.Contains( "Error: " ) || thisLine.Contains( "[Error]" ) )
+                        installErrors.Add( thisLine );
                 }
 
                 return installErrors;
             }
 
-            Logger.LogVerbose( "No errors found in TSLPatcher installlog file" );
+            Logger.LogVerbose( "No errors found in TSLPatcher installation log file" );
             return new List<string>();
         }
 
         // this method removes the tslpatcher log file.
         // should be called BEFORE any tslpatcher install takes place from KOTORModSync, never post-install.
-        public void CleanupTSLPatcherInstall()
+        public void CleanupTSLPatcherInstall( [ItemNotNull] List<string> sourcePaths = null )
         {
+            if ( sourcePaths == null )
+                sourcePaths = RealSourcePaths;
+            if ( sourcePaths == null )
+                throw new ArgumentNullException( nameof(sourcePaths) );
+
             Logger.LogVerbose( "Preparing TSLPatcher install..." );
-            foreach ( string sourcePath in RealSourcePaths )
+            foreach ( string sourcePath in sourcePaths )
             {
                 string tslPatcherDirPath = Path.GetDirectoryName( sourcePath )
                     ?? throw new DirectoryNotFoundException(
@@ -845,9 +867,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
         )
         {
             if ( EqualityComparer<T>.Default.Equals( field, value ) )
-            {
                 return false;
-            }
 
             field = value;
             OnPropertyChanged( propertyName );

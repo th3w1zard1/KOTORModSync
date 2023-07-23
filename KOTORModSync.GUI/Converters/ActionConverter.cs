@@ -44,7 +44,7 @@ namespace KOTORModSync.Converters
                     "run",
                     "delete",
                     "choose",
-                    "extract"
+                    "extract",
                 };
 
                 if ( validActions.Any(

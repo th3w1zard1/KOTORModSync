@@ -305,7 +305,7 @@ namespace KOTORModSync.Core.Utility
             string[] shellExecutables =
             {
                 "cmd.exe", "powershell.exe", "sh", "bash", "/bin/sh", "/usr/bin/sh", "/usr/local/bin/sh",
-                "/bin/bash", "/usr/bin/bash", "/usr/local/bin/bash"
+                "/bin/bash", "/usr/bin/bash", "/usr/local/bin/bash",
             };
 
             foreach ( string executable in shellExecutables )
@@ -355,7 +355,7 @@ namespace KOTORModSync.Core.Utility
                     FileName = command,
                     Arguments = arguments,
                     RedirectStandardOutput = true,
-                    UseShellExecute = false
+                    UseShellExecute = false,
                 };
 
                 using ( var process = new Process() )
@@ -443,8 +443,8 @@ namespace KOTORModSync.Core.Utility
                         Arguments = "-n true",
                         UseShellExecute = false,
                         RedirectStandardOutput = true,
-                        CreateNoWindow = true
-                    }
+                        CreateNoWindow = true,
+                    },
                 };
 
                 try
@@ -483,7 +483,7 @@ namespace KOTORModSync.Core.Utility
                 RedirectStandardError = true,
                 RedirectStandardInput = true,
                 ErrorDialog = false,
-                WindowStyle = ProcessWindowStyle.Hidden
+                WindowStyle = ProcessWindowStyle.Hidden,
             },
             // perhaps the error dialog was the problem.
             new ProcessStartInfo
@@ -495,7 +495,7 @@ namespace KOTORModSync.Core.Utility
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
                 RedirectStandardInput = true,
-                WindowStyle = ProcessWindowStyle.Hidden
+                WindowStyle = ProcessWindowStyle.Hidden,
             },
             // if it's not a console app or command, it needs a window.
             new ProcessStartInfo
@@ -505,7 +505,7 @@ namespace KOTORModSync.Core.Utility
                 UseShellExecute = false,
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
-                RedirectStandardInput = true
+                RedirectStandardInput = true,
             },
             // try without redirecting output
             new ProcessStartInfo { FileName = programFile.FullName, Arguments = cmdlineArgs, UseShellExecute = false },
@@ -514,8 +514,8 @@ namespace KOTORModSync.Core.Utility
             {
                 FileName = programFile.FullName,
                 Arguments = cmdlineArgs,
-                UseShellExecute = IsShellExecutionSupported() // not supported on all OS's.
-            }
+                UseShellExecute = IsShellExecutionSupported(), // not supported on all OS's.
+            },
         };
 
         public static async Task<(int, string, string)> ExecuteProcessAsync(

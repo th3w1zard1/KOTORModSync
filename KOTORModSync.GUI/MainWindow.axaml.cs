@@ -200,7 +200,7 @@ namespace KOTORModSync
 
             // Check if the item matches the search text
             // Show or hide the item based on the match
-            item.IsVisible = itemName.Contains( searchText, StringComparison.OrdinalIgnoreCase );
+            item.IsVisible = itemName.IndexOf( searchText, StringComparison.OrdinalIgnoreCase ) >= 0;
         }
 
         // test the options dialog for use with the 'Options' IDictionary<string, object>.
@@ -231,7 +231,8 @@ namespace KOTORModSync
         // Prevents a combobox from dragging the window around.
         private void FindComboBoxes( [CanBeNull] Control control )
         {
-            if ( !( control is ILogical visual ) ) throw new ArgumentNullException( nameof( control ) );
+            if ( !( control is ILogical visual ) )
+                throw new ArgumentNullException( nameof( control ) );
 
             if ( control is ComboBox _ )
             {
@@ -257,7 +258,8 @@ namespace KOTORModSync
 
         public void FindComboBoxesInWindow( [NotNull] Window thisWindow )
         {
-            if ( thisWindow is null ) throw new ArgumentNullException( nameof( thisWindow ) );
+            if ( thisWindow is null )
+                throw new ArgumentNullException( nameof( thisWindow ) );
 
             FindComboBoxes( thisWindow );
         }
@@ -306,6 +308,7 @@ namespace KOTORModSync
             _mouseDownForWindowMoving = false;
 
         private void CloseButton_Click( object sender, RoutedEventArgs e ) => Close();
+        private void MinimizeButton_Click( object sender, RoutedEventArgs e ) => WindowState = WindowState.Minimized;
 
         [ItemCanBeNull]
         private async Task<string> OpenFile()
@@ -315,7 +318,7 @@ namespace KOTORModSync
                 var filters = new List<FileDialogFilter>( 10 )
                 {
                     new FileDialogFilter { Name = "Mod Sync File", Extensions = { "toml", "tml" } },
-                    new FileDialogFilter { Name = "All Files", Extensions = { "*" } }
+                    new FileDialogFilter { Name = "All Files", Extensions = { "*" } },
                 };
 
                 string[] result = await ShowFileDialog( isFolderDialog: false, filters );
@@ -330,7 +333,6 @@ namespace KOTORModSync
             return null;
         }
 
-        private void MinimizeButton_Click( object sender, RoutedEventArgs e ) => WindowState = WindowState.Minimized;
 
         [ItemCanBeNull]
         private async Task<List<string>> OpenFiles()
@@ -339,7 +341,7 @@ namespace KOTORModSync
             {
                 var filters = new List<FileDialogFilter>( 10 )
                 {
-                    new FileDialogFilter { Name = "All Files", Extensions = { "*" } }
+                    new FileDialogFilter { Name = "All Files", Extensions = { "*" } },
                 };
 
                 string[] filePaths = await ShowFileDialog( isFolderDialog: false, filters, allowMultiple: true );
@@ -390,8 +392,8 @@ namespace KOTORModSync
                     Filters =
                     {
                         new FileDialogFilter { Name = "All Files", Extensions = { "*" } },
-                        new FileDialogFilter { Name = "Preferred Extensions", Extensions = defaultExt }
-                    }
+                        new FileDialogFilter { Name = "Preferred Extensions", Extensions = defaultExt },
+                    },
                 };
 
                 // Show the dialog and wait for a result.
@@ -609,7 +611,7 @@ namespace KOTORModSync
                         new ProcessStartInfo
                         {
                             FileName = url,
-                            UseShellExecute = true
+                            UseShellExecute = true,
                         }
                     );
                 }
@@ -1000,7 +1002,8 @@ namespace KOTORModSync
                 // todo:
                 if ( MainConfig.AllComponents.Any(
                         c => c.Dependencies.Any( g => g == _currentComponent.Guid )
-                    ) )
+                    )
+                )
                 {
                     await InformationDialog.ShowInformationDialog(
                         this,
@@ -1085,7 +1088,7 @@ namespace KOTORModSync
                 {
                     var informationDialog = new InformationDialog
                     {
-                        InfoText = "Please choose a mod to install from the left list first"
+                        InfoText = "Please choose a mod to install from the left list first",
                     };
                     _ = await informationDialog.ShowDialog<bool?>( this );
                     return;
@@ -1337,8 +1340,10 @@ namespace KOTORModSync
 
         private static async Task SaveDocsToFileAsync( [NotNull] string filePath, [NotNull] string documentation )
         {
-            if ( filePath is null ) throw new ArgumentNullException( nameof( filePath ) );
-            if ( documentation is null ) throw new ArgumentNullException( nameof( documentation ) );
+            if ( filePath is null )
+throw new ArgumentNullException( nameof( filePath ) );
+            if ( documentation is null )
+throw new ArgumentNullException( nameof( documentation ) );
 
             try
             {
@@ -1762,7 +1767,7 @@ namespace KOTORModSync
                 Name = "IsSelected",
                 IsChecked = true,
                 VerticalContentAlignment = VerticalAlignment.Center,
-                VerticalAlignment = VerticalAlignment.Center
+                VerticalAlignment = VerticalAlignment.Center,
             };
             var binding = new Binding( "IsSelected" ) { Source = component, Mode = BindingMode.TwoWay };
 
@@ -1793,15 +1798,15 @@ namespace KOTORModSync
                         VerticalAlignment = VerticalAlignment.Center,
                         Text = $"{index + 1}: ",
                         FontWeight = FontWeight.DemiBold,
-                        Margin = new Thickness(left: 0, top: 0, right: 5, bottom: 0)
+                        Margin = new Thickness(left: 0, top: 0, right: 5, bottom: 0),
                     },
                     checkBox,
                     new TextBlock
                     {
                         VerticalAlignment = VerticalAlignment.Center,
-                        Text = $"{component.Name}"
-                    }
-                }
+                        Text = $"{component.Name}",
+                    },
+                },
             };
 
             return header;
@@ -1829,7 +1834,7 @@ namespace KOTORModSync
                 Header = CreateComponentHeader( component, index ),
                 Tag = component,
                 IsExpanded = true,
-                HorizontalAlignment = HorizontalAlignment.Left
+                HorizontalAlignment = HorizontalAlignment.Left,
             };
 
             componentItem.Tapped += ( sender, e ) =>
@@ -2216,7 +2221,8 @@ namespace KOTORModSync
             [NotNull] ISupportInitialize styleControlComboBox
         )
         {
-            if ( control is null ) throw new ArgumentNullException( nameof( control ) );
+            if ( control is null )
+throw new ArgumentNullException( nameof( control ) );
 
             // fixes a crash that can happen while spamming the combobox style options.
             if ( control == styleControlComboBox ) return;

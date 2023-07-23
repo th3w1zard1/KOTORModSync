@@ -25,7 +25,7 @@ namespace KOTORModSync.Tests
             // Clean up any extracted files or directories after each test if necessary
             if ( _destinationPath is
                 {
-                    Exists: true
+                    Exists: true,
                 } )
             {
                 _destinationPath.Delete( true );

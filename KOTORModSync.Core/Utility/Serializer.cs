@@ -5,12 +5,14 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using JetBrains.Annotations;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using Tomlyn.Model;
 
 // ReSharper disable UnusedMember.Global
 namespace KOTORModSync.Core.Utility
@@ -18,8 +20,11 @@ namespace KOTORModSync.Core.Utility
     public static class Serializer
     {
         [NotNull]
-        public static string FixGuidString( string guidString )
+        public static string FixGuidString( [NotNull] string guidString )
         {
+            if ( string.IsNullOrWhiteSpace( guidString ) )
+                throw new ArgumentException( message: "Value cannot be null or whitespace.", nameof(guidString) );
+
             // Remove any whitespace characters
             guidString = Regex.Replace( guidString, pattern: @"\s", replacement: "" );
 
@@ -47,8 +52,13 @@ namespace KOTORModSync.Core.Utility
         }
 
         // converts accidental lists into strings and vice versa
-        public static void DeserializePathInDictionary( IDictionary<string, object> dict, string key )
+        public static void DeserializePathInDictionary( [NotNull] IDictionary<string, object> dict, [NotNull] string key )
         {
+            if ( dict?.Count == 0 )
+                throw new ArgumentException( message: "Value cannot be null or empty.", nameof(dict) );
+            if ( string.IsNullOrEmpty( key ) )
+                throw new ArgumentException( message: "Value cannot be null or empty.", nameof(key) );
+
             if ( !dict.TryGetValue( key, out object pathValue ) )
             {
                 return;
@@ -58,7 +68,7 @@ namespace KOTORModSync.Core.Utility
             {
                 case string path:
                     {
-                        string formattedPath = FixPathFormatting( path );
+                        string formattedPath = PathHelper.FixPathFormatting( path );
                         dict[key] = new List<string> { PrefixPath( formattedPath ) };
                         break;
                     }
@@ -67,7 +77,7 @@ namespace KOTORModSync.Core.Utility
                         for ( int index = 0; index < paths.Count; index++ )
                         {
                             string currentPath = paths[index];
-                            string formattedPath = FixPathFormatting( currentPath );
+                            string formattedPath = PathHelper.FixPathFormatting( currentPath );
                             paths[index] = PrefixPath( formattedPath );
                         }
 
@@ -89,7 +99,7 @@ namespace KOTORModSync.Core.Utility
                 case string stringValue:
                     {
                         // Convert the string to a list of strings
-                        var stringList = new List<string>( 65535 ) { stringValue };
+                        var stringList = new List<string>( ) { stringValue };
 
                         // Replace the string value with the list
                         dict[key] = stringList;
@@ -135,31 +145,12 @@ namespace KOTORModSync.Core.Utility
 
         [NotNull]
         public static string PrefixPath( [NotNull] string path ) =>
-            !path.StartsWith( value: "<<modDirectory>>", StringComparison.OrdinalIgnoreCase )
-            && !path.StartsWith( value: "<<kotorDirectory>>", StringComparison.OrdinalIgnoreCase )
-                ? FixPathFormatting( "<<modDirectory>>" + Environment.NewLine + path )
-                : path;
-
-        [NotNull]
-        public static string FixPathFormatting( [NotNull] string path )
-        {
-            // Replace backslashes with forward slashes
-            string formattedPath = path.Replace( Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar )
-                .Replace( oldChar: '\\', Path.DirectorySeparatorChar )
-                .Replace( oldChar: '/', Path.DirectorySeparatorChar );
-
-            // Fix repeated slashes
-            formattedPath = Regex.Replace(
-                formattedPath,
-                $"(?<!:){Path.DirectorySeparatorChar}{Path.DirectorySeparatorChar}+",
-                Path.DirectorySeparatorChar.ToString()
-            );
-
-            // Fix trailing slashes
-            formattedPath = formattedPath.TrimEnd( Path.DirectorySeparatorChar );
-
-            return formattedPath;
-        }
+            string.IsNullOrWhiteSpace( path )
+                ? throw new ArgumentException( message: "Value cannot be null or whitespace.", nameof(path) )
+                : !path.StartsWith( value: "<<modDirectory>>", StringComparison.OrdinalIgnoreCase )
+                  && !path.StartsWith( value: "<<kotorDirectory>>", StringComparison.OrdinalIgnoreCase )
+                    ? PathHelper.FixPathFormatting( "<<modDirectory>>" + Path.DirectorySeparatorChar + path )
+                    : path;
 
         [NotNull]
         public static string FixWhitespaceIssues( [NotNull] string strContents )
@@ -169,7 +160,7 @@ namespace KOTORModSync.Core.Utility
                 .Replace( oldValue: "\n", Environment.NewLine );
 
             string[] lines = Regex.Split( strContents, $"(?<!\r){Regex.Escape( Environment.NewLine )}" )
-                .Select( line => line.Trim() )
+                .Select( line => line?.Trim() )
                 .ToArray();
 
             return string.Join( Environment.NewLine, lines );
@@ -178,7 +169,7 @@ namespace KOTORModSync.Core.Utility
         [NotNull]
         public static List<object> CreateMergedList( [NotNull] params IEnumerable<object>[] lists )
         {
-            var mergedList = new List<object>( 65535 );
+            var mergedList = new List<object>( );
 
             foreach ( IEnumerable<object> list in lists )
             {
@@ -192,6 +183,7 @@ namespace KOTORModSync.Core.Utility
         }
 
         [NotNull]
+        [ItemNotNull]
         public static IEnumerable<object> EnumerateDictionaryEntries( [NotNull] IEnumerator enumerator )
         {
             while ( enumerator.MoveNext() )
@@ -217,8 +209,7 @@ namespace KOTORModSync.Core.Utility
                     return obj.ToString();
                 case IList objList:
                     return SerializeIntoList( objList );
-                case IDictionary objDict:
-                    return SerializeIntoDictionary( objDict );
+                case IDictionary _:
                 case var _ when obj.GetType().IsClass:
                     return SerializeIntoDictionary( obj );
                 default:
@@ -232,6 +223,7 @@ namespace KOTORModSync.Core.Utility
             var settings = new JsonSerializerSettings
             {
                 TypeNameHandling = TypeNameHandling.None,
+                NullValueHandling = NullValueHandling.Ignore,
             };
 
             string jsonString = JsonConvert.SerializeObject( obj, settings );
@@ -274,6 +266,86 @@ namespace KOTORModSync.Core.Utility
             // Use Newtonsoft.Json for serialization and deserialization
             string jsonString = JsonConvert.SerializeObject( obj );
             return JsonConvert.DeserializeObject<List<object>>( jsonString );
+        }
+    }
+
+    public static class ObjectToDictionaryHelper
+    {
+        public static IDictionary<string, object> ToDictionary( this object source )
+        {
+            return source.ToDictionary<object>();
+        }
+
+        public static IDictionary<string, T> ToDictionary<T>( this object source )
+        {
+            if ( source == null )
+                ThrowExceptionWhenSourceArgumentIsNull();
+
+            var dictionary = new Dictionary<string, T>();
+            ConvertPropertiesToDictionary( source, dictionary );
+            return dictionary;
+        }
+
+        private static void ConvertPropertiesToDictionary<T>( object source, IDictionary<string, T> dictionary )
+        {
+            foreach ( PropertyDescriptor property in TypeDescriptor.GetProperties( source ) )
+            {
+                object value = property.GetValue( source );
+
+                if ( value == null )
+                {
+                    dictionary.Add( property.Name, default( T ) );
+                }
+                else if ( IsOfType<T>( value ) )
+                {
+                    dictionary.Add( property.Name, (T)value );
+                }
+                else if ( value is IDictionary nestedDictionary )
+                {
+                    var convertedNestedDictionary = ConvertNestedDictionary( nestedDictionary );
+                    dictionary.Add( property.Name, (T)Convert.ChangeType( convertedNestedDictionary, typeof( T ) ) );
+                }
+                else if ( value is IEnumerable enumerable )
+                {
+                    var convertedEnumerable = ConvertEnumerable( enumerable );
+                    dictionary.Add( property.Name, (T)Convert.ChangeType( convertedEnumerable, typeof( T ) ) );
+                }
+                else
+                {
+                    var convertedNestedObject = ToDictionary( value );
+                    dictionary.Add( property.Name, (T)Convert.ChangeType( convertedNestedObject, typeof( T ) ) );
+                }
+            }
+        }
+
+        private static IDictionary<string, object> ConvertNestedDictionary( IDictionary nestedDictionary )
+        {
+            var convertedNestedDictionary = new Dictionary<string, object>();
+            foreach ( DictionaryEntry entry in nestedDictionary )
+            {
+                convertedNestedDictionary.Add( entry.Key.ToString(), entry.Value );
+            }
+            return convertedNestedDictionary;
+        }
+
+        private static IEnumerable<object> ConvertEnumerable( IEnumerable enumerable )
+        {
+            var convertedEnumerable = new List<object>();
+            foreach ( var item in enumerable )
+            {
+                convertedEnumerable.Add( item );
+            }
+            return convertedEnumerable;
+        }
+
+        private static bool IsOfType<T>( object value )
+        {
+            return value is T;
+        }
+
+        private static void ThrowExceptionWhenSourceArgumentIsNull()
+        {
+            throw new ArgumentNullException( "source", "Unable to convert object to a dictionary. The source object is null." );
         }
     }
 }

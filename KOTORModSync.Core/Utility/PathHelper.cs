@@ -12,7 +12,7 @@ using JetBrains.Annotations;
 
 namespace KOTORModSync.Core.Utility
 {
-    public static class FileHelper
+    public static class PathHelper
     {
         [CanBeNull]
         public static string GetFolderName( [CanBeNull] string itemInArchivePath ) =>
@@ -20,25 +20,79 @@ namespace KOTORModSync.Core.Utility
                 ? Path.GetDirectoryName( itemInArchivePath )
                 : itemInArchivePath;
 
+        [CanBeNull]
+        public static string GetCaseSensitivePath([NotNull] string path)
+        {
+            if ( string.IsNullOrWhiteSpace( path ) )
+                throw new ArgumentException( $"'{nameof( path )}' cannot be null or whitespace.", nameof( path ) );
+
+            // Check for invalid characters in the path
+            char[] invalidChars = Path.GetInvalidPathChars();
+            if (path.IndexOfAny(invalidChars) >= 0)
+            {
+                throw new ArgumentException( $"{path} is not a valid path!" );
+            }
+
+            path = Path.GetFullPath(path); // Get the full path to handle relative paths
+            if ( File.Exists( path ) || Directory.Exists( path ) )
+                return path;
+
+            DirectoryInfo parentDir = Directory.GetParent(path);
+            if (parentDir == null)
+                return null;
+
+            string searchName = Path.GetFileName(path);
+            DirectoryInfo[] matchingDirectories = parentDir.GetDirectories(searchPattern: "*", SearchOption.TopDirectoryOnly);
+
+            if (matchingDirectories.Length > 0)
+            {
+                foreach ( DirectoryInfo dir in matchingDirectories)
+                {
+                    if (dir.FullName.Equals(path, StringComparison.OrdinalIgnoreCase))
+                        return dir.FullName;
+                }
+            }
+
+            FileInfo[] matchingFiles = parentDir.GetFiles(searchPattern: "*", SearchOption.TopDirectoryOnly);
+
+            if (matchingFiles.Length > 0)
+            {
+                foreach ( FileInfo file in matchingFiles)
+                {
+                    if (file.FullName.Equals(path, StringComparison.OrdinalIgnoreCase))
+                        return file.FullName;
+                }
+            }
+
+            return null;
+        }
+
+        [CanBeNull]
+        public static string GetCaseSensitivePath( [CanBeNull] FileInfo file ) => GetCaseSensitivePath( file?.FullName );
+        [CanBeNull]
+        public static string GetCaseSensitivePath( [CanBeNull] DirectoryInfo directory ) => GetCaseSensitivePath( directory?.FullName );
+
         public static async Task MoveFileAsync( [NotNull] string sourcePath, [NotNull] string destinationPath )
         {
-            if ( sourcePath is null ) throw new ArgumentNullException( nameof( sourcePath ) );
-            if ( destinationPath is null ) throw new ArgumentNullException( nameof( destinationPath ) );
+            if ( sourcePath is null )
+                throw new ArgumentNullException( nameof( sourcePath ) );
+            if ( destinationPath is null )
+                throw new ArgumentNullException( nameof( destinationPath ) );
 
             using ( var sourceStream = new FileStream(
-                       sourcePath,
-                       FileMode.Open,
-                       FileAccess.Read,
-                       FileShare.Read,
+                       path: sourcePath,
+                       mode: FileMode.Open,
+                       access: FileAccess.Read,
+                       share: FileShare.Read,
                        bufferSize: 4096,
                        useAsync: true
                    ) )
             {
                 using ( var destinationStream = new FileStream(
-                           destinationPath,
-                           FileMode.CreateNew,
-                           FileAccess.Write,
-                           FileShare.None,
+                           path: destinationPath,
+                           mode: FileMode.CreateNew,
+                           access: FileAccess.Write,
+                           share: FileShare.None,
                            bufferSize: 4096,
                            useAsync: true
                        ) )
@@ -58,7 +112,8 @@ namespace KOTORModSync.Core.Utility
             bool topLevelOnly = false
         )
         {
-            if ( filesAndFolders is null ) throw new ArgumentNullException( nameof( filesAndFolders ) );
+            if ( filesAndFolders is null )
+                throw new ArgumentNullException( nameof( filesAndFolders ) );
 
             var result = new List<string>();
             var uniquePaths = new HashSet<string>( filesAndFolders );
@@ -67,7 +122,7 @@ namespace KOTORModSync.Core.Utility
             {
                 try
                 {
-                    string formattedPath = Serializer.FixPathFormatting( path );
+                    string formattedPath = FixPathFormatting( path );
 
                     if ( !ContainsWildcards( formattedPath ) )
                     {
@@ -120,10 +175,10 @@ namespace KOTORModSync.Core.Utility
                     while ( ContainsWildcards( currentDirectory ) )
                     {
                         string parentDirectory = Path.GetDirectoryName( currentDirectory );
+
+                        // Exit the loop if no parent directory is found or if the parent directory is the same as the current directory
                         if ( string.IsNullOrEmpty( parentDirectory ) || parentDirectory == currentDirectory )
-                        {
-                            break; // Exit the loop if no parent directory is found or if the parent directory is the same as the current directory
-                        }
+                            break;
 
                         currentDirectory = parentDirectory;
                     }
@@ -157,17 +212,18 @@ namespace KOTORModSync.Core.Utility
             return result;
         }
 
-        private static bool ContainsWildcards( [NotNull] string path ) =>
-            ( path ?? throw new ArgumentNullException( nameof( path ) ) ).Contains( '*' ) || path.Contains( '?' );
+        private static bool ContainsWildcards( [NotNull] string path ) => path.Contains( '*' ) || path.Contains( '?' );
 
         public static bool WildcardPathMatch( [NotNull] string input, [NotNull] string patternInput )
         {
-            if ( input is null ) throw new ArgumentNullException( nameof( input ) );
-            if ( patternInput is null ) throw new ArgumentNullException( nameof( patternInput ) );
+            if ( input is null )
+                throw new ArgumentNullException( nameof( input ) );
+            if ( patternInput is null )
+                throw new ArgumentNullException( nameof( patternInput ) );
 
             // Fix path formatting
-            input = Serializer.FixPathFormatting( input );
-            patternInput = Serializer.FixPathFormatting( patternInput );
+            input = FixPathFormatting( input );
+            patternInput = FixPathFormatting( patternInput );
 
             // Split the input and pattern into directory levels
             string[] inputLevels = input.Split( Path.DirectorySeparatorChar );
@@ -175,9 +231,7 @@ namespace KOTORModSync.Core.Utility
 
             // Ensure the number of levels match
             if ( inputLevels.Length != patternLevels.Length )
-            {
                 return false;
-            }
 
             // Iterate over each level and perform wildcard matching
             for ( int i = 0; i < inputLevels.Length; i++ )
@@ -187,15 +241,11 @@ namespace KOTORModSync.Core.Utility
 
                 // Check if the current level is a wildcard
                 if ( patternLevel == "*" || patternLevel == "?" )
-                {
                     continue;
-                }
 
                 // Check if the current level matches the pattern
                 if ( !WildcardMatch( inputLevel, patternLevel ) )
-                {
                     return false;
-                }
             }
 
             return true;
@@ -204,8 +254,10 @@ namespace KOTORModSync.Core.Utility
         // Most end users don't know Regex, this function will convert basic wildcards to regex patterns.
         private static bool WildcardMatch( [NotNull] string input, [NotNull] string pattern )
         {
-            if ( input is null ) throw new ArgumentNullException( nameof( input ) );
-            if ( pattern is null ) throw new ArgumentNullException( nameof( pattern ) );
+            if ( input is null )
+                throw new ArgumentNullException( nameof( input ) );
+            if ( pattern is null )
+                throw new ArgumentNullException( nameof( pattern ) );
 
             // Escape special characters in the pattern
             pattern = Regex.Escape( pattern );
@@ -218,10 +270,25 @@ namespace KOTORModSync.Core.Utility
             return Regex.IsMatch( input, $"^{pattern}$" );
         }
 
-        public static bool IsDirectoryWithName( [NotNull] object directory, [NotNull] string name ) =>
-            directory is Dictionary<string, object> dict
-            && dict.ContainsKey( "Name" )
-            && dict["Name"] is string directoryName
-            && directoryName.Equals( name, StringComparison.OrdinalIgnoreCase );
+        [NotNull]
+        public static string FixPathFormatting( [NotNull] string path )
+        {
+            // Replace backslashes with forward slashes
+            string formattedPath = path.Replace( Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar )
+                .Replace( oldChar: '\\', Path.DirectorySeparatorChar )
+                .Replace( oldChar: '/', Path.DirectorySeparatorChar );
+
+            // Fix repeated slashes
+            formattedPath = Regex.Replace(
+                formattedPath,
+                $"(?<!:){Path.DirectorySeparatorChar}{Path.DirectorySeparatorChar}+",
+                Path.DirectorySeparatorChar.ToString()
+            );
+
+            // Fix trailing slashes
+            formattedPath = formattedPath.TrimEnd( Path.DirectorySeparatorChar );
+
+            return formattedPath;
+        }
     }
 }

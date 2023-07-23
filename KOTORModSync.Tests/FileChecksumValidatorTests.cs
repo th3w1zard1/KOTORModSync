@@ -235,7 +235,7 @@ namespace KOTORModSync.Tests
             string filePath = Path.Combine( _testDirectory, path2: "Checksums.json" );
             var checksums = new Dictionary<string, string>
             {
-                { _testDirectory, FileChecksumValidator.Sha1ToString( SHA1.Create() ) }
+                { _testDirectory, FileChecksumValidator.Sha1ToString( SHA1.Create() ) },
             };
 
             // Convert the directory paths to DirectoryInfo objects
@@ -276,7 +276,7 @@ namespace KOTORModSync.Tests
                 string filePath = Path.Combine( testFolderPath, path2: "Checksums.txt" );
                 var checksums = new Dictionary<string, string>
                 {
-                    { Path.Combine( testFolderPath, path2: "TestFile.txt" ), "SHA1HashValue" }
+                    { Path.Combine( testFolderPath, path2: "TestFile.txt" ), "SHA1HashValue" },
                 };
 
                 // Write checksums to the file

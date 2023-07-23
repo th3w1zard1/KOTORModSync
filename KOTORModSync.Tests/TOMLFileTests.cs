@@ -4,11 +4,12 @@
 
 using System.Collections;
 using System.Diagnostics;
+using System.Reflection;
 using System.Text;
 using JetBrains.Annotations;
 using KOTORModSync.Core;
 using KOTORModSync.Core.Utility;
-using Nett.Parser;
+using Newtonsoft.Json;
 
 namespace KOTORModSync.Tests
 {
@@ -263,7 +264,7 @@ namespace KOTORModSync.Tests
                 // Assert
                 Assert.That( loadedComponents, Is.Null.Or.Empty );
             }
-            catch ( ParseException ) { }
+            catch ( InvalidDataException ) { }
         }
 
         [Test]
@@ -274,16 +275,16 @@ namespace KOTORModSync.Tests
             {
                 new Component
                 {
-                    Name = "Component 1", Guid = Guid.Parse( "{B3525945-BDBD-45D8-A324-AAF328A5E13E}" )
+                    Name = "Component 1", Guid = Guid.Parse( "{B3525945-BDBD-45D8-A324-AAF328A5E13E}" ),
                 },
                 new Component
                 {
-                    Name = "Component 2", Guid = Guid.Parse( "{C5418549-6B7E-4A8C-8B8E-4AA1BC63C732}" )
+                    Name = "Component 2", Guid = Guid.Parse( "{C5418549-6B7E-4A8C-8B8E-4AA1BC63C732}" ),
                 },
                 new Component
                 {
-                    Name = "Component 3", Guid = Guid.Parse( "{B3525945-BDBD-45D8-A324-AAF328A5E13E}" )
-                }
+                    Name = "Component 3", Guid = Guid.Parse( "{B3525945-BDBD-45D8-A324-AAF328A5E13E}" ),
+                },
             };
 
             // Act
@@ -337,47 +338,47 @@ namespace KOTORModSync.Tests
                 {
                     new()
                     {
-                        Name = "Component 1", Guid = Guid.Parse( "{B3525945-BDBD-45D8-A324-AAF328A5E13E}" )
+                        Name = "Component 1", Guid = Guid.Parse( "{B3525945-BDBD-45D8-A324-AAF328A5E13E}" ),
                     },
                     new()
                     {
-                        Name = "Component 2", Guid = Guid.Parse( "{C5418549-6B7E-4A8C-8B8E-4AA1BC63C732}" )
-                    }
+                        Name = "Component 2", Guid = Guid.Parse( "{C5418549-6B7E-4A8C-8B8E-4AA1BC63C732}" ),
+                    },
                 },
                 new List<Component>
                 {
                     new()
                     {
-                        Name = "Component 3", Guid = Guid.Parse( "{D0F371DA-5C69-4A26-8A37-76E3A6A2A50D}" )
+                        Name = "Component 3", Guid = Guid.Parse( "{D0F371DA-5C69-4A26-8A37-76E3A6A2A50D}" ),
                     },
                     new()
                     {
-                        Name = "Component 4", Guid = Guid.Parse( "{E7B27A19-9A81-4A20-B062-7D00F2603D5C}" )
+                        Name = "Component 4", Guid = Guid.Parse( "{E7B27A19-9A81-4A20-B062-7D00F2603D5C}" ),
                     },
                     new()
                     {
-                        Name = "Component 5", Guid = Guid.Parse( "{F1B05F5D-3C06-4B64-8E39-8BEC8D22BB0A}" )
-                    }
+                        Name = "Component 5", Guid = Guid.Parse( "{F1B05F5D-3C06-4B64-8E39-8BEC8D22BB0A}" ),
+                    },
                 },
                 new List<Component>
                 {
                     new()
                     {
-                        Name = "Component 6", Guid = Guid.Parse( "{EF04A28E-5031-4A95-A85A-9A1B29A31710}" )
+                        Name = "Component 6", Guid = Guid.Parse( "{EF04A28E-5031-4A95-A85A-9A1B29A31710}" ),
                     },
                     new()
                     {
-                        Name = "Component 7", Guid = Guid.Parse( "{B0373F49-ED5A-43A1-91E0-5CEB85659282}" )
+                        Name = "Component 7", Guid = Guid.Parse( "{B0373F49-ED5A-43A1-91E0-5CEB85659282}" ),
                     },
                     new()
                     {
-                        Name = "Component 8", Guid = Guid.Parse( "{BBDB9C8D-DA44-4859-A641-0364D6F34D12}" )
+                        Name = "Component 8", Guid = Guid.Parse( "{BBDB9C8D-DA44-4859-A641-0364D6F34D12}" ),
                     },
                     new()
                     {
-                        Name = "Component 9", Guid = Guid.Parse( "{D6B5C60F-26A7-4595-A0E2-2DE567A376DE}" )
-                    }
-                }
+                        Name = "Component 9", Guid = Guid.Parse( "{D6B5C60F-26A7-4595-A0E2-2DE567A376DE}" ),
+                    },
+                },
             };
             // Act and Assert
             foreach ( List<Component> components in rounds )
@@ -397,21 +398,53 @@ namespace KOTORModSync.Tests
             }
         }
 
-        private static void AssertComponentEquality(
-            Component expected,
-            Component actual,
-            bool caseSensitiveKeys = true
-        ) =>
-            Assert.Multiple(
-                () =>
-                {
-                    IComparer comparer = caseSensitiveKeys
-                        ? StringComparer.Ordinal
-                        : StringComparer.OrdinalIgnoreCase;
+        [Test]
+        public void TomlWriteStringTest()
+        {
+            // Sample nested Dictionary representing TOML data
+            Dictionary<string, object> innerDictionary1 = new Dictionary<string, object>
+            {
+                { "name", "John" },
+                { "age", 30 },
+                // other key-value pairs for the first table
+            };
 
-                    Assert.That( actual.Name, Is.EqualTo( expected.Name ).Using( comparer ) );
-                    Assert.That( actual.Guid, Is.EqualTo( expected.Guid ).Using( comparer ) );
+            Dictionary<string, object> innerDictionary2 = new Dictionary<string, object>
+            {
+                { "name", "Alice" },
+                { "age", 25 },
+                // other key-value pairs for the second table
+            };
+
+            var rootTable = new Dictionary<string, object>
+            {
+                {
+                    "thisMod", new List<object>
+                    {
+                        innerDictionary1,
+                        innerDictionary2
+                        // additional dictionaries in the list
+                    }
                 }
-            );
+            };
+
+            Logger.Log( TomlWriter.WriteString( rootTable ) );
+            Logger.Log( Tomlyn.Toml.FromModel(rootTable) );
+        }
+
+        private static void AssertComponentEquality( object obj, object another )
+        {
+            if ( ReferenceEquals( obj, another ) )
+                return;
+            if ( ( obj == null ) || ( another == null ) )
+                return;
+            if ( obj.GetType() != another.GetType() )
+                return;
+
+            string objJson = JsonConvert.SerializeObject( obj );
+            string anotherJson = JsonConvert.SerializeObject( another );
+
+            Assert.That(objJson, Is.EqualTo(anotherJson));
+        }
     }
 }

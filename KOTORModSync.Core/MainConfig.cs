@@ -42,7 +42,7 @@ namespace KOTORModSync.Core
 
             [Description( "Not Tested" )] Untested = 2,
 
-            [Description( "INCOMPATIBLE" )] Incompatible = 3
+            [Description( "INCOMPATIBLE" )] Incompatible = 3,
         }
 
         [UsedImplicitly]
@@ -58,7 +58,7 @@ namespace KOTORModSync.Core
 
             [DefaultValue( true )]
             [Description( "Use PyKotorCLI" )]
-            PyKotorCLI = 1
+            PyKotorCLI = 1,
         }
 
         [UsedImplicitly]

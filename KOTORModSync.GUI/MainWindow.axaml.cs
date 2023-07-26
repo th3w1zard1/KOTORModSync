@@ -152,12 +152,14 @@ namespace KOTORModSync
         public new event EventHandler<PropertyChangedEventArgs> PropertyChanged;
         private string _searchText;
 
+        [CanBeNull]
         public string SearchText
         {
             get => _searchText;
             set
             {
-                if ( _searchText == value ) return; // prevent recursion problems
+                if ( _searchText == value )
+                    return; // prevent recursion problems
 
                 _searchText = value;
                 PropertyChanged?.Invoke( this, new PropertyChangedEventArgs( nameof( SearchText ) ) );
@@ -243,9 +245,7 @@ namespace KOTORModSync
             }
 
             if ( visual.LogicalChildren is null || visual.LogicalChildren.Count == 0 )
-            {
                 return;
-            }
 
             foreach ( ILogical child in visual.LogicalChildren )
             {
@@ -307,15 +307,15 @@ namespace KOTORModSync
         private void InputElement_OnPointerReleased( [NotNull] object sender, [NotNull] PointerEventArgs e ) =>
             _mouseDownForWindowMoving = false;
 
-        private void CloseButton_Click( object sender, RoutedEventArgs e ) => Close();
-        private void MinimizeButton_Click( object sender, RoutedEventArgs e ) => WindowState = WindowState.Minimized;
+        private void CloseButton_Click( [NotNull] object sender, [NotNull] RoutedEventArgs e ) => Close();
+        private void MinimizeButton_Click( [NotNull] object sender, [NotNull] RoutedEventArgs e ) => WindowState = WindowState.Minimized;
 
         [ItemCanBeNull]
         private async Task<string> OpenFile()
         {
             try
             {
-                var filters = new List<FileDialogFilter>( 10 )
+                var filters = new List<FileDialogFilter>
                 {
                     new FileDialogFilter { Name = "Mod Sync File", Extensions = { "toml", "tml" } },
                     new FileDialogFilter { Name = "All Files", Extensions = { "*" } },
@@ -339,7 +339,7 @@ namespace KOTORModSync
         {
             try
             {
-                var filters = new List<FileDialogFilter>( 10 )
+                var filters = new List<FileDialogFilter>
                 {
                     new FileDialogFilter { Name = "All Files", Extensions = { "*" } },
                 };
@@ -594,7 +594,7 @@ namespace KOTORModSync
             }
         }
 
-        private void OpenLink_Click( object sender, RoutedEventArgs e )
+        private void OpenLink_Click( [NotNull] object sender, [NotNull] RoutedEventArgs e )
         {
             if ( !( sender is TextBlock textBlock ) )
                 return;
@@ -1236,17 +1236,17 @@ namespace KOTORModSync
                                 progressWindow.PercentCompleted.Text = $"{Math.Round( percentComplete * 100 )}%";
 
                                 // Additional fallback options
-                                await Task.Delay( 100 ); // Introduce a small delay
+                                await Task.Delay( millisecondsDelay: 100 ); // Introduce a small delay
                                 await Dispatcher.UIThread.InvokeAsync(
                                     () => { }
                                 ); // Invoke an empty action to ensure UI updates are processed
-                                await Task.Delay( 50 ); // Introduce another small delay
+                                await Task.Delay( millisecondsDelay: 50 ); // Introduce another small delay
                             }
                         );
 
                         // Ensure the UI updates are processed
                         await Task.Yield();
-                        await Task.Delay( 200 );
+                        await Task.Delay( millisecondsDelay: 200 );
 
                         if ( !component.IsSelected )
                         {
@@ -1316,7 +1316,7 @@ namespace KOTORModSync
         {
             try
             {
-                string file = await SaveFile( new List<string>( 65535 ) { "txt" } );
+                string file = await SaveFile( new List<string> { "txt" } );
                 if ( file is null )
                 {
                     return;
@@ -1367,37 +1367,45 @@ namespace KOTORModSync
 
         private void TabControl_SelectionChanged( [CanBeNull] object sender, [CanBeNull] SelectionChangedEventArgs e )
         {
-            if ( !( ( sender as TabControl )?.SelectedItem is TabItem selectedItem ) )
+            try
             {
-                return;
-            }
+                if ( !( ( sender as TabControl )?.SelectedItem is TabItem selectedItem ) )
+                {
+                    return;
+                }
 
-            if ( selectedItem.Header is null )
-            {
-                return;
-            }
+                if ( selectedItem.Header is null )
+                {
+                    return;
+                }
 
-            // Don't show content of any tabs (except the hidden one) if there's no content.
-            if ( MainConfig.AllComponents.Count == 0 || LeftTreeView.SelectedItem is null )
-            {
-                TabControl.SelectedItem = InitialTab;
-                return;
-            }
+                // Don't show content of any tabs (except the hidden one) if there's no content.
+                if ( MainConfig.AllComponents.Count == 0 || LeftTreeView.SelectedItem is null )
+                {
+                    TabControl.SelectedItem = InitialTab;
+                    return;
+                }
 
-            switch ( selectedItem.Header.ToString() )
+                switch ( selectedItem.Header.ToString() )
+                {
+                    // Show/hide the appropriate content based on the selected tab
+                    case "Raw Edit":
+                        RawEditTextBox.IsVisible = true;
+                        ApplyEditorButton.IsVisible = true;
+                        break;
+                    case "GUI Edit":
+                        RawEditTextBox.IsVisible = false;
+                        ApplyEditorButton.IsVisible = false;
+                        break;
+                    default:
+                        RawEditTextBox.IsVisible = true;
+                        break;
+                }
+            }
+            catch ( Exception exception )
             {
-                // Show/hide the appropriate content based on the selected tab
-                case "Raw Edit":
-                    RawEditTextBox.IsVisible = true;
-                    ApplyEditorButton.IsVisible = true;
-                    break;
-                case "GUI Edit":
-                    RawEditTextBox.IsVisible = false;
-                    ApplyEditorButton.IsVisible = false;
-                    break;
-                default:
-                    RawEditTextBox.IsVisible = true;
-                    break;
+                Logger.LogException( exception );
+                throw;
             }
         }
 
@@ -1454,11 +1462,7 @@ namespace KOTORModSync
         private void RawEditTextBox_LostFocus( [NotNull] object sender, [NotNull] RoutedEventArgs e ) =>
             e.Handled = true;
 
-        private bool CheckForChanges()
-        {
-            string currentContent = RawEditTextBox.Text;
-            return !string.Equals( currentContent, _originalContent );
-        }
+        private bool CheckForChanges() => !string.Equals( RawEditTextBox?.Text, _originalContent );
 
         private async Task<(bool, string Message)> SaveChanges()
         {
@@ -1516,7 +1520,7 @@ namespace KOTORModSync
             catch ( Exception ex )
             {
                 const string customMessage = "An unexpected exception was thrown. Please report this to the developer.";
-                Logger.LogException( ex, customMessage );
+                await Logger.LogExceptionAsync( ex, customMessage );
                 return (false, customMessage + Environment.NewLine + "Refer to the output window for details.");
             }
         }
@@ -1525,7 +1529,7 @@ namespace KOTORModSync
         {
             try
             {
-                var treeViewComponent = (Component)selectedTreeViewItem.Tag;
+                var treeViewComponent = (Component)selectedTreeViewItem?.Tag;
 
                 int index = MainConfig.AllComponents.IndexOf( treeViewComponent );
                 if ( treeViewComponent is null
@@ -1620,7 +1624,7 @@ namespace KOTORModSync
             }
         }
 
-        public void ComponentCheckboxChecked(
+        private void ComponentCheckboxChecked(
             [NotNull] Component component,
             [NotNull] HashSet<Component> visitedComponents,
             bool suppressErrors = false
@@ -1699,7 +1703,7 @@ namespace KOTORModSync
             }
         }
 
-        public void ComponentCheckboxUnchecked(
+        private void ComponentCheckboxUnchecked(
             [NotNull] Component component,
             [CanBeNull] HashSet<Component> visitedComponents,
             bool suppressErrors = false
@@ -1757,6 +1761,7 @@ namespace KOTORModSync
             }
         }
 
+        [NotNull]
         private CheckBox CreateComponentCheckbox( [NotNull] Component component )
         {
             if ( component is null )
@@ -1783,6 +1788,7 @@ namespace KOTORModSync
             return checkBox;
         }
 
+        [NotNull]
         private Control CreateComponentHeader( [NotNull] Component component, int index )
         {
             if ( component is null )
@@ -1816,9 +1822,7 @@ namespace KOTORModSync
             parameter =>
             {
                 if ( !( parameter is Component component ) )
-                {
                     return;
-                }
 
                 LoadComponentDetails( component );
             }
@@ -1856,14 +1860,10 @@ namespace KOTORModSync
             foreach ( object item in items )
             {
                 if ( !( item is TreeViewItem treeViewItem ) )
-                {
                     continue;
-                }
 
                 if ( treeViewItem.Tag is Component treeViewComponent && treeViewComponent.Equals( component ) )
-                {
                     return treeViewItem;
-                }
             }
 
             return null;
@@ -1909,7 +1909,7 @@ namespace KOTORModSync
             var rootItem = new TreeViewItem { IsExpanded = true };
 
             var checkBox = new CheckBox { Name = "IsSelected", IsChecked = true };
-            var binding = new Binding( "IsSelected" );
+            var binding = new Binding( path: "IsSelected" );
 
             // Set up the event handler for the checkbox
             bool manualSet = false;
@@ -2018,7 +2018,8 @@ namespace KOTORModSync
                 _ = treeEnumerator.MoveNext();
                 LeftTreeView.ExpandSubTree( (TreeViewItem)treeEnumerator.Current );
 
-                if ( componentsList.Count > 0 || TabControl is null ) return;
+                if ( componentsList.Count > 0 || TabControl is null )
+                    return;
 
                 TabControl.SelectedItem = InitialTab;
             }
@@ -2041,10 +2042,9 @@ namespace KOTORModSync
                 var addButton = (Button)sender;
                 var thisInstruction = addButton.Tag as Instruction;
                 var thisComponent = addButton.Tag as Component;
+
                 if ( thisInstruction is null && thisComponent is null )
-                {
                     throw new NullReferenceException( "Cannot find instruction instance from button." );
-                }
 
                 _currentComponent.Instructions = _currentComponent.Instructions; //todo
 
@@ -2225,7 +2225,8 @@ namespace KOTORModSync
                 throw new ArgumentNullException( nameof( control ) );
 
             // fixes a crash that can happen while spamming the combobox style options.
-            if ( control == styleControlComboBox ) return;
+            if ( control == styleControlComboBox )
+                return;
 
             // Reload the style of the control
             control.ApplyTemplate();
@@ -2243,7 +2244,7 @@ namespace KOTORModSync
                 );
         }
 
-        private void ToggleMaximizeButton_Click( object sender, RoutedEventArgs e )
+        private void ToggleMaximizeButton_Click( [NotNull] object sender, [NotNull] RoutedEventArgs e )
         {
             if ( !( sender is Button maximizeButton ) )
                 return;

@@ -93,7 +93,7 @@ namespace KOTORModSync.Core
         public List<Instruction> Instructions { get; set; } = new List<Instruction>();
 
         [NotNull]
-        public Dictionary<Guid, Option> Options { get; set; } = new Dictionary<Guid, Option>();
+        public List<Option> Options { get; set; } = new List<Option>();
 
         [NotNull]
         [ItemNotNull]
@@ -103,7 +103,7 @@ namespace KOTORModSync.Core
         public bool IsSelected { get => _isSelected; set { _isSelected = value; OnPropertyChanged(); } }
 
         [NotNull]
-        public Dictionary<Guid, Option> ChosenOptions { get; set; } = new Dictionary<Guid, Option>();
+        public List<Option> ChosenOptions { get; set; } = new List<Option>();
 
         [NotNull]
         private DirectoryInfo _tempPath;
@@ -463,6 +463,7 @@ namespace KOTORModSync.Core
                     = GetValueOrDefault<List<Guid>>( instructionDict, key: "Dependencies" ) ?? new List<Guid>();
                 instruction.Source = GetValueOrDefault<List<string>>( instructionDict, key: "Source" ) ?? new List<string>();
                 instruction.Destination = GetValueOrDefault<string>( instructionDict, key: "Destination" ) ?? string.Empty;
+                instruction.Options = DeserializeOptions( GetValueOrDefault<IList<object>>( instructionDict, key: "Options" ) );
                 instructions.Add( instruction );
             }
 
@@ -486,7 +487,8 @@ namespace KOTORModSync.Core
             for ( int index = 0; index < optionsSerializedList.Count; index++ )
             {
                 var optionsDict = (IDictionary<string, object>)optionsSerializedList[index];
-                if ( optionsDict is null ) continue;
+                if ( optionsDict is null )
+                    continue;
 
                 Serializer.DeserializeGuidDictionary( optionsDict, key: "Restrictions" );
                 Serializer.DeserializeGuidDictionary( optionsDict, key: "Dependencies" );
@@ -497,7 +499,8 @@ namespace KOTORModSync.Core
                 );
 
                 option.Name = GetRequiredValue<string>( optionsDict, key: "Name" );
-                _ = Logger.LogAsync( $"{Environment.NewLine}== Deserialize next component '{Name}' ==" );
+                option.Description = GetValueOrDefault<string>( optionsDict, key: "Description" );
+                _ = Logger.LogAsync( $"{Environment.NewLine}== Deserialize next option '{Name}' ==" );
                 option.Guid = GetRequiredValue<Guid>( optionsDict, key: "Guid" );
                 option.Restrictions
                     = GetValueOrDefault<List<Guid>>( optionsDict, key: "Restrictions" ) ?? new List<Guid>();
@@ -573,7 +576,7 @@ namespace KOTORModSync.Core
                         {
                             return required
                                 ? throw new KeyNotFoundException( $"'{key}' field cannot be empty." )
-                                : (T)default;
+                                : default(T);
                         }
 
                         if ( targetType == typeof( Guid ) )
@@ -587,7 +590,7 @@ namespace KOTORModSync.Core
                         }
 
                         if ( targetType == typeof( string ) )
-                            return (T)(valueStr as object);
+                            return (T)(object)valueStr;
 
                         break;
                 }
@@ -595,13 +598,14 @@ namespace KOTORModSync.Core
                 if ( targetType.IsGenericType && targetType.GetGenericTypeDefinition() == typeof( List<> ) )
                 {
                     var list = (T)Activator.CreateInstance( targetType );
+                    Type listElementType = targetType.GetGenericArguments()[0];
                     MethodInfo addMethod = list?.GetType().GetMethod( name: "Add" );
 
                     if ( value is IEnumerable<object> enumerableValue )
                     {
                         foreach ( object item in enumerableValue )
                         {
-                            if (Guid.TryParse( item?.ToString(), out Guid guidItem ))
+                            if ( listElementType == typeof( Guid ) && Guid.TryParse( item?.ToString(), out Guid guidItem ) )
                                 _ = addMethod?.Invoke( list, new[] { (object)guidItem } );
                             else
                                 _ = addMethod?.Invoke( list, new[] { item } );
@@ -958,12 +962,16 @@ namespace KOTORModSync.Core
                         instruction.SetRealPaths();
                         exitCode = await instruction.ExecuteProgramAsync();
                         break;
-
+                    case "choose":
                     case "option":
                         instruction.SetRealPaths();
 
-                        Option chosenOption = instruction.GetChosenOption();
-                        (installExitCode, _) = await ExecuteInstructionsAsync( chosenOption.Instructions, componentsList );
+                        List<Option> chosenOptions = instruction.GetChosenOptions();
+                        foreach ( Option thisOption in chosenOptions )
+                        {
+                            (installExitCode, _) = await ExecuteInstructionsAsync( thisOption.Instructions, componentsList );
+                        }
+
                         break;
                     case "backup": //todo
                     case "confirm":

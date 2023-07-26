@@ -85,7 +85,7 @@ namespace KOTORModSync.Tests
         public void SaveAndLoadTOMLFile_MatchingComponents()
         {
             // Read the original TOMLIN file contents
-            Debug.Assert( _filePath != null, nameof( _filePath ) + " != null" );
+            Debug.Assert( _filePath != null, nameof( _filePath ) + " is null" );
             string tomlContents = File.ReadAllText( _filePath );
 
             // Fix whitespace issues

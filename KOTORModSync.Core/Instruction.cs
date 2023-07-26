@@ -3,6 +3,7 @@
 // See LICENSE.txt file in the project root for full license information.
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -881,26 +882,16 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
         }
 
         [NotNull]
-        public Option GetChosenOption()
+        [ItemNotNull]
+        public List<Option> GetChosenOptions()
         {
-            if ( ParentComponent is null )
-                throw new NullReferenceException( "ParentComponent not found for this instruction!" );
+            List<Option> theseChosenOptions = Options
+                .Where( x => x.IsSelected ) // Filter Options based on whether they're chosen.
+                .ToList();
 
-            foreach ( KeyValuePair<Guid, Option> kvp in ParentComponent.ChosenOptions )
-            {
-                Guid optionGuid = kvp.Key;
-                Option thisOption = kvp.Value;
-
-                Option thisInstructionOption = Options.Find( o => o.Guid == optionGuid );
-                if ( thisInstructionOption is null )
-                    continue;
-
-                return thisOption != thisInstructionOption
-                    ? throw new DuplicateNameException( "This guid already corresponds to another option." )
-                    : thisInstructionOption;
-            }
-
-            throw new KeyNotFoundException( "Could not find chosen option for this instruction" );
+            return theseChosenOptions.Count > 0
+                ? theseChosenOptions
+                : throw new KeyNotFoundException( message: "Could not find chosen option for this instruction" );
         }
 
         [NotNull][ItemNotNull] public List<Option> Options = new List<Option>();

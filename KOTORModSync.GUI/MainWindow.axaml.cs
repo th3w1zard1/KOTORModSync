@@ -2156,7 +2156,9 @@ namespace KOTORModSync
                 _canExecute = canExecute;
             }
 
-            [UsedImplicitly] public event EventHandler CanExecuteChanged;
+            [UsedImplicitly]
+            [CanBeNull]
+            public event EventHandler CanExecuteChanged;
 
             public bool CanExecute( object parameter ) => _canExecute?.Invoke( parameter ) == true;
             public void Execute( object parameter ) => _execute( parameter );
@@ -2165,9 +2167,7 @@ namespace KOTORModSync
         private void OpenOutputWindow_Click( [NotNull] object sender, [NotNull] RoutedEventArgs e )
         {
             if ( _outputWindow?.IsVisible == true )
-            {
                 _outputWindow.Close();
-            }
 
             _outputWindow = new OutputWindow();
             _outputWindow.Show();

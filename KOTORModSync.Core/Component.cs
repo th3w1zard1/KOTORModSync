@@ -316,12 +316,99 @@ namespace KOTORModSync.Core
             Instructions = DeserializeInstructions( GetValueOrDefault<IList<object>>( componentDict, key: "Instructions" ) );
             Instructions.ForEach( instruction => instruction?.SetParentComponent( this ) );
 
-            /*Options = DeserializeOptions(
-                GetValueOrDefault<IList<IDictionary<string, object>>>( componentDict, "Options" )
-            );*/
+            Options = DeserializeOptions(
+                GetValueOrDefault<IList<object>>( componentDict, "Options" )
+            );
 
             // Validate and log additional errors/warnings.
             _ = Logger.LogAsync( $"Successfully deserialized component '{Name}'" );
+        }
+
+        [ItemNotNull]
+        [NotNull]
+        private List<Instruction> DeserializeInstructions(
+            [CanBeNull][ItemCanBeNull] IList<object> instructionsSerializedList
+        )
+        {
+            if ( instructionsSerializedList is null || instructionsSerializedList.Count == 0 )
+            {
+                _ = Logger.LogWarningAsync( $"No instructions found for component '{Name}'" );
+                return new List<Instruction>();
+            }
+
+            var instructions = new List<Instruction>();
+
+            for ( int index = 0; index < instructionsSerializedList.Count; index++ )
+            {
+                Dictionary<string, object> instructionDict = Serializer.SerializeIntoDictionary( instructionsSerializedList[index] );
+
+                Serializer.DeserializePathInDictionary( instructionDict, key: "Source" );
+                Serializer.DeserializeGuidDictionary( instructionDict, key: "Restrictions" );
+                Serializer.DeserializeGuidDictionary( instructionDict, key: "Dependencies" );
+
+                var instruction = new Instruction();
+                instruction.Action = GetRequiredValue<string>( instructionDict, key: "Action" );
+                _ = Logger.LogAsync(
+                    $"{Environment.NewLine}-- Deserialize instruction #{index + 1} action {instruction.Action}"
+                );
+                instruction.Arguments = GetValueOrDefault<string>( instructionDict, key: "Arguments" );
+                instruction.Overwrite = GetValueOrDefault<bool>( instructionDict, key: "Overwrite" );
+
+                instruction.Restrictions
+                    = GetValueOrDefault<List<Guid>>( instructionDict, key: "Restrictions" ) ?? new List<Guid>();
+                instruction.Dependencies
+                    = GetValueOrDefault<List<Guid>>( instructionDict, key: "Dependencies" ) ?? new List<Guid>();
+                instruction.Source = GetValueOrDefault<List<string>>( instructionDict, key: "Source" ) ?? new List<string>();
+                instruction.Destination = GetValueOrDefault<string>( instructionDict, key: "Destination" ) ?? string.Empty;
+                instruction.Options = DeserializeOptions( GetValueOrDefault<IList<object>>( instructionDict, key: "Options" ) );
+                instructions.Add( instruction );
+            }
+
+            return instructions;
+        }
+
+        [ItemNotNull]
+        [NotNull]
+        private List<Option> DeserializeOptions(
+            [CanBeNull][ItemCanBeNull] IList<object> optionsSerializedList
+        )
+        {
+            if ( optionsSerializedList is null || optionsSerializedList.Count == 0 )
+            {
+                _ = Logger.LogWarningAsync( $"No options found for component '{Name}'" );
+                return new List<Option>();
+            }
+
+            var options = new List<Option>();
+
+            for ( int index = 0; index < optionsSerializedList.Count; index++ )
+            {
+                var optionsDict = (IDictionary<string, object>)optionsSerializedList[index];
+                if ( optionsDict is null )
+                    continue;
+
+                Serializer.DeserializeGuidDictionary( optionsDict, key: "Restrictions" );
+                Serializer.DeserializeGuidDictionary( optionsDict, key: "Dependencies" );
+
+                var option = new Option();
+                _ = Logger.LogAsync(
+                    $"{Environment.NewLine}-- Deserialize option #{index + 1}"
+                );
+
+                option.Name = GetRequiredValue<string>( optionsDict, key: "Name" );
+                option.Description = GetValueOrDefault<string>( optionsDict, key: "Description" );
+                _ = Logger.LogAsync( $"{Environment.NewLine}== Deserialize next option '{Name}' ==" );
+                option.Guid = GetRequiredValue<Guid>( optionsDict, key: "Guid" );
+                option.Restrictions
+                    = GetValueOrDefault<List<Guid>>( optionsDict, key: "Restrictions" ) ?? new List<Guid>();
+                option.Dependencies
+                    = GetValueOrDefault<List<Guid>>( optionsDict, key: "Dependencies" ) ?? new List<Guid>();
+                option.Instructions
+                    = Instructions = DeserializeInstructions( GetValueOrDefault<IList<object>>( optionsDict, key: "Instructions" ) );
+                options.Add( option );
+            }
+
+            return options;
         }
 
         public static void OutputConfigFile(
@@ -425,93 +512,6 @@ namespace KOTORModSync.Core
             }
 
             return sb.ToString();
-        }
-
-        [ItemNotNull]
-        [NotNull]
-        private List<Instruction> DeserializeInstructions(
-            [CanBeNull][ItemCanBeNull] IList<object> instructionsSerializedList
-        )
-        {
-            if ( instructionsSerializedList is null || instructionsSerializedList.Count == 0 )
-            {
-                _ = Logger.LogWarningAsync( $"No instructions found for component '{Name}'" );
-                return new List<Instruction>();
-            }
-
-            var instructions = new List<Instruction>();
-
-            for ( int index = 0; index < instructionsSerializedList.Count; index++ )
-            {
-                Dictionary<string, object> instructionDict = Serializer.SerializeIntoDictionary( instructionsSerializedList[index] );
-
-                Serializer.DeserializePathInDictionary( instructionDict, key: "Source" );
-                Serializer.DeserializeGuidDictionary( instructionDict, key: "Restrictions" );
-                Serializer.DeserializeGuidDictionary( instructionDict, key: "Dependencies" );
-
-                var instruction = new Instruction();
-                instruction.Action = GetRequiredValue<string>( instructionDict, key: "Action" );
-                _ = Logger.LogAsync(
-                    $"{Environment.NewLine}-- Deserialize instruction #{index + 1} action {instruction.Action}"
-                );
-                instruction.Arguments = GetValueOrDefault<string>( instructionDict, key: "Arguments" );
-                instruction.Overwrite = GetValueOrDefault<bool>( instructionDict, key: "Overwrite" );
-
-                instruction.Restrictions
-                    = GetValueOrDefault<List<Guid>>( instructionDict, key: "Restrictions" ) ?? new List<Guid>();
-                instruction.Dependencies
-                    = GetValueOrDefault<List<Guid>>( instructionDict, key: "Dependencies" ) ?? new List<Guid>();
-                instruction.Source = GetValueOrDefault<List<string>>( instructionDict, key: "Source" ) ?? new List<string>();
-                instruction.Destination = GetValueOrDefault<string>( instructionDict, key: "Destination" ) ?? string.Empty;
-                instruction.Options = DeserializeOptions( GetValueOrDefault<IList<object>>( instructionDict, key: "Options" ) );
-                instructions.Add( instruction );
-            }
-
-            return instructions;
-        }
-
-        [ItemNotNull]
-        [NotNull]
-        private List<Option> DeserializeOptions(
-            [CanBeNull][ItemCanBeNull] IList<object> optionsSerializedList
-        )
-        {
-            if ( optionsSerializedList is null || optionsSerializedList.Count == 0 )
-            {
-                _ = Logger.LogWarningAsync( $"No options found for component '{Name}'" );
-                return new List<Option>();
-            }
-
-            var options = new List<Option>();
-
-            for ( int index = 0; index < optionsSerializedList.Count; index++ )
-            {
-                var optionsDict = (IDictionary<string, object>)optionsSerializedList[index];
-                if ( optionsDict is null )
-                    continue;
-
-                Serializer.DeserializeGuidDictionary( optionsDict, key: "Restrictions" );
-                Serializer.DeserializeGuidDictionary( optionsDict, key: "Dependencies" );
-
-                var option = new Option();
-                _ = Logger.LogAsync(
-                    $"{Environment.NewLine}-- Deserialize option #{index + 1}"
-                );
-
-                option.Name = GetRequiredValue<string>( optionsDict, key: "Name" );
-                option.Description = GetValueOrDefault<string>( optionsDict, key: "Description" );
-                _ = Logger.LogAsync( $"{Environment.NewLine}== Deserialize next option '{Name}' ==" );
-                option.Guid = GetRequiredValue<Guid>( optionsDict, key: "Guid" );
-                option.Restrictions
-                    = GetValueOrDefault<List<Guid>>( optionsDict, key: "Restrictions" ) ?? new List<Guid>();
-                option.Dependencies
-                    = GetValueOrDefault<List<Guid>>( optionsDict, key: "Dependencies" ) ?? new List<Guid>();
-                option.Instructions
-                    = Instructions = DeserializeInstructions( GetValueOrDefault<IList<object>>( optionsDict, key: "Instructions" ) );
-                options.Add( option );
-            }
-
-            return options;
         }
 
         [NotNull]
@@ -1244,7 +1244,7 @@ namespace KOTORModSync.Core
                 if ( visitedNodes.Contains( node ) )
                     continue;
 
-                DepthFirstSearch( node, visitedNodes, orderedComponents );
+                DepthFirstSearch( node ?? throw new NullReferenceException(nameof(node)), visitedNodes, orderedComponents );
             }
 
             bool isCorrectOrder = orderedComponents.SequenceEqual( components );
@@ -1300,39 +1300,42 @@ namespace KOTORModSync.Core
                 foreach ( Guid dependencyGuid in component.InstallAfter )
                 {
                     GraphNode dependencyNode = nodeMap[dependencyGuid];
-                    _ = node?.Dependencies?.Add( dependencyNode );
+                    _ = node?.Dependencies.Add( dependencyNode );
                 }
 
                 foreach ( Guid dependentGuid in component.InstallBefore )
                 {
                     GraphNode dependentNode = nodeMap[dependentGuid];
-                    _ = dependentNode?.Dependencies?.Add( node );
+                    _ = dependentNode?.Dependencies.Add( node );
                 }
             }
 
             return nodeMap;
         }
 
-        public sealed class GraphNode
+        internal sealed class GraphNode
         {
+            [NotNull]
             internal Component Component { get; }
+
+            [NotNull][ItemNotNull]
             internal HashSet<GraphNode> Dependencies { get; }
 
             internal GraphNode( [CanBeNull] Component component )
             {
-                Component = component;
+                Component = component ?? throw new ArgumentNullException(nameof(component));
                 Dependencies = new HashSet<GraphNode>();
             }
         }
 
-        public void CreateInstruction( int index = 0 )
+        public void CreateInstruction( int newIndex = 0 )
         {
             var instruction = new Instruction();
             if ( Instructions.Count == 0 )
             {
-                if ( index != 0 )
+                if ( newIndex != 0 )
                 {
-                    Logger.LogError( "Cannot create instruction at index when list is empty." );
+                    Logger.LogError( "Cannot create instruction at newIndex when list is empty." );
                     return;
                 }
 
@@ -1340,44 +1343,39 @@ namespace KOTORModSync.Core
             }
             else
             {
-                Instructions.Insert( index, instruction );
+                Instructions.Insert( newIndex, instruction );
             }
         }
 
         public void DeleteInstruction( int index ) => Instructions.RemoveAt( index );
 
-        public void MoveInstructionToIndex( [NotNull] Instruction thisInstruction, int index )
+        public void MoveInstructionToIndex( [NotNull] Instruction thisInstruction, int newIndex )
         {
-            if ( thisInstruction is null || index < 0 || index >= Instructions.Count )
-            {
-                throw new ArgumentException( "Invalid instruction or index." );
-            }
+            if ( thisInstruction == null )
+                throw new ArgumentNullException( nameof(thisInstruction) );
 
             int currentIndex = Instructions.IndexOf( thisInstruction );
-            if ( currentIndex < 0 )
-            {
-                throw new ArgumentException( "Instruction does not exist in the list." );
-            }
+            if ( newIndex < 0 || newIndex >= Instructions.Count || currentIndex < 0 )
+                throw new ArgumentOutOfRangeException( nameof( newIndex ), $"Invalid newIndex: {newIndex}" );
 
-            if ( index == currentIndex )
+            if ( newIndex == currentIndex )
             {
                 _ = Logger.LogAsync(
-                    $"Cannot move Instruction '{thisInstruction.Action}' from {currentIndex} to {index}. Reason: Indices are the same."
+                    $"Cannot move Instruction '{thisInstruction.Action}' from {currentIndex} to {newIndex}. Reason: Indices are the same."
                 );
                 return;
             }
 
             Instructions.RemoveAt( currentIndex );
-            Instructions.Insert( index, thisInstruction );
+            Instructions.Insert( newIndex, thisInstruction );
 
             _ = Logger.LogVerboseAsync(
-                $"Instruction '{thisInstruction.Action}' moved from {currentIndex} to {index}"
+                $"Instruction '{thisInstruction.Action}' moved from {currentIndex} to {newIndex}"
             );
         }
 
         // used for the ui.
         public event PropertyChangedEventHandler PropertyChanged;
-
         protected virtual void OnPropertyChanged( [CallerMemberName] [CanBeNull] string propertyName = null ) =>
             PropertyChanged?.Invoke( this, new PropertyChangedEventArgs( propertyName ) );
     }

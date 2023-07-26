@@ -3,6 +3,7 @@
 // See LICENSE.txt file in the project root for full license information.
 
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 using System.Reflection;
@@ -10,6 +11,13 @@ using JetBrains.Annotations;
 
 namespace KOTORModSync.Core.Utility
 {
+    public static class ListExtensions
+    {
+        public static void Move<T>( this List<T> list, int currentIndex, int newIndex, T item )
+        {
+        }
+    }
+
     public static class Utility
     {
         [NotNull]

@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
+using KOTORModSync.Core.Instructions;
 
 namespace KOTORModSync.Core
 {

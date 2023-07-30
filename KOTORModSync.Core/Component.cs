@@ -914,8 +914,8 @@ namespace KOTORModSync.Core
                         }
 
                         break;
-                    case "confirm":
-                    /*(var sourcePaths, var something) = instruction.ParsePaths();
+                    /*case "confirm":
+                    (var sourcePaths, var something) = instruction.ParsePaths();
                 bool confirmationResult = await confirmDialog.ShowConfirmationDialog(sourcePaths.FirstOrDefault());
                 if (!confirmationResult)
                 {
@@ -940,7 +940,7 @@ namespace KOTORModSync.Core
                     bool? confirmationResult = await PromptUserInstallError(
                         $"An error occurred during the installation of '{Name}':"
                         + Environment.NewLine
-                        + Utility.Utility.GetEnumDescription( Instruction.ActionExitCode.Success )
+                        + Utility.Utility.GetEnumDescription( exitCode )
                     );
 
                     switch ( confirmationResult )

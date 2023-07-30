@@ -39,7 +39,7 @@ namespace KOTORModSync.Tests
             string fileExtension = ".txt";
 
             // Act
-            new Instruction().DeleteDuplicateFile( new DirectoryInfo( directory ), fileExtension, true );
+            new Instruction().DeleteDuplicateFile( new DirectoryInfo( directory ), fileExtension );
 
             // Assert
             Assert.Multiple(

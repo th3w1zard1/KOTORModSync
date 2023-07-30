@@ -425,8 +425,8 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                 }
                 else if ( !fileNameCounts.ContainsKey( fileNameWithoutExtension ) )
                 {
-                    Logger.LogError(
-                        $"Conditional 2: '{fileNameWithoutExtension}' is not present in '{fileNameCounts}' somehow?"
+                    Logger.LogVerbose(
+                        $"Conditional 2: '{fileNameWithoutExtension}' is not present in '{fileNameCounts}' ergo not a duplicate"
                     );
                 }
                 else if ( fileNameCounts[fileNameWithoutExtension] <= 1 )

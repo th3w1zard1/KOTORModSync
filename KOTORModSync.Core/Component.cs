@@ -875,7 +875,7 @@ namespace KOTORModSync.Core
                         break;
                     case "delduplicate":
                         instruction.SetRealPaths( true );
-                        instruction.DeleteDuplicateFile();
+                        instruction.DeleteDuplicateFile(caseInsensitive: true);
                         exitCode = Instruction.ActionExitCode.Success;
                         break;
                     case "copy":

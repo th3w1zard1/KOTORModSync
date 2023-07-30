@@ -139,33 +139,16 @@ namespace KOTORModSync.Core
         public string SerializeComponent()
         {
             var serializedComponentDict = (Dictionary<string, object>)Serializer.SerializeObject( this );
-
             CollectionUtils.RemoveEmptyCollections( serializedComponentDict );
+            StringBuilder tomlString = CreateTomlStringFromDict( serializedComponentDict );
 
-            StringBuilder tomlString = FixSerializedTomlDict( serializedComponentDict );
-
-            CollectionUtils.RemoveEmptyCollections( serializedComponentDict );
-
-            var rootTable = new Dictionary<string, object>( StringComparer.OrdinalIgnoreCase )
-            {
-                {
-                    "thisMod", serializedComponentDict
-                },
-            };
-
-
-            _ = tomlString
-                .Insert(
-                    index: 0,
-                    Toml.FromModel( rootTable )
-                        .Replace( oldValue: "[thisMod]", newValue: "[[thisMod]]" )
-                ).ToString();
             return string.IsNullOrWhiteSpace( tomlString.ToString() )
                 ? throw new InvalidOperationException( message: "Could not serialize into a valid tomlin string" )
                 : Serializer.FixWhitespaceIssues( tomlString.ToString() );
         }
 
-        private static StringBuilder FixSerializedTomlDict(
+        [NotNull]
+        private static StringBuilder CreateTomlStringFromDict(
             [NotNull] Dictionary<string, object> serializedComponentDict,
             [CanBeNull] StringBuilder tomlString = null
         )
@@ -227,15 +210,28 @@ namespace KOTORModSync.Core
                 }
             }
 
-            return tomlString;
+            var rootTable = new Dictionary<string, object>( StringComparer.OrdinalIgnoreCase )
+            {
+                {
+                    "thisMod", serializedComponentDict
+                },
+            };
+
+            return tomlString.Insert(
+                    index: 0,
+                    Toml.FromModel(
+                            rootTable
+                    ).Replace(
+                            oldValue: "[thisMod]",
+                            newValue: "[[thisMod]]"
+                    )
+                );
         }
 
         private void DeserializeComponent( [NotNull] IDictionary<string, object> componentDict )
         {
             if ( !( componentDict is TomlTable ) )
-            {
                 throw new ArgumentException( "[TomlError] Expected a TOML table for component data." );
-            }
 
             _tempPath = new DirectoryInfo( Path.GetTempPath() );
 
@@ -258,7 +254,9 @@ namespace KOTORModSync.Core
             {
                 string modLink = GetValueOrDefault<string>( componentDict, key: "ModLink" ) ?? string.Empty;
                 if ( string.IsNullOrEmpty( modLink ) )
+                {
                     Logger.LogError( "Could not deserialize key 'ModLink'" );
+                }
                 else
                 {
                     ModLink = modLink.Split( new[] { "\r\n", "\n" }, StringSplitOptions.None ).ToList();
@@ -902,7 +900,7 @@ namespace KOTORModSync.Core
                         break;
                     case "choose":
                     case "option":
-                        instruction.SetRealPaths();
+                        instruction.SetRealPaths(true);
 
                         List<Option> chosenOptions = instruction.GetChosenOptions();
                         foreach ( Option thisOption in chosenOptions )
@@ -1029,16 +1027,15 @@ namespace KOTORModSync.Core
 
             if ( dependencyGuids.Count > 0 )
             {
-                var dependencyConflicts = dependencyGuids.Select(
-                    requiredGuid =>
-                        componentsList.Find(
-                            c =>
-                                c.Guid == requiredGuid
+                var dependencyConflicts = dependencyGuids
+                    .Select(
+                        requiredGuid =>
+                            componentsList.Find(
+                                c => c?.Guid == requiredGuid
                         )
-                ).Where(
-                    checkComponent =>
-                        checkComponent?.IsSelected == false
-                ).ToList();
+                    ).Where(
+                        checkComponent => checkComponent?.IsSelected != true
+                    ).ToList();
 
                 if ( isInstall && dependencyConflicts.Count > 0 )
                 {
@@ -1056,17 +1053,14 @@ namespace KOTORModSync.Core
             // ReSharper disable once InvertIf
             if ( restrictionGuids.Count > 0 )
             {
-                var restrictionConflicts = new List<Component>();
-
-                foreach ( Guid restrictedGuid in restrictionGuids )
-                {
-                    Component checkComponent = componentsList.Find( c => c.Guid == restrictedGuid );
-
-                    if ( checkComponent?.IsSelected == true )
-                    {
-                        restrictionConflicts.Add( checkComponent );
-                    }
-                }
+                var restrictionConflicts = restrictionGuids.Select(
+                    restrictedGuid =>
+                        componentsList.Find(
+                            c => c?.Guid == restrictedGuid
+                        )
+                    ).Where(
+                        checkComponent => checkComponent?.IsSelected == true
+                    ).ToList();
 
                 if ( isInstall && restrictionConflicts.Count > 0 )
                 {

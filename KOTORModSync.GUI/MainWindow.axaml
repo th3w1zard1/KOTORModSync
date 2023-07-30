@@ -199,15 +199,6 @@
                                         <TextBox Text="{Binding Name}"
                                                  Focusable="True" HorizontalAlignment="Stretch" TextWrapping="Wrap" />
 
-                                        <TextBlock Text="Guid:" />
-                                        <DockPanel>
-                                            <TextBox
-                                                Text="{Binding Guid, Converter={StaticResource GuidConverter}}"
-                                                Focusable="True" HorizontalAlignment="Stretch" />
-                                            <Button Content="Generate GUID"
-                                                    Click="GenerateGuidButton_Click" />
-                                        </DockPanel>
-
                                         <TextBlock Text="Description:" />
                                         <TextBox Margin="5,0"
                                                  Focusable="True" HorizontalAlignment="Stretch" TextWrapping="Wrap"

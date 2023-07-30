@@ -168,8 +168,8 @@ namespace KOTORModSync
 
         public static void FilterControlListItems( [NotNull] object item, [NotNull] string searchText )
         {
-            if ( string.IsNullOrEmpty( searchText ) )
-                throw new ArgumentException( message: "Value cannot be null or empty.", nameof( searchText ) );
+            if ( searchText == null )
+                throw new ArgumentNullException( nameof( searchText ) );
 
             if ( !( item is Control controlItem ) )
                 return; // no components loaded/created
@@ -780,22 +780,6 @@ namespace KOTORModSync
             }
         }
 
-        private void GenerateGuidButton_Click( [NotNull] object sender, [NotNull] RoutedEventArgs e )
-        {
-            try
-            {
-                if ( _currentComponent is null )
-                    return;
-
-                _currentComponent.Guid = Guid.NewGuid();
-                LoadComponentDetails( _currentComponent );
-            }
-            catch ( Exception ex )
-            {
-                Logger.LogException( ex );
-            }
-        }
-
         private async void SaveButton_Click( [NotNull] object sender, [NotNull] RoutedEventArgs e )
         {
             try
@@ -809,7 +793,7 @@ namespace KOTORModSync
                     return;
                 }
 
-                await Logger.LogVerboseAsync( $"Selected {_currentComponent.Name}" );
+                await Logger.LogVerboseAsync( $"Selected '{_currentComponent.Name}'" );
 
                 if ( !CheckForChanges() )
                 {
@@ -1019,9 +1003,8 @@ namespace KOTORModSync
                 newComponent.Name = "new mod_" + Path.GetFileNameWithoutExtension( Path.GetRandomFileName() );
                 // Add the new component to the collection
                 MainConfigInstance.allComponents.Add( newComponent );
-                _currentComponent = newComponent;
 
-                // Load into the editor ( optional )
+                // Load into the editor
                 LoadComponentDetails( newComponent );
 
                 // Refresh the TreeView to reflect the changes
@@ -1453,19 +1436,26 @@ namespace KOTORModSync
                     return;
                 }
 
-                switch ( selectedItem.Header.ToString() )
+                string tabName = selectedItem.Header.ToString()?.ToLowerInvariant();
+
+                switch ( tabName )
                 {
                     // Show/hide the appropriate content based on the selected tab
-                    case "Raw Edit":
+                    case "raw edit":
                         RawEditTextBox.IsVisible = true;
                         ApplyEditorButton.IsVisible = true;
+
+                        // refresh contents of raw edit and don't prompt user to confirm changes
+                        Component refreshedComponent = _currentComponent;
+                        LoadComponentDetails( refreshedComponent );
                         break;
-                    case "GUI Edit":
+                    case "gui edit":
                         RawEditTextBox.IsVisible = false;
                         ApplyEditorButton.IsVisible = false;
                         break;
                     default:
                         RawEditTextBox.IsVisible = true;
+                        ApplyEditorButton.IsVisible = false;
                         break;
                 }
             }
@@ -1484,10 +1474,7 @@ namespace KOTORModSync
             try
             {
                 _ = Logger.LogVerboseAsync( $"Loading '{selectedComponent.Name}' into the editor..." );
-
-                _originalContent = _currentComponent?.SerializeComponent();
-                if ( _originalContent?.Equals( RawEditTextBox.Text, StringComparison.Ordinal ) != true
-                    && !(_currentComponent is null) )
+                if ( CheckForChanges() )
                 {
                     bool? confirmResult = await ConfirmationDialog.ShowConfirmationDialog(
                         parentWindow: this,
@@ -1526,7 +1513,9 @@ namespace KOTORModSync
         private void RawEditTextBox_LostFocus( [NotNull] object sender, [NotNull] RoutedEventArgs e ) =>
             e.Handled = true;
 
-        private bool CheckForChanges() => !string.Equals( RawEditTextBox?.Text, _originalContent );
+        private bool CheckForChanges() =>
+            _currentComponent != null
+            && RawEditTextBox.Text != _currentComponent.SerializeComponent();
 
         private async Task<(bool, string Message)> SaveChanges()
         {

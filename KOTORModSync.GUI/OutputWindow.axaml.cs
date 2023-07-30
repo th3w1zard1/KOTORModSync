@@ -76,7 +76,13 @@ namespace KOTORModSync
                 string logText = _logBuilder.ToString();
 
                 // Split the log text into lines
-                string[] lines = logText.Split( new[] { Environment.NewLine }, StringSplitOptions.None );
+                string[] lines = logText.Split(
+                    new[]
+                    {
+                        Environment.NewLine,
+                    },
+                    StringSplitOptions.None
+                );
 
                 // Trim the lines if they exceed the desired line count
                 if ( lines.Length > _maxLinesShown )

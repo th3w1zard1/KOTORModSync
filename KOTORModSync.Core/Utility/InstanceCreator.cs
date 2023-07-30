@@ -42,12 +42,12 @@ namespace KOTORModSync.Core.Utility
 
             int parameterCount = constructorParameters.Length;
             foreach ( ConstructorInfo constructor in
-                     from constructor in constructors
-                     let parameters = constructor.GetParameters()
-                     where parameters.Length == parameterCount
-                     let match = AreParametersCompatible( parameters, constructorParameters )
-                     where match
-                     select constructor )
+                from constructor in constructors
+                let parameters = constructor.GetParameters()
+                where parameters.Length == parameterCount
+                let match = AreParametersCompatible( parameters, constructorParameters )
+                where match
+                select constructor )
             {
                 return (T)constructor.Invoke( constructorParameters );
             }
@@ -62,9 +62,9 @@ namespace KOTORModSync.Core.Utility
         )
         {
             if ( parameters == null )
-                throw new ArgumentNullException( nameof(parameters) );
+                throw new ArgumentNullException( nameof( parameters ) );
             if ( constructorParameters == null )
-                throw new ArgumentNullException( nameof(constructorParameters) );
+                throw new ArgumentNullException( nameof( constructorParameters ) );
 
             for ( int i = 0; i < parameters.Length; i++ )
             {

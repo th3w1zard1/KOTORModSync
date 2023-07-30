@@ -6,6 +6,7 @@ using System.Diagnostics;
 using System.Security.Cryptography;
 using KOTORModSync.Core.Utility;
 using Newtonsoft.Json;
+
 #pragma warning disable CS8604
 
 namespace KOTORModSync.Tests
@@ -76,7 +77,7 @@ namespace KOTORModSync.Tests
 
             // Calculate the SHA1 hash for the test files
             foreach ( FileInfo? fileInfo in
-                     expectedChecksums.Select( static expectedChecksum => expectedChecksum.Key ) )
+                expectedChecksums.Select( static expectedChecksum => expectedChecksum.Key ) )
             {
                 SHA1 sha1 = await FileChecksumValidator.CalculateSha1Async( fileInfo );
                 actualChecksums[fileInfo] = sha1;
@@ -118,7 +119,13 @@ namespace KOTORModSync.Tests
                     do
                     {
                         bytesRead = await stream.ReadAsync( buffer );
-                        _ = expectedSha1.TransformBlock( buffer, inputOffset: 0, bytesRead, outputBuffer: null, outputOffset: 0 );
+                        _ = expectedSha1.TransformBlock(
+                            buffer,
+                            inputOffset: 0,
+                            bytesRead,
+                            outputBuffer: null,
+                            outputOffset: 0
+                        );
                     } while ( bytesRead > 0 );
                 }
 
@@ -150,7 +157,8 @@ namespace KOTORModSync.Tests
                 Assert.That( sha1, Is.Null );
             }
             catch ( FileNotFoundException ) // success
-            { }
+            {
+            }
             catch ( Exception e )
             {
                 Debug.WriteLine( e );
@@ -181,7 +189,13 @@ namespace KOTORModSync.Tests
                     do
                     {
                         bytesRead = await stream.ReadAsync( buffer );
-                        _ = expectedSha1.TransformBlock( buffer, inputOffset: 0, bytesRead, outputBuffer: null, outputOffset: 0 );
+                        _ = expectedSha1.TransformBlock(
+                            buffer,
+                            inputOffset: 0,
+                            bytesRead,
+                            outputBuffer: null,
+                            outputOffset: 0
+                        );
                     } while ( bytesRead > 0 );
                 }
 
@@ -220,7 +234,9 @@ namespace KOTORModSync.Tests
                 DirectoryInfo? existingValue,
                 bool hasExistingValue,
                 JsonSerializer serializer
-            ) => reader.Value is string path ? new DirectoryInfo( path ) : null;
+            ) => reader.Value is string path
+                ? new DirectoryInfo( path )
+                : null;
 
             public override void WriteJson( JsonWriter writer, DirectoryInfo? value, JsonSerializer serializer ) =>
                 writer.WriteValue( value!.FullName );
@@ -235,7 +251,9 @@ namespace KOTORModSync.Tests
             string filePath = Path.Combine( _testDirectory, path2: "Checksums.json" );
             var checksums = new Dictionary<string, string>
             {
-                { _testDirectory, FileChecksumValidator.Sha1ToString( SHA1.Create() ) },
+                {
+                    _testDirectory, FileChecksumValidator.Sha1ToString( SHA1.Create() )
+                },
             };
 
             // Convert the directory paths to DirectoryInfo objects
@@ -276,7 +294,9 @@ namespace KOTORModSync.Tests
                 string filePath = Path.Combine( testFolderPath, path2: "Checksums.txt" );
                 var checksums = new Dictionary<string, string>
                 {
-                    { Path.Combine( testFolderPath, path2: "TestFile.txt" ), "SHA1HashValue" },
+                    {
+                        Path.Combine( testFolderPath, path2: "TestFile.txt" ), "SHA1HashValue"
+                    },
                 };
 
                 // Write checksums to the file

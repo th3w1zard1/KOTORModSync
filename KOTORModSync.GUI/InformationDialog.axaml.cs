@@ -35,7 +35,10 @@ namespace KOTORModSync
             [CanBeNull] string title = "Information"
         )
         {
-            var dialog = new InformationDialog { Title = title, InfoText = message };
+            var dialog = new InformationDialog
+            {
+                Title = title, InfoText = message,
+            };
             _ = await dialog.ShowDialog<bool?>( parentWindow );
         }
 

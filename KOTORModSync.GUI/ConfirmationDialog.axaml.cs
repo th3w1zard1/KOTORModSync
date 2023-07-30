@@ -57,7 +57,10 @@ namespace KOTORModSync
             await Dispatcher.UIThread.InvokeAsync(
                 () =>
                 {
-                    var confirmationDialog = new ConfirmationDialog { ConfirmText = confirmText };
+                    var confirmationDialog = new ConfirmationDialog
+                    {
+                        ConfirmText = confirmText,
+                    };
 
                     confirmationDialog.YesButtonClicked += YesClickedHandler;
                     confirmationDialog.NoButtonClicked += NoClickedHandler;

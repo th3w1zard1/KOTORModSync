@@ -44,11 +44,14 @@ namespace KOTORModSync.Tests
         [Test]
         public void TestSerializeListOfGuid()
         {
-            List<Guid> list = new() { Guid.NewGuid(), Guid.NewGuid() };
+            List<Guid> list = new()
+            {
+                Guid.NewGuid(), Guid.NewGuid(),
+            };
             object? serialized = Serializer.SerializeObject( list );
 
             Assert.That( serialized, Is.InstanceOf<IList<object>>() );
-            CollectionAssert.AllItemsAreInstancesOfType( (IList<object>)serialized, typeof( string ) );
+            CollectionAssert.AllItemsAreInstancesOfType( (IEnumerable<object>)serialized, typeof( string ) );
         }
 
         [Test]
@@ -59,14 +62,24 @@ namespace KOTORModSync.Tests
             instance1.NestedInstance = new MyNestedClass( instance1 );
             instance1.GuidNestedClassDict = new Dictionary<Guid, List<MyNestedClass>>
             {
-                { Guid.NewGuid(), new List<MyNestedClass> { new( instance1 ) } },
+                {
+                    Guid.NewGuid(), new List<MyNestedClass>
+                    {
+                        new(instance1),
+                    }
+                },
             };
 
             var instance2 = new MyClass();
             instance2.NestedInstance = new MyNestedClass( instance2 );
             instance2.GuidNestedClassDict = new Dictionary<Guid, List<MyNestedClass>>
             {
-                { Guid.NewGuid(), new List<MyNestedClass> { new( instance2 ), new( instance2 ) } },
+                {
+                    Guid.NewGuid(), new List<MyNestedClass>
+                    {
+                        new(instance2), new(instance2),
+                    }
+                },
             };
 
             // Act & Assert
@@ -80,7 +93,12 @@ namespace KOTORModSync.Tests
                     );
                     Assert.That(
                         HasStackOverflow(
-                            () => Serializer.SerializeObject( new List<object> { instance1, instance2 } )
+                            () => Serializer.SerializeObject(
+                                new List<object>
+                                {
+                                    instance1, instance2,
+                                }
+                            )
                         ),
                         Is.False,
                         message: "Serialization should not cause a stack overflow"

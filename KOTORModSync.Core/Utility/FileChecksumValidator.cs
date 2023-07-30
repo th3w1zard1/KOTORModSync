@@ -34,29 +34,33 @@ namespace KOTORModSync.Core.Utility
         [NotNull]
         public static string Sha1ToString( [NotNull] SHA1 sha1 ) =>
             sha1 == null
-                ? throw new ArgumentNullException( nameof(sha1) )
+                ? throw new ArgumentNullException( nameof( sha1 ) )
                 : string.Concat( sha1.Hash.Select( b => b.ToString( format: "x2" ) ) );
 
         [NotNull]
-        public static string StringToSha1( [NotNull] string s )
-        {
-            if ( s == null )
-                throw new ArgumentNullException( nameof(s) );
-
-            return string.Concat(
+        public static string StringToSha1( [NotNull] string s ) => s == null
+            ? throw new ArgumentNullException( nameof( s ) )
+            : string.Concat(
                 SHA1.Create()
                     .ComputeHash(
-                        Enumerable.Range( start: 0,
-                                s.Length )
+                        Enumerable.Range(
+                                start: 0,
+                                s.Length
+                            )
                             .Where( x => x % 2 == 0 )
-                            .Select( x => Convert.ToByte( s.Substring( x,
-                                    length: 2 ),
-                                fromBase: 16 ) )
+                            .Select(
+                                x => Convert.ToByte(
+                                    s.Substring(
+                                        x,
+                                        length: 2
+                                    ),
+                                    fromBase: 16
+                                )
+                            )
                             .ToArray()
                     )
                     .Select( b => b.ToString( "x2" ) )
             );
-        }
 
         public async Task<bool> ValidateChecksumsAsync()
         {
@@ -70,21 +74,23 @@ namespace KOTORModSync.Core.Utility
 
                 SHA1 sha1 = await CalculateSha1Async( fileInfo );
                 actualChecksums[fileInfo.Name] = BitConverter.ToString( sha1.Hash )
-                    .Replace( oldValue: "-",
-                        newValue: "" );
+                    .Replace(
+                        oldValue: "-",
+                        newValue: ""
+                    );
             }
 
             bool allChecksumsMatch = actualChecksums.Count == _expectedChecksums.Count
-                                     && actualChecksums.All(
-                                         x => _expectedChecksums.TryGetValue(
-                                                  new FileInfo( Path.Combine( _destinationPath, x.Key ) ),
-                                                  out SHA1 expectedSha1
-                                              )
-                                              // ReSharper disable once PossibleNullReferenceException
-                                              && BitConverter.ToString( expectedSha1.Hash )
-                                                  .Replace( oldValue: "-", newValue: "" )
-                                                  .Equals( x.Value, StringComparison.OrdinalIgnoreCase )
-                                     );
+                && actualChecksums.All(
+                    x => _expectedChecksums.TryGetValue(
+                            new FileInfo( Path.Combine( _destinationPath, x.Key ) ),
+                            out SHA1 expectedSha1
+                        )
+                        // ReSharper disable once PossibleNullReferenceException
+                        && BitConverter.ToString( expectedSha1.Hash )
+                            .Replace( oldValue: "-", newValue: "" )
+                            .Equals( x.Value, StringComparison.OrdinalIgnoreCase )
+                );
 
             if ( allChecksumsMatch )
                 return true;
@@ -134,8 +140,18 @@ namespace KOTORModSync.Core.Utility
 
                     int read = bytesRead;
 
-                    tasks.Add( Task.Run( () =>
-                        _ = sha1.TransformBlock( data, inputOffset: 0, read, outputBuffer: null, outputOffset: 0 ) ) );
+                    tasks.Add(
+                        Task.Run(
+                            () =>
+                                _ = sha1.TransformBlock(
+                                    data,
+                                    inputOffset: 0,
+                                    read,
+                                    outputBuffer: null,
+                                    outputOffset: 0
+                                )
+                        )
+                    );
 
                     if ( tasks.Count < Environment.ProcessorCount * 2 )
                         continue;
@@ -158,7 +174,7 @@ namespace KOTORModSync.Core.Utility
         )
         {
             if ( filePath == null )
-                throw new ArgumentNullException( nameof(filePath) );
+                throw new ArgumentNullException( nameof( filePath ) );
 
             string json = JsonConvert.SerializeObject( checksums );
             using ( var writer = new StreamWriter( filePath ) )
@@ -171,7 +187,7 @@ namespace KOTORModSync.Core.Utility
         public static async Task<Dictionary<FileInfo, SHA1>> LoadChecksumsFromFileAsync( [NotNull] FileInfo filePath )
         {
             if ( filePath == null )
-                throw new ArgumentNullException( nameof(filePath) );
+                throw new ArgumentNullException( nameof( filePath ) );
 
             if ( !File.Exists( filePath.FullName ) )
                 return new Dictionary<FileInfo, SHA1>();
@@ -232,7 +248,7 @@ namespace KOTORModSync.Core.Utility
         private static bool TryConvertHexStringToBytes( [NotNull] string hexString, [CanBeNull] out byte[] bytes )
         {
             if ( hexString == null )
-                throw new ArgumentNullException( nameof(hexString) );
+                throw new ArgumentNullException( nameof( hexString ) );
 
             int numberChars = hexString.Length;
             if ( numberChars % 2 != 0 )
@@ -247,7 +263,9 @@ namespace KOTORModSync.Core.Utility
                 if (
                     byte.TryParse(
                         hexString.Substring( i, length: 2 ),
-                        NumberStyles.HexNumber, provider: null, out bytes[i / 2]
+                        NumberStyles.HexNumber,
+                        provider: null,
+                        out bytes[i / 2]
                     )
                 )
                 {

@@ -34,11 +34,17 @@ namespace KOTORModSync
         )
         {
             var progressWindow = new ProgressWindow
+            {
+                Owner = parentWindow,
+                ProgressTextBlock =
                 {
-                    Owner = parentWindow,
-                    ProgressTextBlock = { Text = message },
-                    ProgressBar = { Value = (double)progress },
-                };
+                    Text = message,
+                },
+                ProgressBar =
+                {
+                    Value = (double)progress,
+                },
+            };
 
             _ = await progressWindow.ShowDialog<bool?>( parentWindow );
         }

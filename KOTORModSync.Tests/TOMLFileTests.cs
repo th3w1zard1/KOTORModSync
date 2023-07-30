@@ -4,7 +4,6 @@
 
 using System.Diagnostics;
 using System.Text;
-using JetBrains.Annotations;
 using KOTORModSync.Core;
 using KOTORModSync.Core.Utility;
 using Newtonsoft.Json;
@@ -78,8 +77,7 @@ namespace KOTORModSync.Tests
 
             [[thisMod.instructions]]
             action = ""run""
-            path = ""%temp%\\mod_files\\TSLPatcher.exe""
-            arguments = """"";
+            path = ""%temp%\\mod_files\\TSLPatcher.exe""";
 
         [Test]
         public void SaveAndLoadTOMLFile_MatchingComponents()
@@ -112,7 +110,7 @@ namespace KOTORModSync.Tests
                 Component originalComponent = originalComponents[i];
                 Component loadedComponent = loadedComponents[i];
 
-                AssertComponentEquality( originalComponent, loadedComponent );
+                AssertComponentEquality( loadedComponent, originalComponent );
             }
         }
 
@@ -182,7 +180,7 @@ namespace KOTORModSync.Tests
             // Add mixed line endings and extra whitespaces
             tomlContents = "    \r\n\t   \r\n\r\n\r\n" + tomlContents + "    \r\n\t   \r\n\r\n\r\n";
 
-            // Save the modified TOMLYN file
+            // Save the modified TOMLIN file
             string modifiedFilePath = Path.GetTempFileName();
             File.WriteAllText( modifiedFilePath, tomlContents );
 
@@ -203,7 +201,7 @@ namespace KOTORModSync.Tests
 
         private static string ConvertFieldNamesAndValuesToMixedCase( string tomlContents )
         {
-            var convertedContents = new StringBuilder( );
+            var convertedContents = new StringBuilder();
             var random = new Random();
 
             bool isFieldName = true; // Flag to determine if the current item is a field name or field value
@@ -262,7 +260,9 @@ namespace KOTORModSync.Tests
                 // Assert
                 Assert.That( loadedComponents, Is.Null.Or.Empty );
             }
-            catch ( InvalidDataException ) { }
+            catch ( InvalidDataException )
+            {
+            }
         }
 
         [Test]
@@ -322,7 +322,7 @@ namespace KOTORModSync.Tests
                 Component originalComponent = originalComponents[i];
                 Component loadedComponent = loadedComponents[i];
 
-                AssertComponentEquality( originalComponent, loadedComponent );
+                AssertComponentEquality( loadedComponent, originalComponent );
             }
         }
 
@@ -400,17 +400,25 @@ namespace KOTORModSync.Tests
         public void TomlWriteStringTest()
         {
             // Sample nested Dictionary representing TOML data
-            Dictionary<string, object> innerDictionary1 = new Dictionary<string, object>
+            var innerDictionary1 = new Dictionary<string, object>
             {
-                { "name", "John" },
-                { "age", 30 },
+                {
+                    "name", "John"
+                },
+                {
+                    "age", 30
+                },
                 // other key-value pairs for the first table
             };
 
-            Dictionary<string, object> innerDictionary2 = new Dictionary<string, object>
+            var innerDictionary2 = new Dictionary<string, object>
             {
-                { "name", "Alice" },
-                { "age", 25 },
+                {
+                    "name", "Alice"
+                },
+                {
+                    "age", 25
+                },
                 // other key-value pairs for the second table
             };
 
@@ -419,15 +427,14 @@ namespace KOTORModSync.Tests
                 {
                     "thisMod", new List<object>
                     {
-                        innerDictionary1,
-                        innerDictionary2
+                        innerDictionary1, innerDictionary2,
                         // additional dictionaries in the list
                     }
-                }
+                },
             };
 
             Logger.Log( TomlWriter.WriteString( rootTable ) );
-            Logger.Log( Tomlyn.Toml.FromModel(rootTable) );
+            Logger.Log( Tomlyn.Toml.FromModel( rootTable ) );
         }
 
         private static void AssertComponentEquality( object? obj, object? another )
@@ -442,7 +449,7 @@ namespace KOTORModSync.Tests
             string objJson = JsonConvert.SerializeObject( obj );
             string anotherJson = JsonConvert.SerializeObject( another );
 
-            Assert.That(objJson, Is.EqualTo(anotherJson));
+            Assert.That( objJson, Is.EqualTo( anotherJson ) );
         }
     }
 }

@@ -16,8 +16,10 @@ namespace KOTORModSync.Core.Utility
         {
             if ( data.Count == 0 )
             {
-                throw new ArgumentException( message: "Value cannot be null or an empty collection.",
-                    nameof(data) );
+                throw new ArgumentException(
+                    message: "Value cannot be null or an empty collection.",
+                    nameof( data )
+                );
             }
 
             var sb = new StringBuilder();
@@ -33,19 +35,24 @@ namespace KOTORModSync.Core.Utility
             return sb.ToString();
         }
 
-        private static void WriteTomlKey( [NotNull] string key, [CanBeNull] object value, [NotNull] StringBuilder sb, int indentLevel )
+        private static void WriteTomlKey(
+            [NotNull] string key,
+            [CanBeNull] object value,
+            [NotNull] StringBuilder sb,
+            int indentLevel
+        )
         {
             if ( key == null )
-                throw new ArgumentNullException( nameof(key) );
+                throw new ArgumentNullException( nameof( key ) );
             if ( sb == null )
                 throw new ArgumentNullException( nameof( sb ) );
 
             if ( value == null )
                 return;
 
-            string indentation = new string( ' ', indentLevel * 4 );
+            string indentation = new string( c: ' ', indentLevel * 4 );
 
-            switch (value)
+            switch ( value )
             {
                 case Dictionary<string, object> table:
                     {
@@ -54,6 +61,7 @@ namespace KOTORModSync.Core.Utility
                         {
                             WriteTomlKey( entry.Key, entry.Value, sb, indentLevel + 1 );
                         }
+
                         _ = sb.AppendLine( $"{indentation}}}" );
                         break;
                     }
@@ -68,9 +76,10 @@ namespace KOTORModSync.Core.Utility
                             }
                             else
                             {
-                                sb.AppendLine( $"{indentation}    {TomlValueToString( item )}," );
+                                _ = sb.AppendLine( $"{indentation}    {TomlValueToString( item )}," );
                             }
                         }
+
                         _ = sb.AppendLine( $"{indentation}]" );
                         break;
                     }
@@ -83,14 +92,16 @@ namespace KOTORModSync.Core.Utility
         [CanBeNull]
         private static string TomlValueToString( [NotNull] object value )
         {
-            switch (value)
+            switch ( value )
             {
                 case null:
-                    throw new ArgumentNullException( nameof(value) );
+                    throw new ArgumentNullException( nameof( value ) );
                 case string str:
                     return $"\"{EscapeTomlString( str )}\"";
                 case bool boolean:
-                    return boolean ? "true" : "false";
+                    return boolean
+                        ? "true"
+                        : "false";
                 case DateTime dateTime:
                     return dateTime.ToString( format: "O" );
                 default:

@@ -20,9 +20,7 @@ namespace KOTORModSync.Core.Utility
     {
         public static readonly ExtractionOptions DefaultExtractionOptions = new ExtractionOptions
         {
-            ExtractFullPath = false,
-            Overwrite = true,
-            PreserveFileTime = true,
+            ExtractFullPath = false, Overwrite = true, PreserveFileTime = true,
         };
 
         public static bool IsArchive( [NotNull] string filePath ) => IsArchive(
@@ -30,9 +28,9 @@ namespace KOTORModSync.Core.Utility
         );
 
         public static bool IsArchive( [NotNull] FileInfo thisFile ) => thisFile.Extension.Equals( ".zip" )
-                                                                       || thisFile.Extension.Equals( ".7z" )
-                                                                       || thisFile.Extension.Equals( ".rar" )
-                                                                       || thisFile.Extension.Equals( ".exe" );
+            || thisFile.Extension.Equals( ".7z" )
+            || thisFile.Extension.Equals( ".rar" )
+            || thisFile.Extension.Equals( ".exe" );
 
         [CanBeNull]
         public static IArchive OpenArchive( [NotNull] string archivePath )
@@ -47,15 +45,15 @@ namespace KOTORModSync.Core.Utility
                 IArchive archive = null;
                 using ( FileStream stream = File.OpenRead( archivePath ) )
                 {
-                    if ( archivePath.EndsWith( ".zip", StringComparison.OrdinalIgnoreCase ) )
+                    if ( archivePath.EndsWith( value: ".zip", StringComparison.OrdinalIgnoreCase ) )
                     {
                         archive = SharpCompress.Archives.Zip.ZipArchive.Open( stream );
                     }
-                    else if ( archivePath.EndsWith( ".rar", StringComparison.OrdinalIgnoreCase ) )
+                    else if ( archivePath.EndsWith( value: ".rar", StringComparison.OrdinalIgnoreCase ) )
                     {
                         archive = RarArchive.Open( stream );
                     }
-                    else if ( archivePath.EndsWith( ".7z", StringComparison.OrdinalIgnoreCase ) )
+                    else if ( archivePath.EndsWith( value: ".7z", StringComparison.OrdinalIgnoreCase ) )
                     {
                         archive = SevenZipArchive.Open( stream );
                     }
@@ -83,7 +81,10 @@ namespace KOTORModSync.Core.Utility
                 string json = JsonConvert.SerializeObject(
                     root,
                     Formatting.Indented,
-                    new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() }
+                    new JsonSerializerSettings
+                    {
+                        ContractResolver = new CamelCasePropertyNamesContractResolver(),
+                    }
                 );
 
                 File.WriteAllText( outputPath, json );
@@ -102,22 +103,49 @@ namespace KOTORModSync.Core.Utility
 
             var root = new Dictionary<string, object>
             {
-                { "Name", directory.Name }, { "Type", "directory" }, { "Contents", new List<object>() },
+                {
+                    "Name", directory.Name
+                },
+                {
+                    "Type", "directory"
+                },
+                {
+                    "Contents", new List<object>()
+                },
             };
 
             try
             {
-                foreach ( FileInfo file in directory.EnumerateFiles( searchPattern: "*.*", SearchOption.TopDirectoryOnly ) )
+                foreach ( FileInfo file in directory.EnumerateFiles(
+                        searchPattern: "*.*",
+                        SearchOption.TopDirectoryOnly
+                    ) )
                 {
                     if ( file == null || !IsArchive( file.Extension ) )
                         continue;
 
                     var fileInfo
-                        = new Dictionary<string, object> { { "Name", file.Name }, { "Type", "file" } };
+                        = new Dictionary<string, object>
+                        {
+                            {
+                                "Name", file.Name
+                            },
+                            {
+                                "Type", "file"
+                            },
+                        };
                     List<ModDirectory.ArchiveEntry> archiveEntries = TraverseArchiveEntries( file.FullName );
                     var archiveRoot = new Dictionary<string, object>
                     {
-                        { "Name", file.Name }, { "Type", "directory" }, { "Contents", archiveEntries },
+                        {
+                            "Name", file.Name
+                        },
+                        {
+                            "Type", "directory"
+                        },
+                        {
+                            "Contents", archiveEntries
+                        },
                     };
 
                     fileInfo["Contents"] = archiveRoot["Contents"];
@@ -152,7 +180,7 @@ namespace KOTORModSync.Core.Utility
             if ( archivePath == null )
                 throw new ArgumentNullException( nameof( archivePath ) );
 
-            var archiveEntries = new List<ModDirectory.ArchiveEntry>(  );
+            var archiveEntries = new List<ModDirectory.ArchiveEntry>();
 
             try
             {
@@ -166,11 +194,14 @@ namespace KOTORModSync.Core.Utility
                 archiveEntries.AddRange(
                     from entry in archive.Entries.Where( e => !e.IsDirectory )
                     let pathParts = entry.Key.Split(
-                        archivePath.EndsWith( ".rar", StringComparison.OrdinalIgnoreCase )
+                        archivePath.EndsWith( value: ".rar", StringComparison.OrdinalIgnoreCase )
                             ? '\\' // Use backslash as separator for RAR files
-                            : '/' // Use forward slash for other archive types
+                            : '/'  // Use forward slash for other archive types
                     )
-                    select new ModDirectory.ArchiveEntry { Name = pathParts[pathParts.Length - 1], Path = entry.Key }
+                    select new ModDirectory.ArchiveEntry
+                    {
+                        Name = pathParts[pathParts.Length - 1], Path = entry.Key,
+                    }
                 );
             }
             catch ( Exception ex )
@@ -181,12 +212,15 @@ namespace KOTORModSync.Core.Utility
             return archiveEntries;
         }
 
-        public static void ProcessArchiveEntry( [NotNull] IArchiveEntry entry, [NotNull] Dictionary<string, object> currentDirectory )
+        public static void ProcessArchiveEntry(
+            [NotNull] IArchiveEntry entry,
+            [NotNull] Dictionary<string, object> currentDirectory
+        )
         {
             if ( entry == null )
-                throw new ArgumentNullException( nameof(entry) );
+                throw new ArgumentNullException( nameof( entry ) );
             if ( currentDirectory == null )
-                throw new ArgumentNullException( nameof(currentDirectory) );
+                throw new ArgumentNullException( nameof( currentDirectory ) );
 
             string[] pathParts = entry.Key.Split( '/' );
             bool isFile = !entry.IsDirectory;
@@ -201,9 +235,9 @@ namespace KOTORModSync.Core.Utility
                 string name1 = name;
                 object existingChild = existingDirectory.Find(
                     c => c is Dictionary<string, object> dict
-                    && dict.ContainsKey( "Name" )
-                    && dict["Name"] is string directoryName
-                    && directoryName.Equals( name, StringComparison.OrdinalIgnoreCase )
+                        && dict.ContainsKey( "Name" )
+                        && dict["Name"] is string directoryName
+                        && directoryName.Equals( name, StringComparison.OrdinalIgnoreCase )
                 );
 
                 if ( existingChild != null )
@@ -215,15 +249,19 @@ namespace KOTORModSync.Core.Utility
                 }
                 else
                 {
-                    var child = new Dictionary<string, object>( )
+                    var child = new Dictionary<string, object>()
                     {
-                        { "Name", name },
+                        {
+                            "Name", name
+                        },
                         {
                             "Type", isFile
                                 ? "file"
                                 : "directory"
                         },
-                        { "Contents", new List<object>() },
+                        {
+                            "Contents", new List<object>()
+                        },
                     };
                     existingDirectory.Add( child );
                     currentDirectory = child;

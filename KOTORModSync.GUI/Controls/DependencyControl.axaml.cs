@@ -64,7 +64,7 @@ namespace KOTORModSync.Controls
                 throw new NullReferenceException( "Could not get main window instance" );
 
             string searchText = SearchText;
-            mainWindow.FilterControlListItems( DependenciesListBox, searchText );
+            MainWindow.FilterControlListItems( DependenciesListBox, searchText );
         }
 
         [NotNull]
@@ -75,7 +75,7 @@ namespace KOTORModSync.Controls
         public List<Guid> ThisGuidList
         {
             get => GetValue( ThisGuidListProperty )
-                   ?? throw new NullReferenceException( "Could not retrieve property 'ThisGuidListProperty'" );
+                ?? throw new NullReferenceException( "Could not retrieve property 'ThisGuidListProperty'" );
             set => SetValue( ThisGuidListProperty, value );
         }
 
@@ -87,7 +87,7 @@ namespace KOTORModSync.Controls
         public List<Component> ThisComponentList
         {
             get => GetValue( ThisComponentListProperty )
-                   ?? throw new NullReferenceException( "Could not retrieve property 'ThisComponentListProperty'" );
+                ?? throw new NullReferenceException( "Could not retrieve property 'ThisComponentListProperty'" );
             set => SetValue( ThisComponentListProperty, value );
         }
 
@@ -110,7 +110,10 @@ namespace KOTORModSync.Controls
                 ThisGuidList.Add( selectedComponent.Guid );
 
                 var convertedItems = new Converters.GuidListToComponentNames().Convert(
-                    new object[] { ThisGuidList, ThisComponentList },
+                    new object[]
+                    {
+                        ThisGuidList, ThisComponentList,
+                    },
                     ThisGuidList.GetType(),
                     parameter: null,
                     CultureInfo.CurrentCulture
@@ -143,7 +146,10 @@ namespace KOTORModSync.Controls
                 ThisGuidList.RemoveAt( index );
 
                 var convertedItems = new Converters.GuidListToComponentNames().Convert(
-                    new object[] { ThisGuidList, ThisComponentList },
+                    new object[]
+                    {
+                        ThisGuidList, ThisComponentList,
+                    },
                     ThisGuidList.GetType(),
                     parameter: null,
                     CultureInfo.CurrentCulture

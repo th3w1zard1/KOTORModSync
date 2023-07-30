@@ -4,7 +4,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using JetBrains.Annotations;
@@ -89,8 +88,6 @@ namespace KOTORModSync.Core
                 .Select( r => r.Message )
                 .ToList();
 
-        [SuppressMessage("ReSharper",
-            "HeuristicUnreachableCode")]
         private bool VerifyExtractPaths()
         {
             try
@@ -125,11 +122,12 @@ namespace KOTORModSync.Core
                 {
                     // we already checked if the archive exists in GetAllArchivesFromInstructions.
                     if ( instruction.Action.Equals( value: "extract", StringComparison.OrdinalIgnoreCase ) )
-                    {
                         continue;
-                    }
 
-                    bool archiveNameFound = true;
+                    // 'choose' action uses Source as list of guids to options.
+                    if ( instruction.Action.Equals( value: "choose", StringComparison.OrdinalIgnoreCase ) )
+                        continue;
+
                     // ReSharper disable once ConditionIsAlwaysTrueOrFalse
                     if ( instruction.Source is null )
                     {
@@ -137,23 +135,23 @@ namespace KOTORModSync.Core
                         success = false;
                         continue;
                     }
-
+                    
+                    bool archiveNameFound = true;
                     for ( int index = 0; index < instruction.Source.Count; index++ )
                     {
                         string sourcePath = PathHelper.FixPathFormatting( instruction.Source[index] );
 
                         // todo
                         if ( sourcePath.StartsWith( value: "<<kotorDirectory>>", StringComparison.OrdinalIgnoreCase ) )
-                        {
                             continue;
-                        }
 
                         // ensure tslpatcher.exe sourcePaths use the action 'tslpatcher'
                         if ( sourcePath.EndsWith( value: "tslpatcher.exe", StringComparison.OrdinalIgnoreCase )
                             && !instruction.Action.Equals( value: "tslpatcher", StringComparison.OrdinalIgnoreCase ) )
                         {
                             AddWarning(
-                                message: "'tslpatcher.exe' used in Source path without the action 'tslpatcher', was this intentional?",
+                                message:
+                                "'tslpatcher.exe' used in Source path without the action 'tslpatcher', was this intentional?",
                                 instruction
                             );
                         }
@@ -176,7 +174,10 @@ namespace KOTORModSync.Core
 
                             string path = string.Join(
                                 Path.DirectorySeparatorChar.ToString(),
-                                new[] { parts[0], duplicatedPart }.Concat( remainingParts )
+                                new[]
+                                {
+                                    parts[0], duplicatedPart,
+                                }.Concat( remainingParts )
                             );
 
                             result = IsSourcePathInArchives( path, allArchives, instruction );
@@ -232,7 +233,10 @@ namespace KOTORModSync.Core
 
                 foreach ( string realSourcePath in realPaths )
                 {
-                    if ( Path.GetExtension( realSourcePath ).Equals( value: ".exe", StringComparison.OrdinalIgnoreCase ) )
+                    if ( Path.GetExtension( realSourcePath ).Equals(
+                            value: ".exe",
+                            StringComparison.OrdinalIgnoreCase
+                        ) )
                     {
                         allArchives.Add( realSourcePath );
                         continue; // no way to verify self-extracting executables.
@@ -277,7 +281,11 @@ namespace KOTORModSync.Core
                         continue;
                     // tslpatcher must always use <<kotorDirectory>> and nothing else.
                     case "tslpatcher" when string.IsNullOrEmpty( instruction.Destination ):
-                        AddWarning( message: "Destination must be <<kotorDirectory>> with 'TSLPatcher' action, setting it now automatically.", instruction );
+                        AddWarning(
+                            message:
+                            "Destination must be <<kotorDirectory>> with 'TSLPatcher' action, setting it now automatically.",
+                            instruction
+                        );
                         instruction.Destination = "<<kotorDirectory>>";
                         break;
 
@@ -408,7 +416,7 @@ namespace KOTORModSync.Core
             {
                 if ( archivePath is null )
                 {
-                    AddError( "Archive is not a valid file path", instruction );
+                    AddError( message: "Archive is not a valid file path", instruction );
                     continue;
                 }
 
@@ -438,28 +446,28 @@ namespace KOTORModSync.Core
             if ( hasError )
             {
                 AddError( $"Invalid source path '{sourcePath}'. Reason: {errorDescription}", instruction );
-                return (false, archiveNameFound);
+                return ( false, archiveNameFound );
             }
 
             if ( foundInAnyArchive || !Component.ShouldRunInstruction( instruction, ComponentsList ) )
             {
-                return (true, true);
+                return ( true, true );
             }
 
             // todo, stop displaying errors for self extracting executables. This is the only mod using one that I've seen out of 200-some.
             if ( ComponentToValidate.Name.Equals( value: "Improved AI", StringComparison.OrdinalIgnoreCase ) )
             {
-                return (true, true);
+                return ( true, true );
             }
 
             // archive not required if instruction isn't running.
             if ( !Component.ShouldRunInstruction( instruction, ComponentsList, isInstall: false ) )
             {
-                return (true, true);
+                return ( true, true );
             }
 
             AddError( $"Failed to find '{sourcePath}' in any archives!", instruction );
-            return (false, archiveNameFound);
+            return ( false, archiveNameFound );
         }
 
         private static ArchivePathCode IsPathInArchive( [NotNull] string relativePath, [NotNull] string archivePath )

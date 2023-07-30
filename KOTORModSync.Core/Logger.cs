@@ -135,7 +135,10 @@ namespace KOTORModSync.Core
             ExceptionLogged.Invoke( ex ); // Raise the ExceptionLogged event
         }
 
-        private static void CurrentDomain_UnhandledException( [NotNull] object sender, [NotNull] UnhandledExceptionEventArgs e )
+        private static void CurrentDomain_UnhandledException(
+            [NotNull] object sender,
+            [NotNull] UnhandledExceptionEventArgs e
+        )
         {
             if ( !( e.ExceptionObject is Exception ex ) )
             {

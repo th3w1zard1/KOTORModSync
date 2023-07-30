@@ -16,7 +16,13 @@ namespace KOTORModSync.Core
 
         [CanBeNull]
         public static List<Component> ParseMods( [CanBeNull] string source ) => source?
-            .Split( new[] { Separator }, StringSplitOptions.RemoveEmptyEntries )
+            .Split(
+                new[]
+                {
+                    Separator,
+                },
+                StringSplitOptions.RemoveEmptyEntries
+            )
             .Select( ParseMod )
             .ToList();
 
@@ -31,10 +37,13 @@ namespace KOTORModSync.Core
             (string, string) nameAndModLinks = GetNameAndModLink( modText );
             mod.Name = GetName( nameAndModLinks );
             mod.Guid = new Guid();
-            mod.ModLink = new List<string>() { GetHyperlinkUrl( nameAndModLinks, linkType: "Name" ) };
+            mod.ModLink = new List<string>()
+            {
+                GetHyperlinkUrl( nameAndModLinks, linkType: "Name" ),
+            };
             mod.Author = GetPropertyValue( modText, propertyName: "Author" );
             mod.Description = GetPropertyValue( modText, propertyName: "Description" );
-            (mod.Category, mod.Tier) = GetCategoryAndTier( modText, categoryTierName: "Category & Tier" );
+            ( mod.Category, mod.Tier ) = GetCategoryAndTier( modText, categoryTierName: "Category & Tier" );
             mod.NonEnglishFunctionality = GetBoolValue( modText, propertyName: "Non-English Functionality" );
             mod.InstallationMethod = GetPropertyValue( modText, propertyName: "Installation Method" );
             mod.Directions = GetPropertyValue( modText, propertyName: "Installation Instructions" );
@@ -52,12 +61,12 @@ namespace KOTORModSync.Core
 
             if ( !match.Success )
             {
-                return (string.Empty, string.Empty);
+                return ( string.Empty, string.Empty );
             }
 
             string name = match.Groups[2].Value.Trim();
             string modLink = match.Groups[3].Value.Trim();
-            return (name, modLink);
+            return ( name, modLink );
         }
 
         [NotNull]
@@ -97,13 +106,13 @@ namespace KOTORModSync.Core
 
             if ( !match.Success )
             {
-                return (string.Empty, string.Empty);
+                return ( string.Empty, string.Empty );
             }
 
             string[] values = match.Groups[1].Value.Split( '/' );
             return values.Length == 2
-                ? (values[0].Trim(), values[1].Trim())
-                : (string.Empty, string.Empty);
+                ? ( values[0].Trim(), values[1].Trim() )
+                : ( string.Empty, string.Empty );
         }
 
         private static bool GetBoolValue( [NotNull] string text, [NotNull] string propertyName )

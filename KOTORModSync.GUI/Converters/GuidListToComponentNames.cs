@@ -32,7 +32,10 @@ namespace KOTORModSync.Converters
                 }
 
                 return selectedComponentNames.Count == 0
-                    ? new List<string> { "None Selected" }
+                    ? new List<string>
+                    {
+                        "None Selected",
+                    }
                     : (object)selectedComponentNames;
             }
             catch ( Exception e )

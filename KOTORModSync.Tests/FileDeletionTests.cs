@@ -93,7 +93,11 @@ namespace KOTORModSync.Tests
             string fileExtension = ".tga";
 
             // Act
-            new Instruction().DeleteDuplicateFile( new DirectoryInfo( directory ), fileExtension, caseInsensitive: true );
+            new Instruction().DeleteDuplicateFile(
+                new DirectoryInfo( directory ),
+                fileExtension,
+                caseInsensitive: true
+            );
 
             // Assert
             Assert.Multiple(

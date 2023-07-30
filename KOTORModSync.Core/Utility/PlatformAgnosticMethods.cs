@@ -19,164 +19,7 @@ namespace KOTORModSync.Core.Utility
 {
     public static class PlatformAgnosticMethods
     {
-        [NotNull]
-        public static List<FileSystemInfo> FindCaseInsensitiveDuplicates( [NotNull] DirectoryInfo directory )
-        {
-            if ( directory is null )
-                throw new ArgumentNullException( nameof( directory ) );
-
-            var duplicates = new List<FileSystemInfo>();
-            var fileDict = new Dictionary<string, List<FileSystemInfo>>( StringComparer.OrdinalIgnoreCase );
-            var folderDict = new Dictionary<string, List<FileSystemInfo>>( StringComparer.OrdinalIgnoreCase );
-
-            try
-            {
-                FindDuplicatesRecursively( directory, ref fileDict, ref folderDict );
-            }
-            catch ( Exception ex )
-            {
-                Logger.LogException( ex );
-                return duplicates;
-            }
-
-            foreach ( List<FileSystemInfo> fileList in fileDict.Values )
-            {
-                if ( fileList?.Count > 1 )
-                    duplicates.AddRange( fileList );
-            }
-
-            foreach ( List<FileSystemInfo> folderList in folderDict.Values )
-            {
-                if ( folderList?.Count > 1 )
-                    duplicates.AddRange( folderList );
-            }
-
-            return duplicates;
-        }
-
-        private static void FindDuplicatesRecursively(
-            [NotNull] DirectoryInfo directory,
-            [NotNull] ref Dictionary<string, List<FileSystemInfo>> fileDict,
-            [NotNull] ref Dictionary<string, List<FileSystemInfo>> folderDict
-        )
-        {
-            if ( fileDict is null )
-                throw new ArgumentNullException( nameof( fileDict ) );
-            if ( folderDict is null )
-                throw new ArgumentNullException( nameof( folderDict ) );
-
-            // Check if the directory exists and if we have access to it.
-            if ( directory.Exists != true )
-                throw new DirectoryNotFoundException( "Directory not found." );
-
-            // Search for files and add them to the file dictionary.
-            foreach ( FileInfo file in directory.GetFiles() )
-            {
-                if ( file?.Exists != true )
-                    continue;
-
-                if ( !fileDict.TryGetValue( file.Name, out List<FileSystemInfo> fileList ) )
-                {
-                    fileList = new List<FileSystemInfo>();
-                    fileDict.Add( file.Name, fileList );
-                    fileList.Add( file );
-                }
-            }
-
-            // Search for subdirectories and add them to the folder dictionary.
-            foreach ( DirectoryInfo subdirectory in directory.GetDirectories() )
-            {
-                if ( subdirectory?.Exists != true )
-                    continue;
-
-                if ( !folderDict.TryGetValue( subdirectory.Name, out List<FileSystemInfo> folderList ) )
-                {
-                    folderList = new List<FileSystemInfo>();
-                    folderDict.Add( subdirectory.Name, folderList );
-                }
-
-                folderList?.Add( subdirectory );
-
-                // Recursively search the sub-directory.
-                FindDuplicatesRecursively( subdirectory, ref fileDict, ref folderDict );
-            }
-        }
-
         // Overload for a string representation of the folder path.
-        [NotNull]
-        public static List<FileSystemInfo> FindCaseInsensitiveDuplicates( [NotNull] string path )
-        {
-            if ( path is null )
-                throw new ArgumentNullException( nameof( path ) );
-
-            var directory = new DirectoryInfo( path );
-            return FindCaseInsensitiveDuplicates( directory );
-        }
-
-        public static (FileSystemInfo, List<string>) GetClosestMatchingEntry( [NotNull] string path )
-        {
-            if ( path is null )
-                throw new ArgumentNullException( nameof( path ) );
-
-            string directoryName = Path.GetDirectoryName( path );
-            string searchPattern = Path.GetFileName( path );
-
-            FileSystemInfo closestMatch = null;
-            int maxMatchingCharacters = -1;
-            var duplicatePaths = new List<string>();
-
-            if ( directoryName is null )
-            {
-                return (null, duplicatePaths);
-            }
-
-            var directory = new DirectoryInfo( directoryName );
-            foreach ( FileSystemInfo entry in directory.EnumerateFileSystemInfos( searchPattern ) )
-            {
-                if ( string.IsNullOrWhiteSpace( entry?.FullName ) )
-                    continue;
-
-                int matchingCharacters = GetMatchingCharactersCount( entry.FullName, path );
-                if ( matchingCharacters == path.Length )
-                {
-                    // Exact match found
-                    closestMatch = entry;
-                }
-                else if ( matchingCharacters > maxMatchingCharacters )
-                {
-                    closestMatch = entry;
-                    maxMatchingCharacters = matchingCharacters;
-                    duplicatePaths.Clear();
-                }
-                else if ( matchingCharacters == maxMatchingCharacters )
-                {
-                    duplicatePaths.Add( entry.FullName );
-                }
-            }
-
-            return (closestMatch, duplicatePaths);
-        }
-
-        private static int GetMatchingCharactersCount( [NotNull] string str1, [NotNull] string str2 )
-        {
-            if ( str1 is null )
-                throw new ArgumentNullException( nameof( str1 ) );
-
-            if ( str2 is null )
-                throw new ArgumentNullException( nameof( str2 ) );
-
-            int matchingCount = 0;
-
-            for ( int i = 0; i < str1.Length && i < str2.Length; i++ )
-            {
-                if ( str1[i] != str2[i] )
-                    break;
-
-                matchingCount++;
-            }
-
-            return matchingCount;
-        }
 
         public static async Task<int> CalculateMaxDegreeOfParallelismAsync( [CanBeNull] DirectoryInfo thisDir )
         {
@@ -229,23 +72,26 @@ namespace KOTORModSync.Core.Utility
                 }
             }
 
-            if ( result.ExitCode != 0 )
-            {
-                return 0; // no memory command found.
-            }
-
-            long availableMemory = ParseAvailableMemory( result.Output, command );
-            return availableMemory;
+            return result.ExitCode != 0
+                ? 0 // no memory command found.
+                : ParseAvailableMemory( result.Output, command );
         }
 
-        private static long ParseAvailableMemory( [NotNull] string output, [CanBeNull] string command )
+        private static long ParseAvailableMemory( [NotNull] string output, [NotNull] string command )
         {
             if ( string.IsNullOrWhiteSpace( output ) )
-                throw new ArgumentException( message: "Value cannot be null or whitespace.",
-                    nameof(output) );
+            {
+                throw new ArgumentException(
+                    message: "Value cannot be null or whitespace.",
+                    nameof( output )
+                );
+            }
+
+            if ( string.IsNullOrWhiteSpace( command ) )
+                throw new ArgumentException( message: "Value cannot be null or whitespace.", nameof( command ) );
 
             string pattern = string.Empty;
-            switch ( command )
+            switch ( command.ToLowerInvariant() )
             {
                 case "sysctl":
                     pattern = @"\d+(\.\d+)?"; // sysctl command
@@ -268,16 +114,14 @@ namespace KOTORModSync.Core.Utility
         {
             string shellPath = GetShellExecutable();
             if ( string.IsNullOrEmpty( shellPath ) )
-            {
-                return (-1, string.Empty, "Unable to retrieve shell executable path.");
-            }
+                return ( -1, string.Empty, "Unable to retrieve shell executable path." );
 
             try
             {
                 using ( var process = new Process() )
                 {
                     string args = RuntimeInformation.IsOSPlatform( OSPlatform.Windows )
-                        ? $"/c \"{command}\"" // Use "/c" for Windows command prompt
+                        ? $"/c \"{command}\""  // Use "/c" for Windows command prompt
                         : $"-c \"{command}\""; // Use "-c" for Unix-like shells
                     var shellFileInfo = new FileInfo( shellPath );
                     Task<(int, string, string)> executeProcessTask = ExecuteProcessAsync( shellFileInfo, args );
@@ -287,7 +131,7 @@ namespace KOTORModSync.Core.Utility
             }
             catch ( Exception ex )
             {
-                return (-2, string.Empty, $"Command execution failed: {ex.Message}");
+                return ( -2, string.Empty, $"Command execution failed: {ex.Message}" );
             }
         }
 
@@ -306,8 +150,8 @@ namespace KOTORModSync.Core.Utility
         {
             string[] shellExecutables =
             {
-                "cmd.exe", "powershell.exe", "sh", "bash", "/bin/sh", "/usr/bin/sh", "/usr/local/bin/sh",
-                "/bin/bash", "/usr/bin/bash", "/usr/local/bin/bash",
+                "cmd.exe", "powershell.exe", "sh", "bash", "/bin/sh", "/usr/bin/sh", "/usr/local/bin/sh", "/bin/bash",
+                "/usr/bin/bash", "/usr/local/bin/bash",
             };
 
             foreach ( string executable in shellExecutables )
@@ -318,7 +162,7 @@ namespace KOTORModSync.Core.Utility
                 }
 
                 if ( executable == null )
-                    throw new NullReferenceException(nameof(executable));
+                    throw new NullReferenceException( nameof( executable ) );
 
                 string fullExecutablePath = Path.Combine( Environment.SystemDirectory, executable );
                 if ( File.Exists( fullExecutablePath ) )
@@ -343,7 +187,7 @@ namespace KOTORModSync.Core.Utility
                     arguments = $"/C winsat disk -drive \"{drivePath}\" -seq -read -ramsize 4096";
                 }
                 else if ( RuntimeInformation.IsOSPlatform( OSPlatform.Linux )
-                         || RuntimeInformation.IsOSPlatform( OSPlatform.OSX ) )
+                    || RuntimeInformation.IsOSPlatform( OSPlatform.OSX ) )
                 {
                     command = "dd";
                     arguments = $"if={drivePath} bs=1M count=256 iflag=direct";
@@ -357,10 +201,7 @@ namespace KOTORModSync.Core.Utility
 
                 var startInfo = new ProcessStartInfo
                 {
-                    FileName = command,
-                    Arguments = arguments,
-                    RedirectStandardOutput = true,
-                    UseShellExecute = false,
+                    FileName = command, Arguments = arguments, RedirectStandardOutput = true, UseShellExecute = false,
                 };
 
                 using ( var process = new Process() )
@@ -479,7 +320,7 @@ namespace KOTORModSync.Core.Utility
         )
         {
             if ( programFile == null )
-                throw new ArgumentNullException( nameof(programFile) );
+                throw new ArgumentNullException( nameof( programFile ) );
 
             cmdlineArgs = cmdlineArgs ?? string.Empty;
 
@@ -523,9 +364,7 @@ namespace KOTORModSync.Core.Utility
                 // try without redirecting output
                 new ProcessStartInfo
                 {
-                    FileName = programFile.FullName,
-                    Arguments = cmdlineArgs,
-                    UseShellExecute = false,
+                    FileName = programFile.FullName, Arguments = cmdlineArgs, UseShellExecute = false,
                 },
                 // try using native shell (doesn't support output redirection, perhaps they need admin)
                 new ProcessStartInfo
@@ -552,7 +391,6 @@ namespace KOTORModSync.Core.Utility
             List<ProcessStartInfo> processStartInfosWithFallbacks = GetProcessStartInfos( programFile, cmdlineArgs );
 
             Exception ex = null;
-            bool startedProcess = false;
             bool? isAdmin = IsExecutorAdmin();
             for ( int index = 0; index < processStartInfosWithFallbacks.Count; index++ )
             {
@@ -608,24 +446,16 @@ namespace KOTORModSync.Core.Utility
                             {
 #pragma warning disable IDE0045 // Convert to conditional expression
                                 if ( e.Data is null )
-                                {
                                     _ = outputWaitHandle.Set();
-                                }
                                 else
-                                {
                                     _ = output.AppendLine( e.Data );
-                                }
                             };
                             process.ErrorDataReceived += ( sender, e ) =>
                             {
                                 if ( e.Data is null )
-                                {
                                     _ = errorWaitHandle.Set();
-                                }
                                 else
-                                {
                                     _ = error.AppendLine( e.Data );
-                                }
 #pragma warning restore IDE0045 // Convert to conditional expression
                             };
 
@@ -649,7 +479,7 @@ namespace KOTORModSync.Core.Utility
 
                         return timeout > 0 && cancellationTokenSource.Token.IsCancellationRequested
                             ? throw new TimeoutException( "Process timed out" )
-                            : ((int, string, string))(process.ExitCode, output.ToString(), error.ToString());
+                            : ((int, string, string))( process.ExitCode, output.ToString(), error.ToString() );
                     }
                 }
                 catch ( Win32Exception localException )
@@ -674,18 +504,13 @@ namespace KOTORModSync.Core.Utility
                 {
                     await Logger.LogAsync( $"An unplanned error has occurred trying to run '{programFile.Name}'" );
                     await Logger.LogExceptionAsync( startinfoException );
-                    return (-6, string.Empty, string.Empty);
+                    return ( -6, string.Empty, string.Empty );
                 }
-            }
-
-            if ( startedProcess )
-            {
-                return (-2, string.Empty, string.Empty); // todo: figure out what scenario this return code will happen in.
             }
 
             await Logger.LogAsync( "Process failed to start with all possible combinations of arguments." );
             await Logger.LogExceptionAsync( ex ?? new InvalidOperationException() );
-            return (-1, string.Empty, string.Empty);
+            return ( -1, string.Empty, string.Empty );
         }
     }
 }

@@ -16,7 +16,10 @@ namespace KOTORModSync.Tests
         {
             // Set up the initial values for destinationPath and sourcePaths
             _destinationPath = new DirectoryInfo( "DestinationPath" );
-            _sourcePaths = new List<string> { "SourcePath1", "SourcePath2", "SourcePath3" };
+            _sourcePaths = new List<string>
+            {
+                "SourcePath1", "SourcePath2", "SourcePath3",
+            };
         }
 
         [TearDown]
@@ -41,7 +44,10 @@ namespace KOTORModSync.Tests
             // Arrange
             var fileExtractor = new FileExtractor();
             string archivePath = CreateTemporaryArchive( "validArchive.zip" );
-            _sourcePaths = new List<string> { archivePath };
+            _sourcePaths = new List<string>
+            {
+                archivePath,
+            };
 
             // Act
             Instruction.ActionExitCode extractionResult
@@ -64,7 +70,10 @@ namespace KOTORModSync.Tests
             // Arrange
             var fileExtractor = new FileExtractor();
             string archivePath = CreateTemporaryArchive( "invalidArchive.zip" );
-            _sourcePaths = new List<string> { archivePath };
+            _sourcePaths = new List<string>
+            {
+                archivePath,
+            };
 
             // Act
             Instruction.ActionExitCode extractionResult
@@ -111,7 +120,10 @@ namespace KOTORModSync.Tests
             // Arrange
             var fileExtractor = new FileExtractor();
             string archivePath = CreateTemporaryArchive( "archiveWithPermissionDenied.zip" );
-            _sourcePaths = new List<string> { archivePath };
+            _sourcePaths = new List<string>
+            {
+                archivePath,
+            };
 
             // Act
             Instruction.ActionExitCode extractionResult

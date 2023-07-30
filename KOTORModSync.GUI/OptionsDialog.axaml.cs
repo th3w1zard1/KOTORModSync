@@ -61,7 +61,10 @@ namespace KOTORModSync
 
             foreach ( string option in OptionsList )
             {
-                var radioButton = new RadioButton { Content = option, GroupName = "OptionsGroup" };
+                var radioButton = new RadioButton
+                {
+                    Content = option, GroupName = "OptionsGroup",
+                };
                 optionStackPanel.Children.Add( radioButton );
             }
 
@@ -74,11 +77,11 @@ namespace KOTORModSync
 
             // Define padding values
             const double horizontalPadding = 100; // Padding on the left and right
-            const double verticalPadding = 150; // Padding on the top and bottom
+            const double verticalPadding = 150;   // Padding on the top and bottom
 
             // Calculate the desired width and height for the content with padding
-            double contentWidth = actualSize.Width + ( 2 * horizontalPadding );
-            double contentHeight = actualSize.Height + ( 2 * verticalPadding );
+            double contentWidth = actualSize.Width + 2 * horizontalPadding;
+            double contentHeight = actualSize.Height + 2 * verticalPadding;
 
             // Set the width and height of the window
             Width = contentWidth;
@@ -107,7 +110,10 @@ namespace KOTORModSync
             await Dispatcher.UIThread.InvokeAsync(
                 async () =>
                 {
-                    var optionsDialog = new OptionsDialog { OptionsList = optionsList };
+                    var optionsDialog = new OptionsDialog
+                    {
+                        OptionsList = optionsList,
+                    };
 
                     optionsDialog.Closed += ClosedHandler;
                     optionsDialog.Opened += optionsDialog.OnOpened;

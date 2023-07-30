@@ -17,12 +17,11 @@ namespace KOTORModSync.Core
     // instance has GET and SET access.
     // Everyone else has readonly GET access.
     [SuppressMessage( category: "Performance", checkId: "CA1822:Mark members as static", Justification = "<Pending>" )]
-    [SuppressMessage( category: "CodeQuality", checkId: "IDE0079:Remove unnecessary suppression", Justification = "<Pending>" )]
-    [SuppressMessage( category: "ReSharper", checkId: "InconsistentNaming" )]
-    [SuppressMessage("ReSharper",
-        "MemberCanBePrivate.Global")]
-    [SuppressMessage("ReSharper",
-        "MemberCanBeInternal")]
+    [SuppressMessage(
+        category: "CodeQuality",
+        checkId: "IDE0079:Remove unnecessary suppression",
+        Justification = "<Pending>"
+    )]
     public class MainConfig : INotifyPropertyChanged
     {
         [NotNull]
@@ -82,7 +81,7 @@ namespace KOTORModSync.Core
         public static CompatibilityLevel CurrentCompatibilityLevel { get; private set; }
         [NotNull][ItemNotNull] public static List<Component> AllComponents { get; set; } = new List<Component>();
 
-        [CanBeNull]
+        [NotNull]
         public List<Component> allComponents
         {
             get => AllComponents;
@@ -135,38 +134,18 @@ namespace KOTORModSync.Core
             }
         }
 
-        public bool debugLogging
-        {
-            get => DebugLogging;
-            set => DebugLogging = value;
-        }
+        public bool debugLogging { get => DebugLogging; set => DebugLogging = value; }
 
         [CanBeNull]
-        public DirectoryInfo lastOutputDirectory
-        {
-            get => LastOutputDirectory;
-            set => LastOutputDirectory = value;
-        }
+        public DirectoryInfo lastOutputDirectory { get => LastOutputDirectory; set => LastOutputDirectory = value; }
 
-        public bool defaultInstall
-        {
-            get => DefaultInstall;
-            set => DefaultInstall = value;
-        }
+        public bool defaultInstall { get => DefaultInstall; set => DefaultInstall = value; }
 
-        public bool attemptFixes
-        {
-            get => AttemptFixes;
-            set => AttemptFixes = value;
-        }
+        public bool attemptFixes { get => AttemptFixes; set => AttemptFixes = value; }
 
         public static bool NoAdmin { get; private set; }
 
-        public bool noAdmin
-        {
-            get => NoAdmin;
-            set => NoAdmin = value;
-        }
+        public bool noAdmin { get => NoAdmin; set => NoAdmin = value; }
 
         public event PropertyChangedEventHandler PropertyChanged;
 

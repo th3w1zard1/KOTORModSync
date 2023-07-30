@@ -21,7 +21,7 @@ namespace KOTORModSync.Core.Utility
         public static string FixGuidString( [NotNull] string guidString )
         {
             if ( string.IsNullOrWhiteSpace( guidString ) )
-                throw new ArgumentException( message: "Value cannot be null or whitespace.", nameof(guidString) );
+                throw new ArgumentException( message: "Value cannot be null or whitespace.", nameof( guidString ) );
 
             // Remove any whitespace characters
             guidString = Regex.Replace( guidString, pattern: @"\s", replacement: "" );
@@ -36,7 +36,11 @@ namespace KOTORModSync.Core.Utility
             }
 
             // Insert necessary dashes between the GUID sections
-            guidString = Regex.Replace( guidString, pattern: @"(\w{8})(\w{4})(\w{4})(\w{4})(\w{12})", replacement: "$1-$2-$3-$4-$5" );
+            guidString = Regex.Replace(
+                guidString,
+                pattern: @"(\w{8})(\w{4})(\w{4})(\w{4})(\w{12})",
+                replacement: "$1-$2-$3-$4-$5"
+            );
 
             // Attempt to fix common issues with GUID strings
             if ( !guidString.StartsWith( value: "{", StringComparison.Ordinal ) )
@@ -50,12 +54,15 @@ namespace KOTORModSync.Core.Utility
         }
 
         // converts accidental lists into strings and vice versa
-        public static void DeserializePathInDictionary( [NotNull] IDictionary<string, object> dict, [NotNull] string key )
+        public static void DeserializePathInDictionary(
+            [NotNull] IDictionary<string, object> dict,
+            [NotNull] string key
+        )
         {
             if ( dict.Count == 0 )
-                throw new ArgumentException( message: "Value cannot be null or empty.", nameof(dict) );
+                throw new ArgumentException( message: "Value cannot be null or empty.", nameof( dict ) );
             if ( string.IsNullOrEmpty( key ) )
-                throw new ArgumentException( message: "Value cannot be null or empty.", nameof(key) );
+                throw new ArgumentException( message: "Value cannot be null or empty.", nameof( key ) );
 
             if ( !dict.TryGetValue( key, out object pathValue ) )
             {
@@ -67,7 +74,10 @@ namespace KOTORModSync.Core.Utility
                 case string path:
                     {
                         string formattedPath = PathHelper.FixPathFormatting( path );
-                        dict[key] = new List<string> { PrefixPath( formattedPath ) };
+                        dict[key] = new List<string>
+                        {
+                            PrefixPath( formattedPath ),
+                        };
                         break;
                     }
                 case IList<string> paths:
@@ -97,7 +107,10 @@ namespace KOTORModSync.Core.Utility
                 case string stringValue:
                     {
                         // Convert the string to a list of strings
-                        var stringList = new List<string>( ) { stringValue };
+                        var stringList = new List<string>()
+                        {
+                            stringValue,
+                        };
 
                         // Replace the string value with the list
                         dict[key] = stringList;
@@ -144,9 +157,9 @@ namespace KOTORModSync.Core.Utility
         [NotNull]
         public static string PrefixPath( [NotNull] string path ) =>
             string.IsNullOrWhiteSpace( path )
-                ? throw new ArgumentException( message: "Value cannot be null or whitespace.", nameof(path) )
+                ? throw new ArgumentException( message: "Value cannot be null or whitespace.", nameof( path ) )
                 : !path.StartsWith( value: "<<modDirectory>>", StringComparison.OrdinalIgnoreCase )
-                  && !path.StartsWith( value: "<<kotorDirectory>>", StringComparison.OrdinalIgnoreCase )
+                && !path.StartsWith( value: "<<kotorDirectory>>", StringComparison.OrdinalIgnoreCase )
                     ? PathHelper.FixPathFormatting( "<<modDirectory>>" + Path.DirectorySeparatorChar + path )
                     : path;
 
@@ -167,7 +180,7 @@ namespace KOTORModSync.Core.Utility
         [NotNull]
         public static List<object> CreateMergedList( [NotNull] params IEnumerable<object>[] lists )
         {
-            var mergedList = new List<object>( );
+            var mergedList = new List<object>();
 
             foreach ( IEnumerable<object> list in lists )
             {
@@ -220,8 +233,7 @@ namespace KOTORModSync.Core.Utility
         {
             var settings = new JsonSerializerSettings
             {
-                TypeNameHandling = TypeNameHandling.None,
-                NullValueHandling = NullValueHandling.Ignore,
+                TypeNameHandling = TypeNameHandling.None, NullValueHandling = NullValueHandling.Ignore,
             };
 
             string jsonString = JsonConvert.SerializeObject( obj, settings );

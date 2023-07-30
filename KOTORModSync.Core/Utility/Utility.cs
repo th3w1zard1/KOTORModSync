@@ -37,7 +37,8 @@ namespace KOTORModSync.Core.Utility
                 executingAssemblyLocation = AppDomain.CurrentDomain.BaseDirectory;
             }
 
-            return Path.GetDirectoryName( executingAssemblyLocation ) ?? throw new InvalidOperationException( "Could not determine the path to the program!" );
+            return Path.GetDirectoryName( executingAssemblyLocation )
+                ?? throw new InvalidOperationException( "Could not determine the path to the program!" );
         }
 
         [CanBeNull]
@@ -65,13 +66,16 @@ namespace KOTORModSync.Core.Utility
             try
             {
                 using ( FileStream fs = File.Create(
-                           Path.Combine(
-                               dirPath.FullName,
-                               Path.GetRandomFileName()
-                           ),
-                           bufferSize: 1,
-                           FileOptions.DeleteOnClose )
-                      ) { }
+                        Path.Combine(
+                            dirPath.FullName,
+                            Path.GetRandomFileName()
+                        ),
+                        bufferSize: 1,
+                        FileOptions.DeleteOnClose
+                    )
+                )
+                {
+                }
 
                 return true;
             }

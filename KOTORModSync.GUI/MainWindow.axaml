@@ -115,69 +115,64 @@
                                             </ItemsRepeater.ItemTemplate>
                                         </ItemsRepeater>
 
+                                        
+                                        <TextBlock Text="Customizations" FontWeight="Bold"/>
                                         <ItemsRepeater
-                                            x:Name="instructionsRepeater" Items="{Binding Instructions}">
+                                            x:Name="optionsRepeater"
+                                                       Items="{Binding Options}">
                                             <ItemsRepeater.ItemTemplate>
-                                                <DataTemplate DataType="core:Instruction">
-                                                    <Border BorderThickness="2" BorderBrush="LightGray"
-                                                            Margin="10,10,0,0" Padding="10">
-                                                        <Grid RowDefinitions="Auto,Auto" ColumnDefinitions="Auto,*">
-                                                            <TextBlock Grid.Column="0" Grid.Row="0"
-                                                                       Text="{Binding Converter={StaticResource IndexConverter}, ConverterParameter={Binding Instructions, ElementName=instructionsRepeater}}"
-                                                                       FontWeight="Bold" />
-                                                            <DockPanel Grid.Row="0" Grid.RowSpan="2" Grid.Column="1">
-                                                                <TextBlock Text="{Binding Action}"
-                                                                           Margin="10,0,0,0" TextWrapping="Wrap" />
-                                                                <TextBlock
-                                                                    Text="{Binding Source, Converter={StaticResource ListToStringConverter}}"
-                                                                    Margin="10,0,0,0" TextWrapping="Wrap" />
-                                                                <TextBlock
-                                                                    Text="{Binding Arguments, Converter={StaticResource ListToStringConverter}}"
-                                                                    Margin="10,0,0,0" TextWrapping="Wrap" />
+                                                <DataTemplate DataType="core:Option">
+                                                    <Border BorderThickness="2"
+                                                            BorderBrush="LightGray"
+                                                            Margin="10,10,0,0"
+                                                            Padding="10">
+                                                        <StackPanel>
+                                                            <DockPanel Margin="10,0,0,0">
+                                                                <CheckBox Name="IsSelected"
+                                                                          VerticalContentAlignment="Center"
+                                                                          VerticalAlignment="Center"
+                                                                          IsChecked="{Binding IsSelected, Mode=TwoWay}" />
+                                                                <TextBlock Text="{Binding Name}" />
                                                             </DockPanel>
-
-                                                            <ItemsRepeater Grid.Row="1" Grid.Column="0"
-                                                                           x:Name="optionsRepeater" Items="{Binding Options}">
+                                                            <TextBlock Text="{Binding Description}" />
+                                                            <ItemsRepeater
+                                                                x:Name="optionsInstructionsRepeater"
+                                                                Items="{Binding Instructions}">
                                                                 <ItemsRepeater.ItemTemplate>
-                                                                    <DataTemplate DataType="core:Option">
-                                                                        <StackPanel>
-                                                                            <DockPanel Margin="10,0,0,0">
-                                                                                <CheckBox Content="{Binding IsSelected}"/>
-                                                                                <TextBlock Text="{Binding Description}"/>
-                                                                            </DockPanel>
-                                                                            <ItemsRepeater
-                                                                                x:Name="optionsInstructionsRepeater" Items="{Binding Instructions}">
-                                                                                <ItemsRepeater.ItemTemplate>
-                                                                                    <DataTemplate DataType="core:Instruction">
-                                                                                        <Border BorderThickness="2" BorderBrush="LightGray"
-                                                                                                Margin="10,10,0,0" Padding="10">
-                                                                                            <Grid RowDefinitions="Auto,Auto" ColumnDefinitions="Auto,*">
-                                                                                                <TextBlock Grid.Column="0" Grid.Row="0"
-                                                                                                           Text="{Binding
-                                                                                                               Converter={StaticResource IndexConverter},
-                                                                                                               ConverterParameter={Binding Instructions,
-                                                                                                               ElementName=instructionsRepeater}}"
-                                                                                                           FontWeight="Bold" />
-                                                                                                <DockPanel Grid.Row="0" Grid.RowSpan="2" Grid.Column="1">
-                                                                                                    <TextBlock Text="{Binding Action}"
-                                                                                                               Margin="10,0,0,0" TextWrapping="Wrap" />
-                                                                                                    <TextBlock
-                                                                                                        Text="{Binding Source, Converter={StaticResource ListToStringConverter}}"
-                                                                                                        Margin="10,0,0,0" TextWrapping="Wrap" />
-                                                                                                    <TextBlock
-                                                                                                        Text="{Binding Arguments, Converter={StaticResource ListToStringConverter}}"
-                                                                                                        Margin="10,0,0,0" TextWrapping="Wrap" />
-                                                                                                </DockPanel>
-                                                                                            </Grid>
-                                                                                        </Border>
-                                                                                    </DataTemplate>
-                                                                                </ItemsRepeater.ItemTemplate>
-                                                                            </ItemsRepeater>
-                                                                        </StackPanel>
+                                                                    <DataTemplate
+                                                                        DataType="core:Instruction">
+                                                                            <Grid
+                                                                                RowDefinitions="Auto,Auto"
+                                                                                ColumnDefinitions="Auto,*">
+                                                                                <TextBlock
+                                                                                    Grid.Column="0"
+                                                                                    Grid.Row="0"
+                                                                                    Text="{Binding
+                                                                                               Converter={StaticResource IndexConverter},
+                                                                                               ConverterParameter={Binding Instructions,
+                                                                                               ElementName=instructionsRepeater}}"
+                                                                                    FontWeight="Bold" />
+                                                                                <DockPanel Grid.Row="0"
+                                                                                    Grid.RowSpan="2"
+                                                                                    Grid.Column="1">
+                                                                                    <TextBlock
+                                                                                        Text="{Binding Action}"
+                                                                                        Margin="10,0,0,0"
+                                                                                        TextWrapping="Wrap" />
+                                                                                    <TextBlock
+                                                                                        Text="{Binding Source, Converter={StaticResource ListToStringConverter}}"
+                                                                                        Margin="10,0,0,0"
+                                                                                        TextWrapping="Wrap" />
+                                                                                    <TextBlock
+                                                                                        Text="{Binding Arguments, Converter={StaticResource ListToStringConverter}}"
+                                                                                        Margin="10,0,0,0"
+                                                                                        TextWrapping="Wrap" />
+                                                                                </DockPanel>
+                                                                            </Grid>
                                                                     </DataTemplate>
                                                                 </ItemsRepeater.ItemTemplate>
                                                             </ItemsRepeater>
-                                                        </Grid>
+                                                        </StackPanel>
                                                     </Border>
                                                 </DataTemplate>
                                             </ItemsRepeater.ItemTemplate>

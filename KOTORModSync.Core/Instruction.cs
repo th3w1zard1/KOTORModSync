@@ -3,10 +3,8 @@
 // See LICENSE.txt file in the project root for full license information.
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Data;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -15,6 +13,7 @@ using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
+using KOTORModSync.Core.Data;
 using KOTORModSync.Core.TSLPatcher;
 using KOTORModSync.Core.Utility;
 using SharpCompress.Archives;
@@ -26,23 +25,65 @@ namespace KOTORModSync.Core
 {
     public class Instruction : INotifyPropertyChanged
     {
-        public static List<string> AvailableActions = new List<string>()
+        public enum ActionType
         {
-            "execute",
-            "tslpatcher",
-            "move",
-            "rename",
-            "delete",
-            "delduplicate",
-        };
+            Extract,
+            Execute,
+            TslPatcher,
+            Move,
+            Copy,
+            Rename,
+            Delete,
+            DelDuplicate,
+            Choose,
+        }
 
         public string Action { get; set; }
-        [NotNull][ItemNotNull] public List<string> Source { get => _source; set { _source = value; OnPropertyChanged(); } }
-        [NotNull] public string Destination { get => _destination; set { _destination = value; OnPropertyChanged(); } }
-        [NotNull] public List<Guid> Dependencies { get => _dependencies; set { _dependencies = value; OnPropertyChanged(); } }
-        [NotNull] public List<Guid> Restrictions { get => _restrictions; set { _restrictions = value; OnPropertyChanged(); } }
+
+        [NotNull][ItemNotNull] public List<string> Source
+        {
+            get => _source;
+            set
+            {
+                _source = value;
+                OnPropertyChanged();
+            }
+        }
+
+        [NotNull] public string Destination
+        {
+            get => _destination;
+            set
+            {
+                _destination = value;
+                OnPropertyChanged();
+            }
+        }
+
+        [NotNull] public List<Guid> Dependencies
+        {
+            get => _dependencies;
+            set
+            {
+                _dependencies = value;
+                OnPropertyChanged();
+            }
+        }
+
+        [NotNull] public List<Guid> Restrictions
+        {
+            get => _restrictions;
+            set
+            {
+                _restrictions = value;
+                OnPropertyChanged();
+            }
+        }
+
         public bool Overwrite { get; set; }
         public string Arguments { get; set; }
+        [CanBeNull] public List<string> DeleteExtensions { get; set; }
+        [CanBeNull] public List<Option> ValidOptions { get; set; }
         private Component ParentComponent { get; set; }
         public Dictionary<FileInfo, SHA1> ExpectedChecksums { get; set; }
         public Dictionary<FileInfo, SHA1> OriginalChecksums { get; internal set; }
@@ -110,42 +151,49 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
         [NotNull][ItemNotNull] private List<string> RealSourcePaths { get; set; } = new List<string>();
         [CanBeNull] private DirectoryInfo RealDestinationPath { get; set; }
 
-        public void SetParentComponent( [CanBeNull] Component parentComponent ) => ParentComponent = parentComponent;
+        internal void SetParentComponent( [CanBeNull] Component parentComponent ) => ParentComponent = parentComponent;
+
         public static async Task<bool> ExecuteInstructionAsync( [NotNull] Func<Task<bool>> instructionMethod ) =>
-            await ( instructionMethod() ?? throw new ArgumentNullException( nameof( instructionMethod ) ) ).ConfigureAwait( false );
+            await ( instructionMethod()
+                ?? throw new ArgumentNullException( nameof( instructionMethod ) ) ).ConfigureAwait( false );
 
         // This method will replace custom variables such as <<modDirectory>> and <<kotorDirectory>> with their actual paths.
         // This method should not be ran before an instruction is executed.
         // Otherwise we risk deserializing a full path early, which can lead to unsafe config injections. (e.g. malicious config file targeting sys files)
         // ^ perhaps the above is user error though? User should check what they are running in advance perhaps? Either way, we attempt to baby them here.
-        public void SetRealPaths( bool noValidate = false )
+        internal void SetRealPaths( bool noValidate = false )
         {
             // Get real path then enumerate the files/folders with wildcards and add them to the list
             if ( Source is null )
                 throw new NullReferenceException( nameof( Source ) );
 
-            RealSourcePaths = Source.ConvertAll( Utility.Utility.ReplaceCustomVariables );
-            RealSourcePaths = PathHelper.EnumerateFilesWithWildcards( RealSourcePaths );
+            List<string> newSourcePaths = Source.ConvertAll( Utility.Utility.ReplaceCustomVariables );
+            newSourcePaths = PathHelper.EnumerateFilesWithWildcards( newSourcePaths );
 
-            if ( RealSourcePaths?.Count != 0 || !noValidate )
+            if ( !(newSourcePaths?.Any() ?? false) && !noValidate )
             {
                 throw new FileNotFoundException(
                     $"Could not find any files in the 'Source' path! Got [{string.Join( separator: ", ", Source )}]"
                 );
             }
 
+            // ReSharper disable once AssignNullToNotNullAttribute
+            RealSourcePaths = newSourcePaths;
+
             string destinationPath = Utility.Utility.ReplaceCustomVariables( Destination );
             if ( string.IsNullOrWhiteSpace( destinationPath ) )
                 return;
 
-            var thisDestination = new DirectoryInfo( destinationPath );
+            DirectoryInfo thisDestination = PathValidator.IsValidPath( destinationPath )
+                ? new DirectoryInfo( destinationPath )
+                : throw new InvalidDataException( destinationPath + " is not a valid path!" );
+
             if ( !thisDestination.Exists )
             {
-                (FileSystemInfo caseSensitiveDestination, List<string> isMultiple)
-                    = PlatformAgnosticMethods.GetClosestMatchingEntry( thisDestination.FullName );
-
-                thisDestination = (DirectoryInfo)caseSensitiveDestination
+                string caseSensitiveDestination = PathHelper.GetCaseSensitivePath( thisDestination.FullName )
                     ?? throw new DirectoryNotFoundException( "Could not find the 'Destination' path!" );
+
+                thisDestination = new DirectoryInfo( caseSensitiveDestination );
             }
 
             RealDestinationPath = thisDestination;
@@ -158,17 +206,15 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
         {
             try
             {
-                if ( argSourcePaths is null )
-                {
-                    argSourcePaths = RealSourcePaths
-                        ?? throw new NullReferenceException(nameof(RealSourcePaths));
-                }
+                RealSourcePaths = argSourcePaths
+                    ?? RealSourcePaths
+                    ?? throw new ArgumentNullException( nameof( argSourcePaths ) );
 
-                var extractionTasks = new List<Task>( 25 );
-                var semaphore = new SemaphoreSlim( 5 ); // Limiting to 5 concurrent extractions
+                var extractionTasks = new List<Task>( capacity: 25 );
+                var semaphore = new SemaphoreSlim( initialCount: 5 ); // Limiting to 5 concurrent extractions
                 ActionExitCode exitCode = ActionExitCode.Success;
 
-                foreach ( string sourcePath in argSourcePaths )
+                foreach ( string sourcePath in RealSourcePaths )
                 {
                     await semaphore.WaitAsync(); // Acquire a semaphore slot
 
@@ -178,16 +224,14 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                     {
                         try
                         {
-                            var thisFile = new FileInfo( sourcePath );
+                            var thisFile = new FileInfo(
+                                sourcePath ?? throw new NullReferenceException( nameof( sourcePath ) )
+                            );
                             if ( argDestinationPath is null )
-                            {
                                 argDestinationPath = thisFile.Directory;
-                            }
 
                             if ( argDestinationPath is null )
-                            {
                                 throw new ArgumentNullException( nameof( argDestinationPath ) );
-                            }
 
                             _ = Logger.LogAsync( $"File path: '{thisFile.FullName}'" );
 
@@ -225,7 +269,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                             {
                                 IArchive archive = null;
 
-                                switch ( thisFile.Extension )
+                                switch ( thisFile.Extension.ToLowerInvariant() )
                                 {
                                     case ".zip":
                                         archive = SharpCompress.Archives.Zip.ZipArchive.Open( stream );
@@ -324,8 +368,8 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
             if ( string.IsNullOrEmpty( fileExtension ) )
                 fileExtension = Arguments;
 
-            if (compatibleExtensions is null || compatibleExtensions.Count == 0)
-                compatibleExtensions = new List<string> {".tga", ".tpc", ".dds", ".txi"};
+            if ( compatibleExtensions is null || compatibleExtensions.Count == 0 )
+                compatibleExtensions = Game.TextureOverridePriorityList;
 
             string[] files = Directory.GetFiles( directoryPath.FullName );
             Dictionary<string, int> fileNameCounts = caseInsensitive
@@ -340,13 +384,13 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                 bool compatibleExtensionFound = caseInsensitive
                     // ReSharper disable once AssignNullToNotNullAttribute
                     // ReSharper disable once PossibleNullReferenceException
-                    ? compatibleExtensions.Any(ext => ext.Equals(thisExtension, StringComparison.OrdinalIgnoreCase))
+                    ? compatibleExtensions.Any( ext => ext.Equals( thisExtension, StringComparison.OrdinalIgnoreCase ) )
                     // ReSharper disable once PossibleNullReferenceException
                     : compatibleExtensions.Contains( thisExtension );
 
                 if ( compatibleExtensionFound )
                 {
-                    if ( fileNameCounts.TryGetValue(fileNameWithoutExtension, out int _) )
+                    if ( fileNameCounts.TryGetValue( fileNameWithoutExtension, out int _ ) )
                         fileNameCounts[fileNameWithoutExtension]++;
                     else
                         fileNameCounts[fileNameWithoutExtension] = 1;
@@ -361,7 +405,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                 try
                 {
                     File.Delete( filePath );
-                    Logger.Log( $"Deleted file: '{Path.GetFileNameWithoutExtension(filePath)}'" );
+                    Logger.Log( $"Deleted file: '{Path.GetFileNameWithoutExtension( filePath )}'" );
                 }
                 catch ( Exception ex )
                 {
@@ -369,29 +413,36 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                 }
             }
 
-            bool ShouldDeleteFile(string filePath)
+            bool ShouldDeleteFile( string filePath )
             {
                 string fileName = Path.GetFileName( filePath );
                 string fileNameWithoutExtension = Path.GetFileNameWithoutExtension( filePath );
                 string fileExtensionFromFile = Path.GetExtension( filePath );
 
-                if ( string.IsNullOrEmpty(fileNameWithoutExtension) )
+                if ( string.IsNullOrEmpty( fileNameWithoutExtension ) )
                 {
-                    Logger.LogVerbose($"Conditional 1: fileNameWithoutExtension from '{fileName}' is null or empty");
+                    Logger.LogVerbose( $"Conditional 1: fileNameWithoutExtension from '{fileName}' is null or empty" );
                 }
-                else if ( !fileNameCounts.ContainsKey(fileNameWithoutExtension) )
+                else if ( !fileNameCounts.ContainsKey( fileNameWithoutExtension ) )
                 {
-                    Logger.LogError($"Conditional 2: '{fileNameWithoutExtension}' is not present in '{fileNameCounts}' somehow?");
+                    Logger.LogError(
+                        $"Conditional 2: '{fileNameWithoutExtension}' is not present in '{fileNameCounts}' somehow?"
+                    );
                 }
                 else if ( fileNameCounts[fileNameWithoutExtension] <= 1 )
                 {
-                    Logger.LogVerbose($"Conditional 3: '{fileNameWithoutExtension}' is the only file with this name.");
+                    Logger.LogVerbose(
+                        $"Conditional 3: '{fileNameWithoutExtension}' is the only file with this name."
+                    );
                 }
-                else if ( !string.Equals(fileExtensionFromFile, fileExtension, StringComparison.OrdinalIgnoreCase) )
+                else if ( !string.Equals( fileExtensionFromFile, fileExtension, StringComparison.OrdinalIgnoreCase ) )
                 {
-                    string caseInsensitivity = caseInsensitive ? " (case-insensitive)" : string.Empty;
-                    string message = $"Conditional 4: '{fileExtensionFromFile}' is not equal to '{fileExtension}'{caseInsensitivity}";
-                    Logger.LogVerbose(message);
+                    string caseInsensitivity = caseInsensitive
+                        ? " (case-insensitive)"
+                        : string.Empty;
+                    string message =
+                        $"Conditional 4: '{fileExtensionFromFile}' is not equal to '{fileExtension}'{caseInsensitivity}";
+                    Logger.LogVerbose( message );
                 }
                 else
                 {
@@ -402,18 +453,19 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
             }
         }
 
-        public ActionExitCode DeleteFile(List<string> sourcePaths = null)
+        // ReSharper disable once AssignNullToNotNullAttribute
+        public ActionExitCode DeleteFile( [ItemNotNull][NotNull] List<string> sourcePaths = null )
         {
-            if ( sourcePaths?.Count == 0 )
+            if ( sourcePaths is null || sourcePaths.Count == 0 )
                 sourcePaths = RealSourcePaths;
-            if ( sourcePaths?.Count == 0 )
-                throw new ArgumentNullException( nameof(sourcePaths) );
+            if ( sourcePaths is null || sourcePaths.Count == 0 )
+                throw new ArgumentNullException( nameof( sourcePaths ) );
 
             try
             {
                 foreach ( string thisFilePath in sourcePaths )
                 {
-                    var thisFile = new FileInfo( PathHelper.GetCaseSensitivePath(thisFilePath) );
+                    var thisFile = new FileInfo( PathHelper.GetCaseSensitivePath( thisFilePath ) );
 
                     if ( !Path.IsPathRooted( thisFilePath ) || !thisFile.Exists )
                     {
@@ -446,7 +498,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
             }
         }
 
-        public ActionExitCode RenameFile(List<string> sourcePaths = null)
+        public ActionExitCode RenameFile( List<string> sourcePaths = null )
         {
             if ( sourcePaths is null )
                 sourcePaths = Source;
@@ -516,13 +568,27 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
             }
         }
 
-        public ActionExitCode CopyFile()
+        public ActionExitCode CopyFile(
+            [ItemNotNull] List<string> sourcePaths = null,
+            DirectoryInfo destinationPath = null
+        )
         {
+            if ( sourcePaths is null || sourcePaths.Count == 0 )
+                sourcePaths = RealSourcePaths;
+            if ( sourcePaths is null || sourcePaths.Count == 0 )
+                throw new ArgumentNullException( nameof( sourcePaths ) );
+
+            if ( destinationPath?.Exists != true )
+                destinationPath = RealDestinationPath;
+            if ( destinationPath?.Exists != true )
+                throw new ArgumentNullException( nameof( destinationPath ) );
+
             try
             {
-                foreach ( string sourcePath in RealSourcePaths )
+                foreach ( string sourcePath in sourcePaths )
                 {
                     string fileName = Path.GetFileName( sourcePath );
+                    // ReSharper disable once PossibleNullReferenceException
                     string destinationFilePath = Path.Combine( RealDestinationPath.FullName, fileName );
 
                     // Check if the destination file already exists
@@ -554,17 +620,20 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
             }
         }
 
-        public ActionExitCode MoveFile( [ItemNotNull] List<string> sourcePaths = null, DirectoryInfo destinationPath = null )
+        public ActionExitCode MoveFile(
+            [ItemNotNull] List<string> sourcePaths = null,
+            DirectoryInfo destinationPath = null
+        )
         {
-            if ( sourcePaths == null )
+            if ( sourcePaths is null || sourcePaths.Count == 0 )
                 sourcePaths = RealSourcePaths;
-            if ( destinationPath == null )
-                destinationPath = RealDestinationPath;
-
-            if ( sourcePaths == null )
+            if ( sourcePaths is null || sourcePaths.Count == 0 )
                 throw new ArgumentNullException( nameof( sourcePaths ) );
-            if ( destinationPath == null )
-                throw new ArgumentNullException( nameof(destinationPath) );
+
+            if ( destinationPath?.Exists != true )
+                destinationPath = RealDestinationPath;
+            if ( destinationPath?.Exists != true )
+                throw new ArgumentNullException( nameof( destinationPath ) );
 
             try
             {
@@ -612,7 +681,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                 {
                     DirectoryInfo tslPatcherDirectory = Path.HasExtension( t )
                         ? new FileInfo( t ).Directory // It's a file, get the parent folder.
-                        : new DirectoryInfo( t ); // It's a folder, create a DirectoryInfo instance
+                        : new DirectoryInfo( t );     // It's a folder, create a DirectoryInfo instance
 
                     if ( tslPatcherDirectory?.Exists != true )
                     {
@@ -653,7 +722,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                                 path1: "Resources",
                                 RuntimeInformation.IsOSPlatform( OSPlatform.Windows )
                                     ? "pykotorcli.exe" // windows
-                                    : "pykotorcli" // linux/mac
+                                    : "pykotorcli"     // linux/mac
                             );
                             break;
                         case MainConfig.AvailablePatchers.TSLPatcher:
@@ -680,7 +749,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                         await Logger.LogVerboseAsync( $"Using CLI to run command: '{tslPatcherCliPath} {args}'" );
                     }
 
-                    (int exitCode, string output, string error) = await PlatformAgnosticMethods.ExecuteProcessAsync(
+                    ( int exitCode, string output, string error ) = await PlatformAgnosticMethods.ExecuteProcessAsync(
                         tslPatcherCliPath,
                         args,
                         noAdmin: MainConfig.NoAdmin
@@ -724,7 +793,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
             }
         }
 
-        public async Task<ActionExitCode> ExecuteProgramAsync( [ItemNotNull] List<string> sourcePaths = null)
+        public async Task<ActionExitCode> ExecuteProgramAsync( [ItemNotNull] List<string> sourcePaths = null )
         {
             try
             {
@@ -746,7 +815,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                             );
                         }
 
-                        (int childExitCode, string output, string error)
+                        ( int childExitCode, string output, string error )
                             = await PlatformAgnosticMethods.ExecuteProcessAsync(
                                 thisProgram,
                                 noAdmin: MainConfig.NoAdmin
@@ -787,14 +856,14 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
             if ( sourcePaths == null )
                 sourcePaths = RealSourcePaths;
             if ( sourcePaths == null )
-                throw new ArgumentNullException( nameof(sourcePaths) );
+                throw new ArgumentNullException( nameof( sourcePaths ) );
 
             foreach ( string sourcePath in sourcePaths )
             {
                 string tslPatcherDirPath = Path.GetDirectoryName( sourcePath )
-                   ?? throw new DirectoryNotFoundException(
-                       $"Could not retrieve parent directory of '{sourcePath}'."
-                   );
+                    ?? throw new DirectoryNotFoundException(
+                        $"Could not retrieve parent directory of '{sourcePath}'."
+                    );
 
                 //PlaintextLog=0
                 string fullInstallLogFile = Path.Combine( tslPatcherDirPath, path2: "installlog.rtf" );
@@ -831,7 +900,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
             if ( sourcePaths == null )
                 sourcePaths = RealSourcePaths;
             if ( sourcePaths == null )
-                throw new ArgumentNullException( nameof(sourcePaths) );
+                throw new ArgumentNullException( nameof( sourcePaths ) );
 
             Logger.LogVerbose( "Preparing TSLPatcher install..." );
             foreach ( string sourcePath in sourcePaths )
@@ -870,7 +939,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
         protected bool SetField<T>(
             [CanBeNull] ref T field,
             [CanBeNull] T value,
-            [CallerMemberName][CanBeNull] string propertyName = null
+            [CallerMemberName] string propertyName = null
         )
         {
             if ( EqualityComparer<T>.Default.Equals( field, value ) )
@@ -883,17 +952,14 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
 
         [NotNull]
         [ItemNotNull]
-        public List<Option> GetChosenOptions()
-        {
-            List<Option> theseChosenOptions = Options
-                .Where( x => x.IsSelected ) // Filter Options based on whether they're chosen.
-                .ToList();
-
-            return theseChosenOptions.Count > 0
-                ? theseChosenOptions
-                : throw new KeyNotFoundException( message: "Could not find chosen option for this instruction" );
-        }
-
-        [NotNull][ItemNotNull] public List<Option> Options = new List<Option>();
+        public List<Option> GetChosenOptions() => ParentComponent?.Options
+            .Where( x =>
+                x != null
+                && x.IsSelected
+                && Source.Contains( x.Guid.ToString(), StringComparer.OrdinalIgnoreCase )
+            ).ToList() ?? new List<Option>();
+        /*return theseChosenOptions?.Count > 0
+            ? theseChosenOptions
+            : throw new KeyNotFoundException( message: "Could not find chosen option for this instruction" );*/
     }
 }

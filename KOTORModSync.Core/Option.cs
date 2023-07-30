@@ -19,11 +19,22 @@ namespace KOTORModSync.Core
         [NotNull] public List<Guid> Dependencies { get; set; } = new List<Guid>();
         [NotNull] public List<Guid> Restrictions { get; set; } = new List<Guid>();
         [NotNull][ItemNotNull] public List<Instruction> Instructions { get; set; } = new List<Instruction>();
-        public bool IsSelected { get => _isSelected; set { _isSelected = value; OnPropertyChanged(); } }
+
+        public bool IsSelected
+        {
+            get => _isSelected;
+            set
+            {
+                _isSelected = value;
+                OnPropertyChanged();
+            }
+        }
+
         public string Description { get; set; }
 
         // used for the ui
         public event PropertyChangedEventHandler PropertyChanged;
+
         protected virtual void OnPropertyChanged( [CallerMemberName][CanBeNull] string propertyName = null ) =>
             PropertyChanged?.Invoke( this, new PropertyChangedEventArgs( propertyName ) );
     }

@@ -135,52 +135,66 @@ namespace KOTORModSync.Core
         private List<Guid> _restrictions = new List<Guid>();
         private bool _isSelected;
 
-        [NotNull]
+                [NotNull]
         public string SerializeComponent()
         {
             var serializedComponentDict = (Dictionary<string, object>)Serializer.SerializeObject( this );
             CollectionUtils.RemoveEmptyCollections( serializedComponentDict );
-            StringBuilder tomlString = CreateTomlStringFromDict( serializedComponentDict );
+            StringBuilder tomlString = FixSerializedTomlDict( serializedComponentDict );
 
+            var rootTable = new Dictionary<string, object>( StringComparer.OrdinalIgnoreCase )
+            {
+                {
+                    "thisMod", serializedComponentDict
+                },
+            };
+
+            _ = tomlString
+                .Insert(
+                    index: 0,
+                    Toml.FromModel( rootTable )
+                        .Replace( oldValue: "[thisMod]", newValue: "[[thisMod]]" )
+                ).ToString();
             return string.IsNullOrWhiteSpace( tomlString.ToString() )
                 ? throw new InvalidOperationException( message: "Could not serialize into a valid tomlin string" )
                 : Serializer.FixWhitespaceIssues( tomlString.ToString() );
         }
 
-        [NotNull]
-        private static StringBuilder CreateTomlStringFromDict(
+        private static StringBuilder FixSerializedTomlDict(
             [NotNull] Dictionary<string, object> serializedComponentDict,
-            [CanBeNull] StringBuilder tomlString = null
+            [CanBeNull] StringBuilder tomlString = null,
+            [CanBeNull] List<string> nestedKeys = null
         )
         {
-            if ( serializedComponentDict is null )
-                throw new ArgumentNullException( nameof( serializedComponentDict ) );
+            if (serializedComponentDict is null)
+                throw new ArgumentNullException(nameof(serializedComponentDict));
 
-            if ( tomlString is null )
+            if (tomlString is null)
                 tomlString = new StringBuilder();
 
             // not the cleanest solution, but it works.
             var keysCopy = serializedComponentDict.Keys.ToList();
-            foreach ( string key in keysCopy )
+            foreach (string key in keysCopy)
             {
                 object value = serializedComponentDict[key];
-                if ( !( value is List<dynamic> propertyList ) )
+                if (!(value is List<dynamic> propertyList))
                     continue;
 
                 Type listEntriesType = propertyList.GetType().GetGenericArguments()[0];
-                if ( !listEntriesType.IsClass || listEntriesType == typeof( string ) )
+                if (!listEntriesType.IsClass || listEntriesType == typeof(string))
                     continue;
 
                 bool found = false;
-                foreach ( object classInstanceObj in propertyList )
+                foreach (object classInstanceObj in propertyList)
                 {
-                    if ( classInstanceObj == null )
+                    if (classInstanceObj == null)
                         continue;
 
-                    if ( classInstanceObj is string )
+                    if (classInstanceObj is string)
                         break;
 
                     found = true;
+
                     var model = new Dictionary<string, object>
                     {
                         {
@@ -200,33 +214,23 @@ namespace KOTORModSync.Core
                             $"[thisMod.{key}]"
                         )
                     );
+
+                    /*if (classInstanceObj is Dictionary<string, object> anotherDict)
+                    {
+                        // Call the method recursively to process the nested dictionary
+                        FixSerializedTomlDict(anotherDict, tomlString);
+                    }*/
                 }
 
-                if ( found )
+                if (found)
                 {
-                    _ = serializedComponentDict.Remove(
-                        key
-                    );
+                    _ = serializedComponentDict.Remove(key);
                 }
             }
 
-            var rootTable = new Dictionary<string, object>( StringComparer.OrdinalIgnoreCase )
-            {
-                {
-                    "thisMod", serializedComponentDict
-                },
-            };
-
-            return tomlString.Insert(
-                    index: 0,
-                    Toml.FromModel(
-                            rootTable
-                    ).Replace(
-                            oldValue: "[thisMod]",
-                            newValue: "[[thisMod]]"
-                    )
-                );
+            return tomlString;
         }
+
 
         private void DeserializeComponent( [NotNull] IDictionary<string, object> componentDict )
         {
@@ -431,7 +435,7 @@ namespace KOTORModSync.Core
         {
             if ( optionsSerializedList is null || optionsSerializedList.Count == 0 )
             {
-                _ = Logger.LogWarningAsync( $"No options found for component '{Name}'" );
+                _ = Logger.LogVerboseAsync( $"No options found for component '{Name}'" );
                 return new List<Option>();
             }
 

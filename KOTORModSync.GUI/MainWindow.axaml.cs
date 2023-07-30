@@ -149,7 +149,6 @@ namespace KOTORModSync
         [CanBeNull] private Component _currentComponent;
         private bool _installRunning;
 
-        private string _originalContent;
         private Window _outputWindow;
         private bool _ignoreWindowMoveWhenClickingComboBox;
         private bool _mouseDownForWindowMoving;

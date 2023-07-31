@@ -1288,7 +1288,8 @@ namespace KOTORModSync.Core
         }
 
         public void DeleteInstruction( int index ) => Instructions.RemoveAt( index );
-
+        public void DeleteOption( int index ) => Options.RemoveAt( index );
+        
         public void MoveInstructionToIndex( [NotNull] Instruction thisInstruction, int index )
         {
             if ( thisInstruction is null || index < 0 || index >= Instructions.Count )
@@ -1315,6 +1316,54 @@ namespace KOTORModSync.Core
 
             _ = Logger.LogVerboseAsync(
                 $"Instruction '{thisInstruction.Action}' moved from {currentIndex} to {index}"
+            );
+        }
+
+        public void CreateOption( int index = 0 )
+        {
+            var option = new Option();
+            if ( Instructions.IsNullOrEmptyOrAllNull() )
+            {
+                if ( index != 0 )
+                {
+                    Logger.LogError( "Cannot create option at index when list is empty." );
+                    return;
+                }
+
+                Options.Add( option );
+            }
+            else
+            {
+                Options.Insert( index, option );
+            }
+        }
+
+        public void MoveOptionToIndex( [NotNull] Option thisOption, int index )
+        {
+            if ( thisOption is null || index < 0 || index >= Options.Count )
+            {
+                throw new ArgumentException( "Invalid option or index." );
+            }
+
+            int currentIndex = Options.IndexOf( thisOption );
+            if ( currentIndex < 0 )
+            {
+                throw new ArgumentException( "Option does not exist in the list." );
+            }
+
+            if ( index == currentIndex )
+            {
+                _ = Logger.LogAsync(
+                    $"Cannot move Option '{thisOption.Name}' from {currentIndex} to {index}. Reason: Indices are the same."
+                );
+                return;
+            }
+
+            Options.RemoveAt( currentIndex );
+            Options.Insert( index, thisOption );
+
+            _ = Logger.LogVerboseAsync(
+                $"Option '{thisOption.Name}' moved from {currentIndex} to {index}"
             );
         }
 

@@ -3,16 +3,17 @@
 // See LICENSE.txt file in the project root for full license information.
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text.RegularExpressions;
 using JetBrains.Annotations;
+using SharpCompress.Archives;
 
 namespace KOTORModSync.Core.TSLPatcher
 {
     public static class IniHelper
     {
         // Stop TSLPatcher from automatically assuming the KOTOR directory.
-        // use PlaintextLog=1
         public static void ReplaceLookupGameFolder( [NotNull] DirectoryInfo directory )
         {
             if ( directory == null )
@@ -42,9 +43,8 @@ namespace KOTORModSync.Core.TSLPatcher
                 File.WriteAllText( filePath, fileContents );
             }
         }
-
-        // Stop TSLPatcher from automatically assuming the KOTOR directory.
-        // use PlaintextLog=1
+        
+        // use PlaintextLog=1 for installlog.txt instead of installlog.rtf
         public static void ReplacePlaintextLog( [NotNull] DirectoryInfo directory )
         {
             if ( directory == null )
@@ -56,6 +56,9 @@ namespace KOTORModSync.Core.TSLPatcher
 
             foreach ( FileInfo file in iniFiles )
             {
+                if ( file is null )
+                    continue;
+
                 string filePath = file.FullName;
                 string fileContents = File.ReadAllText( filePath );
 
@@ -73,6 +76,50 @@ namespace KOTORModSync.Core.TSLPatcher
                 // Write the modified file contents back to the file
                 File.WriteAllText( filePath, fileContents );
             }
+        }
+
+        public static Dictionary<string, string> ReadNamespacesIniFromArchive(Stream archiveStream)
+        {
+            using (var archive = ArchiveFactory.Open(archiveStream))
+            {
+                foreach (var entry in archive.Entries)
+                {
+                    if (entry.IsDirectory && entry.Key.Contains("tslpatchdata"))
+                    {
+                        using (var reader = new StreamReader(entry.OpenEntryStream()))
+                        {
+                            return ParseNamespacesIni(reader);
+                        }
+                    }
+                }
+            }
+
+            return null; // Folder 'tslpatchdata' or 'namespaces.ini' not found in the archive.
+        }
+
+        public static Dictionary<string, string> ParseNamespacesIni( [NotNull] StreamReader reader)
+        {
+            if ( reader is null )
+                throw new ArgumentNullException( nameof( reader ) );
+
+            var namespaces = new Dictionary<string, string>();
+            string line;
+            while ( (line = reader.ReadLine()) != null )
+            {
+                line = line.Trim();
+                if ( string.IsNullOrWhiteSpace( line ) || !line.StartsWith( "Namespace" ) )
+                    continue;
+
+                int separatorIndex = line.IndexOf('=');
+                if ( separatorIndex == -1 )
+                    continue;
+
+                string key = line.Substring(0, separatorIndex).Trim();
+                string value = line.Substring(separatorIndex + 1).Trim();
+                namespaces[key] = value;
+            }
+
+            return namespaces;
         }
     }
 }

@@ -120,4 +120,18 @@
     <Style Selector="Window">
         <Setter Property="Background" Value="#000116" />
     </Style>
+    
+    <Style Selector="Expander">
+        <Setter Property="Background" Value="#062766" />
+        <Setter Property="Foreground" Value="#3AAAFF" />
+    </Style>
+    <Style Selector="Expander /template/ ContentPresenter">
+        <Setter Property="Background" Value="#010116"/>
+    </Style>
+    <Style Selector="Expander:expanded /template/ Border#ExpanderContent">
+        <Setter Property="Background" Value="#062766" />
+    </Style>
+    <Style Selector="Expander:expanded /template/ Border#ExpanderContent">
+        <Setter Property="BorderThickness" Value="0" />
+    </Style>
 </Styles>

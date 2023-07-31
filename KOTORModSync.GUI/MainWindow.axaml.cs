@@ -125,6 +125,8 @@ namespace KOTORModSync
                 += RawEditTextBox_LostFocus; // Prevents RawEditTextBox from being cleared when clicking elsewhere(?)
             RawEditTextBox.DataContext = new ObservableCollection<string>();
 
+            GuidGeneratedTextBox = this.FindControl<TextBox>( "GuidGeneratedTextBox" );
+
             // Column 3
             configColumn.Width = new GridLength( 250 );
             MainConfigInstance = new MainConfig();
@@ -1823,6 +1825,20 @@ namespace KOTORModSync
             }
         }
 
+        private void GenerateGuidButton_Click( [NotNull] object sender, [NotNull] RoutedEventArgs e )
+        {
+            try
+            {
+                GuidGeneratedTextBox.Text = Guid.NewGuid().ToString();
+                LoadComponentDetails( _currentComponent );
+            }
+            catch ( Exception ex )
+            {
+                Logger.LogException( ex );
+            }
+        }
+
+
         private void ComponentCheckboxChecked(
             [NotNull] Component component,
             [NotNull] HashSet<Component> visitedComponents,
@@ -2265,22 +2281,30 @@ namespace KOTORModSync
                 var addButton = (Button)sender;
                 var thisInstruction = addButton.Tag as Instruction;
                 var thisComponent = addButton.Tag as Component;
+                var thisOption = addButton.Tag as Option;
 
-                if ( thisInstruction is null && thisComponent is null )
+                if ( thisInstruction is null && thisComponent is null && thisOption is null )
                     throw new NullReferenceException( "Cannot find instruction instance from button." );
 
                 int index;
-                if ( thisInstruction is null )
+                if ( !( thisComponent is null ) )
                 {
                     thisInstruction = new Instruction();
-                    index = _currentComponent.Instructions.Count;
+                    index = thisComponent.Instructions.Count;
+                    _currentComponent.CreateInstruction( index );
+                }
+                else if ( !( thisOption is null ) )
+                {
+                    thisInstruction = new Instruction();
+                    index = thisOption.Instructions.Count;
+                    thisOption.CreateInstruction( index );
                 }
                 else
                 {
                     index = _currentComponent.Instructions.IndexOf( thisInstruction );
+                    _currentComponent.CreateInstruction( index );
                 }
 
-                _currentComponent.CreateInstruction( index );
                 if ( thisInstruction.Action != null )
                 {
                     await Logger.LogVerboseAsync(
@@ -2508,9 +2532,115 @@ namespace KOTORModSync
             }
         }
 
-        private void AddNewOption_Click( object sender, RoutedEventArgs e )
+        private async void AddNewOption_Click( [NotNull] object sender, [NotNull] RoutedEventArgs e )
         {
-            throw new NotImplementedException();
+            try
+            {
+                if ( _currentComponent is null )
+                {
+                    await InformationDialog.ShowInformationDialog( this, message: "Load a component first" );
+                    return;
+                }
+
+                var addButton = (Button)sender;
+                var thisOption = addButton.Tag as Option;
+                var thisComponent = addButton.Tag as Component;
+
+                if ( thisOption is null && thisComponent is null )
+                    throw new NullReferenceException( "Cannot find option instance from button." );
+
+                int index;
+                if ( thisOption is null )
+                {
+                    thisOption = new Option();
+                    index = _currentComponent.Options.Count;
+                }
+                else
+                {
+                    index = _currentComponent.Options.IndexOf( thisOption );
+                }
+
+                _currentComponent.CreateOption( index );
+                await Logger.LogVerboseAsync(
+                    $"Component '{_currentComponent.Name}': Option '{thisOption.Name}' created at index #{index}"
+                );
+
+                LoadComponentDetails( _currentComponent );
+            }
+            catch ( Exception exception )
+            {
+                await Logger.LogExceptionAsync( exception );
+            }
+        }
+
+        private async void DeleteOption_Click( [NotNull] object sender, [NotNull] RoutedEventArgs e )
+        {
+            try
+            {
+                if ( _currentComponent is null )
+                {
+                    await InformationDialog.ShowInformationDialog( this, message: "Load a component first" );
+                    return;
+                }
+
+                var thisOption = (Option)( (Button)sender ).Tag;
+                int index = _currentComponent.Options.IndexOf( thisOption );
+
+                _currentComponent.DeleteOption( index );
+                await Logger.LogVerboseAsync(
+                    $"Component '{_currentComponent.Name}': instruction '{thisOption?.Name}' deleted at index #{index}"
+                );
+
+                LoadComponentDetails( _currentComponent );
+            }
+            catch ( Exception exception )
+            {
+                await Logger.LogExceptionAsync( exception );
+            }
+        }
+
+        private async void MoveOptionUp_Click( [NotNull] object sender, [NotNull] RoutedEventArgs e )
+        {
+            try
+            {
+                if ( _currentComponent is null )
+                {
+                    await InformationDialog.ShowInformationDialog( this, message: "Load a component first" );
+                    return;
+                }
+
+                var thisOption = (Option)( (Button)sender ).Tag;
+                int index = _currentComponent.Options.IndexOf( thisOption );
+
+                _currentComponent.MoveOptionToIndex( thisOption, index - 1 );
+                LoadComponentDetails( _currentComponent );
+            }
+            catch ( Exception exception )
+            {
+                await Logger.LogExceptionAsync( exception );
+            }
+        }
+
+        private async void MoveOptionDown_Click( [NotNull] object sender, [NotNull] RoutedEventArgs e )
+        {
+            try
+            {
+                if ( _currentComponent is null )
+                {
+                    await InformationDialog.ShowInformationDialog( this, message: "Load a component first" );
+                    return;
+                }
+
+                var thisOption = (Option)( (Button)sender ).Tag;
+                int index = _currentComponent.Options.IndexOf( thisOption );
+
+                _currentComponent.MoveOptionToIndex( thisOption, index + 1 );
+                LoadComponentDetails( _currentComponent );
+            }
+            catch ( Exception exception )
+            {
+                await Logger.LogExceptionAsync( exception );
+            }
         }
     }
 }

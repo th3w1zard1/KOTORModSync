@@ -1,4 +1,4 @@
-$version = "v0.8.4"
+$version = "v0.9.0"
 $projectFile = "KOTORModSync.GUI\KOTORModSync.csproj"
 $publishProfilesDir = "KOTORModSync.GUI\Properties\PublishProfiles"
 $sevenZipPath = "C:\Program Files\7-Zip\7z.exe"  # Path to 7zip executable
@@ -22,36 +22,36 @@ foreach ($file in $publishProfileFiles) {
     Write-Host "CPU: '$cpu'"
     Write-Host "Subfolder: '$lastSection'"
 
-    
+
     # Build the dotnet publish command with the --framework argument
     $publishCommand = "dotnet publish $projectFile --framework $framework /p:PublishProfile=$file"
-    
+
     try {
-        
+
         # Execute the publish command
         Invoke-Expression $publishCommand
 
         $topLevelFolder = "KOTORModSync $version"
-        
+
         # Get the publish folder path
         $publishFolder = Get-Item (Join-Path -Path (Split-Path -Path $projectFile) -ChildPath "..\bin\publish\$lastSection\$framework\$rid")
 
         # Rename for our top level folder for the archive.
         Rename-Item -Path $publishFolder -NewName $topLevelFolder
-        
+
         $publishFolder = Get-Item (Join-Path -Path (Split-Path -Path $projectFile) -ChildPath "..\bin\publish\$lastSection\$framework\$topLevelFolder")
-        
+
         # Copy the license
         Copy-Item -Path "LICENSE.TXT" -Destination $publishFolder
         Copy-Item -Path "usage guide.txt" -Destination $publishFolder
-        
+
         # Define the archive file path
         $archiveFile = Join-Path -Path (Split-Path -Path "bin\publish") -ChildPath "$rid.zip"
 
         # Create the archive using 7zip CLI
         $archiveCommand = "& `"$sevenZipPath`" a -tzip `"$archiveFile`" `"$publishFolder*`""
         Invoke-Expression $archiveCommand
-        
+
         # Remove the leftover folder
         Remove-Item -Path "$publishFolder\..\$topLevelFolder" -Recurse
 

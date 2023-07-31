@@ -7,10 +7,11 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
+using KOTORModSync.Core.Utility;
 
 namespace KOTORModSync.Core
 {
-    public class Option : INotifyPropertyChanged
+    public sealed class Option : INotifyPropertyChanged
     {
         private bool _isSelected;
 
@@ -35,7 +36,26 @@ namespace KOTORModSync.Core
         // used for the ui
         public event PropertyChangedEventHandler PropertyChanged;
 
-        protected virtual void OnPropertyChanged( [CallerMemberName][CanBeNull] string propertyName = null ) =>
+        private void OnPropertyChanged( [CallerMemberName][CanBeNull] string propertyName = null ) =>
             PropertyChanged?.Invoke( this, new PropertyChangedEventArgs( propertyName ) );
+
+        public void CreateInstruction( int index = 0 )
+        {
+            var instruction = new Instruction();
+            if ( Instructions.IsNullOrEmptyOrAllNull() )
+            {
+                if ( index != 0 )
+                {
+                    Logger.LogError( "Cannot create instruction at index when list is empty." );
+                    return;
+                }
+
+                Instructions.Add( instruction );
+            }
+            else
+            {
+                Instructions.Insert( index, instruction );
+            }
+        }
     }
 }

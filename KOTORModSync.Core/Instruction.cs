@@ -23,7 +23,7 @@ using SharpCompress.Readers;
 
 namespace KOTORModSync.Core
 {
-    public class Instruction : INotifyPropertyChanged
+    public sealed class Instruction : INotifyPropertyChanged
     {
         public enum ActionType
         {
@@ -918,10 +918,10 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
 
         public event PropertyChangedEventHandler PropertyChanged;
 
-        protected virtual void OnPropertyChanged( [CallerMemberName][CanBeNull] string propertyName = null ) =>
+        private void OnPropertyChanged( [CallerMemberName][CanBeNull] string propertyName = null ) =>
             PropertyChanged?.Invoke( this, new PropertyChangedEventArgs( propertyName ) );
 
-        protected bool SetField<T>(
+        private bool SetField<T>(
             [CanBeNull] ref T field,
             [CanBeNull] T value,
             [CallerMemberName] string propertyName = null

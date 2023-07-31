@@ -22,10 +22,10 @@ namespace KOTORModSync.Core
         checkId: "IDE0079:Remove unnecessary suppression",
         Justification = "<Pending>"
     )]
-    public class MainConfig : INotifyPropertyChanged
+    public sealed class MainConfig : INotifyPropertyChanged
     {
         [NotNull]
-        public static string CurrentVersion => "0.8.4";
+        public static string CurrentVersion => "0.9.0";
 
         public MainConfig()
         {
@@ -150,7 +150,7 @@ namespace KOTORModSync.Core
         public event PropertyChangedEventHandler PropertyChanged;
 
         // used for the ui.
-        protected virtual void OnPropertyChanged( [CallerMemberName][CanBeNull] string propertyName = null ) =>
+        private void OnPropertyChanged( [CallerMemberName][CanBeNull] string propertyName = null ) =>
             PropertyChanged?.Invoke( this, new PropertyChangedEventArgs( propertyName ) );
     }
 }

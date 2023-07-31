@@ -5,6 +5,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Data.Common;
 using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
@@ -384,9 +385,10 @@ namespace KOTORModSync.Core.Utility
         )
         {
             if ( programFile is null )
-            {
                 throw new ArgumentNullException( nameof( programFile ) );
-            }
+
+            if ( timeout == 0 )
+                timeout = 180000; // todo: set timeout as user configurable
 
             List<ProcessStartInfo> processStartInfosWithFallbacks = GetProcessStartInfos( programFile, cmdlineArgs );
 
@@ -444,19 +446,43 @@ namespace KOTORModSync.Core.Utility
                         {
                             process.OutputDataReceived += ( sender, e ) =>
                             {
-#pragma warning disable IDE0045 // Convert to conditional expression
-                                if ( e.Data is null )
-                                    _ = outputWaitHandle.Set();
-                                else
-                                    _ = output.AppendLine( e.Data );
+                                try
+                                {
+                                    if ( e?.Data is null )
+                                    {
+                                        _ = outputWaitHandle.Set();
+                                    }
+                                    else
+                                    {
+                                        _ = output.AppendLine( e.Data );
+                                        Logger.Log( e.Data );
+                                    }
+
+
+                                }
+                                catch ( Exception exception )
+                                {
+                                    Logger.LogException( exception, "Exception while gathering the output from executed program" );
+                                }
                             };
                             process.ErrorDataReceived += ( sender, e ) =>
                             {
-                                if ( e.Data is null )
-                                    _ = errorWaitHandle.Set();
-                                else
-                                    _ = error.AppendLine( e.Data );
-#pragma warning restore IDE0045 // Convert to conditional expression
+                                try
+                                {
+                                    if ( e?.Data is null )
+                                    {
+                                        _ = errorWaitHandle.Set();
+                                    }
+                                    else
+                                    {
+                                        _ = error.AppendLine( e.Data );
+                                        Logger.LogError( e.Data );
+                                    }
+                                }
+                                catch ( Exception exception )
+                                {
+                                    Logger.LogException( exception, "Exception while gathering the error output from executed program" );
+                                }
                             };
 
                             if ( !process.Start() )
@@ -474,7 +500,23 @@ namespace KOTORModSync.Core.Utility
                                 process.BeginErrorReadLine();
                             }
 
-                            process.WaitForExit();
+                            // Start the process and asynchronously wait for its completion
+                            _ = await Task.Run(
+                                () =>
+                                {
+                                    try
+                                    {
+                                        process.WaitForExit();
+                                        return ( process.ExitCode, output.ToString(), error.ToString() );
+                                    }
+                                    catch ( Exception exception )
+                                    {
+                                        Logger.LogException( exception, "Exception while running the executed program" );
+                                        return default; // todo: exit codes for timeout and unhandled etc.
+                                    }
+                                },
+                                cancellationTokenSource.Token
+                            );
                         }
 
                         return timeout > 0 && cancellationTokenSource.Token.IsCancellationRequested

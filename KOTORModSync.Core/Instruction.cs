@@ -741,9 +741,6 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                     );
                     await Logger.LogVerboseAsync( $"'{tslPatcherCliPath.Name}' exited with exit code {exitCode}" );
 
-                    await Logger.LogAsync( output );
-                    await Logger.LogAsync( error );
-
                     try
                     {
                         List<string> installErrors = VerifyInstall();

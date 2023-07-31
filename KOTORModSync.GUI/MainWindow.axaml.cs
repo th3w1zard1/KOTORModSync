@@ -1335,6 +1335,8 @@ namespace KOTORModSync
                         await Logger.LogAsync( $"Finished installed '{component.Name}'" );
                     }
 
+                    await InformationDialog.ShowInformationDialog( this, "All components successfully installed!" );
+
                     progressWindow.Close();
                     _installRunning = false;
                 }

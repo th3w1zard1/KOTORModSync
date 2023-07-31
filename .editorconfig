@@ -29,6 +29,7 @@ csharp_new_line_before_members_in_object_initializers = false
 csharp_preferred_modifier_order = public, private, protected, internal, async, extern, new, virtual, abstract, sealed, override, static, unsafe, volatile, readonly, file, required:suggestion
 csharp_space_between_method_call_parameter_list_parentheses = true
 csharp_space_between_method_declaration_parameter_list_parentheses = true
+csharp_space_between_parentheses = control_flow_statements
 csharp_style_expression_bodied_accessors = true:suggestion
 csharp_style_expression_bodied_methods = true:none
 csharp_style_expression_bodied_properties = true:suggestion
@@ -81,20 +82,25 @@ resharper_arguments_string_literal = named
 resharper_blank_lines_after_control_transfer_statements = 1
 resharper_blank_lines_around_auto_property = 0
 resharper_braces_for_foreach = required
+resharper_braces_for_ifelse = required_for_multiline_statement
 resharper_braces_redundant = false
 resharper_csharp_blank_lines_around_field = 0
 resharper_csharp_insert_final_newline = true
 resharper_csharp_int_align_comments = true
-resharper_csharp_space_within_parentheses = true
+resharper_csharp_max_line_length = 160
+resharper_csharp_space_within_parentheses = false
 resharper_csharp_wrap_after_declaration_lpar = true
 resharper_csharp_wrap_after_invocation_lpar = true
 resharper_csharp_wrap_arguments_style = chop_if_long
 resharper_csharp_wrap_before_binary_opsign = true
 resharper_csharp_wrap_before_declaration_rpar = true
 resharper_csharp_wrap_before_invocation_rpar = true
+resharper_csharp_wrap_chained_binary_expressions = wrap_if_long
 resharper_csharp_wrap_parameters_style = chop_if_long
 resharper_csharp_wrap_ternary_expr_style = chop_always
 resharper_for_built_in_types = use_explicit_type
+resharper_for_other_types = use_explicit_type
+resharper_indent_statement_pars = inside
 resharper_instance_members_qualify_declared_in = 
 resharper_keep_existing_attribute_arrangement = true
 resharper_local_function_body = expression_body
@@ -102,6 +108,7 @@ resharper_nested_ternary_style = expanded
 resharper_parentheses_non_obvious_operations = none, shift, bitwise_and, bitwise_exclusive_or, bitwise_inclusive_or, bitwise, conditional_and
 resharper_parentheses_redundancy_style = remove
 resharper_place_expr_accessor_on_single_line = true
+resharper_place_expr_method_on_single_line = true
 resharper_place_field_attribute_on_same_line = false
 resharper_place_simple_accessorholder_on_single_line = true
 resharper_place_simple_embedded_statement_on_same_line = false
@@ -117,7 +124,7 @@ resharper_space_within_switch_parentheses = true
 resharper_space_within_typeof_parentheses = true
 resharper_space_within_using_parentheses = true
 resharper_trailing_comma_in_multiline_lists = true
-resharper_use_heuristics_for_body_style = false
+resharper_use_heuristics_for_body_style = true
 resharper_wrap_chained_binary_expressions = chop_if_long
 
 # ReSharper inspection severities
@@ -238,14 +245,14 @@ dotnet_style_prefer_conditional_expression_over_return = true:silent
 csharp_prefer_simple_default_expression = true:suggestion
 
 # Expression-bodied members
-csharp_style_expression_bodied_methods = true:suggestion
-csharp_style_expression_bodied_constructors = true:suggestion
-csharp_style_expression_bodied_operators = true:suggestion
-csharp_style_expression_bodied_properties = true:suggestion
-csharp_style_expression_bodied_indexers = true:suggestion
-csharp_style_expression_bodied_accessors = true:suggestion
-csharp_style_expression_bodied_lambdas = true:suggestion
-csharp_style_expression_bodied_local_functions = true:suggestion
+csharp_style_expression_bodied_methods = when_on_single_line:suggestion
+csharp_style_expression_bodied_constructors = when_on_single_line:suggestion
+csharp_style_expression_bodied_operators = when_on_single_line:suggestion
+csharp_style_expression_bodied_properties = when_on_single_line:suggestion
+csharp_style_expression_bodied_indexers = when_on_single_line:suggestion
+csharp_style_expression_bodied_accessors = when_on_single_line:suggestion
+csharp_style_expression_bodied_lambdas = when_on_single_line:suggestion
+csharp_style_expression_bodied_local_functions = when_on_single_line:suggestion
 
 # Pattern matching
 csharp_style_pattern_matching_over_is_with_cast_check = true:suggestion
@@ -359,6 +366,12 @@ indent_style = space
 indent_size = 4
 tab_width = 4
 end_of_line = crlf
+dotnet_style_collection_initializer = true:suggestion
+dotnet_style_prefer_conditional_expression_over_assignment = true:silent
+dotnet_style_prefer_conditional_expression_over_return = true:silent
+dotnet_style_explicit_tuple_names = true:suggestion
+dotnet_style_prefer_inferred_tuple_names = true:suggestion
+dotnet_style_prefer_inferred_anonymous_type_member_names = true:suggestion
 
 [*.{json,resjson}]
 indent_style = space

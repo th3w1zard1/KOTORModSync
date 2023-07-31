@@ -45,10 +45,10 @@ namespace KOTORModSync.Core.Utility
                                     {
                                         case IList<object> list:
                                             RemoveEmptyCollections( list ); // Recursively check sub-lists
-                                            return list.Count == 0;
+                                            return list.IsNullOrEmptyOrAllNull();
                                         case IDictionary<string, object> dict:
                                             RemoveEmptyCollections( dict ); // Recursively check sub-dictionaries
-                                            return dict.Count == 0;
+                                            return dict.IsNullOrEmptyOrAllNull();
                                         default:
                                             return false;
                                     }
@@ -100,7 +100,7 @@ namespace KOTORModSync.Core.Utility
                     case IDictionary<string, object> dict:
                         {
                             RemoveEmptyCollections( dict ); // Recursively check sub-dictionaries
-                            if ( dict.Count == 0 )
+                            if ( dict.IsNullOrEmptyCollection() )
                                 list.RemoveAt( i );
 
                             break;
@@ -108,7 +108,7 @@ namespace KOTORModSync.Core.Utility
                     case IList<object> subList:
                         {
                             RemoveEmptyCollections( subList ); // Recursively check sub-lists
-                            if ( subList.Count == 0 )
+                            if ( subList.IsNullOrEmptyCollection() )
                                 list.RemoveAt( i );
 
                             break;

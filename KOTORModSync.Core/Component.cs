@@ -135,7 +135,7 @@ namespace KOTORModSync.Core
         private List<Guid> _restrictions = new List<Guid>();
         private bool _isSelected;
 
-                [NotNull]
+        [NotNull]
         public string SerializeComponent()
         {
             var serializedComponentDict = (Dictionary<string, object>)Serializer.SerializeObject( this );
@@ -223,9 +223,7 @@ namespace KOTORModSync.Core
                 }
 
                 if (found)
-                {
-                    _ = serializedComponentDict.Remove(key);
-                }
+                    _ = serializedComponentDict.Remove( key );
             }
 
             return tomlString;
@@ -254,7 +252,7 @@ namespace KOTORModSync.Core
             InstallAfter = GetValueOrDefault<List<Guid>>( componentDict, key: "InstallAfter" ) ?? new List<Guid>();
 
             ModLink = GetValueOrDefault<List<string>>( componentDict, key: "ModLink" ) ?? new List<string>();
-            if ( ModLink.Count == 0 )
+            if ( ModLink.IsNullOrEmptyCollection() )
             {
                 string modLink = GetValueOrDefault<string>( componentDict, key: "ModLink" ) ?? string.Empty;
                 if ( string.IsNullOrEmpty( modLink ) )
@@ -388,7 +386,7 @@ namespace KOTORModSync.Core
             [CanBeNull][ItemCanBeNull] IList<object> instructionsSerializedList
         )
         {
-            if ( instructionsSerializedList is null || instructionsSerializedList.Count == 0 )
+            if ( instructionsSerializedList.IsNullOrEmptyCollection() )
             {
                 _ = Logger.LogWarningAsync( $"No instructions found for component '{Name}'" );
                 return new List<Instruction>();
@@ -433,7 +431,7 @@ namespace KOTORModSync.Core
             [CanBeNull][ItemCanBeNull] IList<object> optionsSerializedList
         )
         {
-            if ( optionsSerializedList is null || optionsSerializedList.Count == 0 )
+            if ( optionsSerializedList.IsNullOrEmptyCollection() )
             {
                 _ = Logger.LogVerboseAsync( $"No options found for component '{Name}'" );
                 return new List<Option>();
@@ -1195,7 +1193,7 @@ namespace KOTORModSync.Core
 
             bool isCorrectOrder = orderedComponents.SequenceEqual( components );
 
-            return ( isCorrectOrder, orderedComponents );
+            return (isCorrectOrder, orderedComponents);
         }
 
         // use a graph traversal algorithm
@@ -1225,10 +1223,7 @@ namespace KOTORModSync.Core
             orderedComponents.Add( node.Component );
         }
 
-        [NotNull]
-        private static Dictionary<Guid, GraphNode> CreateDependencyGraph(
-            [NotNull][ItemNotNull] List<Component> components
-        )
+        private static Dictionary<Guid, GraphNode> CreateDependencyGraph( [NotNull][ItemNotNull] List<Component> components )
         {
             if ( components is null )
                 throw new ArgumentNullException( nameof( components ) );
@@ -1261,12 +1256,12 @@ namespace KOTORModSync.Core
             return nodeMap;
         }
 
-        public sealed class GraphNode
+        public class GraphNode
         {
-            internal Component Component { get; }
-            internal HashSet<GraphNode> Dependencies { get; }
+            public Component Component { get; }
+            public HashSet<GraphNode> Dependencies { get; }
 
-            internal GraphNode( [CanBeNull] Component component )
+            public GraphNode( [CanBeNull] Component component )
             {
                 Component = component;
                 Dependencies = new HashSet<GraphNode>();
@@ -1276,7 +1271,7 @@ namespace KOTORModSync.Core
         public void CreateInstruction( int index = 0 )
         {
             var instruction = new Instruction();
-            if ( Instructions.Count == 0 )
+            if ( Instructions.IsNullOrEmptyOrAllNull() )
             {
                 if ( index != 0 )
                 {

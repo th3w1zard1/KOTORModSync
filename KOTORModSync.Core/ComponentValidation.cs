@@ -98,7 +98,7 @@ namespace KOTORModSync.Core
                 List<string> allArchives = GetAllArchivesFromInstructions();
 
                 // probably something wrong if there's no archives found.
-                if ( allArchives == null || allArchives.Count == 0 )
+                if ( allArchives.IsNullOrEmptyCollection() )
                 {
                     foreach ( Instruction instruction in ComponentToValidate.Instructions )
                     {

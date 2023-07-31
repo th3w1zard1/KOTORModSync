@@ -13,15 +13,24 @@ namespace KOTORModSync.Core.Utility
     public static class Utility
     {
         [NotNull]
-        public static string ReplaceCustomVariables( [CanBeNull] string path ) =>
-            path?.Replace( oldValue: "<<modDirectory>>", MainConfig.SourcePath?.FullName )
-                .Replace( oldValue: "<<kotorDirectory>>", MainConfig.DestinationPath?.FullName )
-            ?? string.Empty;
+        public static string ReplaceCustomVariables( [NotNull] string path )
+        {
+            if ( path is null )
+                throw new ArgumentNullException( nameof( path ) );
+
+            return path.Replace( oldValue: "<<modDirectory>>", MainConfig.SourcePath?.FullName )
+                .Replace( oldValue: "<<kotorDirectory>>", MainConfig.DestinationPath?.FullName );
+        }
 
         [NotNull]
-        public static string RestoreCustomVariables( [CanBeNull] string fullPath ) =>
-            fullPath?.Replace( MainConfig.SourcePath.FullName, newValue: "<<modDirectory>>" )
-                .Replace( MainConfig.DestinationPath.FullName, newValue: "<<kotorDirectory>>" );
+        public static string RestoreCustomVariables( [NotNull] string fullPath )
+        {
+            if ( fullPath is null )
+                throw new ArgumentNullException( nameof( fullPath ) );
+
+            return fullPath.Replace( MainConfig.SourcePath?.FullName ?? string.Empty, newValue: "<<modDirectory>>" )
+                .Replace( MainConfig.DestinationPath?.FullName ?? string.Empty, newValue: "<<kotorDirectory>>" );
+        }
 
         [NotNull]
         public static string GetExecutingAssemblyDirectory()

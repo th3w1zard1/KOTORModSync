@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using Avalonia.Data.Converters;
 using JetBrains.Annotations;
+using KOTORModSync.Core.Utility;
 
 namespace KOTORModSync.Converters
 {
@@ -16,12 +17,12 @@ namespace KOTORModSync.Converters
         [CanBeNull]
         public object Convert(
             [CanBeNull] object value,
-            [CanBeNull] Type targetType,
+            [NotNull] Type targetType,
             [CanBeNull] object parameter,
-            [CanBeNull] CultureInfo culture
+            [NotNull] CultureInfo culture
         )
         {
-            if ( value is ICollection collection && collection.Count == 0 )
+            if ( value is ICollection collection && collection.IsNullOrEmptyCollection() )
                 return new List<string>
                 {
                     string.Empty,
@@ -31,10 +32,10 @@ namespace KOTORModSync.Converters
         }
 
         public object ConvertBack(
-            object value,
-            Type targetType,
-            object parameter,
-            CultureInfo culture
+            [CanBeNull] object value,
+            [NotNull] Type targetType,
+            [CanBeNull] object parameter,
+            [NotNull] CultureInfo culture
         ) =>
             throw new NotSupportedException();
     }

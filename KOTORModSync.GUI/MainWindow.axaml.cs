@@ -1414,6 +1414,42 @@ namespace KOTORModSync
             }
         }
 
+        /// <summary>
+        /// Event handler for the TabControl's SelectionChanged event.
+        /// This method manages tab selection changes in the TabControl and performs various actions based on the user's interaction.
+        /// When the user selects a different tab, the method first checks if an internal tab change is being ignored. If so, it immediately returns without performing any further actions.
+        /// Additionally, this method relies on a component being currently loaded for proper operation. If no component is loaded, the method will log a verbose
+        /// message, indicating that the tab functionality won't work until a component is loaded.
+        /// 
+        /// The method identifies the last selected tab and the newly selected tab and logs their headers to provide user feedback about their selections.
+        /// However, it assumes that the TabControl's SelectionChanged event arguments will always have valid items.
+        /// If not, it will log a verbose message, indicating that it couldn't resolve the tab item.
+        /// 
+        /// **Caution**: The method tries to resolve the names of the tabs based on their headers, and it assumes that this information will be available.
+        /// If any tab lacks a header, it may lead to unexpected behavior or errors.
+        /// 
+        /// If there are no components in the MainConfig or the current component is null, the method defaults to the initial tab and logs a verbose message.
+        /// However, the conditions under which a component is considered "null" or whether the MainConfig contains any valid components are not explicitly detailed in this method.
+        /// 
+        /// The method then compares the names of the current and last selected tabs in lowercase to detect if the user clicked on the same tab.
+        /// If so, it logs a message and returns without performing any further actions.
+        /// 
+        /// **Warning**: The logic in this method may trigger swapping of tabs based on certain conditions, such as selecting the "raw edit" tab or changing from the "raw edit" tab to another.
+        /// It is important to be aware of these tab-swapping behaviors to avoid unexpected changes in the user interface.
+        /// 
+        /// The method determines whether the tab should be swapped based on the selected tab's name.
+        /// If the new tab is "raw edit", it calls the LoadIntoRawEditTextBox method to check if the current component should be loaded into the raw editor.
+        /// The specific criteria for loading a component into the raw editor are not detailed within this method.
+        /// 
+        /// If the last tab was "raw edit", the method checks if changes should be saved before swapping to the new tab.
+        /// The method finally decides whether to prevent the tab change and returns accordingly.
+        /// Depending on the conditions mentioned earlier, tab swapping may be cancelled, which might not be immediately apparent to the user.
+        /// 
+        /// Furthermore, this method modifies the visibility of certain UI elements (RawEditTextBox and ApplyEditorButton) based on the selected tab.
+        /// Specifically, it shows or hides these elements when the "raw edit" tab is selected, which could impact user interactions if not understood properly.
+        /// </summary>
+        /// <param name="sender">The object that raised the event (expected to be a TabControl).</param>
+        /// <param name="e">The event arguments containing information about the selection change.</param>
         private async void TabControl_SelectionChanged( [NotNull] object sender, [NotNull] SelectionChangedEventArgs e )
         {
             if ( _ignoreInternalTabChange )

@@ -1637,6 +1637,28 @@ namespace KOTORModSync
             return RawEditTextBox.Text != _currentComponent.SerializeComponent();
         }
 
+        /// <summary>
+        /// Asynchronous method that determines if changes should be saved before performing an action.
+        /// This method checks if the current component has any changes and prompts the user for confirmation if necessary.
+        /// 
+        /// The method attempts to deserialize the raw config text from the "RawEditTextBox" into a new Component instance.
+        /// If the deserialization process fails due to syntax errors, it will display a confirmation dialog to the user despite the 'noPrompt' boolean,
+        /// offering to discard the changes and continue with the last attempted action. If the user chooses to discard,
+        /// the method returns true, indicating that the changes should not be saved.
+        /// 
+        /// The method then tries to find the corresponding component in the "MainConfig.AllComponents" collection.
+        /// If the index of the current component cannot be found or is out of range, the method logs an error,
+        /// displays an information dialog to the user, and returns false, indicating that the changes cannot be saved.
+        /// 
+        /// If all checks pass successfully, the method updates the properties of the component in the "MainConfig.AllComponents" collection
+        /// with the deserialized new component, sets the current component to the new one, and refreshes the tree view to reflect the changes.
+        /// 
+        /// **Note**: This method involves multiple asynchronous operations and may not complete immediately.
+        /// Any unexpected exceptions that occur during the process are caught, logged, and displayed to the user via an information dialog.
+        /// 
+        /// </summary>
+        /// <param name="noPrompt">A boolean flag indicating whether the user should be prompted to save changes. Default is false.</param>
+        /// <returns>True if the changes should be saved or if no changes are detected. False if the user chooses not to save or if an error occurs.</returns>
         private async Task<bool> ShouldSaveChanges( bool noPrompt = false )
         {
             string output;
@@ -1706,7 +1728,6 @@ namespace KOTORModSync
 
                 // Update the properties of the component
                 MainConfigInstance.allComponents[index] = newComponent;
-
                 SetCurrentComponent( newComponent );
 
                 // Refresh the tree view to reflect the changes

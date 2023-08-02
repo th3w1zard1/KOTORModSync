@@ -5,8 +5,10 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text.RegularExpressions;
 using JetBrains.Annotations;
+using KOTORModSync.Core.Utility;
 using SharpCompress.Archives;
 
 namespace KOTORModSync.Core.TSLPatcher
@@ -78,13 +80,79 @@ namespace KOTORModSync.Core.TSLPatcher
             }
         }
 
-        public static Dictionary<string, string> ReadNamespacesIniFromArchive(Stream archiveStream)
+        public static Dictionary<string, string> ReadNamespacesIniFromArchive( [NotNull] string archivePath )
         {
-            using (var archive = ArchiveFactory.Open(archiveStream))
+            if ( string.IsNullOrWhiteSpace( archivePath ) )
+                throw new ArgumentException( message: "Value cannot be null or whitespace.", nameof( archivePath ) );
+
+            (IArchive archive, FileStream thisStream) = ArchiveHelper.OpenArchive( archivePath );
+            using ( thisStream )
             {
-                foreach (var entry in archive.Entries)
+                if (archive != null && thisStream != null)
                 {
-                    if (entry.IsDirectory && entry.Key.Contains("tslpatchdata"))
+                    return TraverseDirectories(archive.Entries, "");
+                }
+            }
+
+            return null; // Folder 'tslpatchdata' or 'namespaces.ini' not found in the archive.
+        }
+
+        public static Dictionary<string, string> ReadNamespacesIniFromArchive( [NotNull] Stream archiveStream)
+        {
+            if ( archiveStream is null )
+                throw new ArgumentNullException( nameof( archiveStream ) );
+
+            using (IArchive archive = ArchiveFactory.Open(archiveStream))
+            {
+                foreach (IArchiveEntry entry in archive.Entries)
+                {
+                    if ( !entry.IsDirectory || !entry.Key.Contains( "tslpatchdata" ) )
+                        continue;
+
+                    using (var reader = new StreamReader(entry.OpenEntryStream()))
+                    {
+                        return ParseNamespacesIni(reader);
+                    }
+                }
+            }
+
+            return null; // Folder 'tslpatchdata' or 'namespaces.ini' not found in the archive.
+        }
+
+        private static Dictionary<string, string> TraverseDirectories(IEnumerable<IArchiveEntry> entries, [NotNull] string currentDirectory)
+        {
+            if ( currentDirectory is null )
+                throw new ArgumentNullException( nameof( currentDirectory ) );
+
+            IEnumerable<IArchiveEntry> archiveEntries = entries as IArchiveEntry[] ?? entries?.ToArray()
+                ?? throw new NullReferenceException( nameof(entries) );
+            foreach (IArchiveEntry entry in archiveEntries)
+            {
+                if (entry != null && entry.IsDirectory)
+                {
+                    // Recurse into subdirectories
+                    IEnumerable<IArchiveEntry> subDirectoryEntries = archiveEntries.Where(
+                        e =>
+                            e != null
+                            && (
+                                e.Key.StartsWith( entry.Key + "/" )
+                                || e.Key.StartsWith( entry.Key + "\\" )
+                            )
+                    );
+                    Dictionary<string, string> result = TraverseDirectories(subDirectoryEntries, entry.Key);
+                    if (result != null)
+                        return result;
+                }
+                else
+                {
+                    string directoryName = Path.GetDirectoryName( entry.Key.Replace('\\', '/') );
+                    string fileName = Path.GetFileName(entry.Key);
+
+                    if (string.Equals(directoryName, currentDirectory, StringComparison.OrdinalIgnoreCase) &&
+                        string.Equals(fileName, "namespaces.ini", StringComparison.OrdinalIgnoreCase) &&
+                        currentDirectory.Split(new[] { '/', '\\' },
+                                StringSplitOptions.RemoveEmptyEntries
+                        ).Any(dir => dir.Equals("tslpatchdata", StringComparison.OrdinalIgnoreCase)))
                     {
                         using (var reader = new StreamReader(entry.OpenEntryStream()))
                         {
@@ -94,32 +162,33 @@ namespace KOTORModSync.Core.TSLPatcher
                 }
             }
 
-            return null; // Folder 'tslpatchdata' or 'namespaces.ini' not found in the archive.
+            return null; // No matching 'tslpatchdata/namespaces.ini' found in this directory or its subdirectories
         }
 
-        public static Dictionary<string, string> ParseNamespacesIni( [NotNull] StreamReader reader)
+        public static Dictionary<string, string> ParseNamespacesIni(StreamReader reader)
         {
-            if ( reader is null )
-                throw new ArgumentNullException( nameof( reader ) );
+            if (reader is null)
+                throw new ArgumentNullException(nameof(reader));
 
             var namespaces = new Dictionary<string, string>();
             string line;
-            while ( (line = reader.ReadLine()) != null )
+            while ((line = reader.ReadLine()) != null)
             {
                 line = line.Trim();
-                if ( string.IsNullOrWhiteSpace( line ) || !line.StartsWith( "Namespace" ) )
+                if (string.IsNullOrWhiteSpace(line) || !line.StartsWith("Namespace"))
                     continue;
 
                 int separatorIndex = line.IndexOf('=');
-                if ( separatorIndex == -1 )
+                if (separatorIndex == -1)
                     continue;
 
-                string key = line.Substring(0, separatorIndex).Trim();
+                string key = line.Substring(0, separatorIndex).Trim().Substring( 9 );
                 string value = line.Substring(separatorIndex + 1).Trim();
                 namespaces[key] = value;
             }
 
             return namespaces;
         }
+
     }
 }

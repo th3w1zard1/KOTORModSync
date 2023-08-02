@@ -19,46 +19,61 @@ namespace KOTORModSync.Core.Utility
     {
         // Characters not allowed in Windows file and directory names
         // we don't check colon or any slashes because we aren't validating file/folder names, only a full path string.
+        [NotNull]
         private static readonly char[] s_invalidPathCharsWindows = {
             '<', '>', '"', '|', '?', '*',
             '\0', '\n', '\r', '\t', '\b', '\a', '\v', '\f',
         };
 
         // Characters not allowed in Unix file and directory names
+        [NotNull]
         private static readonly char[] s_invalidPathCharsUnix = {
             '\0',
         };
 
         // Reserved file names in Windows
+        [NotNull][ItemNotNull]
         private static readonly string[] s_reservedFileNamesWindows = {
             "CON", "PRN", "AUX", "NUL",
             "COM1", "COM2", "COM3", "COM4", "COM5", "COM6", "COM7", "COM8", "COM9",
             "LPT1", "LPT2", "LPT3", "LPT4", "LPT5", "LPT6", "LPT7", "LPT8", "LPT9",
         };
 
-        public static bool IsValidPath(string path)
+        public static bool IsValidPath( [NotNull] string path)
         {
-            // Check for forbidden printable ASCII characters
-            char[] invalidChars = GetInvalidCharsForPlatform();
-            if (path.IndexOfAny(invalidChars) >= 0)
+            if ( string.IsNullOrEmpty( path ) )
                 return false;
 
-            // Check for non-printable characters
-            if (ContainsNonPrintableChars(path))
-                return false;
+            try
+            {
+                // Check for forbidden printable ASCII characters
+                char[] invalidChars = GetInvalidCharsForPlatform();
+                if (path.IndexOfAny( invalidChars ) >= 0)
+                    return false;
 
-            // Check for reserved file names in Windows
-            //if ( RuntimeInformation.IsOSPlatform( OSPlatform.Windows ) )
-            //{
+                // Check for non-printable characters
+                if ( ContainsNonPrintableChars(path) )
+                    return false;
+
+                // Check for reserved file names in Windows
+                //if ( RuntimeInformation.IsOSPlatform( OSPlatform.Windows ) )
+                //{
                 if ( IsReservedFileNameWindows(path) )
                     return false;
             
                 // Check for invalid filename parts
+                // ReSharper disable once ConvertIfStatementToReturnStatement
                 if ( HasInvalidWindowsFileNameParts(path) )
                     return false;
-            //}
+                //}
 
-            return true;
+                return true;
+            }
+            catch ( Exception e )
+            {
+                Logger.LogVerbose( e.Message );
+                return false;
+            }
         }
 
         private static char[] GetInvalidCharsForPlatform()
@@ -68,16 +83,16 @@ namespace KOTORModSync.Core.Utility
                 : s_invalidPathCharsWindows;
         }
 
-        private static bool ContainsNonPrintableChars(string path) => path.Any( c => c < ' ' && c != '\t' );
-        private static bool IsReservedFileNameWindows(string path)
+        private static bool ContainsNonPrintableChars([CanBeNull] string path) => path?.Any( c => c < ' ' && c != '\t' ) ?? false;
+        private static bool IsReservedFileNameWindows([NotNull] string path)
         {
             string fileName = Path.GetFileNameWithoutExtension(path);
             
             // Check if any reserved filename matches the filename (case-insensitive)
             return s_reservedFileNamesWindows.Any(reservedName => string.Equals(reservedName, fileName, StringComparison.OrdinalIgnoreCase));
         }
-        
-        public static bool HasInvalidWindowsFileNameParts(string path)
+
+        private static bool HasInvalidWindowsFileNameParts(string path)
         {
             string fileName = Path.GetFileNameWithoutExtension(path);
 
@@ -99,11 +114,12 @@ namespace KOTORModSync.Core.Utility
     public static class PathHelper
     {
         [CanBeNull]
-        public static string GetFolderName( [CanBeNull] string itemInArchivePath )
+        // if it's a folder, return path as is, if it's a file get the parent dir.
+        public static string GetFolderName( [CanBeNull] string filePath )
         {
-            return Path.HasExtension( itemInArchivePath )
-                ? Path.GetDirectoryName( itemInArchivePath )
-                : itemInArchivePath;
+            return Path.HasExtension( filePath )
+                ? Path.GetDirectoryName( filePath )
+                : filePath;
         }
 
         public static DirectoryInfo TryGetValidDirectoryInfo(string destinationPath)
@@ -163,27 +179,26 @@ namespace KOTORModSync.Core.Utility
             string parentDirPath = Path.GetDirectoryName(path)
                 ?? throw new NullReferenceException($"Path.GetDirectoryName(path) when path is '{path}'");
 
-            var parentDir = new DirectoryInfo(parentDirPath);
-            if ( !parentDir.Exists && !( parentDir = new DirectoryInfo(GetCaseSensitivePath(parentDirPath)) ).Exists )
-                throw new DirectoryNotFoundException($"Could not find case-sensitive directory for path string '{parentDirPath}'");
-
-            return GetCaseSensitiveChildPath(parentDir, path);
+            DirectoryInfo parentDir = TryGetValidDirectoryInfo(parentDirPath)
+                ?? throw new NullReferenceException( "TryGetValidDirectoryInfo(parentDirPath)" );
+            return !parentDir.Exists && !( parentDir = TryGetValidDirectoryInfo( GetCaseSensitivePath(parentDirPath) )
+                ?? throw new DirectoryNotFoundException($"Could not find case-sensitive directory for path string '{parentDirPath}'") ).Exists
+                    ? throw new DirectoryNotFoundException($"Could not find case-sensitive directory for path string '{parentDirPath}'")
+                    : GetCaseSensitiveChildPath(parentDir, path);
         }
 
         private static string GetCaseSensitiveChildPath(DirectoryInfo parentDir, string path) =>
         (
-            from item in parentDir.GetFileSystemInfos("*", SearchOption.TopDirectoryOnly)
+            from item in parentDir?.GetFileSystemInfos("*", SearchOption.TopDirectoryOnly)
             where item.FullName.Equals( path, StringComparison.OrdinalIgnoreCase )
             select ConvertWindowsPathToCaseSensitive( item.FullName )
         ).FirstOrDefault();
 
         [CanBeNull]
-        public static string GetCaseSensitivePath( [NotNull] FileInfo file ) =>
-            GetCaseSensitivePath( file?.FullName );
+        public static string GetCaseSensitivePath( [NotNull] FileInfo file ) => GetCaseSensitivePath( file?.FullName );
 
         [CanBeNull]
-        public static string GetCaseSensitivePath( [NotNull] DirectoryInfo directory ) =>
-            GetCaseSensitivePath( directory?.FullName );
+        public static string GetCaseSensitivePath( [NotNull] DirectoryInfo directory ) => GetCaseSensitivePath( directory?.FullName );
 
         public static async Task MoveFileAsync( [NotNull] string sourcePath, [NotNull] string destinationPath )
         {
@@ -246,20 +261,19 @@ namespace KOTORModSync.Core.Utility
                             continue;
                         }
 
-                        if ( !Directory.Exists( formattedPath ) )
+                        if ( Directory.Exists( formattedPath ) )
                         {
-                            continue;
+                            IEnumerable<string> matchingFiles = Directory.EnumerateFiles(
+                                formattedPath,
+                                searchPattern: "*",
+                                topLevelOnly
+                                    ? SearchOption.TopDirectoryOnly
+                                    : SearchOption.AllDirectories
+                            );
+
+                            result.AddRange( matchingFiles );
                         }
 
-                        IEnumerable<string> matchingFiles = Directory.EnumerateFiles(
-                            formattedPath,
-                            searchPattern: "*",
-                            topLevelOnly
-                                ? SearchOption.TopDirectoryOnly
-                                : SearchOption.AllDirectories
-                        );
-
-                        result.AddRange( matchingFiles );
                         continue;
                     }
 
@@ -297,9 +311,7 @@ namespace KOTORModSync.Core.Utility
                     }
 
                     if ( string.IsNullOrEmpty( currentDirectory ) || !Directory.Exists( currentDirectory ) )
-                    {
                         continue;
-                    }
 
                     IEnumerable<string> checkFiles = Directory.EnumerateFiles(
                         currentDirectory,
@@ -554,7 +566,11 @@ namespace KOTORModSync.Core.Utility
 
             int matchingCount = 0;
 
-            for ( int i = 0; i < str1.Length && i < str2.Length; i++ )
+            for (
+                int i = 0;
+                i < str1.Length && i < str2.Length;
+                i++
+            )
             {
                 if ( str1[i] != str2[i] )
                     break;

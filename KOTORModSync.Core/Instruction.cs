@@ -82,9 +82,11 @@ namespace KOTORModSync.Core
 
         public bool Overwrite { get; set; }
         public string Arguments { get; set; }
-        [CanBeNull] public List<string> DeleteExtensions { get; set; }
-        [CanBeNull] public List<Option> ValidOptions { get; set; }
-        private Component ParentComponent { get; set; }
+        private Component _parentComponent { get; set; }
+        
+        public Component GetParentComponent() => _parentComponent;
+        public void SetParentComponent(Component thisComponent) => _parentComponent = thisComponent;
+
         public Dictionary<FileInfo, SHA1> ExpectedChecksums { get; set; }
         public Dictionary<FileInfo, SHA1> OriginalChecksums { get; internal set; }
 
@@ -150,8 +152,6 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
         [NotNull] private List<Guid> _restrictions = new List<Guid>();
         [NotNull][ItemNotNull] private List<string> RealSourcePaths { get; set; } = new List<string>();
         [CanBeNull] private DirectoryInfo RealDestinationPath { get; set; }
-
-        internal void SetParentComponent( [CanBeNull] Component parentComponent ) => ParentComponent = parentComponent;
 
         public static async Task<bool> ExecuteInstructionAsync( [NotNull] Func<Task<bool>> instructionMethod ) =>
             await ( instructionMethod()
@@ -222,10 +222,8 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
 
                         if (!ArchiveHelper.IsArchive(thisFile))
                         {
-                            if (!(ParentComponent is null))
-                            {
-                                _ = Logger.LogAsync($"[Error] '{ParentComponent.Name}' failed to extract file '{thisFile.Name}'. Invalid archive?");
-                            }
+                            if (!(_parentComponent is null))
+                                _ = Logger.LogAsync( $"[Error] '{_parentComponent.Name}' failed to extract file '{thisFile.Name}'. Invalid archive?" );
 
                             exitCode = ActionExitCode.InvalidArchive;
                             return;
@@ -234,7 +232,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                         if (thisFile.Extension.Equals(".exe", StringComparison.OrdinalIgnoreCase))
                         {
                             (int, string, string) result = await PlatformAgnosticMethods.ExecuteProcessAsync(
-                                thisFile,
+                                thisFile.FullName,
                                 $" -o\"{thisFile.DirectoryName}\" -y",
                                 noAdmin: MainConfig.NoAdmin
                             );
@@ -250,7 +248,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                         {
                             IArchive archive = null;
 
-                            switch (thisFile.Extension.ToLowerInvariant())
+                            switch ( thisFile.Extension.ToLowerInvariant() )
                             {
                                 case ".zip":
                                     archive = SharpCompress.Archives.Zip.ZipArchive.Open(stream);
@@ -735,7 +733,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                     }
 
                     ( int exitCode, string output, string error ) = await PlatformAgnosticMethods.ExecuteProcessAsync(
-                        tslPatcherCliPath,
+                        tslPatcherCliPath.FullName,
                         args,
                         noAdmin: MainConfig.NoAdmin
                     );
@@ -799,7 +797,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
 
                         ( int childExitCode, string output, string error )
                             = await PlatformAgnosticMethods.ExecuteProcessAsync(
-                                thisProgram,
+                                thisProgram.FullName,
                                 noAdmin: MainConfig.NoAdmin
                             );
 
@@ -934,7 +932,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
 
         [NotNull]
         [ItemNotNull]
-        public List<Option> GetChosenOptions() => ParentComponent?.Options
+        public List<Option> GetChosenOptions() => _parentComponent?.Options
             .Where( x =>
                 x != null
                 && x.IsSelected

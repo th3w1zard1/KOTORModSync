@@ -12,6 +12,7 @@ using Newtonsoft.Json.Serialization;
 using SharpCompress.Archives;
 using SharpCompress.Archives.Rar;
 using SharpCompress.Archives.SevenZip;
+using SharpCompress.Archives.Zip;
 using SharpCompress.Common;
 
 namespace KOTORModSync.Core.Utility
@@ -32,41 +33,40 @@ namespace KOTORModSync.Core.Utility
             || thisFile.Extension.Equals( ".rar" )
             || thisFile.Extension.Equals( ".exe" );
 
-        [CanBeNull]
-        public static IArchive OpenArchive( [NotNull] string archivePath )
+        public static (IArchive, FileStream) OpenArchive(string archivePath)
         {
-            if ( archivePath == null )
+            if (archivePath == null)
             {
-                throw new ArgumentNullException( nameof( archivePath ) );
+                throw new ArgumentNullException(nameof(archivePath));
             }
 
             try
             {
+                FileStream stream = File.OpenRead(archivePath);
                 IArchive archive = null;
-                using ( FileStream stream = File.OpenRead( archivePath ) )
-                {
-                    if ( archivePath.EndsWith( value: ".zip", StringComparison.OrdinalIgnoreCase ) )
-                    {
-                        archive = SharpCompress.Archives.Zip.ZipArchive.Open( stream );
-                    }
-                    else if ( archivePath.EndsWith( value: ".rar", StringComparison.OrdinalIgnoreCase ) )
-                    {
-                        archive = RarArchive.Open( stream );
-                    }
-                    else if ( archivePath.EndsWith( value: ".7z", StringComparison.OrdinalIgnoreCase ) )
-                    {
-                        archive = SevenZipArchive.Open( stream );
-                    }
 
-                    return archive;
+                if (archivePath.EndsWith(".zip", StringComparison.OrdinalIgnoreCase))
+                {
+                    archive = ZipArchive.Open(stream);
                 }
+                else if (archivePath.EndsWith(".rar", StringComparison.OrdinalIgnoreCase))
+                {
+                    archive = RarArchive.Open(stream);
+                }
+                else if (archivePath.EndsWith(".7z", StringComparison.OrdinalIgnoreCase))
+                {
+                    archive = SevenZipArchive.Open(stream);
+                }
+
+                return (archive, stream);
             }
-            catch ( Exception ex )
+            catch (Exception ex)
             {
-                Logger.LogException( ex );
-                return null;
+                Logger.LogException(ex);
+                return (null, null);
             }
         }
+
 
         public static void OutputModTree( [NotNull] DirectoryInfo directory, [NotNull] string outputPath )
         {
@@ -184,10 +184,11 @@ namespace KOTORModSync.Core.Utility
 
             try
             {
-                IArchive archive = OpenArchive( archivePath );
-                if ( archive is null )
+                (IArchive archive, FileStream stream) = OpenArchive( archivePath );
+                if ( archive is null || stream is null )
                 {
                     Logger.Log( $"Unsupported archive format: '{Path.GetExtension( archivePath )}'" );
+                    stream?.Dispose();
                     return archiveEntries;
                 }
 
@@ -203,6 +204,8 @@ namespace KOTORModSync.Core.Utility
                         Name = pathParts[pathParts.Length - 1], Path = entry.Key,
                     }
                 );
+
+                stream.Dispose();
             }
             catch ( Exception ex )
             {

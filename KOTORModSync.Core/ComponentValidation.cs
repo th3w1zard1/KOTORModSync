@@ -30,13 +30,16 @@ namespace KOTORModSync.Core
         [NotNull] private readonly List<ValidationResult> _validationResults = new List<ValidationResult>();
         [NotNull] public readonly Component ComponentToValidate;
 
-        [NotNull] private readonly List<Component> ComponentsList;
+        [CanBeNull] private readonly List<Component> _componentsList;
 
-        public ComponentValidation( [NotNull] Component component, [NotNull] List<Component> componentsList )
+        public ComponentValidation( [NotNull] Component component, [CanBeNull] List<Component> componentsList = null )
         {
             ComponentToValidate = component ?? throw new ArgumentNullException( nameof( component ) );
-            ComponentsList = new List<Component>(
-                componentsList ?? throw new ArgumentNullException( nameof( componentsList ) )
+            if ( componentsList is null )
+                return;
+
+            _componentsList = new List<Component>(
+                componentsList
             );
         }
 
@@ -212,7 +215,7 @@ namespace KOTORModSync.Core
         }
 
         [NotNull]
-        private List<string> GetAllArchivesFromInstructions()
+        public List<string> GetAllArchivesFromInstructions()
         {
             var allArchives = new List<string>();
 
@@ -258,7 +261,7 @@ namespace KOTORModSync.Core
                         continue;
                     }
 
-                    if ( !Component.ShouldRunInstruction( instruction, ComponentsList ) )
+                    if ( !Component.ShouldRunInstruction( instruction, _componentsList ) )
                     {
                         continue;
                     }
@@ -449,7 +452,7 @@ namespace KOTORModSync.Core
                 return ( false, archiveNameFound );
             }
 
-            if ( foundInAnyArchive || !Component.ShouldRunInstruction( instruction, ComponentsList ) )
+            if ( foundInAnyArchive || !Component.ShouldRunInstruction( instruction, _componentsList ) )
             {
                 return ( true, true );
             }
@@ -461,7 +464,7 @@ namespace KOTORModSync.Core
             }
 
             // archive not required if instruction isn't running.
-            if ( !Component.ShouldRunInstruction( instruction, ComponentsList, isInstall: false ) )
+            if ( !Component.ShouldRunInstruction( instruction, _componentsList ) )
             {
                 return ( true, true );
             }

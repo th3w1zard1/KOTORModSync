@@ -22,7 +22,9 @@
         <converters:ActionConverter x:Key="ActionConverter" />
         <converters:EnumDescriptionConverter x:Key="EnumConverter" />
         <converters:StringToGuidConverter x:Key="GuidConverter" />
+        <converters:NamespacesIniOptionConverter x:Key="NamespacesIniOptionConverter" />
     </Window.Resources>
+
     <Grid x:Name="MainGrid" MinWidth="200" RowDefinitions="Auto,*">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*" MinWidth="250" />
@@ -337,10 +339,14 @@
                                                                                  Text="{Binding Overwrite}" />
 
                                                                         <TextBlock Grid.Row="14" Grid.Column="0"
-                                                                                   Text="Arguments:" />
+                                                                                   Text="Arguments (Namespace Ini Option):" />
                                                                         <TextBox Grid.Row="15" Grid.Column="0"
-                                                                                 Focusable="True"
-                                                                                 Text="{Binding Arguments}" />
+                                                                            Focusable="True"
+                                                                            Text="{Binding Arguments}" />
+                                                                        <ComboBox Grid.Row="15" Grid.Column="1"
+                                                                            Items="{Binding Converter={StaticResource NamespacesIniOptionConverter}}"
+                                                                            SelectedItem="{Binding Arguments}">
+                                                                        </ComboBox>
                                                                     </Grid>
                                                                 </Border>
                                                             </StackPanel>
@@ -396,7 +402,7 @@
                                                                             VerticalAlignment="Center"
                                                                             Margin="0,0,20,0" />
                                                                         <TextBox Grid.Row="3" Grid.Column="0"
-                                                                            Text="{Binding Description, Converter={StaticResource ActionConverter}}"
+                                                                            Text="{Binding Description}"
                                                                             Focusable="True" />
 
                                                                         <TextBlock Grid.Row="4" Grid.Column="0"
@@ -532,19 +538,21 @@
             </TabItem>
             <TabItem x:Name="RawEditTabItem" Header="Raw Edit"
                      ToolTip.Tip="Click 'Apply Editor Changes' to save raw changes">
-                <StackPanel HorizontalAlignment="Stretch">
-                    <DockPanel>
-                        <Button HorizontalContentAlignment="Center" HorizontalAlignment="Stretch"
-                                x:Name="ApplyEditorButton" Content="Apply Editor Changes"
-                                Click="SaveButton_Click" />
-                        <Button Content="Generate GUID" Click="GenerateGuidButton_Click"
-                                ToolTip.Tip="A GUID is used to ensure uniqueness of items.
-								Do not replace existing guids unless you know what you're doing,
-								else anything that relies on the pre-existing GUIDs will have their references broken."/>
-                        <TextBox x:Name="GuidGeneratedTextBox" Focusable="True" HorizontalContentAlignment="Left" />
-                    </DockPanel>
-                    <TextBox x:Name="RawEditTextBox" Margin="10" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="400" />
-                </StackPanel>
+                <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+                    <StackPanel HorizontalAlignment="Stretch">
+                        <DockPanel>
+                            <Button HorizontalContentAlignment="Center" HorizontalAlignment="Stretch"
+                                    x:Name="ApplyEditorButton" Content="Apply Editor Changes"
+                                    Click="SaveButton_Click" />
+                            <Button Content="Generate GUID" Click="GenerateGuidButton_Click"
+                                    ToolTip.Tip="A GUID is used to ensure uniqueness of items.
+								    Do not replace existing guids unless you know what you're doing,
+								    else anything that relies on the pre-existing GUIDs will have their references broken."/>
+                            <TextBox x:Name="GuidGeneratedTextBox" Focusable="True" HorizontalContentAlignment="Left" />
+                        </DockPanel>
+                        <TextBox x:Name="RawEditTextBox" Margin="10" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="400" />
+                    </StackPanel>
+                </ScrollViewer>
             </TabItem>
         </TabControl>
         <GridSplitter Grid.Column="1" Grid.Row="1" Width="5" HorizontalAlignment="Right" />

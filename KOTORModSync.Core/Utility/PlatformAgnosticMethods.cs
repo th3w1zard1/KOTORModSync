@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data.Common;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Security.Principal;
@@ -18,6 +19,7 @@ using JetBrains.Annotations;
 
 namespace KOTORModSync.Core.Utility
 {
+    [SuppressMessage( "ReSharper", "MemberCanBePrivate.Global" )]
     public static class PlatformAgnosticMethods
     {
         // Overload for a string representation of the folder path.
@@ -61,21 +63,22 @@ namespace KOTORModSync.Core.Utility
             (int ExitCode, string Output, string Error) result = TryExecuteCommand( "sysctl -n hw.memsize" );
             string command = "sysctl";
 
-            if ( result.ExitCode != 0 )
-            {
-                result = TryExecuteCommand( "free -b" );
-                command = "free";
+            if ( result.ExitCode == 0 )
+                return ParseAvailableMemory( result.Output, command );
 
-                if ( result.ExitCode != 0 )
-                {
-                    result = TryExecuteCommand( "wmic OS get FreePhysicalMemory" );
-                    command = "wmic";
-                }
-            }
+            result = TryExecuteCommand( "free -b" );
+            command = "free";
 
-            return result.ExitCode != 0
-                ? 0 // no memory command found.
-                : ParseAvailableMemory( result.Output, command );
+            if ( result.ExitCode == 0 )
+                return ParseAvailableMemory( result.Output, command );
+
+            result = TryExecuteCommand( "wmic OS get FreePhysicalMemory" );
+            command = "wmic";
+
+            if ( result.ExitCode == 0 )
+                return ParseAvailableMemory( result.Output, command );
+
+            return 0;
         }
 
         private static long ParseAvailableMemory( [NotNull] string output, [NotNull] string command )
@@ -119,13 +122,12 @@ namespace KOTORModSync.Core.Utility
 
             try
             {
-                using ( var process = new Process() )
+                using ( new Process() )
                 {
                     string args = RuntimeInformation.IsOSPlatform( OSPlatform.Windows )
                         ? $"/c \"{command}\""  // Use "/c" for Windows command prompt
                         : $"-c \"{command}\""; // Use "-c" for Unix-like shells
-                    var shellFileInfo = new FileInfo( shellPath );
-                    Task<(int, string, string)> executeProcessTask = ExecuteProcessAsync( shellFileInfo, args );
+                    Task<(int, string, string)> executeProcessTask = ExecuteProcessAsync( shellPath, args );
                     executeProcessTask.Wait();
                     return executeProcessTask.Result;
                 }
@@ -158,18 +160,12 @@ namespace KOTORModSync.Core.Utility
             foreach ( string executable in shellExecutables )
             {
                 if ( File.Exists( executable ) )
-                {
                     return executable;
-                }
 
-                if ( executable == null )
-                    throw new NullReferenceException( nameof( executable ) );
-
+                // ReSharper disable once AssignNullToNotNullAttribute
                 string fullExecutablePath = Path.Combine( Environment.SystemDirectory, executable );
                 if ( File.Exists( fullExecutablePath ) )
-                {
                     return fullExecutablePath;
-                }
             }
 
             return string.Empty;
@@ -200,23 +196,13 @@ namespace KOTORModSync.Core.Utility
                     );
                 }
 
-                var startInfo = new ProcessStartInfo
-                {
-                    FileName = command, Arguments = arguments, RedirectStandardOutput = true, UseShellExecute = false,
-                };
+                Task<(int, string, string)> result = ExecuteProcessAsync( command, arguments, 60000, true );
+                result.Wait();
+                string output = result.Result.Item2;
 
-                using ( var process = new Process() )
-                {
-                    process.StartInfo = startInfo;
-                    _ = process.Start();
-
-                    string output = process.StandardOutput.ReadToEnd();
-                    process.WaitForExit();
-
-                    // Extract the relevant information from the output and calculate the max disk speed
-                    double maxSpeed = ExtractMaxDiskSpeed( output );
-                    return maxSpeed;
-                }
+                // Extract the relevant information from the output and calculate the max disk speed
+                double maxSpeed = ExtractMaxDiskSpeed( output );
+                return maxSpeed;
             }
             catch ( Exception e )
             {
@@ -225,16 +211,14 @@ namespace KOTORModSync.Core.Utility
             }
         }
 
-        private static double ExtractMaxDiskSpeed( string output )
+        private static double ExtractMaxDiskSpeed( [CanBeNull] string output )
         {
             const double maxSpeed = 0.0;
 
             var regex = new Regex( @"([0-9,.]+)\s*(bytes/sec|MB/sec)" );
-            Match match = regex.Match( output );
+            Match match = regex.Match( output ?? string.Empty );
             if ( !match.Success || match.Groups.Count < 3 )
-            {
                 return maxSpeed;
-            }
 
             string speedString = match.Groups[1]
                 .Value;
@@ -242,9 +226,7 @@ namespace KOTORModSync.Core.Utility
                 .Value.ToLower();
 
             if ( !double.TryParse( speedString.Replace( oldValue: ",", newValue: "" ), out double speed ) )
-            {
                 return maxSpeed;
-            }
 
             switch ( unit )
             {
@@ -259,17 +241,9 @@ namespace KOTORModSync.Core.Utility
         {
             if ( RuntimeInformation.IsOSPlatform( OSPlatform.Windows ) )
             {
-                // Check for administrator privileges on Windows
                 var windowsIdentity = WindowsIdentity.GetCurrent();
                 var windowsPrincipal = new WindowsPrincipal( windowsIdentity );
                 return windowsPrincipal.IsInRole( WindowsBuiltInRole.Administrator );
-            }
-
-            // Unsupported platform
-            if ( !RuntimeInformation.IsOSPlatform( OSPlatform.Linux )
-                && !RuntimeInformation.IsOSPlatform( OSPlatform.OSX ) )
-            {
-                return null;
             }
 
             // Check for root privileges on Linux and macOS
@@ -316,7 +290,7 @@ namespace KOTORModSync.Core.Utility
 
         [NotNull]
         private static List<ProcessStartInfo> GetProcessStartInfos(
-            [NotNull] FileInfo programFile,
+            [NotNull] string programFile,
             [CanBeNull] string cmdlineArgs
         )
         {
@@ -330,7 +304,7 @@ namespace KOTORModSync.Core.Utility
                 // top-level, preferred ProcessStartInfo args. Provides the most flexibility with our code.
                 new ProcessStartInfo
                 {
-                    FileName = programFile.FullName,
+                    FileName = programFile,
                     Arguments = cmdlineArgs,
                     UseShellExecute = false,
                     CreateNoWindow = true,
@@ -343,7 +317,7 @@ namespace KOTORModSync.Core.Utility
                 // perhaps the error dialog was the problem.
                 new ProcessStartInfo
                 {
-                    FileName = programFile.FullName,
+                    FileName = programFile,
                     Arguments = cmdlineArgs,
                     UseShellExecute = false,
                     CreateNoWindow = false,
@@ -355,7 +329,7 @@ namespace KOTORModSync.Core.Utility
                 // if it's not a console app or command, it needs a window.
                 new ProcessStartInfo
                 {
-                    FileName = programFile.FullName,
+                    FileName = programFile,
                     Arguments = cmdlineArgs,
                     UseShellExecute = false,
                     RedirectStandardOutput = true,
@@ -365,12 +339,14 @@ namespace KOTORModSync.Core.Utility
                 // try without redirecting output
                 new ProcessStartInfo
                 {
-                    FileName = programFile.FullName, Arguments = cmdlineArgs, UseShellExecute = false,
+                    FileName = programFile,
+                    Arguments = cmdlineArgs,
+                    UseShellExecute = false,
                 },
                 // try using native shell (doesn't support output redirection, perhaps they need admin)
                 new ProcessStartInfo
                 {
-                    FileName = programFile.FullName,
+                    FileName = programFile,
                     Arguments = cmdlineArgs,
                     UseShellExecute = IsShellExecutionSupported(), // not supported on all OS's.
                 },
@@ -378,7 +354,7 @@ namespace KOTORModSync.Core.Utility
         }
 
         public static async Task<(int, string, string)> ExecuteProcessAsync(
-            [CanBeNull] FileInfo programFile,
+            [CanBeNull] string programFile,
             string cmdlineArgs = "",
             int timeout = 0,
             bool noAdmin = false
@@ -419,14 +395,9 @@ namespace KOTORModSync.Core.Utility
                                 try
                                 {
                                     if ( localProcess.HasExited )
-                                    {
                                         return;
-                                    }
-
                                     if ( !localProcess.CloseMainWindow() )
-                                    {
                                         localProcess.Kill();
-                                    }
                                 }
                                 catch ( Exception cancellationException )
                                 {
@@ -451,14 +422,11 @@ namespace KOTORModSync.Core.Utility
                                     if ( e?.Data is null )
                                     {
                                         _ = outputWaitHandle.Set();
-                                    }
-                                    else
-                                    {
-                                        _ = output.AppendLine( e.Data );
-                                        Logger.Log( e.Data );
+                                        return;
                                     }
 
-
+                                    _ = output.AppendLine( e.Data );
+                                    Logger.Log( e.Data );
                                 }
                                 catch ( Exception exception )
                                 {
@@ -472,12 +440,11 @@ namespace KOTORModSync.Core.Utility
                                     if ( e?.Data is null )
                                     {
                                         _ = errorWaitHandle.Set();
+                                        return;
                                     }
-                                    else
-                                    {
-                                        _ = error.AppendLine( e.Data );
-                                        Logger.LogError( e.Data );
-                                    }
+
+                                    _ = error.AppendLine( e.Data );
+                                    Logger.LogError( e.Data );
                                 }
                                 catch ( Exception exception )
                                 {
@@ -486,19 +453,12 @@ namespace KOTORModSync.Core.Utility
                             };
 
                             if ( !process.Start() )
-                            {
                                 throw new InvalidOperationException( "Failed to start the process." );
-                            }
 
                             if ( process.StartInfo.RedirectStandardOutput )
-                            {
                                 process.BeginOutputReadLine();
-                            }
-
                             if ( process.StartInfo.RedirectStandardError )
-                            {
                                 process.BeginErrorReadLine();
-                            }
 
                             // Start the process and asynchronously wait for its completion
                             _ = await Task.Run(
@@ -535,16 +495,14 @@ namespace KOTORModSync.Core.Utility
                     }
 
                     if ( !MainConfig.DebugLogging )
-                    {
                         continue;
-                    }
 
                     await Logger.LogExceptionAsync( localException );
                     ex = localException;
                 }
                 catch ( Exception startinfoException )
                 {
-                    await Logger.LogAsync( $"An unplanned error has occurred trying to run '{programFile.Name}'" );
+                    await Logger.LogAsync( $"An unplanned error has occurred trying to run '{programFile}'" );
                     await Logger.LogExceptionAsync( startinfoException );
                     return ( -6, string.Empty, string.Empty );
                 }

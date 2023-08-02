@@ -21,7 +21,7 @@ using Tomlyn.Syntax;
 
 namespace KOTORModSync.Core
 {
-    public sealed class Component : INotifyPropertyChanged
+    public class Component : INotifyPropertyChanged
     {
         public enum ExecutionResult
         {
@@ -1014,8 +1014,7 @@ namespace KOTORModSync.Core
         public static Dictionary<string, List<Component>> GetConflictingComponents(
             [NotNull] List<Guid> dependencyGuids,
             [NotNull] List<Guid> restrictionGuids,
-            [NotNull][ItemNotNull] List<Component> componentsList,
-            bool isInstall = false
+            [NotNull][ItemNotNull] List<Component> componentsList
         )
         {
             if ( dependencyGuids is null )
@@ -1026,55 +1025,27 @@ namespace KOTORModSync.Core
                 throw new ArgumentNullException( nameof( componentsList ) );
 
             var conflicts = new Dictionary<string, List<Component>>();
-
             if ( dependencyGuids.Count > 0 )
             {
-                var dependencyConflicts = dependencyGuids
-                    .Select(
-                        requiredGuid =>
-                            componentsList.Find(
-                                c => c?.Guid == requiredGuid
-                        )
-                    ).Where(
-                        checkComponent => checkComponent?.IsSelected != true
-                    ).ToList();
-
-                if ( isInstall && dependencyConflicts.Count > 0 )
-                {
-                    Logger.Log(
-                        $"Skipping, required components not selected for install: [{string.Join( separator: ",", dependencyConflicts.ConvertAll( component => component?.Name ) )}]"
-                    );
-                }
+                var dependencyConflicts = dependencyGuids.Select(
+                    requiredGuid => FindComponentFromGuid( requiredGuid, componentsList ) )
+                    .Where( checkComponent => checkComponent != null && !checkComponent.IsSelected
+                ).ToList();
 
                 if ( dependencyConflicts.Count > 0 )
-                {
                     conflicts["Dependency"] = dependencyConflicts;
-                }
             }
 
             // ReSharper disable once InvertIf
             if ( restrictionGuids.Count > 0 )
             {
                 var restrictionConflicts = restrictionGuids.Select(
-                    restrictedGuid =>
-                        componentsList.Find(
-                            c => c?.Guid == restrictedGuid
-                        )
-                    ).Where(
-                        checkComponent => checkComponent?.IsSelected == true
-                    ).ToList();
-
-                if ( isInstall && restrictionConflicts.Count > 0 )
-                {
-                    Logger.Log(
-                        $"Skipping due to restricted components in install queue: [{string.Join( separator: ",", restrictionConflicts.ConvertAll( component => component?.Name ) )}]"
-                    );
-                }
+                        requiredGuid => FindComponentFromGuid( requiredGuid, componentsList ) )
+                    .Where( checkComponent => checkComponent != null && checkComponent.IsSelected
+                ).ToList();
 
                 if ( restrictionConflicts.Count > 0 )
-                {
                     conflicts["Restriction"] = restrictionConflicts;
-                }
             }
 
             return conflicts;
@@ -1085,8 +1056,7 @@ namespace KOTORModSync.Core
         //The component has dependencies, and all of the required components are being installed.
         //The component has restrictions, but none of the restricted components are being installed.
         public bool ShouldInstallComponent(
-            [NotNull][ItemNotNull] List<Component> componentsList,
-            bool isInstall = true
+            [NotNull][ItemNotNull] List<Component> componentsList
         )
         {
             if ( componentsList is null )
@@ -1095,8 +1065,7 @@ namespace KOTORModSync.Core
             Dictionary<string, List<Component>> conflicts = GetConflictingComponents(
                 Dependencies,
                 Restrictions,
-                componentsList,
-                isInstall
+                componentsList
             );
             return conflicts.Count == 0;
         }
@@ -1107,8 +1076,7 @@ namespace KOTORModSync.Core
         //The instruction has restrictions, but none of the restricted components are being installed.
         public static bool ShouldRunInstruction(
             [NotNull] Instruction instruction,
-            [NotNull] List<Component> componentsList,
-            bool isInstall = true
+            [NotNull] List<Component> componentsList
         )
         {
             if ( instruction is null )
@@ -1119,8 +1087,7 @@ namespace KOTORModSync.Core
             Dictionary<string, List<Component>> conflicts = GetConflictingComponents(
                 instruction.Dependencies,
                 instruction.Restrictions,
-                componentsList,
-                isInstall
+                componentsList
             );
             return conflicts.Count == 0;
         }
@@ -1137,11 +1104,23 @@ namespace KOTORModSync.Core
             Component foundComponent = null;
             foreach ( Component component in componentsList )
             {
-                if ( component.Guid != guidToFind )
-                    continue;
+                if ( component.Guid == guidToFind )
+                {
+                    foundComponent = component;
+                    break;
+                }
 
-                foundComponent = component;
-                break;
+                foreach ( Option thisOption in component.Options )
+                {
+                    if ( thisOption.Guid == guidToFind )
+                    {
+                        foundComponent = thisOption;
+                        break;
+                    }
+                }
+
+                if ( foundComponent != null )
+                    break;
             }
 
             return foundComponent;
@@ -1289,19 +1268,15 @@ namespace KOTORModSync.Core
 
         public void DeleteInstruction( int index ) => Instructions.RemoveAt( index );
         public void DeleteOption( int index ) => Options.RemoveAt( index );
-        
+
         public void MoveInstructionToIndex( [NotNull] Instruction thisInstruction, int index )
         {
             if ( thisInstruction is null || index < 0 || index >= Instructions.Count )
-            {
                 throw new ArgumentException( "Invalid instruction or index." );
-            }
 
             int currentIndex = Instructions.IndexOf( thisInstruction );
             if ( currentIndex < 0 )
-            {
                 throw new ArgumentException( "Instruction does not exist in the list." );
-            }
 
             if ( index == currentIndex )
             {

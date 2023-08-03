@@ -35,7 +35,7 @@ namespace KOTORModSync.Converters
                     if ( result is null || !result.Any() )
                         continue;
                     
-                    return result.Values.ToList();
+                    return result.Keys.ToList();
                 }
 
                 return null;

@@ -2056,6 +2056,7 @@ namespace KOTORModSync
             {
                 VerticalAlignment = VerticalAlignment.Center, 
                 Text = $"{component.Name}",
+                Focusable = false,
             };
             header.Children.Add(nameTextBlock);
             Grid.SetColumn(nameTextBlock, 2);
@@ -2087,7 +2088,7 @@ namespace KOTORModSync
                 HorizontalAlignment = HorizontalAlignment.Left,
             };
 
-            componentItem.Tapped += ( sender, e ) =>
+            componentItem.PointerPressed += ( sender, e ) =>
             {
                 try
                 {

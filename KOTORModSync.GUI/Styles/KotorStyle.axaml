@@ -18,7 +18,6 @@
     </Style>
 
     <Style Selector="Button:pointerover">
-        <Setter Property="TextBlock.Foreground" Value="#A8B348" />
         <Setter Property="Foreground" Value="#A8B348" />
     </Style>
     <Style Selector="Button:pointerover /template/ContentPresenter">

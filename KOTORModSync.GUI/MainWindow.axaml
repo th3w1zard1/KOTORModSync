@@ -21,6 +21,10 @@
         <converters:ListToVisibilityConverter x:Key="listToVisibilityConverter" />
     </Window.Resources>
 
+    <Window.Styles>
+        <StyleInclude Source="/Styles/Kotor2Style.axaml" />
+    </Window.Styles>
+
     <Grid x:Name="MainGrid" MinWidth="200" RowDefinitions="Auto,*">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*" MinWidth="250" />
@@ -45,8 +49,8 @@
             <TextBox Grid.Row="0" Margin="0,0,0,2"
                      Name="SearchBox" ToolTip.Tip="Search for a mod by name" Text="{Binding SearchText}"
                      HorizontalAlignment="Stretch" />
-            <ScrollViewer Grid.Row="1">
-                <TreeView x:Name="LeftTreeView" />
+            <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Disabled" >
+                <TreeView x:Name="LeftTreeView"/>
             </ScrollViewer>
             <Grid Grid.Row="2" Grid.Column="0" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Margin="3,1"
                   RowDefinitions="Auto,Auto,Auto,Auto" ColumnDefinitions="*,*">

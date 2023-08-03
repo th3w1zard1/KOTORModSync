@@ -13,6 +13,10 @@
         <Setter Property="Foreground" Value="#3AAAFF" />
     </Style>
 
+    <Style Selector="Border">
+        <Setter Property="BorderBrush" Value="#3AAAFF" />
+    </Style>
+
     <Style Selector="Button:pointerover">
         <Setter Property="TextBlock.Foreground" Value="#A8B348" />
         <Setter Property="Foreground" Value="#A8B348" />

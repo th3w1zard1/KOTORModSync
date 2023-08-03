@@ -23,12 +23,9 @@ using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Layout;
 using Avalonia.LogicalTree;
-using Avalonia.Markup.Xaml;
 using Avalonia.Markup.Xaml.Styling;
 using Avalonia.Media;
-using Avalonia.Styling;
 using Avalonia.Threading;
-using Avalonia.VisualTree;
 using JetBrains.Annotations;
 using KOTORModSync.CallbackDialogs;
 using KOTORModSync.Core;
@@ -36,8 +33,6 @@ using KOTORModSync.Core.Utility;
 using Component = KOTORModSync.Core.Component;
 using NotNullAttribute = JetBrains.Annotations.NotNullAttribute;
 
-// ReSharper disable UnusedParameter.Local
-// ReSharper disable MemberCanBeMadeStatic.Local
 // ReSharper disable AsyncVoidMethod
 
 namespace KOTORModSync
@@ -66,7 +61,7 @@ namespace KOTORModSync
             try
             {
                 InitializeComponent();
-                DataContext = this;
+                InitializeControls();
 
                 // Initialize the logger
                 Logger.Initialize();
@@ -87,18 +82,13 @@ namespace KOTORModSync
             }
         }
 
-        private void InitializeComponent()
+        public void InitializeControls()
         {
-            AvaloniaXamlLoader.Load( this );
-
-            MainGrid = this.FindControl<Grid>( "MainGrid" )
-                ?? throw new NullReferenceException( "MainGrid undefined in MainWindow." );
             if ( MainGrid.ColumnDefinitions == null || MainGrid.ColumnDefinitions.Count != 3 )
                 throw new NullReferenceException( "MainGrid incorrectly defined, expected 3 columns." );
 
             // set title and version
             Title = $"KOTORModSync v{MainConfig.CurrentVersion}";
-            TitleTextBlock = this.FindControl<TextBlock>( "TitleTextBlock" );
             TitleTextBlock.Text = Title;
 
             ColumnDefinition componentListColumn = MainGrid.ColumnDefinitions[0]
@@ -108,30 +98,15 @@ namespace KOTORModSync
 
             // Column 0
             componentListColumn.Width = new GridLength( 250 );
-            LeftTreeView = this.FindControl<TreeView>( "LeftTreeView" );
-            ApplyEditorButton = this.FindControl<Button>( "ApplyEditorButton" );
-            // Column 1
-            ComponentsItemsControl = this.FindControl<ItemsControl>( "ComponentsItemsControl" );
-            ComponentsItemsControl2 = this.FindControl<ItemsControl>( "ComponentsItemsControl2" );
-            TabControl = this.FindControl<TabControl>( "TabControl" );
-            InitialTab = this.FindControl<TabItem>( "InitialTab" );
-            SummaryTabItem = this.FindControl<TabItem>( "SummaryTabItem" );
-            GuiEditTabItem = this.FindControl<TabItem>( "GuiEditTabItem" );
-            RawEditTabItem = this.FindControl<TabItem>( "RawEditTabItem" );
-            RawEditTextBox = this.FindControl<TextBox>( "RawEditTextBox" )
-                ?? throw new NullReferenceException( "RawEditTextBox not defined for MainWindow." );
 
+            // Column 1
             RawEditTextBox.LostFocus
                 += RawEditTextBox_LostFocus; // Prevents RawEditTextBox from being cleared when clicking elsewhere(?)
             RawEditTextBox.DataContext = new ObservableCollection<string>();
 
-            GuidGeneratedTextBox = this.FindControl<TextBox>( "GuidGeneratedTextBox" );
-
             // Column 3
             configColumn.Width = new GridLength( 250 );
             MainConfigInstance = new MainConfig();
-            MainConfigStackPanel = this.FindControl<StackPanel>( "MainConfigStackPanel" )
-                ?? throw new NullReferenceException( "MainConfigStackPanel not defined for MainWindow." );
 
             MainConfigStackPanel.DataContext = MainConfigInstance;
 
@@ -140,7 +115,7 @@ namespace KOTORModSync
             PointerPressed += InputElement_OnPointerPressed;
             PointerMoved += InputElement_OnPointerMoved;
             PointerReleased += InputElement_OnPointerReleased;
-            PointerLeave += InputElement_OnPointerReleased;
+            PointerExited += InputElement_OnPointerReleased;
             FindComboBoxesInWindow( this );
         }
 
@@ -179,8 +154,7 @@ namespace KOTORModSync
                 ApplySearchVisibility( controlItem, thisComponent.Name, searchText );
 
             // Iterate through the child items (TreeViewItem only)
-            IEnumerable<ILogical> controlItemArray = controlItem.GetLogicalChildren()
-                ?? Array.Empty<ILogical>();
+            IEnumerable<ILogical> controlItemArray = controlItem.GetLogicalChildren();
             foreach ( TreeViewItem childItem in controlItemArray.OfType<TreeViewItem>() )
             {
                 // Recursively filter the child item (TreeViewItem only)
@@ -189,7 +163,7 @@ namespace KOTORModSync
         }
 
         private static void ApplySearchVisibility(
-            [NotNull] IVisual item,
+            [NotNull] Visual item,
             [NotNull] string itemName,
             [NotNull] string searchText
         )
@@ -288,9 +262,6 @@ namespace KOTORModSync
                 _mouseDownForWindowMoving = false;
                 return;
             }
-
-            if ( _originalPoint is null )
-                return;
 
             PointerPoint currentPoint = e.GetCurrentPoint( this );
             Position = new PixelPoint(
@@ -661,7 +632,7 @@ namespace KOTORModSync
             }
         }
 
-        private void OpenLink_Click( [NotNull] object sender, [NotNull] RoutedEventArgs e )
+        private void OpenLink_Click( [NotNull] object sender, [NotNull] TappedEventArgs e )
         {
             if ( !( sender is TextBlock textBlock ) )
                 return;
@@ -1470,6 +1441,7 @@ namespace KOTORModSync
                 if ( _currentComponent is null )
                 {
                     await Logger.LogVerboseAsync( "No component loaded, tabs can't be used until one is loaded first." );
+                    SetTabInternal(tabControl, InitialTab);
                     return;
                 }
 
@@ -1627,8 +1599,15 @@ namespace KOTORModSync
             }
 
             // bind the selected component to the gui editor
-            ComponentsItemsControl.Items = new ObservableCollection<Component>{ selectedComponent };
-            ComponentsItemsControl2.Items = new ObservableCollection<Component>{ selectedComponent };
+            IEnumerable currentItems = ComponentsItemsControl.Items;
+            var currentItemsList = currentItems?.Cast<Component>().ToList();
+
+            if (currentItemsList == null || !currentItemsList.Any() || currentItemsList.All(item => item == null) || currentItemsList[0] != selectedComponent)
+            {
+                ComponentsItemsControl.ItemsSource = new ObservableCollection<Component>{ selectedComponent };
+                ComponentsItemsControl2.ItemsSource = new ObservableCollection<Component>{ selectedComponent };
+            }
+
         }
 
         private void SetCurrentComponent( [CanBeNull] Component c ) => _currentComponent = c;
@@ -2043,33 +2022,47 @@ namespace KOTORModSync
         }
 
         [NotNull]
-        private Control CreateComponentHeader( [NotNull] Component component, int index )
+        private Control CreateComponentHeader([NotNull] Component component, int index)
         {
-            if ( component is null )
-                throw new ArgumentNullException( nameof( component ) );
+            if (component is null)
+                throw new ArgumentNullException(nameof(component));
 
-            CheckBox checkBox = CreateComponentCheckbox( component );
-            var header = new DockPanel
+            CheckBox checkBox = CreateComponentCheckbox(component);
+
+            var header = new Grid
             {
-                Children =
+                ColumnDefinitions =
                 {
-                    new TextBlock
-                    {
-                        VerticalAlignment = VerticalAlignment.Center,
-                        Text = $"{index + 1}: ",
-                        FontWeight = FontWeight.DemiBold,
-                        Margin = new Thickness( left: 0, top: 0, right: 5, bottom: 0 ),
-                    },
-                    checkBox,
-                    new TextBlock
-                    {
-                        VerticalAlignment = VerticalAlignment.Center, Text = $"{component.Name}",
-                    },
+                    new ColumnDefinition(0, GridUnitType.Auto),
+                    new ColumnDefinition(0, GridUnitType.Auto),
+                    new ColumnDefinition(1, GridUnitType.Star),
                 },
             };
+    
+            header.Children.Add(checkBox);
+            Grid.SetColumn(checkBox, 0);
+
+            var indexTextBlock = new TextBlock
+            {
+                VerticalAlignment = VerticalAlignment.Center,
+                Text = $"{index + 1}: ",
+                FontWeight = FontWeight.DemiBold,
+                Margin = new Thickness(left: 0, top: 0, right: 5, bottom: 0),
+            };
+            header.Children.Add(indexTextBlock);
+            Grid.SetColumn(indexTextBlock, 1);
+
+            var nameTextBlock = new TextBlock
+            {
+                VerticalAlignment = VerticalAlignment.Center, 
+                Text = $"{component.Name}",
+            };
+            header.Children.Add(nameTextBlock);
+            Grid.SetColumn(nameTextBlock, 2);
 
             return header;
         }
+
 
         private ICommand ItemClickCommand => new RelayCommand(
             parameter =>
@@ -2142,11 +2135,13 @@ namespace KOTORModSync
                 if ( component is null )
                     throw new ArgumentNullException( nameof( component ) );
 
-                if ( !( parentItem.Items is AvaloniaList<object> parentItemItems ) )
+                if ( !( parentItem.ItemsSource is AvaloniaList<object> parentItemItems ) )
                 {
-                    throw new InvalidCastException(
-                        "parentItem must have a non-nullable Items property and be of type AvaloniaList<object>."
-                    );
+                    parentItem.ItemsSource = new AvaloniaList<object>
+                    {
+                        CreateComponentItem( component, index ),
+                    };
+                    return;
                 }
 
                 TreeViewItem existingItem = FindExistingItem( parentItem, component );
@@ -2285,7 +2280,7 @@ namespace KOTORModSync
                 };
 
                 // Set the root item collection as the items source of the tree view
-                LeftTreeView.Items = rootItemsCollection;
+                LeftTreeView.ItemsSource = rootItemsCollection;
 
                 // Expand the tree. Too lazy to figure out the proper way.
                 IEnumerator treeEnumerator = LeftTreeView.Items.GetEnumerator();
@@ -2316,9 +2311,8 @@ namespace KOTORModSync
                 var addButton = (Button)sender;
                 var thisInstruction = addButton.Tag as Instruction;
                 var thisComponent = addButton.Tag as Component;
-                var thisOption = addButton.Tag as Option;
 
-                if ( thisInstruction is null && thisComponent is null && thisOption is null )
+                if ( thisInstruction is null && thisComponent is null )
                     throw new NullReferenceException( "Cannot find instruction instance from button." );
 
                 int index;
@@ -2327,12 +2321,6 @@ namespace KOTORModSync
                     thisInstruction = new Instruction();
                     index = thisComponent.Instructions.Count;
                     _currentComponent.CreateInstruction( index );
-                }
-                else if ( !( thisOption is null ) )
-                {
-                    thisInstruction = new Instruction();
-                    index = thisOption.Instructions.Count;
-                    thisOption.CreateInstruction( index );
                 }
                 else
                 {
@@ -2436,10 +2424,10 @@ namespace KOTORModSync
                 _canExecute = canExecute;
             }
 
-            [UsedImplicitly] public event EventHandler CanExecuteChanged;
+            [UsedImplicitly][CanBeNull] public event EventHandler CanExecuteChanged;
 
-            public bool CanExecute( object parameter ) => _canExecute?.Invoke( parameter ) == true;
-            public void Execute( object parameter ) => _execute( parameter );
+            public bool CanExecute( [CanBeNull] object parameter ) => _canExecute?.Invoke( parameter ) == true;
+            public void Execute( [CanBeNull] object parameter ) => _execute( parameter );
         }
 
         private void OpenOutputWindow_Click( [NotNull] object sender, [NotNull] RoutedEventArgs e )
@@ -2455,49 +2443,47 @@ namespace KOTORModSync
 
         private bool _initialize = true;
 
-        private void StyleComboBox_SelectionChanged( [NotNull] object sender, [NotNull] SelectionChangedEventArgs e )
+        private void StyleComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             try
             {
-                if ( _initialize )
+                if (_initialize)
                 {
                     _initialize = false;
                     return;
                 }
 
                 var comboBox = (ComboBox)sender;
-                var selectedItem = (ComboBoxItem)comboBox.SelectedItem;
+                var selectedItem = (ComboBoxItem)comboBox?.SelectedItem;
 
-                string stylePath = (string)selectedItem?.Tag;
+                string stylePath = selectedItem?.Tag as string;
 
-                Styles[0] = new Style();
-
-                if ( !( stylePath is null ) && stylePath.Equals( "default" ) )
+                if (!(stylePath is null) && stylePath.Equals("default"))
                 {
-                    InvalidateArrange(); // force repaint of entire window.
-                    InvalidateMeasure(); // force repaint of entire window.
-                    InvalidateVisual();  // force repaint of entire window.
-                    TraverseControls( this, (ISupportInitialize)sender );
+                    Styles.Clear();
+                    TraverseControls(this, (Control)sender);
                     return;
                 }
 
-                var styleUriPath = new Uri( "avares://KOTORModSync" + stylePath );
+                var styleUriPath = new Uri("avares://KOTORModSync" + stylePath);
 
                 // Apply the selected style dynamically
-                Styles[0] = new StyleInclude( styleUriPath )
+                var newStyle = new StyleInclude(styleUriPath)
                 {
-                    Source = styleUriPath,
+                    Source = styleUriPath
                 };
-                InvalidateArrange(); // force repaint of entire window.
-                InvalidateMeasure(); // force repaint of entire window.
-                InvalidateVisual();  // force repaint of entire window.
-                TraverseControls( this, (ISupportInitialize)sender );
+
+                Styles.Clear();
+                Styles.Add(newStyle);
+
+                TraverseControls(this, (Control)sender);
             }
-            catch ( Exception exception )
+            catch (Exception exception)
             {
-                Logger.LogException( exception );
+                Logger.LogException(exception);
             }
         }
+
 
         // Method to get a List<TabItem> from the TabControl
         public static List<TabItem> GetTabItems( [NotNull] TabControl tabControl)
@@ -2523,15 +2509,15 @@ namespace KOTORModSync
         }
 
         private static void TraverseControls(
-            [NotNull] IControl control,
-            [NotNull] ISupportInitialize styleControlComboBox
+            [NotNull] Control control,
+            [NotNull] Control styleControlComboBox
         )
         {
             if ( control is null )
                 throw new ArgumentNullException( nameof( control ) );
 
             // fixes a crash that can happen while spamming the combobox style options.
-            if ( control == styleControlComboBox )
+            if ( control.Equals(styleControlComboBox) )
                 return;
 
             // Reload the style of the control
@@ -2540,7 +2526,7 @@ namespace KOTORModSync
             var logicalControl = control as ILogical;
 
             // Traverse the child controls recursively
-            logicalControl.LogicalChildren?.OfType<IControl>()
+            logicalControl.LogicalChildren.OfType<Control>()
                 .ToList()
                 .ForEach(
                     childControl => TraverseControls(

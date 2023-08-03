@@ -11,6 +11,7 @@ using Avalonia.Data;
 using Avalonia.Data.Converters;
 using Avalonia.Utilities;
 using JetBrains.Annotations;
+using KOTORModSync.Core;
 
 namespace KOTORModSync.Converters
 {
@@ -19,9 +20,9 @@ namespace KOTORModSync.Converters
         [CanBeNull]
         public object Convert(
             [CanBeNull] object value,
-            Type targetType,
+            [NotNull] Type targetType,
             [CanBeNull] object parameter,
-            [CanBeNull] CultureInfo culture
+            [NotNull] CultureInfo culture
         )
         {
             if ( value is null )
@@ -33,20 +34,7 @@ namespace KOTORModSync.Converters
 
             if ( TypeUtilities.TryConvert( targetType, value, culture, out object result ) )
             {
-                var validActions = new List<string>
-                {
-                    "move",
-                    "delduplicate",
-                    "copy",
-                    "rename",
-                    "tslpatcher",
-                    "execute",
-                    "run",
-                    "delete",
-                    "choose",
-                    "extract",
-                };
-
+                IEnumerable<string> validActions = Enum.GetNames(typeof(Instruction.ActionType));
                 if ( validActions.Any(
                         action => string.Equals( action, (string)result, StringComparison.OrdinalIgnoreCase )
                     ) )
@@ -67,9 +55,9 @@ namespace KOTORModSync.Converters
         [CanBeNull]
         public object ConvertBack(
             [CanBeNull] object value,
-            [CanBeNull] Type targetType,
+            [NotNull] Type targetType,
             [CanBeNull] object parameter,
-            [CanBeNull] CultureInfo culture
+            [NotNull] CultureInfo culture
         ) =>
             Convert( value, targetType, parameter, culture );
     }

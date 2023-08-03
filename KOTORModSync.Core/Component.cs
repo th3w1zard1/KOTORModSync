@@ -404,7 +404,7 @@ namespace KOTORModSync.Core
                 Serializer.DeserializeGuidDictionary( instructionDict, key: "Dependencies" );
 
                 var instruction = new Instruction();
-                instruction.Action = GetRequiredValue<string>( instructionDict, key: "Action" );
+                instruction.Action = GetValueOrDefault<string>( instructionDict, key: "Action" );
                 _ = Logger.LogAsync(
                     $"{Environment.NewLine}-- Deserialize instruction #{index + 1} action {instruction.Action}"
                 );

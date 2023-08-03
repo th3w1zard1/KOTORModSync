@@ -119,7 +119,7 @@ namespace KOTORModSync.Controls
                     CultureInfo.CurrentCulture
                 ) as List<string>;
 
-                listBox.Items = new AvaloniaList<object>( convertedItems ?? throw new InvalidOperationException() );
+                listBox.ItemsSource = new AvaloniaList<object>( convertedItems ?? throw new InvalidOperationException() );
                 listBox.InvalidateVisual();
             }
             catch ( Exception exception )
@@ -155,7 +155,7 @@ namespace KOTORModSync.Controls
                     CultureInfo.CurrentCulture
                 ) as List<string>;
 
-                listBox.Items = new AvaloniaList<object>( convertedItems ?? throw new InvalidOperationException() );
+                listBox.ItemsSource = new AvaloniaList<object>( convertedItems ?? throw new InvalidOperationException() );
                 listBox.InvalidateVisual();
             }
             catch ( Exception exception )

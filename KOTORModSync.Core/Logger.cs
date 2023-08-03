@@ -51,7 +51,7 @@ namespace KOTORModSync.Core
                 Console.WriteLine( logMessage );
             }
 
-            Debug.WriteLine( logMessage );
+            //Debug.WriteLine( logMessage );
 
             string formattedDate = DateTime.Now.ToString( "yyyy-MM-dd" );
             File.AppendAllText( LogFileName + formattedDate + ".txt", logMessage + Environment.NewLine );

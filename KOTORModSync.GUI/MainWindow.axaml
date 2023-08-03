@@ -23,6 +23,7 @@
         <converters:EnumDescriptionConverter x:Key="EnumConverter" />
         <converters:StringToGuidConverter x:Key="GuidConverter" />
         <converters:NamespacesIniOptionConverter x:Key="NamespacesIniOptionConverter" />
+        <converters:KeyConverter x:Key="KeyConverter" />
     </Window.Resources>
 
     <Grid x:Name="MainGrid" MinWidth="200" RowDefinitions="Auto,*">
@@ -340,13 +341,18 @@
 
                                                                         <TextBlock Grid.Row="14" Grid.Column="0"
                                                                                    Text="Arguments (Namespace Ini Option):" />
+                                                                        <TextBlock Grid.Row="14" Grid.Column="1"
+                                                                            Text="Namespace Ini Option:" />
                                                                         <TextBox Grid.Row="15" Grid.Column="0"
                                                                             Focusable="True"
                                                                             Text="{Binding Arguments}" />
-                                                                        <ComboBox Grid.Row="15" Grid.Column="1"
-                                                                            Items="{Binding Converter={StaticResource NamespacesIniOptionConverter}}"
-                                                                            SelectedItem="{Binding Arguments}">
-                                                                        </ComboBox>
+                                                                        <ComboBox 
+                                                                            Grid.Row="15"
+                                                                            Grid.Column="1" 
+                                                                            Items="{Binding Converter={StaticResource NamespacesIniOptionConverter}}" 
+                                                                            SelectionChanged="ComboBox_SelectionChanged"
+                                                                        />
+
                                                                     </Grid>
                                                                 </Border>
                                                             </StackPanel>

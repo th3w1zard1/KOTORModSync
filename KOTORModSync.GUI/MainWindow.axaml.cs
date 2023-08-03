@@ -1548,6 +1548,39 @@ namespace KOTORModSync
             }
         }
 
+        private void ComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            try
+            {
+                // Get the ComboBox
+                if ( !( sender is ComboBox comboBox ) )
+                    return;
+
+                // Get the instruction
+                if ( !( comboBox.DataContext is Instruction thisInstruction ) )
+                    return;
+
+                // Get the selected item
+                string selectedItem = comboBox.SelectedItem as string;
+
+                // Convert Items to a List<string> and find the index
+                var itemsList = comboBox.Items?.Cast<string>().ToList();
+                int? index = itemsList?.IndexOf(selectedItem);
+
+                // Assign to instruction.
+                if ( index != null )
+                {
+                    thisInstruction.Arguments = index.ToString();
+                    thisInstruction.Action = "TSLPatcher";
+                }
+            }
+            catch ( Exception exception )
+            {
+                Logger.LogException( exception );
+            }
+        }
+
+
         [CanBeNull]
         private TabItem GetCurrentTabItem( [CanBeNull] TabControl tabControl ) => (tabControl ?? TabControl)?.SelectedItem as TabItem;
 

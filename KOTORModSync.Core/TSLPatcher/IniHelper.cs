@@ -80,7 +80,7 @@ namespace KOTORModSync.Core.TSLPatcher
             }
         }
 
-        public static Dictionary<string, string> ReadNamespacesIniFromArchive( [NotNull] string archivePath )
+        public static Dictionary<string, Dictionary<string, string>> ReadNamespacesIniFromArchive( [NotNull] string archivePath )
         {
             if ( string.IsNullOrWhiteSpace( archivePath ) )
                 throw new ArgumentException( message: "Value cannot be null or whitespace.", nameof( archivePath ) );
@@ -97,7 +97,7 @@ namespace KOTORModSync.Core.TSLPatcher
             return null; // Folder 'tslpatchdata' or 'namespaces.ini' not found in the archive.
         }
 
-        public static Dictionary<string, string> ReadNamespacesIniFromArchive( [NotNull] Stream archiveStream)
+        public static Dictionary<string, Dictionary<string, string>> ReadNamespacesIniFromArchive( [NotNull] Stream archiveStream)
         {
             if ( archiveStream is null )
                 throw new ArgumentNullException( nameof( archiveStream ) );
@@ -119,7 +119,7 @@ namespace KOTORModSync.Core.TSLPatcher
             return null; // Folder 'tslpatchdata' or 'namespaces.ini' not found in the archive.
         }
 
-        private static Dictionary<string, string> TraverseDirectories(IEnumerable<IArchiveEntry> entries, [NotNull] string currentDirectory)
+        private static Dictionary<string, Dictionary<string, string>> TraverseDirectories(IEnumerable<IArchiveEntry> entries, [NotNull] string currentDirectory)
         {
             if ( currentDirectory is null )
                 throw new ArgumentNullException( nameof( currentDirectory ) );
@@ -139,7 +139,7 @@ namespace KOTORModSync.Core.TSLPatcher
                                 || e.Key.StartsWith( entry.Key + "\\" )
                             )
                     );
-                    Dictionary<string, string> result = TraverseDirectories(subDirectoryEntries, entry.Key);
+                    Dictionary<string, Dictionary<string, string>> result = TraverseDirectories(subDirectoryEntries, entry.Key);
                     if (result != null)
                         return result;
                 }
@@ -165,30 +165,42 @@ namespace KOTORModSync.Core.TSLPatcher
             return null; // No matching 'tslpatchdata/namespaces.ini' found in this directory or its subdirectories
         }
 
-        public static Dictionary<string, string> ParseNamespacesIni(StreamReader reader)
+        public static Dictionary<string, Dictionary<string, string>> ParseNamespacesIni(StreamReader reader)
         {
             if (reader is null)
                 throw new ArgumentNullException(nameof(reader));
 
-            var namespaces = new Dictionary<string, string>();
+            var sections = new Dictionary<string, Dictionary<string, string>>();
+            Dictionary<string, string> currentSection = null;
+
             string line;
             while ((line = reader.ReadLine()) != null)
             {
                 line = line.Trim();
-                if (string.IsNullOrWhiteSpace(line) || !line.StartsWith("Namespace"))
-                    continue;
 
-                int separatorIndex = line.IndexOf('=');
-                if (separatorIndex == -1)
-                    continue;
+                // Checks if the line is a section header
+                if (line.StartsWith("[") && line.EndsWith("]"))
+                {
+                    string sectionName = line.Substring(1, line.Length - 2);
+                    currentSection = new Dictionary<string, string>();
+                    sections[sectionName] = currentSection;
+                }
+                // Checks if the line is a key-value pair
+                else if (currentSection != null && line.Contains("="))
+                {
+                    string[] keyValue = line.Split('=');
+                    if (keyValue.Length != 2)
+                        continue;
 
-                string key = line.Substring(0, separatorIndex).Trim().Substring( 9 );
-                string value = line.Substring(separatorIndex + 1).Trim();
-                namespaces[key] = value;
+                    string key = keyValue[0].Trim();
+                    string value = keyValue[1].Trim();
+                    currentSection[key] = value;
+                }
             }
 
-            return namespaces;
+            return sections;
         }
+
 
     }
 }

@@ -5,7 +5,7 @@
         x:Class="KOTORModSync.ProgressWindow">
     <StackPanel>
         <TextBlock x:Name="ProgressTextBlock" HorizontalAlignment="Center" VerticalAlignment="Center"
-                   TextAlignment="Center" FontSize="16" TextWrapping="Wrap" TextTrimming="CharacterEllipsis"
+                   TextAlignment="Center" FontSize="16" TextWrapping="Wrap"
                    Margin="10" />
         <ProgressBar x:Name="ProgressBar" Minimum="0" Maximum="1" Value="0" HorizontalAlignment="Center"
                      VerticalAlignment="Bottom" Width="200" Margin="10" />

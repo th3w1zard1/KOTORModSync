@@ -38,7 +38,10 @@ namespace KOTORModSync.Converters
             }
             catch ( FormatException e )
             {
-                return new BindingNotification( new FormatException( e.Message ), BindingErrorType.DataValidationError );
+                return new BindingNotification(
+                    new FormatException( e.Message ),
+                    BindingErrorType.DataValidationError
+                );
             }
             catch ( Exception ex )
             {

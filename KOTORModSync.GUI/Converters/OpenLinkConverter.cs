@@ -32,7 +32,8 @@ namespace KOTORModSync.Converters
             return null;
         }
 
-        public object ConvertBack( object value, Type targetType, object parameter, CultureInfo culture ) => throw new NotImplementedException();
+        public object ConvertBack( object value, Type targetType, object parameter, CultureInfo culture ) =>
+            throw new NotImplementedException();
 
         private static void OpenLink( [NotNull] string url )
         {
@@ -49,8 +50,7 @@ namespace KOTORModSync.Converters
                     _ = Process.Start(
                         new ProcessStartInfo
                         {
-                            FileName = url,
-                            UseShellExecute = true,
+                            FileName = url, UseShellExecute = true,
                         }
                     );
                 }

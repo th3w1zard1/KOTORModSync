@@ -16,10 +16,20 @@ namespace KOTORModSync.Tests
         {
             // Create test directories and files
             _ = Directory.CreateDirectory(
-                Path.Combine( _basePath, path2: "Ultimate Korriban High Resolution-TPC Version-1", path3: "Korriban HR", path4: "Override" )
+                Path.Combine(
+                    _basePath,
+                    path2: "Ultimate Korriban High Resolution-TPC Version-1",
+                    path3: "Korriban HR",
+                    path4: "Override"
+                )
             );
             _ = Directory.CreateDirectory(
-                Path.Combine( _basePath, path2: "Ultimate Korriban High Resolution-TPC Version-2", path3: "Korriban HR", path4: "Override" )
+                Path.Combine(
+                    _basePath,
+                    path2: "Ultimate Korriban High Resolution-TPC Version-2",
+                    path3: "Korriban HR",
+                    path4: "Override"
+                )
             );
             _ = Directory.CreateDirectory(
                 Path.Combine(
@@ -121,7 +131,10 @@ namespace KOTORModSync.Tests
 
             foreach ( string path in pathsToTest )
             {
-                List<string> paths = new() { path };
+                List<string> paths = new()
+                {
+                    path,
+                };
                 List<string> files = PathHelper.EnumerateFilesWithWildcards( paths );
                 Console.WriteLine( $"Files found for path: {path}" );
                 foreach ( string? file in files )
@@ -138,10 +151,20 @@ namespace KOTORModSync.Tests
         {
             // Create test directories and files
             _ = Directory.CreateDirectory(
-                Path.Combine( _basePath, path2: "Ultimate Korriban High Resolution-TPC Version-1", path3: "Korriban HR", path4: "Override" )
+                Path.Combine(
+                    _basePath,
+                    path2: "Ultimate Korriban High Resolution-TPC Version-1",
+                    path3: "Korriban HR",
+                    path4: "Override"
+                )
             );
             _ = Directory.CreateDirectory(
-                Path.Combine( _basePath, path2: "Ultimate Korriban High Resolution-TPC Version-2", path3: "Korriban HR", path4: "Override" )
+                Path.Combine(
+                    _basePath,
+                    path2: "Ultimate Korriban High Resolution-TPC Version-2",
+                    path3: "Korriban HR",
+                    path4: "Override"
+                )
             );
             _ = Directory.CreateDirectory(
                 Path.Combine(
@@ -235,12 +258,22 @@ namespace KOTORModSync.Tests
                     "file2.txt"
                 ),
                 Path.Combine( _basePath, "Ultimate * High Resolution-TPC Version-*", "*", "Override", "*", "*" ),
-                Path.Combine( _basePath, path2: "Ultimate_Robes_Repair_For_TSL*", path3: "Ultimate_Robes_Repair_For_TSL*", path4: "*.*" ),
+                Path.Combine(
+                    _basePath,
+                    path2: "Ultimate_Robes_Repair_For_TSL*",
+                    path3: "Ultimate_Robes_Repair_For_TSL*",
+                    path4: "*.*"
+                ),
             };
 
             foreach ( string path in pathsToTest )
             {
-                List<string> files = PathHelper.EnumerateFilesWithWildcards( new List<string> { path } );
+                List<string> files = PathHelper.EnumerateFilesWithWildcards(
+                    new List<string>
+                    {
+                        path,
+                    }
+                );
                 Assert.That( files, Is.Empty, $"Files found for path: {path}" );
             }
         }

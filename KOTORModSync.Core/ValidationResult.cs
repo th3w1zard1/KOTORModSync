@@ -17,10 +17,10 @@ namespace KOTORModSync.Core
         )
         {
             if ( validator == null )
-                throw new ArgumentNullException( nameof(validator) );
+                throw new ArgumentNullException( nameof( validator ) );
 
             Component = validator.ComponentToValidate;
-            Instruction = instruction ?? throw new ArgumentNullException(nameof(instruction));
+            Instruction = instruction ?? throw new ArgumentNullException( nameof( instruction ) );
             InstructionIndex = Component.Instructions.IndexOf( instruction );
             Message = message;
             IsError = isError;

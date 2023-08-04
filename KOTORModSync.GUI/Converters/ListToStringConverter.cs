@@ -74,12 +74,24 @@ namespace KOTORModSync.Converters
 
                 if ( targetType != typeof( List<Guid> ) )
                 {
-                    return text.Split( new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries )
+                    return text.Split(
+                            new[]
+                            {
+                                Environment.NewLine,
+                            },
+                            StringSplitOptions.RemoveEmptyEntries
+                        )
                         .ToList();
                 }
 
                 string[] lines = RemoveSpacesExceptNewLine( text )
-                    .Split( new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries );
+                    .Split(
+                        new[]
+                        {
+                            Environment.NewLine,
+                        },
+                        StringSplitOptions.RemoveEmptyEntries
+                    );
 
                 var guids = new List<Guid>();
                 foreach ( string line in lines )

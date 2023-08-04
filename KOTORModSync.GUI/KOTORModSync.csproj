@@ -54,6 +54,9 @@
       <!-- I believe this builds the 'KOTORModSync.Core.dll' separate rather than packaging into EXE/another dll. -->
       <PrivateAssets>none</PrivateAssets>
     </ProjectReference>
+    <PackageReference Include="Avalonia.Controls.ItemsRepeater" Version="11.0.2" />
+    <PackageReference Include="Avalonia.ReactiveUI" Version="11.0.2" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="11.0.2" />
     <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
   </ItemGroup>
 
@@ -66,14 +69,19 @@
   <ItemGroup>
     <ProjectCapability Include="Avalonia" />
     <TrimmerRootAssembly Include="Avalonia.Themes.Fluent" />
-    <PackageReference Include="Avalonia" Version="0.10.21" />
-    <PackageReference Include="Avalonia.Desktop" Version="0.10.21" />
-    <PackageReference Include="Avalonia.LinuxFramebuffer" Version="0.10.21" />
+    <PackageReference Include="Avalonia" Version="11.0.2" />
+    <PackageReference Include="Avalonia.Desktop" Version="11.0.2" />
+    <PackageReference Include="Avalonia.LinuxFramebuffer" Version="11.0.2" />
     <!--Condition below is needed to remove Avalonia.Diagnostics package from build output in Release configuration.-->
-    <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="0.10.21" />
-    <PackageReference Include="XamlNameReferenceGenerator" Version="1.6.1" />
+    <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="11.0.2" />
     <AvaloniaXaml Update="Styles\LegacyStyle.axaml">
-      <Generator>MSBuild:Compile</Generator>
+	    <Generator>MSBuild:Compile</Generator>
+    </AvaloniaXaml>
+    <AvaloniaXaml Update="Styles\Kotor2Style.axaml">
+	    <Generator>MSBuild:Compile</Generator>
+    </AvaloniaXaml>
+    <AvaloniaXaml Update="Styles\KotorStyle.axaml">
+	    <Generator>MSBuild:Compile</Generator>
     </AvaloniaXaml>
   </ItemGroup>
   <ItemGroup>
@@ -111,29 +119,11 @@
   </PropertyGroup>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent" Condition=" '$(OS)' == 'Windows_NT'">
-    <!-- <Exec Condition=" '$(RuntimeIdentifier)' == 'linux-x64' OR '$(RuntimeIdentifier)' == 'osx-x64' "
-          Command="$(CopyCommand) $(SolutionDir)vendor\bin\TSLPatcherCLI $(TargetDir)Resources$(DirectorySeparatorChar)" /> TODO-->
     <Exec Condition=" '$(RuntimeIdentifier)' == 'linux-x64' OR '$(RuntimeIdentifier)' == 'osx-x64' " Command="$(CopyCommand) $(SolutionDir)vendor\bin\pykotorcli $(TargetDir)Resources$(DirectorySeparatorChar)" />
     <Exec Condition=" '$(RuntimeIdentifier)' == 'linux-x64' OR '$(RuntimeIdentifier)' == 'osx-x64' " Command="$(CopyCommand) $(SolutionDir)vendor\bin\pykotorcli $(PublishDir)Resources$(DirectorySeparatorChar)" />
 
-    <!-- <Exec Condition=" '$(RuntimeIdentifier)' != 'linux-x64' AND '$(RuntimeIdentifier)' != 'osx-x64' "
-          Command="$(CopyCommand) $(SolutionDir)vendor\bin\TSLPatcherCLI.exe $(TargetDir)Resources$(DirectorySeparatorChar)" />
-    <Exec Condition=" '$(RuntimeIdentifier)' != 'linux-x64' AND '$(RuntimeIdentifier)' != 'osx-x64' "
-          Command="$(CopyCommand) $(SolutionDir)vendor\bin\TSLPatcherCLI.exe $(PublishDir)Resources$(DirectorySeparatorChar)" /> -->
-
     <Exec Condition=" '$(RuntimeIdentifier)' != 'linux-x64' AND '$(RuntimeIdentifier)' != 'osx-x64' " Command="$(CopyCommand) $(SolutionDir)vendor\bin\pykotorcli.exe $(TargetDir)Resources$(DirectorySeparatorChar)" />
     <Exec Condition=" '$(RuntimeIdentifier)' != 'linux-x64' AND '$(RuntimeIdentifier)' != 'osx-x64' " Command="$(CopyCommand) $(SolutionDir)vendor\bin\pykotorcli.exe $(PublishDir)Resources$(DirectorySeparatorChar)" />
-
-
-    <!-- WindowsDeleteString returntype changes from int to IntPtr HRESULT after net framework 4.x.x, replace with our patches. -->
-    <Exec Condition=" '$(Platform)'=='x86' AND '$(TargetFramework)' == 'net462' " Command="$(CopyCommand) $(SolutionDir)vendor$(DirectorySeparatorChar)lib$(DirectorySeparatorChar)Avalonia.Win32_net4.x_x86.dll $(TargetDir)" />
-    <Exec Condition=" '$(Platform)'=='x86' AND '$(TargetFramework)' == 'net462' " Command="$(CopyCommand) $(SolutionDir)vendor$(DirectorySeparatorChar)lib$(DirectorySeparatorChar)Avalonia.Win32_net4.x_x86.dll $(PublishDir)" />
-
-    <Exec Condition=" '$(Platform)'=='x86' AND '$(TargetFramework)' == 'net462' " Command="$(DeleteCommand) $(TargetDir)Avalonia.Win32.dll" />
-    <Exec Condition=" '$(Platform)'=='x86' AND '$(TargetFramework)' == 'net462' " Command="$(DeleteCommand) $(PublishDir)Avalonia.Win32.dll" />
-
-    <Exec Condition=" '$(Platform)'=='x86' AND '$(TargetFramework)' == 'net462' " Command="$(RenameCommand) $(TargetDir)Avalonia.Win32_net4.x_x86.dll Avalonia.Win32.dll" />
-    <Exec Condition=" '$(Platform)'=='x86' AND '$(TargetFramework)' == 'net462' " Command="$(RenameCommand) $(PublishDir)Avalonia.Win32_net4.x_x86.dll Avalonia.Win32.dll" />
   </Target>
 
   <!-- Delete logs and other temp output -->

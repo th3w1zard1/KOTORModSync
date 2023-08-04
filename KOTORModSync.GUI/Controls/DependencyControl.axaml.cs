@@ -7,12 +7,6 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Globalization;
 using Avalonia;
-/* Unmerged change from project 'KOTORModSync (net462)'
-Before:
-using System;
-After:
-using Avalonia;
-*/
 using Avalonia.Collections;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
@@ -27,7 +21,6 @@ namespace KOTORModSync.Controls
         public DependencyControl()
         {
             InitializeComponent();
-            DependenciesListBox = this.FindControl<ListBox>( "DependenciesListBox" );
         }
 
         // used to fix the move window code with combo boxes.
@@ -36,9 +29,7 @@ namespace KOTORModSync.Controls
             base.OnAttachedToVisualTree( e );
 
             if ( VisualRoot is MainWindow mainWindow )
-            {
                 mainWindow.FindComboBoxesInWindow( mainWindow );
-            }
         }
 
         public event EventHandler<PropertyChangedEventArgs> PropertyChanged2;
@@ -49,7 +40,8 @@ namespace KOTORModSync.Controls
             get => _searchText;
             set
             {
-                if ( _searchText == value ) return; // prevent recursion problems
+                if ( _searchText == value )
+                    return; // prevent recursion problems
 
                 _searchText = value;
                 PropertyChanged2?.Invoke( this, new PropertyChangedEventArgs( nameof( SearchText ) ) );
@@ -58,15 +50,14 @@ namespace KOTORModSync.Controls
 
         private void SearchText_PropertyChanged( object sender, PropertyChangedEventArgs e )
         {
-            if ( e.PropertyName != nameof( SearchText ) ) return;
+            if ( e.PropertyName != nameof( SearchText ) )
+                return;
 
             if ( !( VisualRoot is MainWindow mainWindow ) )
-            {
                 throw new NullReferenceException( "Could not get main window instance" );
-            }
 
             string searchText = SearchText;
-            mainWindow.FilterControlListItems( DependenciesListBox, searchText );
+            MainWindow.FilterControlListItems( DependenciesListBox, searchText );
         }
 
         [NotNull]
@@ -76,7 +67,8 @@ namespace KOTORModSync.Controls
         [NotNull]
         public List<Guid> ThisGuidList
         {
-            get => GetValue( ThisGuidListProperty ) ?? throw new NullReferenceException( "Could not retrieve property 'ThisGuidListProperty'" );
+            get => GetValue( ThisGuidListProperty )
+                ?? throw new NullReferenceException( "Could not retrieve property 'ThisGuidListProperty'" );
             set => SetValue( ThisGuidListProperty, value );
         }
 
@@ -87,7 +79,8 @@ namespace KOTORModSync.Controls
         [NotNull]
         public List<Component> ThisComponentList
         {
-            get => GetValue( ThisComponentListProperty ) ?? throw new NullReferenceException( "Could not retrieve property 'ThisComponentListProperty'" );
+            get => GetValue( ThisComponentListProperty )
+                ?? throw new NullReferenceException( "Could not retrieve property 'ThisComponentListProperty'" );
             set => SetValue( ThisComponentListProperty, value );
         }
 
@@ -96,36 +89,43 @@ namespace KOTORModSync.Controls
             try
             {
                 if ( !( sender is Button addButton ) )
-                {
                     throw new ArgumentException( "Sender is not a Button." );
-                }
 
                 if ( !( addButton.Tag is ComboBox comboBox ) )
-                {
                     throw new ArgumentException( "Button doesn't have a proper ComboBox tag." );
-                }
 
                 if ( !( comboBox.SelectedItem is Component selectedComponent ) )
-                {
                     return; // no selection
-                }
 
-                if ( !( comboBox.Tag is ListBox listBox ) )
-                {
+                if ( !( comboBox.Tag is ListBox listBox) )
                     throw new ArgumentException( "ComboBox does not have a ListBox Tag." );
+
+                if ( ThisGuidList.Contains( selectedComponent.Guid ) )
+                {
+                    return; // already in list.
                 }
 
                 ThisGuidList.Add( selectedComponent.Guid );
 
                 var convertedItems = new Converters.GuidListToComponentNames().Convert(
-                    new object[] { ThisGuidList, ThisComponentList },
+                    new object[]
+                    {
+                        ThisGuidList, ThisComponentList,
+                    },
                     ThisGuidList.GetType(),
                     parameter: null,
                     CultureInfo.CurrentCulture
                 ) as List<string>;
 
-                listBox.Items = new AvaloniaList<object>( convertedItems ?? throw new InvalidOperationException() );
+                listBox.ItemsSource = null;
+                listBox.ItemsSource = new AvaloniaList<object>( convertedItems ?? throw new InvalidOperationException() );
+
+                comboBox.Tag = listBox;
+                DependenciesListBox = listBox;
+
                 listBox.InvalidateVisual();
+                listBox.InvalidateArrange();
+                listBox.InvalidateMeasure();
             }
             catch ( Exception exception )
             {
@@ -138,33 +138,34 @@ namespace KOTORModSync.Controls
             try
             {
                 if ( !( sender is Button removeButton ) )
-                {
                     throw new ArgumentException( "Sender is not a Button." );
-                }
 
                 if ( !( removeButton.Tag is ListBox listBox ) )
-                {
                     throw new ArgumentException( "Button doesn't have a proper ListBox tag." );
-                }
 
                 int index = listBox.SelectedIndex;
 
                 if ( index < 0 || index >= ThisGuidList.Count )
-                {
                     return; // no selection
-                }
 
                 ThisGuidList.RemoveAt( index );
 
                 var convertedItems = new Converters.GuidListToComponentNames().Convert(
-                    new object[] { ThisGuidList, ThisComponentList },
+                    new object[]
+                    {
+                        ThisGuidList, ThisComponentList,
+                    },
                     ThisGuidList.GetType(),
                     parameter: null,
                     CultureInfo.CurrentCulture
                 ) as List<string>;
 
-                listBox.Items = new AvaloniaList<object>( convertedItems ?? throw new InvalidOperationException() );
+                listBox.ItemsSource = null;
+                listBox.ItemsSource = new AvaloniaList<object>( convertedItems ?? throw new InvalidOperationException() );
+                
                 listBox.InvalidateVisual();
+                listBox.InvalidateArrange();
+                listBox.InvalidateMeasure();
             }
             catch ( Exception exception )
             {

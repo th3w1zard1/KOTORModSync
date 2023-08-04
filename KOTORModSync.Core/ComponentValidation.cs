@@ -4,7 +4,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using JetBrains.Annotations;
@@ -31,13 +30,16 @@ namespace KOTORModSync.Core
         [NotNull] private readonly List<ValidationResult> _validationResults = new List<ValidationResult>();
         [NotNull] public readonly Component ComponentToValidate;
 
-        [NotNull] private readonly List<Component> ComponentsList;
+        [CanBeNull] private readonly List<Component> _componentsList;
 
-        public ComponentValidation( [NotNull] Component component, [NotNull] List<Component> componentsList )
+        public ComponentValidation( [NotNull] Component component, [CanBeNull] List<Component> componentsList = null )
         {
             ComponentToValidate = component ?? throw new ArgumentNullException( nameof( component ) );
-            ComponentsList = new List<Component>(
-                componentsList ?? throw new ArgumentNullException( nameof( componentsList ) )
+            if ( componentsList is null )
+                return;
+
+            _componentsList = new List<Component>(
+                componentsList
             );
         }
 
@@ -89,8 +91,6 @@ namespace KOTORModSync.Core
                 .Select( r => r.Message )
                 .ToList();
 
-        [SuppressMessage("ReSharper",
-            "HeuristicUnreachableCode")]
         private bool VerifyExtractPaths()
         {
             try
@@ -101,7 +101,7 @@ namespace KOTORModSync.Core
                 List<string> allArchives = GetAllArchivesFromInstructions();
 
                 // probably something wrong if there's no archives found.
-                if ( allArchives == null || allArchives.Count == 0 )
+                if ( allArchives.IsNullOrEmptyCollection() )
                 {
                     foreach ( Instruction instruction in ComponentToValidate.Instructions )
                     {
@@ -123,13 +123,21 @@ namespace KOTORModSync.Core
 
                 foreach ( Instruction instruction in ComponentToValidate.Instructions )
                 {
-                    // we already checked if the archive exists in GetAllArchivesFromInstructions.
-                    if ( instruction.Action.Equals( value: "extract", StringComparison.OrdinalIgnoreCase ) )
+                    if ( instruction.Action is null )
                     {
+                        AddError( "Action cannot be null", instruction );
+                        success = false;
                         continue;
                     }
 
-                    bool archiveNameFound = true;
+                    // we already checked if the archive exists in GetAllArchivesFromInstructions.
+                    if ( instruction.Action.Equals( value: "extract", StringComparison.OrdinalIgnoreCase ) )
+                        continue;
+
+                    // 'choose' action uses Source as list of guids to options.
+                    if ( instruction.Action.Equals( value: "choose", StringComparison.OrdinalIgnoreCase ) )
+                        continue;
+
                     // ReSharper disable once ConditionIsAlwaysTrueOrFalse
                     if ( instruction.Source is null )
                     {
@@ -137,23 +145,23 @@ namespace KOTORModSync.Core
                         success = false;
                         continue;
                     }
-
+                    
+                    bool archiveNameFound = true;
                     for ( int index = 0; index < instruction.Source.Count; index++ )
                     {
                         string sourcePath = PathHelper.FixPathFormatting( instruction.Source[index] );
 
                         // todo
                         if ( sourcePath.StartsWith( value: "<<kotorDirectory>>", StringComparison.OrdinalIgnoreCase ) )
-                        {
                             continue;
-                        }
 
                         // ensure tslpatcher.exe sourcePaths use the action 'tslpatcher'
                         if ( sourcePath.EndsWith( value: "tslpatcher.exe", StringComparison.OrdinalIgnoreCase )
                             && !instruction.Action.Equals( value: "tslpatcher", StringComparison.OrdinalIgnoreCase ) )
                         {
                             AddWarning(
-                                message: "'tslpatcher.exe' used in Source path without the action 'tslpatcher', was this intentional?",
+                                message:
+                                "'tslpatcher.exe' used in Source path without the action 'tslpatcher', was this intentional?",
                                 instruction
                             );
                         }
@@ -176,7 +184,10 @@ namespace KOTORModSync.Core
 
                             string path = string.Join(
                                 Path.DirectorySeparatorChar.ToString(),
-                                new[] { parts[0], duplicatedPart }.Concat( remainingParts )
+                                new[]
+                                {
+                                    parts[0], duplicatedPart,
+                                }.Concat( remainingParts )
                             );
 
                             result = IsSourcePathInArchives( path, allArchives, instruction );
@@ -211,7 +222,7 @@ namespace KOTORModSync.Core
         }
 
         [NotNull]
-        private List<string> GetAllArchivesFromInstructions()
+        public List<string> GetAllArchivesFromInstructions()
         {
             var allArchives = new List<string>();
 
@@ -232,7 +243,10 @@ namespace KOTORModSync.Core
 
                 foreach ( string realSourcePath in realPaths )
                 {
-                    if ( Path.GetExtension( realSourcePath ).Equals( value: ".exe", StringComparison.OrdinalIgnoreCase ) )
+                    if ( Path.GetExtension( realSourcePath ).Equals(
+                            value: ".exe",
+                            StringComparison.OrdinalIgnoreCase
+                        ) )
                     {
                         allArchives.Add( realSourcePath );
                         continue; // no way to verify self-extracting executables.
@@ -254,7 +268,7 @@ namespace KOTORModSync.Core
                         continue;
                     }
 
-                    if ( !Component.ShouldRunInstruction( instruction, ComponentsList ) )
+                    if ( !Component.ShouldRunInstruction( instruction, _componentsList ) )
                     {
                         continue;
                     }
@@ -277,7 +291,11 @@ namespace KOTORModSync.Core
                         continue;
                     // tslpatcher must always use <<kotorDirectory>> and nothing else.
                     case "tslpatcher" when string.IsNullOrEmpty( instruction.Destination ):
-                        AddWarning( message: "Destination must be <<kotorDirectory>> with 'TSLPatcher' action, setting it now automatically.", instruction );
+                        AddWarning(
+                            message:
+                            "Destination must be <<kotorDirectory>> with 'TSLPatcher' action, setting it now automatically.",
+                            instruction
+                        );
                         instruction.Destination = "<<kotorDirectory>>";
                         break;
 
@@ -298,7 +316,8 @@ namespace KOTORModSync.Core
                         }
 
                         break;
-                    // extract and delete cannot use the 'Destination' key.
+                    // choose, extract, and delete cannot use the 'Destination' key.
+                    case "choose":
                     case "extract":
                     case "delete":
                         if ( string.IsNullOrEmpty( instruction.Destination ) )
@@ -408,7 +427,7 @@ namespace KOTORModSync.Core
             {
                 if ( archivePath is null )
                 {
-                    AddError( "Archive is not a valid file path", instruction );
+                    AddError( message: "Archive is not a valid file path", instruction );
                     continue;
                 }
 
@@ -438,28 +457,28 @@ namespace KOTORModSync.Core
             if ( hasError )
             {
                 AddError( $"Invalid source path '{sourcePath}'. Reason: {errorDescription}", instruction );
-                return (false, archiveNameFound);
+                return ( false, archiveNameFound );
             }
 
-            if ( foundInAnyArchive || !Component.ShouldRunInstruction( instruction, ComponentsList ) )
+            if ( foundInAnyArchive || !Component.ShouldRunInstruction( instruction, _componentsList ) )
             {
-                return (true, true);
+                return ( true, true );
             }
 
             // todo, stop displaying errors for self extracting executables. This is the only mod using one that I've seen out of 200-some.
             if ( ComponentToValidate.Name.Equals( value: "Improved AI", StringComparison.OrdinalIgnoreCase ) )
             {
-                return (true, true);
+                return ( true, true );
             }
 
             // archive not required if instruction isn't running.
-            if ( !Component.ShouldRunInstruction( instruction, ComponentsList, isInstall: false ) )
+            if ( !Component.ShouldRunInstruction( instruction, _componentsList ) )
             {
-                return (true, true);
+                return ( true, true );
             }
 
             AddError( $"Failed to find '{sourcePath}' in any archives!", instruction );
-            return (false, archiveNameFound);
+            return ( false, archiveNameFound );
         }
 
         private static ArchivePathCode IsPathInArchive( [NotNull] string relativePath, [NotNull] string archivePath )

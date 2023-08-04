@@ -20,7 +20,10 @@ namespace KOTORModSync.Converters
             [CanBeNull] CultureInfo culture
         ) =>
             value is string action
-                ? new ComboBoxItem { Content = action }
+                ? new ComboBoxItem
+                {
+                    Content = action,
+                }
                 : (object)null;
 
         [CanBeNull]

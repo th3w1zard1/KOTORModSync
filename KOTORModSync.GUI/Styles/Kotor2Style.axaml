@@ -9,12 +9,16 @@
     <Style Selector="TextBlock">
         <Setter Property="FontSize" Value="14" />
         <Setter Property="FontWeight" Value="Normal" />
-        <Setter Property="Margin" Value="0,2" />
         <Setter Property="Foreground" Value="#33C3A2" />
+        <Setter Property="TextWrapping" Value="Wrap" />
+        <Setter Property="Margin" Value="0,5,0,2" />
+    </Style>
+
+    <Style Selector="Border">
+        <Setter Property="BorderBrush" Value="#33C3A2" />
     </Style>
 
     <Style Selector="Button:pointerover">
-        <Setter Property="TextBlock.Foreground" Value="#FFFFFF" />
         <Setter Property="Foreground" Value="#FFFFFF" />
     </Style>
     <Style Selector="Button:pointerover /template/ContentPresenter">
@@ -23,7 +27,6 @@
         <Setter Property="TextBlock.Foreground" Value="#FFFFFF" />
     </Style>
     <Style Selector="Button">
-        <Setter Property="Margin" Value="0,2" />
         <Setter Property="BorderThickness" Value="2" />
         <Setter Property="BorderBrush" Value="#CD134D40" />
         <Setter Property="Padding" Value="10" />
@@ -32,6 +35,23 @@
         <Setter Property="Foreground" Value="#33C3A2" />
         <Setter Property="HorizontalAlignment" Value="Center" />
         <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+    <Style Selector="Expander">
+        <Setter Property="Background" Value="#09241D" />
+        <Setter Property="Foreground" Value="#33C3A2" />
+    </Style>
+    <Style Selector="Expander /template/ ContentPresenter">
+        <Setter Property="Background" Value="#05110D"/>
+    </Style>
+    <Style Selector="Expander:expanded /template/ Border#ExpanderContent">
+        <Setter Property="Background" Value="#05110D" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="Padding" Value="0" />
+    </Style>
+    <Style Selector="Expander /template/ Border#ExpanderContent">
+        <Setter Property="Background" Value="#09241D" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="Padding" Value="0" />
     </Style>
 
     <Style Selector="TextBox:focus /template/ TextBlock#PART_Watermark">
@@ -67,14 +87,13 @@
     </Style>
     <Style Selector="TextBox">
         <Setter Property="CaretBrush" Value="AliceBlue" />
-        <Setter Property="Margin" Value="2" />
-        <Setter Property="Padding" Value="2" />
         <Setter Property="Background" Value="#09241D" />
         <Setter Property="FontFamily" Value="Verdana" />
         <Setter Property="Foreground" Value="#33C3A2" />
         <Setter Property="BorderBrush" Value="#134D40" />
         <Setter Property="BorderThickness" Value="2" />
         <Setter Property="FontSize" Value="14" />
+        <Setter Property="TextWrapping" Value="Wrap" />
     </Style>
     <Style Selector="ComboBox">
         <Setter Property="Background" Value="#09241D" />
@@ -97,7 +116,6 @@
     </Style>
 
     <Style Selector="TreeView">
-        <Setter Property="Margin" Value="2" />
         <Setter Property="MinWidth" Value="150" />
         <Setter Property="Background" Value="#09241D" />
     </Style>

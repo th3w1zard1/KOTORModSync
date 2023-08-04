@@ -14,9 +14,9 @@ namespace KOTORModSync.Core.Utility
         public static IniData MergeIniFiles( [NotNull] IniData iniData1, [NotNull] IniData iniData2 )
         {
             if ( iniData1 == null )
-                throw new ArgumentNullException( nameof(iniData1) );
+                throw new ArgumentNullException( nameof( iniData1 ) );
             if ( iniData2 == null )
-                throw new ArgumentNullException( nameof(iniData2) );
+                throw new ArgumentNullException( nameof( iniData2 ) );
 
             var mergedIniData = new IniData();
 
@@ -37,8 +37,8 @@ namespace KOTORModSync.Core.Utility
                 // If the section already exists in iniData1, append a number to the section name
                 string mergedSectionName = section.SectionName;
                 for ( int sectionNumber = 1;
-                     mergedIniData.Sections.ContainsSection( mergedSectionName );
-                     sectionNumber++ )
+                    mergedIniData.Sections.ContainsSection( mergedSectionName );
+                    sectionNumber++ )
                 {
                     mergedSectionName = section.SectionName + sectionNumber;
                 }

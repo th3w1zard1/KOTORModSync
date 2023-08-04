@@ -9,7 +9,6 @@ using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
-using Avalonia.Markup.Xaml;
 using Avalonia.Platform;
 using Avalonia.Threading;
 using JetBrains.Annotations;
@@ -24,9 +23,6 @@ namespace KOTORModSync
         public OptionsDialog()
         {
             InitializeComponent();
-            OptionTextBox = this.FindControl<TextBlock>( "OptionTextBox" );
-            OptionStackPanel = this.FindControl<StackPanel>( "OptionStackPanel" );
-            OkButton = this.FindControl<Button>( "OkButton" );
             OkButton.Click += OKButton_Click;
         }
 
@@ -36,8 +32,6 @@ namespace KOTORModSync
             get => GetValue( OptionsListProperty ) as List<string>;
             set => SetValue( OptionsListProperty, value );
         }
-
-        private void InitializeComponent() => AvaloniaXamlLoader.Load( this );
 
         private void OKButton_Click( [CanBeNull] object sender, [CanBeNull] RoutedEventArgs e )
         {
@@ -57,28 +51,29 @@ namespace KOTORModSync
 
         private void OnOpened( [CanBeNull] object sender, [CanBeNull] EventArgs e )
         {
-            StackPanel optionStackPanel = this.FindControl<StackPanel>( "OptionStackPanel" );
-
             foreach ( string option in OptionsList )
             {
-                var radioButton = new RadioButton { Content = option, GroupName = "OptionsGroup" };
-                optionStackPanel.Children.Add( radioButton );
+                var radioButton = new RadioButton
+                {
+                    Content = option, GroupName = "OptionsGroup",
+                };
+                OptionStackPanel.Children.Add( radioButton );
             }
 
             // Measure and arrange the optionStackPanel to update DesiredSize
-            optionStackPanel.Measure( new Size( double.PositiveInfinity, double.PositiveInfinity ) );
-            optionStackPanel.Arrange( new Rect( optionStackPanel.DesiredSize ) );
+            OptionStackPanel.Measure( new Size( double.PositiveInfinity, double.PositiveInfinity ) );
+            OptionStackPanel.Arrange( new Rect( OptionStackPanel.DesiredSize ) );
 
             // Get the actual size of the optionStackPanel including children and transformations
-            Size actualSize = optionStackPanel.Bounds.Size;
+            Size actualSize = OptionStackPanel.Bounds.Size;
 
             // Define padding values
             const double horizontalPadding = 100; // Padding on the left and right
-            const double verticalPadding = 150; // Padding on the top and bottom
+            const double verticalPadding = 150;   // Padding on the top and bottom
 
             // Calculate the desired width and height for the content with padding
-            double contentWidth = actualSize.Width + ( 2 * horizontalPadding );
-            double contentHeight = actualSize.Height + ( 2 * verticalPadding );
+            double contentWidth = actualSize.Width + 2 * horizontalPadding;
+            double contentHeight = actualSize.Height + 2 * verticalPadding;
 
             // Set the width and height of the window
             Width = contentWidth;
@@ -107,7 +102,10 @@ namespace KOTORModSync
             await Dispatcher.UIThread.InvokeAsync(
                 async () =>
                 {
-                    var optionsDialog = new OptionsDialog { OptionsList = optionsList };
+                    var optionsDialog = new OptionsDialog
+                    {
+                        OptionsList = optionsList,
+                    };
 
                     optionsDialog.Closed += ClosedHandler;
                     optionsDialog.Opened += optionsDialog.OnOpened;

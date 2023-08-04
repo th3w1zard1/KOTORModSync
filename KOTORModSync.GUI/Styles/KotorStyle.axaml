@@ -13,8 +13,11 @@
         <Setter Property="Foreground" Value="#3AAAFF" />
     </Style>
 
+    <Style Selector="Border">
+        <Setter Property="BorderBrush" Value="#3AAAFF" />
+    </Style>
+
     <Style Selector="Button:pointerover">
-        <Setter Property="TextBlock.Foreground" Value="#A8B348" />
         <Setter Property="Foreground" Value="#A8B348" />
     </Style>
     <Style Selector="Button:pointerover /template/ContentPresenter">
@@ -32,6 +35,7 @@
         <Setter Property="Foreground" Value="#3AAAFF" />
         <Setter Property="HorizontalAlignment" Value="Center" />
         <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="FontSize" Value="14" />
     </Style>
 
     <Style Selector="TextBox:focus /template/ TextBlock#PART_Watermark">
@@ -119,5 +123,19 @@
     </Style>
     <Style Selector="Window">
         <Setter Property="Background" Value="#000116" />
+    </Style>
+    
+    <Style Selector="Expander">
+        <Setter Property="Background" Value="#062766" />
+        <Setter Property="Foreground" Value="#3AAAFF" />
+    </Style>
+    <Style Selector="Expander /template/ ContentPresenter">
+        <Setter Property="Background" Value="#010116"/>
+    </Style>
+    <Style Selector="Expander:expanded /template/ Border#ExpanderContent">
+        <Setter Property="Background" Value="#010116" />
+    </Style>
+    <Style Selector="Expander:expanded /template/ Border#ExpanderContent">
+        <Setter Property="BorderThickness" Value="0" />
     </Style>
 </Styles>

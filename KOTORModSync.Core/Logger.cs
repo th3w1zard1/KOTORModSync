@@ -51,9 +51,11 @@ namespace KOTORModSync.Core
                 Console.WriteLine( logMessage );
             }
 
-            Debug.WriteLine( logMessage );
+            //Debug.WriteLine( logMessage );
 
             string formattedDate = DateTime.Now.ToString( "yyyy-MM-dd" );
+
+            // todo: see if file is locked from another async logger first.
             File.AppendAllText( LogFileName + formattedDate + ".txt", logMessage + Environment.NewLine );
 
             Logged.Invoke( logMessage ); // Raise the Logged event
@@ -135,7 +137,10 @@ namespace KOTORModSync.Core
             ExceptionLogged.Invoke( ex ); // Raise the ExceptionLogged event
         }
 
-        private static void CurrentDomain_UnhandledException( [NotNull] object sender, [NotNull] UnhandledExceptionEventArgs e )
+        private static void CurrentDomain_UnhandledException(
+            [NotNull] object sender,
+            [NotNull] UnhandledExceptionEventArgs e
+        )
         {
             if ( !( e.ExceptionObject is Exception ex ) )
             {

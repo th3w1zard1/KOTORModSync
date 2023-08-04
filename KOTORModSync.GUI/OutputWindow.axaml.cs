@@ -83,6 +83,8 @@ namespace KOTORModSync
                 {
                     lines = lines.Skip( lines.Length - _maxLinesShown ).ToArray();
                     logText = string.Join( Environment.NewLine, lines );
+                    _logBuilder.Clear();
+                    _logBuilder.Append( logText );
                 }
 
                 _ = Dispatcher.UIThread.InvokeAsync(

@@ -10,7 +10,6 @@ using Avalonia;
 using Avalonia.Collections;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
-using Avalonia.LogicalTree;
 using JetBrains.Annotations;
 using KOTORModSync.Core;
 using Component = KOTORModSync.Core.Component;

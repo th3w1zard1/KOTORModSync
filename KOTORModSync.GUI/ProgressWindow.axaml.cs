@@ -4,29 +4,15 @@
 
 using System.Threading.Tasks;
 using Avalonia.Controls;
-using Avalonia.Markup.Xaml;
 using JetBrains.Annotations;
 
 namespace KOTORModSync
 {
     public partial class ProgressWindow : Window
     {
-        public ProgressWindow()
-        {
-            InitializeComponent();
-            AttachControls();
-        }
-
-        private void InitializeComponent() => AvaloniaXamlLoader.Load( this );
-
-        private void AttachControls()
-        {
-            ProgressTextBlock = this.FindControl<TextBlock>( "ProgressTextBlock" );
-            ProgressBar = this.FindControl<ProgressBar>( "ProgressBar" );
-            InstalledRemaining = this.FindControl<TextBlock>( "InstalledRemaining" );
-            PercentCompleted = this.FindControl<TextBlock>( "PercentCompleted" );
-        }
-
+        public ProgressWindow() => InitializeComponent();
+        public void Dispose() => Close();
+        
         public static async Task ShowProgressWindow(
             [CanBeNull] Window parentWindow,
             [CanBeNull] string message,
@@ -48,7 +34,5 @@ namespace KOTORModSync
 
             _ = await progressWindow.ShowDialog<bool?>( parentWindow );
         }
-
-        public void Dispose() => Close();
     }
 }

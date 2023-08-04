@@ -7,7 +7,6 @@ using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
-using Avalonia.Markup.Xaml;
 using Avalonia.Threading;
 using JetBrains.Annotations;
 
@@ -26,8 +25,6 @@ namespace KOTORModSync
             get => GetValue( InfoTextProperty ) as string;
             set => SetValue( InfoTextProperty, value );
         }
-
-        private void InitializeComponent() => AvaloniaXamlLoader.Load( this );
 
         public static async Task ShowInformationDialog(
             [CanBeNull] Window parentWindow,
@@ -49,13 +46,6 @@ namespace KOTORModSync
         }
 
         private void OKButton_Click( [CanBeNull] object sender, [CanBeNull] RoutedEventArgs e ) => Close();
-
-        private void UpdateInfoText() => Dispatcher.UIThread.InvokeAsync(
-            () =>
-            {
-                TextBlock textBlock = this.FindControl<TextBlock>( "InfoTextBlock" );
-                textBlock.Text = InfoText;
-            }
-        );
+        private void UpdateInfoText() => Dispatcher.UIThread.InvokeAsync( () => InfoTextBlock.Text = InfoText );
     }
 }

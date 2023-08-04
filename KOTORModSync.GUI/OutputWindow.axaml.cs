@@ -7,7 +7,6 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using Avalonia.Controls;
-using Avalonia.Markup.Xaml;
 using Avalonia.Threading;
 using KOTORModSync.Core;
 
@@ -24,13 +23,8 @@ namespace KOTORModSync
             InitializeControls();
         }
 
-        private void InitializeComponent() => AvaloniaXamlLoader.Load( this );
-
         private void InitializeControls()
         {
-            LogTextBox = this.FindControl<TextBox>( "LogTextBox" );
-            LogScrollViewer = this.FindControl<ScrollViewer>( "LogScrollViewer" );
-
             _logBuilder = new StringBuilder( 65535 );
 
             // Subscribe to the Logger.Logged event to capture log messages

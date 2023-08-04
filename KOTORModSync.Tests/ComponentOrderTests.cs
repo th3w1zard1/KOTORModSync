@@ -527,22 +527,12 @@ namespace KOTORModSync.Tests
                 componentA, componentB, componentC,
             };
 
-            // Act
-            try
+            // Act & Assert
+            Assert.Throws<KeyNotFoundException>( () =>
             {
-                _ = Component.ConfirmComponentsInstallOrder( componentsList );
-            }
-            // Assert
-            catch ( KeyNotFoundException )
-            {
-                return;
-            }
+                _ = Component.ConfirmComponentsInstallOrder(componentsList);
+            }, "ConfirmComponentsInstallOrder should have raised a KeyNotFoundException");
 
-            Assert.That(
-                actual: false,
-                Is.True,
-                message: "ConfirmComponentsInstallOrder should have raised a KeyNotFoundException"
-            );
         }
 
         private static void Swap<T>( IList<T> list, int index1, int index2 ) =>

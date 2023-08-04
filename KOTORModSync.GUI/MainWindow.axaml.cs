@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -37,6 +38,7 @@ using NotNullAttribute = JetBrains.Annotations.NotNullAttribute;
 
 namespace KOTORModSync
 {
+    [SuppressMessage( "ReSharper", "UnusedParameter.Local" )]
     public partial class MainWindow : Window
     {
         public static List<Component> ComponentsList => MainConfig.AllComponents;
@@ -76,8 +78,7 @@ namespace KOTORModSync
             }
             catch ( Exception e )
             {
-                Logger.LogException( e );
-                Logger.LogError( "A fatal error has occurred loading the main window" );
+                Logger.LogException( e, "A fatal error has occurred loading the main window" );
                 throw;
             }
         }
@@ -137,7 +138,7 @@ namespace KOTORModSync
                 return;
 
             // Get the root item of the TreeView
-            var rootItem = (TreeViewItem)LeftTreeView.ItemContainerGenerator.ContainerFromIndex( 0 );
+            var rootItem = (TreeViewItem)LeftTreeView.ContainerFromIndex(0);
 
             FilterControlListItems( rootItem, SearchText );
         }
@@ -349,7 +350,7 @@ namespace KOTORModSync
         }
 
         [ItemCanBeNull]
-        private async Task<string> SaveFile( [CanBeNull] List<string> defaultExt = null )
+        private async Task<string> SaveFile( string saveWindowTitle, [CanBeNull] List<string> defaultExt = null )
         {
             try
             {
@@ -1230,6 +1231,8 @@ namespace KOTORModSync
                     progressWindow.Show();
                     _progressWindowClosed = false;
 
+                    Component.InstallExitCode exitCode = Component.InstallExitCode.UnknownError;
+
                     for ( int index = 0; index < MainConfig.AllComponents.Count; index++ )
                     {
                         if ( _progressWindowClosed )
@@ -1277,7 +1280,7 @@ namespace KOTORModSync
                         }
 
                         await Logger.LogAsync( $"Start Install of '{component.Name}'..." );
-                        Component.InstallExitCode exitCode = await component.InstallAsync( MainConfig.AllComponents );
+                        exitCode = await component.InstallAsync( MainConfig.AllComponents );
                         await Logger.LogAsync( $"Install of '{component.Name}' finished with exit code {exitCode}" );
 
                         if ( exitCode != 0 )
@@ -1306,7 +1309,8 @@ namespace KOTORModSync
                         await Logger.LogAsync( $"Finished installed '{component.Name}'" );
                     }
 
-                    await InformationDialog.ShowInformationDialog( this, "All components successfully installed!" );
+                    if ( exitCode == Component.InstallExitCode.Success)
+                        await InformationDialog.ShowInformationDialog( this, "All components successfully installed!" );
 
                     progressWindow.Close();
                     _installRunning = false;
@@ -1325,15 +1329,22 @@ namespace KOTORModSync
 
         private void ProgressWindowClosed( [CanBeNull] object sender, [CanBeNull] EventArgs e )
         {
-            if ( !( sender is ProgressWindow progressWindow ) )
+            try
             {
-                return;
-            }
+                if ( !( sender is ProgressWindow progressWindow ) )
+                {
+                    return;
+                }
 
-            progressWindow.ProgressBar.Value = 0;
-            progressWindow.Closed -= ProgressWindowClosed;
-            progressWindow.Dispose();
-            _progressWindowClosed = true;
+                progressWindow.ProgressBar.Value = 0;
+                progressWindow.Closed -= ProgressWindowClosed;
+                progressWindow.Dispose();
+                _progressWindowClosed = true;
+            }
+            catch ( Exception exception )
+            {
+                Logger.LogException( exception );
+            }
         }
 
         private async void DocsButton_Click( [NotNull] object sender, [NotNull] RoutedEventArgs e )
@@ -1341,10 +1352,11 @@ namespace KOTORModSync
             try
             {
                 string file = await SaveFile(
+                    "Save instructions documentation to file",
                     new List<string>{ "txt" }
                 );
                 if ( file is null )
-                    return;
+                    return; // user cancelled
 
                 string docs = Component.GenerateModDocumentation( MainConfig.AllComponents );
                 await SaveDocsToFileAsync( file, docs );
@@ -1807,7 +1819,7 @@ namespace KOTORModSync
         {
             try
             {
-                string filePath = await SaveFile();
+                string filePath = await SaveFile(saveWindowTitle: "Save instructions config Tomlin");
                 if ( filePath is null )
                     return;
 

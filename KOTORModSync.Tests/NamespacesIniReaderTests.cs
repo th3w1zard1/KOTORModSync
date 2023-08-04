@@ -17,7 +17,6 @@ namespace KOTORModSync.Tests
         }
 
         [Test]
-        [Ignore("needs update")]
         public void ReadNamespacesIniFromArchive_WhenValidInput_ReturnsNamespaces()
         {
             // Arrange
@@ -27,6 +26,18 @@ Namespace1=standard
 Namespace2=hk50
 Namespace3=standardTSLRCM
 Namespace4=hk50TSLRCM
+
+[standard]
+Name=standard hk47 no tslrcm
+
+[hk50]
+Name=hk50 no tslrcm
+
+[standardTSLRCM]
+Name=standard hk47 with tslrcm
+
+[hk50TSLRCM]
+Name=hk50 with tslrcm
 ";
             Stream stream = CreateNamespacesIniStream(content);
 
@@ -34,12 +45,16 @@ Namespace4=hk50TSLRCM
             Dictionary<string, Dictionary<string, string>> result = IniHelper.ReadNamespacesIniFromArchive(stream);
 
             // Assert
-            Assert.IsNotNull(result);
+            Assert.That( result, Is.Not.Null );
             Assert.That( result.Count, Is.EqualTo( 4 ) );
-            Assert.That( result["Namespace1"], Is.EqualTo( "standard" ) );
-            Assert.That( result["Namespace2"], Is.EqualTo( "hk50" ) );
-            Assert.That( result["Namespace3"], Is.EqualTo( "standardTSLRCM" ) );
-            Assert.That( result["Namespace4"], Is.EqualTo( "hk50TSLRCM" ) );
+
+            Assert.Multiple( () =>
+            {
+                Assert.That( result["Namespace1"]["standard"], Is.EqualTo( "standard hk47 no tslrcm" ) );
+                Assert.That( result["Namespace2"]["hk50"], Is.EqualTo( "hk50 no tslrcm" ) );
+                Assert.That( result["Namespace3"]["standardTSLRCM"], Is.EqualTo( "standard hk47 with tslrcm" ) );
+                Assert.That( result["Namespace4"]["hk50TSLRCM"], Is.EqualTo( "hk50 with tslrcm" ) );
+            } );
         }
 
         [Test]
@@ -77,16 +92,29 @@ Namespace4=hk50TSLRCM
         }
 
         [Test]
-        [Ignore("needs update")]
         public void ParseNamespacesIni_WhenValidInput_ReturnsNamespaces()
         {
             // Arrange
             const string content = @"
+[Namespaces]
 Namespace1=standard
 Namespace2=hk50
 Namespace3=standardTSLRCM
 Namespace4=hk50TSLRCM
+
+[standard]
+Name=standard hk47 no tslrcm
+
+[hk50]
+Name=hk50 no tslrcm
+
+[standardTSLRCM]
+Name=standard hk47 with tslrcm
+
+[hk50TSLRCM]
+Name=hk50 with tslrcm
 ";
+
             using (var reader = new StreamReader(CreateNamespacesIniStream(content)))
             {
                 // Act
@@ -95,10 +123,13 @@ Namespace4=hk50TSLRCM
                 // Assert
                 Assert.IsNotNull(result);
                 Assert.That( result.Count, Is.EqualTo( 4 ) );
-                Assert.That( result["Namespace1"], Is.EqualTo( "standard" ) );
-                Assert.That( result["Namespace2"], Is.EqualTo( "hk50" ) );
-                Assert.That( result["Namespace3"], Is.EqualTo( "standardTSLRCM" ) );
-                Assert.That( result["Namespace4"], Is.EqualTo( "hk50TSLRCM" ) );
+                Assert.Multiple( () =>
+                {
+                    Assert.That( result["Namespace1"]["standard"], Is.EqualTo( "standard hk47 no tslrcm" ) );
+                    Assert.That( result["Namespace2"]["hk50"], Is.EqualTo( "hk50 no tslrcm" ) );
+                    Assert.That( result["Namespace3"]["standardTSLRCM"], Is.EqualTo( "standard hk47 with tslrcm" ) );
+                    Assert.That( result["Namespace4"]["hk50TSLRCM"], Is.EqualTo( "hk50 with tslrcm" ) );
+                } );
             }
         }
 

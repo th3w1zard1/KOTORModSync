@@ -54,6 +54,8 @@ namespace KOTORModSync.Core
             //Debug.WriteLine( logMessage );
 
             string formattedDate = DateTime.Now.ToString( "yyyy-MM-dd" );
+
+            // todo: see if file is locked from another async logger first.
             File.AppendAllText( LogFileName + formattedDate + ".txt", logMessage + Environment.NewLine );
 
             Logged.Invoke( logMessage ); // Raise the Logged event

@@ -887,6 +887,7 @@ namespace KOTORModSync.Core
                         exitCode = instruction.MoveFile();
                         break;
                     case "rename":
+                        instruction.SetRealPaths(true);
                         exitCode = instruction.RenameFile();
                         break;
                     case "patch":

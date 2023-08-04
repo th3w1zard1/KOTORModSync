@@ -190,8 +190,12 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
 
             if ( !thisDestination.Exists )
             {
-                string caseSensitiveDestination = PathHelper.GetCaseSensitivePath( thisDestination.FullName )
-                    ?? throw new DirectoryNotFoundException( "Could not find the 'Destination' path!" );
+                string caseSensitiveDestination = PathHelper.GetCaseSensitivePath( thisDestination.FullName );
+                if ( !noValidate && caseSensitiveDestination is null )
+                    throw new DirectoryNotFoundException( "Could not find the 'Destination' path!" );
+
+                if ( caseSensitiveDestination is null )
+                    return;
 
                 thisDestination = new DirectoryInfo( caseSensitiveDestination );
             }
@@ -579,7 +583,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                         if ( !Overwrite )
                         {
                             Logger.Log(
-                                $"Skipping file '{Path.GetFileName( destinationFilePath )}' ( Overwrite set to False )"
+                                $"File already exists, skipping file '{Path.GetFileName( destinationFilePath )}' ( Overwrite set to False )"
                             );
 
                             continue;
@@ -631,7 +635,7 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                         if ( !Overwrite )
                         {
                             Logger.Log(
-                                $"Skipping file '{Path.GetFileName( destinationFilePath )}' ( Overwrite set to False )"
+                                $"File already exists, skipping file '{Path.GetFileName( destinationFilePath )}' ( Overwrite set to False )"
                             );
 
                             continue;

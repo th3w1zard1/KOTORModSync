@@ -123,6 +123,12 @@ namespace KOTORModSync.Core
 
                 foreach ( Instruction instruction in ComponentToValidate.Instructions )
                 {
+                    if ( instruction.Action is null )
+                    {
+                        AddError( "Action cannot be null", instruction );
+                        continue;
+                    }
+
                     // we already checked if the archive exists in GetAllArchivesFromInstructions.
                     if ( instruction.Action.Equals( value: "extract", StringComparison.OrdinalIgnoreCase ) )
                         continue;
@@ -309,7 +315,8 @@ namespace KOTORModSync.Core
                         }
 
                         break;
-                    // extract and delete cannot use the 'Destination' key.
+                    // choose, extract, and delete cannot use the 'Destination' key.
+                    case "choose":
                     case "extract":
                     case "delete":
                         if ( string.IsNullOrEmpty( instruction.Destination ) )

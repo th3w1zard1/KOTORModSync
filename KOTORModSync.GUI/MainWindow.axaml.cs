@@ -2159,15 +2159,10 @@ namespace KOTORModSync
         [NotNull]
         private TreeViewItem CreateRootTreeViewItem()
         {
-            var rootItem = new TreeViewItem
-            {
-                IsExpanded = true,
-            };
             var checkBox = new CheckBox
             {
-                Name = "IsSelected", IsChecked = true,
+                Name = "IsSelected",
             };
-            var binding = new Binding( path: "IsSelected" );
 
             // Set up the event handler for the checkbox
             bool manualSet = false;
@@ -2211,7 +2206,6 @@ namespace KOTORModSync
             };
 
             var header = new DockPanel();
-            // ReSharper disable once PossibleNullReferenceException
             header.Children.Add( checkBox );
             header.Children.Add(
                 new TextBlock
@@ -2219,13 +2213,18 @@ namespace KOTORModSync
                     Text = "Available Mods",
                 }
             );
-            rootItem.Header = header;
-
+            
+            var binding = new Binding( path: "IsSelected" );
             if ( ToggleButton.IsCheckedProperty != null )
             {
                 _ = checkBox.Bind( ToggleButton.IsCheckedProperty, binding );
             }
 
+            var rootItem = new TreeViewItem
+            {
+                IsExpanded = true,
+                Header = header,
+            };
             return rootItem;
         }
 

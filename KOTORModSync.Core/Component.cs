@@ -462,8 +462,8 @@ namespace KOTORModSync.Core
                 option.Dependencies
                     = GetValueOrDefault<List<Guid>>( optionsDict, key: "Dependencies" ) ?? new List<Guid>();
                 option.Instructions = DeserializeInstructions(
-                    GetValueOrDefault<IList<object>>( optionsDict, key: "Instructions" )
-                );
+                    GetValueOrDefault<IList<object>>( optionsDict, key: "Instructions" ) );
+                option.IsSelected = GetValueOrDefault<bool>( optionsDict, key: "IsSelected" );
                 options.Add( option );
             }
 
@@ -1027,10 +1027,28 @@ namespace KOTORModSync.Core
             var conflicts = new Dictionary<string, List<Component>>();
             if ( dependencyGuids.Count > 0 )
             {
-                var dependencyConflicts = dependencyGuids.Select(
-                    requiredGuid => FindComponentFromGuid( requiredGuid, componentsList ) )
-                    .Where( checkComponent => checkComponent != null && !checkComponent.IsSelected
-                ).ToList();
+                var dependencyConflicts = new List<Component>();
+
+                foreach (Guid requiredGuid in dependencyGuids)
+                {
+                    Component checkComponent = FindComponentFromGuid(requiredGuid, componentsList);
+                    if ( checkComponent == null )
+                    {
+                        // sometimes a component will be defined later by a user and all they have defined is a guid.
+                        // this hacky solution will support that syntax.
+                        // Only needed for 'dependencies' not 'restrictions'.
+                        var componentGuidNotFound = new Component
+                        {
+                            Name = "Component Undefined with GUID.", Guid = requiredGuid,
+                        };
+                        dependencyConflicts.Add( componentGuidNotFound );
+                    }
+                    else if ( !checkComponent.IsSelected )
+                    {
+                        dependencyConflicts.Add(checkComponent);
+                    }
+                }
+
 
                 if ( dependencyConflicts.Count > 0 )
                     conflicts["Dependency"] = dependencyConflicts;

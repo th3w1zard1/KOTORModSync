@@ -847,7 +847,6 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
 
                 //PlaintextLog=0
                 string fullInstallLogFile = Path.Combine( tslPatcherDirPath, path2: "installlog.rtf" );
-
                 if ( !File.Exists( fullInstallLogFile ) )
                 {
                     //PlaintextLog=1
@@ -859,14 +858,8 @@ arguments = ""any command line arguments to pass (in TSLPatcher, this is the ind
                 }
 
                 string installLogContent = File.ReadAllText( fullInstallLogFile );
-                var installErrors = new List<string>();
-                foreach ( string thisLine in installLogContent.Split( Environment.NewLine.ToCharArray() ) )
-                {
-                    if ( thisLine.Contains( "Error: " ) || thisLine.Contains( "[Error]" ) )
-                        installErrors.Add( thisLine );
-                }
 
-                return installErrors;
+                return installLogContent.Split( Environment.NewLine.ToCharArray() ).Where( thisLine => thisLine.Contains( "Error: " ) || thisLine.Contains( "[Error]" ) ).ToList();
             }
 
             Logger.LogVerbose( "No errors found in TSLPatcher installation log file" );

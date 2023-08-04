@@ -208,6 +208,7 @@
                                                                     <TextBlock
                                                                         Text="{Binding Action}"
                                                                         Margin="10,0,0,0"
+                                                                        FontWeight="DemiBold"
                                                                         TextWrapping="Wrap" />
                                                                     <TextBlock
                                                                         Text="{Binding Source, Converter={StaticResource listToStringConverter}}"
@@ -397,8 +398,7 @@
                                                                             Grid.Row="15"
                                                                             Grid.Column="1" 
                                                                             ItemsSource="{Binding Converter={StaticResource namespacesIniOptionConverter}}" 
-                                                                            SelectionChanged="ComboBox_SelectionChanged"
-                                                                        />
+                                                                            SelectionChanged="ComboBox_SelectionChanged" />
 
                                                                     </Grid>
                                                                 </Border>
@@ -556,10 +556,17 @@
                                                                                                                  Text="{Binding Overwrite}" />
 
                                                                                                         <TextBlock Grid.Row="14" Grid.Column="0"
-                                                                                                                   Text="Arguments:" />
+                                                                                                            Text="Arguments (Namespace Ini Option):" />
+                                                                                                        <TextBlock Grid.Row="14" Grid.Column="1"
+                                                                                                            Text="Namespace Ini Option:" />
                                                                                                         <TextBox Grid.Row="15" Grid.Column="0"
                                                                                                                  Focusable="True"
                                                                                                                  Text="{Binding Arguments}" />
+                                                                                                        <ComboBox 
+                                                                                                            Grid.Row="15"
+                                                                                                            Grid.Column="1" 
+                                                                                                            ItemsSource="{Binding Converter={StaticResource namespacesIniOptionConverter}}" 
+                                                                                                            SelectionChanged="ComboBox_SelectionChanged" />
                                                                                                     </Grid>
                                                                                                 </Border>
                                                                                             </StackPanel>

@@ -1513,7 +1513,6 @@ namespace KOTORModSync
                     {
                         // unload the raw editor
                         RawEditTextBox.Text = string.Empty;
-                        RefreshComponentInEditor();
                     }
                 }
 
@@ -1525,6 +1524,7 @@ namespace KOTORModSync
                 }
 
                 // Show/hide the appropriate content based on the selected tab
+                RefreshComponentInEditor();
                 RawEditTextBox.IsVisible = tabName == "raw edit";
                 ApplyEditorButton.IsVisible = tabName == "raw edit";
             }

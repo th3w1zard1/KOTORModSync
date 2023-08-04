@@ -1,7 +1,7 @@
 import os
 import sys
 
-from enum import Enum
+from enum import Enum, IntEnum
 from pykotor.tslpatcher.config import ModInstaller
 from pykotor.tslpatcher.reader import NamespaceReader
 
@@ -19,7 +19,7 @@ sys.modules['pykotor.tslpatcher.reader'].print = custom_print
 sys.modules['pykotor.tslpatcher.config'].print = custom_print
 
 
-class ExitCode(Enum):
+class ExitCode(IntEnum):
     Success = 0
     NumberOfArgs = 1
     NamespacesIniNotFound = 2
@@ -51,10 +51,10 @@ elif len(sys.argv) == 4:
         sys.exit(ExitCode.NamespacesIniNotFound)
 
     loaded_namespaces = NamespaceReader.from_filepath(namespaces_ini_path)
-    if namespace_index is None or namespace_index >= len(loaded_namespaces):
+    if namespace_index >= len(loaded_namespaces):
         print("Namespace index is out of range.")
         sys.exit(ExitCode.NamespaceIndexOutOfRange)
-    
+
     if loaded_namespaces[namespace_index].data_folderpath:
         changes_ini_path = os.path.join(
             tslpatchdata_path,
@@ -91,6 +91,6 @@ with open(log_file_path, "w") as log_file:
 
     for error in installer.log.errors:
         log_file.write(f"Error: {error.message}\n")
-        
+
 print ("Logging finished")
 sys.exit()

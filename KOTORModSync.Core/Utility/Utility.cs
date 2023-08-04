@@ -64,7 +64,7 @@ namespace KOTORModSync.Core.Utility
             FieldInfo field = type.GetField( name );
 
             DescriptionAttribute attribute = field?.GetCustomAttribute<DescriptionAttribute>();
-            return attribute?.Description;
+            return attribute?.Description ?? name;
         }
 
         public static bool IsDirectoryWritable( [NotNull] DirectoryInfo dirPath )

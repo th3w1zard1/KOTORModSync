@@ -363,7 +363,7 @@ namespace KOTORModSync.Core.Utility
                 throw new ArgumentNullException( nameof( programFile ) );
 
             if ( timeout == 0 )
-                timeout = 180000; // todo: set timeout as user configurable
+                timeout = 3600000; // todo: set timeout as user configurable
 
             List<ProcessStartInfo> processStartInfosWithFallbacks = GetProcessStartInfos( programFile, cmdlineArgs );
 
@@ -425,11 +425,11 @@ namespace KOTORModSync.Core.Utility
                                     }
 
                                     _ = output.AppendLine( e.Data );
-                                    Logger.Log( e.Data );
+                                    _ = Logger.LogAsync( e.Data );
                                 }
                                 catch ( Exception exception )
                                 {
-                                    Logger.LogException( exception, "Exception while gathering the output from executed program" );
+                                    _ = Logger.LogExceptionAsync( exception, "Exception while gathering the output from executed program" );
                                 }
                             };
                             process.ErrorDataReceived += ( sender, e ) =>
@@ -443,11 +443,11 @@ namespace KOTORModSync.Core.Utility
                                     }
 
                                     _ = error.AppendLine( e.Data );
-                                    Logger.LogError( e.Data );
+                                    _ = Logger.LogErrorAsync( e.Data );
                                 }
                                 catch ( Exception exception )
                                 {
-                                    Logger.LogException( exception, "Exception while gathering the error output from executed program" );
+                                    _ = Logger.LogExceptionAsync( exception, "Exception while gathering the error output from executed program" );
                                 }
                             };
 

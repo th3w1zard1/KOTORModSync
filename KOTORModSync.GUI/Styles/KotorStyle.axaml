@@ -35,6 +35,7 @@
         <Setter Property="Foreground" Value="#3AAAFF" />
         <Setter Property="HorizontalAlignment" Value="Center" />
         <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="FontSize" Value="14" />
     </Style>
 
     <Style Selector="TextBox:focus /template/ TextBlock#PART_Watermark">
@@ -132,7 +133,7 @@
         <Setter Property="Background" Value="#010116"/>
     </Style>
     <Style Selector="Expander:expanded /template/ Border#ExpanderContent">
-        <Setter Property="Background" Value="#062766" />
+        <Setter Property="Background" Value="#010116" />
     </Style>
     <Style Selector="Expander:expanded /template/ Border#ExpanderContent">
         <Setter Property="BorderThickness" Value="0" />

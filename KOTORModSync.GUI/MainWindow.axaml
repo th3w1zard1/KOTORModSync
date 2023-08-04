@@ -411,7 +411,7 @@
                                                     Click="AddNewInstruction_Click" Tag="{Binding}" />
                                             </StackPanel>
                                         </Expander>
-                                        <Expander Header="Options" FontSize="22" IsExpanded="False">
+                                        <Expander Header="Options" FontSize="22" IsExpanded="False" x:Name="optionsExpander">
                                             <StackPanel>
                                                 <ItemsRepeater x:Name="optionsRepeater" ItemsSource="{Binding Options}">
                                                     <ItemsRepeater.ItemTemplate>

@@ -1599,14 +1599,8 @@ namespace KOTORModSync
             }
 
             // bind the selected component to the gui editor
-            IEnumerable currentItems = ComponentsItemsControl.Items;
-            var currentItemsList = currentItems?.Cast<Component>().ToList();
-
-            if (currentItemsList == null || !currentItemsList.Any() || currentItemsList.All(item => item == null) || currentItemsList[0] != selectedComponent)
-            {
-                ComponentsItemsControl.ItemsSource = new ObservableCollection<Component>{ selectedComponent };
-                ComponentsItemsControl2.ItemsSource = new ObservableCollection<Component>{ selectedComponent };
-            }
+            ComponentsItemsControl.ItemsSource = new ObservableCollection<Component>{ selectedComponent };
+            ComponentsItemsControl2.ItemsSource = new ObservableCollection<Component>{ selectedComponent };
 
         }
 

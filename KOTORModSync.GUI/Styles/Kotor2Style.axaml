@@ -44,7 +44,7 @@
         <Setter Property="Background" Value="#05110D"/>
     </Style>
     <Style Selector="Expander:expanded /template/ Border#ExpanderContent">
-        <Setter Property="Background" Value="#09241D" />
+        <Setter Property="Background" Value="#05110D" />
         <Setter Property="BorderThickness" Value="0" />
         <Setter Property="Padding" Value="0" />
     </Style>

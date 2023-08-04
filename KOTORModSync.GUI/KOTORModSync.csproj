@@ -124,17 +124,6 @@
 
     <Exec Condition=" '$(RuntimeIdentifier)' != 'linux-x64' AND '$(RuntimeIdentifier)' != 'osx-x64' " Command="$(CopyCommand) $(SolutionDir)vendor\bin\pykotorcli.exe $(TargetDir)Resources$(DirectorySeparatorChar)" />
     <Exec Condition=" '$(RuntimeIdentifier)' != 'linux-x64' AND '$(RuntimeIdentifier)' != 'osx-x64' " Command="$(CopyCommand) $(SolutionDir)vendor\bin\pykotorcli.exe $(PublishDir)Resources$(DirectorySeparatorChar)" />
-
-
-    <!-- WindowsDeleteString returntype changes from int to IntPtr HRESULT after net framework 4.x.x, replace with our patches. -->
-    <Exec Condition=" '$(Platform)'=='x86' AND '$(TargetFramework)' == 'net462' " Command="$(CopyCommand) $(SolutionDir)vendor$(DirectorySeparatorChar)lib$(DirectorySeparatorChar)Avalonia.Win32_net4.x_x86.dll $(TargetDir)" />
-    <Exec Condition=" '$(Platform)'=='x86' AND '$(TargetFramework)' == 'net462' " Command="$(CopyCommand) $(SolutionDir)vendor$(DirectorySeparatorChar)lib$(DirectorySeparatorChar)Avalonia.Win32_net4.x_x86.dll $(PublishDir)" />
-
-    <Exec Condition=" '$(Platform)'=='x86' AND '$(TargetFramework)' == 'net462' " Command="$(DeleteCommand) $(TargetDir)Avalonia.Win32.dll" />
-    <Exec Condition=" '$(Platform)'=='x86' AND '$(TargetFramework)' == 'net462' " Command="$(DeleteCommand) $(PublishDir)Avalonia.Win32.dll" />
-
-    <Exec Condition=" '$(Platform)'=='x86' AND '$(TargetFramework)' == 'net462' " Command="$(RenameCommand) $(TargetDir)Avalonia.Win32_net4.x_x86.dll Avalonia.Win32.dll" />
-    <Exec Condition=" '$(Platform)'=='x86' AND '$(TargetFramework)' == 'net462' " Command="$(RenameCommand) $(PublishDir)Avalonia.Win32_net4.x_x86.dll Avalonia.Win32.dll" />
   </Target>
 
   <!-- Delete logs and other temp output -->

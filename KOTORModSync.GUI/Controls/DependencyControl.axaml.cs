@@ -7,15 +7,10 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Globalization;
 using Avalonia;
-/* Unmerged change from project 'KOTORModSync (net462)'
-Before:
-using System;
-After:
-using Avalonia;
-*/
 using Avalonia.Collections;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
+using Avalonia.LogicalTree;
 using JetBrains.Annotations;
 using KOTORModSync.Core;
 using Component = KOTORModSync.Core.Component;
@@ -27,7 +22,6 @@ namespace KOTORModSync.Controls
         public DependencyControl()
         {
             InitializeComponent();
-            DependenciesListBox = this.FindControl<ListBox>( "DependenciesListBox" );
         }
 
         // used to fix the move window code with combo boxes.
@@ -104,8 +98,13 @@ namespace KOTORModSync.Controls
                 if ( !( comboBox.SelectedItem is Component selectedComponent ) )
                     return; // no selection
 
-                if ( !( comboBox.Tag is ListBox listBox ) )
+                if ( !( comboBox.Tag is ListBox listBox) )
                     throw new ArgumentException( "ComboBox does not have a ListBox Tag." );
+
+                if ( ThisGuidList.Contains( selectedComponent.Guid ) )
+                {
+                    return; // already in list.
+                }
 
                 ThisGuidList.Add( selectedComponent.Guid );
 
@@ -119,8 +118,15 @@ namespace KOTORModSync.Controls
                     CultureInfo.CurrentCulture
                 ) as List<string>;
 
+                listBox.ItemsSource = null;
                 listBox.ItemsSource = new AvaloniaList<object>( convertedItems ?? throw new InvalidOperationException() );
+
+                comboBox.Tag = listBox;
+                DependenciesListBox = listBox;
+
                 listBox.InvalidateVisual();
+                listBox.InvalidateArrange();
+                listBox.InvalidateMeasure();
             }
             catch ( Exception exception )
             {
@@ -155,8 +161,12 @@ namespace KOTORModSync.Controls
                     CultureInfo.CurrentCulture
                 ) as List<string>;
 
+                listBox.ItemsSource = null;
                 listBox.ItemsSource = new AvaloniaList<object>( convertedItems ?? throw new InvalidOperationException() );
+                
                 listBox.InvalidateVisual();
+                listBox.InvalidateArrange();
+                listBox.InvalidateMeasure();
             }
             catch ( Exception exception )
             {

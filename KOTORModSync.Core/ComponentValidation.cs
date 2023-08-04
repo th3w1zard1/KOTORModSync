@@ -126,6 +126,7 @@ namespace KOTORModSync.Core
                     if ( instruction.Action is null )
                     {
                         AddError( "Action cannot be null", instruction );
+                        success = false;
                         continue;
                     }
 

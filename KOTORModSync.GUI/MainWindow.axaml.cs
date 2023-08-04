@@ -63,6 +63,7 @@ namespace KOTORModSync
             try
             {
                 InitializeComponent();
+                DataContext = this;
                 InitializeControls();
 
                 // Initialize the logger
@@ -1512,6 +1513,7 @@ namespace KOTORModSync
                     {
                         // unload the raw editor
                         RawEditTextBox.Text = string.Empty;
+                        RefreshComponentInEditor();
                     }
                 }
 
@@ -1611,9 +1613,13 @@ namespace KOTORModSync
             }
 
             // bind the selected component to the gui editor
-            ComponentsItemsControl.ItemsSource = new ObservableCollection<Component>{ selectedComponent };
-            ComponentsItemsControl2.ItemsSource = new ObservableCollection<Component>{ selectedComponent };
+            RefreshComponentInEditor();
+        }
 
+        private void RefreshComponentInEditor()
+        {
+            ComponentsItemsControl.ItemsSource = new ObservableCollection<Component>{ _currentComponent };
+            ComponentsItemsControl2.ItemsSource = new ObservableCollection<Component>{ _currentComponent };
         }
 
         private void SetCurrentComponent( [CanBeNull] Component c ) => _currentComponent = c;

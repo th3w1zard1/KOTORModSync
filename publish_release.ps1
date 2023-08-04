@@ -25,6 +25,7 @@ foreach ($file in $publishProfileFiles) {
 
     # Build the dotnet publish command with the --framework argument
     $publishCommand = "dotnet publish $projectFile --framework $framework /p:PublishProfile=$file"
+    Write-Host "Publish command: $publishCommand"
 
     try {
 

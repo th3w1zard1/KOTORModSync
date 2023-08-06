@@ -26,12 +26,12 @@ namespace KOTORModSync.Core
     public sealed class MainConfig : INotifyPropertyChanged
     {
         [NotNull]
-        public static string CurrentVersion => "0.9.0";
+        public static string CurrentVersion => "0.9.1";
 
         public MainConfig()
         {
             currentCompatibilityLevel = CompatibilityLevel.Compatible;
-            debugLogging = true;
+            debugLogging = false;
             patcherOption = AvailablePatchers.PyKotorCLI;
             attemptFixes = true;
             defaultInstall = true;

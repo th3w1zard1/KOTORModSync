@@ -119,7 +119,7 @@ namespace KOTORModSync.Tests
         {
             // Deserialize default component
             Component newComponent
-                = Component.DeserializeTomlComponent( Component.DefaultComponent + Instruction.DefaultInstructions )
+                = Component.DeserializeTomlComponent( _exampleToml )
                 ?? throw new InvalidOperationException();
             newComponent.Guid = Guid.NewGuid();
             newComponent.Name = "test_mod_" + Path.GetRandomFileName();

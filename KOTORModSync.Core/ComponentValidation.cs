@@ -105,8 +105,8 @@ namespace KOTORModSync.Core
                 {
                     foreach ( Instruction instruction in ComponentToValidate.Instructions )
                     {
-                        if ( !( instruction.Action is null )
-                            && !instruction.Action.Equals( value: "extract", StringComparison.OrdinalIgnoreCase ) )
+                        string strAction = instruction.ActionString;
+                        if ( instruction.Action == Instruction.ActionType.Extract )
                         {
                             continue;
                         }
@@ -123,7 +123,7 @@ namespace KOTORModSync.Core
 
                 foreach ( Instruction instruction in ComponentToValidate.Instructions )
                 {
-                    if ( instruction.Action is null )
+                    if ( instruction.Action is Instruction.ActionType.Unset )
                     {
                         AddError( "Action cannot be null", instruction );
                         success = false;
@@ -131,11 +131,11 @@ namespace KOTORModSync.Core
                     }
 
                     // we already checked if the archive exists in GetAllArchivesFromInstructions.
-                    if ( instruction.Action.Equals( value: "extract", StringComparison.OrdinalIgnoreCase ) )
+                    if ( instruction.Action == Instruction.ActionType.Extract )
                         continue;
 
                     // 'choose' action uses Source as list of guids to options.
-                    if ( instruction.Action.Equals( value: "choose", StringComparison.OrdinalIgnoreCase ) )
+                    if ( instruction.Action == Instruction.ActionType.Choose )
                         continue;
 
                     // ReSharper disable once ConditionIsAlwaysTrueOrFalse
@@ -157,7 +157,7 @@ namespace KOTORModSync.Core
 
                         // ensure tslpatcher.exe sourcePaths use the action 'tslpatcher'
                         if ( sourcePath.EndsWith( value: "tslpatcher.exe", StringComparison.OrdinalIgnoreCase )
-                            && !instruction.Action.Equals( value: "tslpatcher", StringComparison.OrdinalIgnoreCase ) )
+                            && instruction.Action != Instruction.ActionType.TSLPatcher )
                         {
                             AddWarning(
                                 message:
@@ -228,7 +228,7 @@ namespace KOTORModSync.Core
 
             foreach ( Instruction instruction in ComponentToValidate.Instructions )
             {
-                if ( instruction.Action != "extract" )
+                if ( instruction.Action != Instruction.ActionType.Extract )
                     continue;
 
                 List<string> realPaths = PathHelper.EnumerateFilesWithWildcards(
@@ -285,7 +285,7 @@ namespace KOTORModSync.Core
             bool success = true;
             foreach ( Instruction instruction in ComponentToValidate.Instructions )
             {
-                switch ( instruction.Action )
+                switch ( instruction.ActionString )
                 {
                     case null:
                         continue;

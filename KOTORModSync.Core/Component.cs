@@ -4,6 +4,8 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
@@ -15,6 +17,7 @@ using System.Threading.Tasks;
 using JetBrains.Annotations;
 using KOTORModSync.Core.Utility;
 using Microsoft.CSharp.RuntimeBinder;
+using SharpCompress;
 using Tomlyn;
 using Tomlyn.Model;
 using Tomlyn.Syntax;
@@ -40,39 +43,86 @@ namespace KOTORModSync.Core
         protected virtual void OnPropertyChanged(string propertyName) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         */
 
-        public static readonly string DefaultComponent = @"
-[[thisMod]]
-    name = ""the name of your mod""
-    # Use the button below to generate a Global Unique Identifier (guid) for this mod
-    guid = ""{01234567-ABCD-EF01-2345-6789ABCDEF01}""
-    # Copy and paste any guid of any mod you depend on here, format like below
-    dependencies = [
-        ""{d2bf7bbb-4757-4418-96bf-a9772a36a262}"",
-        ""{C5418549-6B7E-4A8C-8B8E-4AA1BC63C732}""
-    ]
-    # Copy and paste any guid of any incompatible mod here, format like below
-    restrictions = [
-        ""{C5418549-6B7E-4A8C-8B8E-4AA1BC63C732}"",
-        ""{D0F371DA-5C69-4A26-8A37-76E3A6A2A50D}""
-    ]
-    installOrder = 3";
-
-        [NotNull]
-        public string Name { get; set; } = string.Empty;
-        public Guid Guid { get; set; }
-        [NotNull]
-        public string Author { get; set; } = string.Empty;
-        [NotNull]
-        public string Category { get; set; } = string.Empty;
-        [NotNull]
-        public string Tier { get; set; } = string.Empty;
-        [NotNull]
-        public string Description { get; set; } = string.Empty;
-        [NotNull]
-        public string Directions { get; set; } = string.Empty;
-
-        [NotNull]
-        public List<Guid> Dependencies
+        
+        [NotNull] private string _name = string.Empty;
+        [NotNull] public string Name
+        {
+            get => _name;
+            set
+            {
+                _name = value;
+                OnPropertyChanged();
+            }
+        }
+        
+        private Guid _guid;
+        public Guid Guid
+        {
+            get => _guid;
+            set
+            {
+                _guid = value;
+                OnPropertyChanged();
+            }
+        }
+        
+        [NotNull] private string _author = string.Empty;
+        [NotNull] public string Author
+        {
+            get => _author;
+            set
+            {
+                _author = value;
+                OnPropertyChanged();
+            }
+        }
+        
+        [NotNull] private string _category = string.Empty;
+        [NotNull] public string Category
+        {
+            get => _category;
+            set
+            {
+                _category = value;
+                OnPropertyChanged();
+            }
+        }
+        
+        [NotNull] private string _tier = string.Empty;
+        [NotNull] public string Tier
+        {
+            get => _tier;
+            set
+            {
+                _tier = value;
+                OnPropertyChanged();
+            }
+        }
+        
+        [NotNull] private string _description = string.Empty;
+        [NotNull] public string Description
+        {
+            get => _description;
+            set
+            {
+                _description = value;
+                OnPropertyChanged();
+            }
+        }
+        
+        [NotNull] private string _directions = string.Empty;
+        [NotNull] public string Directions
+        {
+            get => _directions;
+            set
+            {
+                _directions = value;
+                OnPropertyChanged();
+            }
+        }
+        
+        [NotNull] private List<Guid> _dependencies = new List<Guid>();
+        [NotNull] public List<Guid> Dependencies
         {
             get => _dependencies;
             set
@@ -81,9 +131,9 @@ namespace KOTORModSync.Core
                 OnPropertyChanged();
             }
         }
-
-        [NotNull]
-        public List<Guid> Restrictions
+        
+        [NotNull] private List<Guid> _restrictions = new List<Guid>();
+        [NotNull] public List<Guid> Restrictions
         {
             get => _restrictions;
             set
@@ -93,30 +143,108 @@ namespace KOTORModSync.Core
             }
         }
 
-        [NotNull]
-        public List<Guid> InstallBefore { get; set; } = new List<Guid>();
+        [NotNull] private List<Guid> _installBefore = new List<Guid>();
+        [NotNull] public List<Guid> InstallBefore
+        {
+            get => _installBefore;
+            set
+            {
+                _installBefore = value;
+                OnPropertyChanged();
+            }
+        }
 
-        [NotNull]
-        public List<Guid> InstallAfter { get; set; } = new List<Guid>();
+        [NotNull] private List<Guid> _installAfter = new List<Guid>();
+        [NotNull] public List<Guid> InstallAfter
+        {
+            get => _installAfter;
+            set
+            {
+                _installAfter = value;
+                OnPropertyChanged();
+            }
+        }
 
-        public bool NonEnglishFunctionality { get; set; }
+        private bool _nonEnglishFunctionality;
+        public bool NonEnglishFunctionality
+        {
+            get => _nonEnglishFunctionality;
+            set
+            {
+                _nonEnglishFunctionality = value;
+                OnPropertyChanged();
+            }
+        }
 
-        [NotNull]
-        public string InstallationMethod { get; set; } = string.Empty;
+        [NotNull] private string _installationMethod = string.Empty;
+        [NotNull] public string InstallationMethod
+        {
+            get => _installationMethod;
+            set
+            {
+                _installationMethod = value;
+                OnPropertyChanged();
+            }
+        }
 
-        [NotNull]
-        [ItemNotNull]
-        public List<Instruction> Instructions { get; set; } = new List<Instruction>();
+        [NotNull] [ItemNotNull] private ObservableCollection<Instruction> _instructions = new ObservableCollection<Instruction>();
+        [NotNull] [ItemNotNull] public ObservableCollection<Instruction> Instructions
+        {
+            get => _instructions;
+            set
+            {
+                if (_instructions != value)
+                {
+                    _instructions = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
 
-        [NotNull]
-        public List<Option> Options { get; set; } = new List<Option>();
+        [NotNull] private ObservableCollection<Option> _options = new ObservableCollection<Option>();
+        [NotNull] public ObservableCollection<Option> Options
+        {
+            get => _options;
+            set
+            {
+                if (_options != value)
+                {
+                    if (_options != null)
+                        _options.CollectionChanged -= CollectionChanged;
 
-        [NotNull]
-        [ItemNotNull]
-        public List<string> Language { get; set; } = new List<string>();
+                    _options = value;
 
-        [NotNull] public List<string> ModLink { get; set; } = new List<string>();
+                    if (_options != null)
+                        _options.CollectionChanged += CollectionChanged;
 
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+        [NotNull][ItemNotNull] private List<string> _language = new List<string>();
+        [NotNull][ItemNotNull] public List<string> Language
+        {
+            get => _language;
+            set
+            {
+                _language = value;
+                OnPropertyChanged();
+            }
+        }
+
+        [NotNull] private List<string> _modLink = new List<string>();
+        [NotNull] public List<string> ModLink
+        {
+            get => _modLink;
+            set
+            {
+                _modLink = value;
+                OnPropertyChanged();
+            }
+        }
+        
+        private bool _isSelected;
         public bool IsSelected
         {
             get => _isSelected;
@@ -129,11 +257,6 @@ namespace KOTORModSync.Core
 
         [NotNull]
         private DirectoryInfo _tempPath;
-        [NotNull]
-        private List<Guid> _dependencies = new List<Guid>();
-        [NotNull]
-        private List<Guid> _restrictions = new List<Guid>();
-        private bool _isSelected;
 
         [NotNull]
         public string SerializeComponent()
@@ -344,12 +467,12 @@ namespace KOTORModSync.Core
                 _ = sb.AppendLine( "**Installation Instructions:**" );
                 foreach ( Instruction instruction in component.Instructions )
                 {
-                    if ( instruction.Action == "extract" )
+                    if ( instruction.Action == Instruction.ActionType.Extract )
                         continue;
 
                     _ = sb.Append( "**Action**: " )
-                        .AppendLine( instruction.Action );
-                    if ( instruction.Action == "move" )
+                        .AppendLine( instruction.ActionString );
+                    if ( instruction.Action == Instruction.ActionType.Move )
                     {
                         _ = sb.Append( "**Overwrite existing files?**: " )
                             .AppendLine(
@@ -362,14 +485,14 @@ namespace KOTORModSync.Core
                     string thisLine =
                         $"Source: [{Environment.NewLine}{string.Join( $",{Environment.NewLine}", instruction.Source.Select( item => $"{indentation}{item}" ) )}{Environment.NewLine}]";
 
-                    if ( instruction.Action != "move" )
+                    if ( instruction.Action != Instruction.ActionType.Move )
                     {
                         thisLine = thisLine.Replace( oldValue: "Source: ", newValue: "" );
                     }
 
                     _ = sb.AppendLine( thisLine );
 
-                    if ( !string.IsNullOrEmpty( instruction.Destination ) && instruction.Action == "move" )
+                    if ( !string.IsNullOrEmpty( instruction.Destination ) && instruction.Action == Instruction.ActionType.Move )
                     {
                         _ = sb.Append( "Destination: " )
                             .AppendLine( instruction.Destination );
@@ -382,17 +505,17 @@ namespace KOTORModSync.Core
 
         [ItemNotNull]
         [NotNull]
-        private List<Instruction> DeserializeInstructions(
+        private ObservableCollection<Instruction> DeserializeInstructions(
             [CanBeNull][ItemCanBeNull] IList<object> instructionsSerializedList
         )
         {
             if ( instructionsSerializedList.IsNullOrEmptyCollection() )
             {
                 _ = Logger.LogWarningAsync( $"No instructions found for component '{Name}'" );
-                return new List<Instruction>();
+                return new ObservableCollection<Instruction>();
             }
 
-            var instructions = new List<Instruction>();
+            var instructions = new ObservableCollection<Instruction>();
 
             for ( int index = 0; index < instructionsSerializedList.Count; index++ )
             {
@@ -404,11 +527,21 @@ namespace KOTORModSync.Core
                 Serializer.DeserializeGuidDictionary( instructionDict, key: "Dependencies" );
 
                 var instruction = new Instruction();
-                instruction.Action = GetValueOrDefault<string>( instructionDict, key: "Action" );
-                _ = Logger.LogAsync(
-                    $"{Environment.NewLine}-- Deserialize instruction #{index + 1} action {instruction.Action}"
-                );
-                instruction.Arguments = GetValueOrDefault<string>( instructionDict, key: "Arguments" );
+                string strAction = GetValueOrDefault<string>( instructionDict, key: "Action" );
+                if ( Enum.TryParse( strAction, ignoreCase: true, out Instruction.ActionType action ) )
+                {
+                    instruction.Action = action;
+                    _ = Logger.LogAsync(
+                        $"{Environment.NewLine} -- Deserialize instruction #{index + 1} action '{action}'"
+                    );
+                }
+                else
+                {
+                    _ = Logger.LogErrorAsync( $"{Environment.NewLine} -- Missing/invalid action for instruction #{index}" );
+                    instruction.Action = Instruction.ActionType.Unset;
+                }
+
+                instruction.Arguments = GetValueOrDefault<string>( instructionDict, key: "Arguments" ) ?? string.Empty;
                 instruction.Overwrite = GetValueOrDefault<bool>( instructionDict, key: "Overwrite" );
 
                 instruction.Restrictions
@@ -427,17 +560,17 @@ namespace KOTORModSync.Core
 
         [ItemNotNull]
         [NotNull]
-        private List<Option> DeserializeOptions(
+        private ObservableCollection<Option> DeserializeOptions(
             [CanBeNull][ItemCanBeNull] IList<object> optionsSerializedList
         )
         {
             if ( optionsSerializedList.IsNullOrEmptyCollection() )
             {
                 _ = Logger.LogVerboseAsync( $"No options found for component '{Name}'" );
-                return new List<Option>();
+                return new ObservableCollection<Option>();
             }
 
-            var options = new List<Option>();
+            var options = new ObservableCollection<Option>();
 
             for ( int index = 0; index < optionsSerializedList.Count; index++ )
             {
@@ -797,7 +930,7 @@ namespace KOTORModSync.Core
         }
 
         private async Task<(InstallExitCode, Dictionary<SHA1, FileInfo>)> ExecuteInstructionsAsync(
-            [NotNull][ItemNotNull] List<Instruction> theseInstructions,
+            [NotNull][ItemNotNull] IList<Instruction> theseInstructions,
             [NotNull][ItemNotNull] List<Component> componentsList
         )
         {
@@ -863,46 +996,44 @@ namespace KOTORModSync.Core
                 }*/
 
                 Instruction.ActionExitCode exitCode = Instruction.ActionExitCode.Success;
-                switch ( instruction.Action?.ToLower() )
+                switch ( instruction.Action )
                 {
-                    case "extract":
+                    case Instruction.ActionType.Extract:
                         instruction.SetRealPaths();
                         exitCode = await instruction.ExtractFileAsync();
                         break;
-                    case "delete":
+                    case Instruction.ActionType.Delete:
                         instruction.SetRealPaths( true );
                         exitCode = instruction.DeleteFile();
                         break;
-                    case "delduplicate":
+                    case Instruction.ActionType.DelDuplicate:
                         instruction.SetRealPaths( true );
                         instruction.DeleteDuplicateFile(caseInsensitive: true);
                         exitCode = Instruction.ActionExitCode.Success;
                         break;
-                    case "copy":
+                    case Instruction.ActionType.Copy:
                         instruction.SetRealPaths();
                         exitCode = instruction.CopyFile();
                         break;
-                    case "move":
+                    case Instruction.ActionType.Move:
                         instruction.SetRealPaths();
                         exitCode = instruction.MoveFile();
                         break;
-                    case "rename":
+                    case Instruction.ActionType.Rename:
                         instruction.SetRealPaths(true);
                         exitCode = instruction.RenameFile();
                         break;
-                    case "patch":
-                    case "holopatcher":
-                    case "tslpatcher":
+                    case Instruction.ActionType.HoloPatcher:
+                    case Instruction.ActionType.TSLPatcher:
                         instruction.SetRealPaths();
                         exitCode = await instruction.ExecuteTSLPatcherAsync();
                         break;
-                    case "execute":
-                    case "run":
+                    case Instruction.ActionType.Execute:
+                    case Instruction.ActionType.Run:
                         instruction.SetRealPaths();
                         exitCode = await instruction.ExecuteProgramAsync();
                         break;
-                    case "choose":
-                    case "option":
+                    case Instruction.ActionType.Choose:
                         instruction.SetRealPaths(true);
 
                         List<Option> chosenOptions = instruction.GetChosenOptions();
@@ -925,18 +1056,18 @@ namespace KOTORModSync.Core
                 break;*/
                     default:
                         // Handle unknown instruction type here
-                        await Logger.LogWarningAsync( $"Unknown instruction '{instruction.Action}'" );
+                        await Logger.LogWarningAsync( $"Unknown instruction '{instruction.ActionString}'" );
                         exitCode = Instruction.ActionExitCode.UnknownInstruction;
                         break;
                 }
 
                 _ = Logger.LogVerboseAsync(
-                    $"Instruction #{instructionIndex} '{instruction.Action}' exited with code {Instruction.ActionExitCode.Success}"
+                    $"Instruction #{instructionIndex} '{instruction.ActionString}' exited with code {exitCode}"
                 );
                 if ( exitCode != Instruction.ActionExitCode.Success )
                 {
                     await Logger.LogErrorAsync(
-                        $"FAILED Instruction #{instructionIndex} Action '{instruction.Action}'"
+                        $"FAILED Instruction #{instructionIndex} Action '{instruction.ActionString}'"
                     );
                     bool? confirmationResult = await PromptUserInstallError(
                         $"An error occurred during the installation of '{Name}':"
@@ -1361,9 +1492,10 @@ namespace KOTORModSync.Core
             );
         }
 
+
         // used for the ui.
         public event PropertyChangedEventHandler PropertyChanged;
-
+        private void CollectionChanged(object sender, NotifyCollectionChangedEventArgs e) => OnPropertyChanged();
         private void OnPropertyChanged( [CallerMemberName][CanBeNull] string propertyName = null ) =>
             PropertyChanged?.Invoke( this, new PropertyChangedEventArgs( propertyName ) );
     }

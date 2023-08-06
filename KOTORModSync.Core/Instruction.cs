@@ -16,10 +16,12 @@ using JetBrains.Annotations;
 using KOTORModSync.Core.Data;
 using KOTORModSync.Core.TSLPatcher;
 using KOTORModSync.Core.Utility;
+using Newtonsoft.Json;
 using SharpCompress.Archives;
 using SharpCompress.Archives.Rar;
 using SharpCompress.Archives.SevenZip;
 using SharpCompress.Readers;
+using static KOTORModSync.Core.Instruction;
 
 namespace KOTORModSync.Core
 {
@@ -29,17 +31,43 @@ namespace KOTORModSync.Core
         {
             Extract,
             Execute,
-            TslPatcher,
+            TSLPatcher,
             Move,
             Copy,
             Rename,
             Delete,
             DelDuplicate,
             Choose,
+            HoloPatcher,
+            Run,
+            Unset,
         }
 
-        public string Action { get; set; }
+        public static IEnumerable<string> ActionTypes => Enum.GetValues(typeof(ActionType))
+            .Cast<ActionType>()
+            .Select(actionType => actionType.ToString());
 
+
+        private ActionType _action;
+        [JsonIgnore]
+        public ActionType Action
+        {
+            get => _action;
+            set
+            {
+                _action = value;
+                OnPropertyChanged();
+            }
+        }
+
+        [JsonProperty("Action")]
+        public string ActionString
+        {
+            get => Action.ToString();
+            set => Action = (ActionType)Enum.Parse( typeof( ActionType ), value );
+        }
+        
+        [NotNull][ItemNotNull] private List<string> _source = new List<string>();
         [NotNull][ItemNotNull] public List<string> Source
         {
             get => _source;
@@ -49,7 +77,8 @@ namespace KOTORModSync.Core
                 OnPropertyChanged();
             }
         }
-
+        
+        [NotNull] private string _destination = string.Empty;
         [NotNull] public string Destination
         {
             get => _destination;
@@ -59,7 +88,8 @@ namespace KOTORModSync.Core
                 OnPropertyChanged();
             }
         }
-
+        
+        [NotNull] private List<Guid> _dependencies = new List<Guid>();
         [NotNull] public List<Guid> Dependencies
         {
             get => _dependencies;
@@ -69,7 +99,8 @@ namespace KOTORModSync.Core
                 OnPropertyChanged();
             }
         }
-
+        
+        [NotNull] private List<Guid> _restrictions = new List<Guid>();
         [NotNull] public List<Guid> Restrictions
         {
             get => _restrictions;
@@ -79,9 +110,32 @@ namespace KOTORModSync.Core
                 OnPropertyChanged();
             }
         }
+        
+        private bool _overwrite;
+        public bool Overwrite
+        {
+            get => _overwrite;
+            set
+            {
+                _overwrite = value;
+                OnPropertyChanged();
+            }
+        }
+        
+        [NotNull] private string _arguments = string.Empty;
+        [NotNull] public string Arguments
+        {
+            get => _arguments;
+            set
+            {
+                _arguments = value;
+                OnPropertyChanged();
+            }
+        }
 
-        public bool Overwrite { get; set; }
-        public string Arguments { get; set; }
+        [NotNull][ItemNotNull] private List<string> RealSourcePaths { get; set; } = new List<string>();
+        [CanBeNull] private DirectoryInfo RealDestinationPath { get; set; }
+
         private Component _parentComponent { get; set; }
         
         public Component GetParentComponent() => _parentComponent;
@@ -108,50 +162,6 @@ namespace KOTORModSync.Core
             UnknownInstruction,
             TSLPatcherLogNotFound,
         }
-
-        public static readonly string DefaultInstructions = @"
-[[thisMod.instructions]]
-action = ""extract""
-source = [""<<modDirectory>>\\path\\to\\mod\\mod.rar""]
-overwrite = true
-
-[[thisMod.instructions]]
-action = ""delete""
-source = [
-    ""<<modDirectory>>\\path\\to\\mod\\file1.tpc"",
-    ""<<modDirectory>>\\path\\to\\mod\\file2.tpc"",
-    ""<<modDirectory>>\\path\\to\\mod\\file3.tpc""
-]
-dependencies = """"
-overwrite = true
-
-[[thisMod.instructions]]
-action = ""move""
-source = [
-    ""<<modDirectory>>\\path\\to\\mod\\file1.tpc"",
-    ""<<modDirectory>>\\path\\to\\mod\\file2.tpc"",
-    ""<<modDirectory>>\\path\\to\\mod\\file3.tpc""
-]
-destination = ""<<kotorDirectory>>\\Override""
-overwrite = ""True""
-restrictions = """"
-
-[[thisMod.instructions]]
-action = ""run""
-Source = [""<<modDirectory>>\\path\\to\\mod\\program.exe""]
-arguments = ""any command line arguments to pass""
-[[thisMod.instructions]]
-action = ""TSLPatcher""
-source = [""<<modDirectory>>\\path\\to\\mod\\TSLPatcher directory""]
-arguments = ""any command line arguments to pass (in TSLPatcher, this is the index of the desired option in namespaces.ini))""
-";
-
-        [NotNull][ItemNotNull] private List<string> _source = new List<string>();
-        [NotNull] private string _destination = string.Empty;
-        [NotNull] private List<Guid> _dependencies = new List<Guid>();
-        [NotNull] private List<Guid> _restrictions = new List<Guid>();
-        [NotNull][ItemNotNull] private List<string> RealSourcePaths { get; set; } = new List<string>();
-        [CanBeNull] private DirectoryInfo RealDestinationPath { get; set; }
 
         public static async Task<bool> ExecuteInstructionAsync( [NotNull] Func<Task<bool>> instructionMethod ) =>
             await ( instructionMethod()

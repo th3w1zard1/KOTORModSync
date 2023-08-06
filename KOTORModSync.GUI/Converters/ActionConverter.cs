@@ -17,48 +17,38 @@ namespace KOTORModSync.Converters
 {
     public class ActionConverter : IValueConverter
     {
-        [CanBeNull]
-        public object Convert(
-            [CanBeNull] object value,
-            [NotNull] Type targetType,
-            [CanBeNull] object parameter,
-            [NotNull] CultureInfo culture
-        )
+        public object Convert( object value, Type targetType, object parameter, CultureInfo culture )
         {
             if ( value is null )
             {
-                return targetType.IsValueType
-                    ? AvaloniaProperty.UnsetValue
-                    : null;
+                return Instruction.ActionType.Unset.ToString();
             }
 
-            if ( TypeUtilities.TryConvert( targetType, value, culture, out object result ) )
+            if ( value is Instruction.ActionType actionType )
             {
-                IEnumerable<string> validActions = Enum.GetNames(typeof(Instruction.ActionType));
-                if ( validActions.Any(
-                        action => string.Equals( action, (string)result, StringComparison.OrdinalIgnoreCase )
-                    ) )
-                {
-                    return result;
-                }
-
-                string msg = $"Valid actions are [{string.Join( separator: ", ", validActions )}]";
-                return new BindingNotification( new ArgumentException( msg ), BindingErrorType.Error );
+                return actionType.ToString();
             }
 
-            string message = TypeUtilities.IsNumeric( targetType )
-                ? $"'{value}' is not a valid number."
-                : $"Could not convert '{value}' to '{targetType.Name}'.";
-            return new BindingNotification( new InvalidCastException( message ), BindingErrorType.Error );
+            if ( value is string strValue && Enum.TryParse( strValue, true, out Instruction.ActionType result ) )
+                return result.ToString();
+            
+            string msg = $"Valid actions are [{string.Join( separator: ", ", Instruction.ActionTypes )}]";
+            return new BindingNotification( new ArgumentException( msg ), BindingErrorType.Error );
         }
 
-        [CanBeNull]
-        public object ConvertBack(
-            [CanBeNull] object value,
-            [NotNull] Type targetType,
-            [CanBeNull] object parameter,
-            [NotNull] CultureInfo culture
-        ) =>
-            Convert( value, targetType, parameter, culture );
+        public object ConvertBack( object value, Type targetType, object parameter, CultureInfo culture )
+        {
+            if ( value is Instruction.ActionType actual )
+                return actual.ToString();
+            if ( value?.ToString() is string strValue )
+            {
+                if ( Enum.TryParse( strValue, true, out Instruction.ActionType result) )
+                {
+                    return result.ToString();
+                }
+            }
+
+            return Instruction.ActionType.Unset.ToString();
+        }
     }
 }

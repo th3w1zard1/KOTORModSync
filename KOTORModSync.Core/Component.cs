@@ -1013,11 +1013,11 @@ namespace KOTORModSync.Core
                         break;
                     case Instruction.ActionType.Copy:
                         instruction.SetRealPaths();
-                        exitCode = instruction.CopyFile();
+                        exitCode = await instruction.CopyFileAsync();
                         break;
                     case Instruction.ActionType.Move:
                         instruction.SetRealPaths();
-                        exitCode = instruction.MoveFile();
+                        exitCode = await instruction.MoveFileAsync();
                         break;
                     case Instruction.ActionType.Rename:
                         instruction.SetRealPaths(true);
@@ -1030,7 +1030,7 @@ namespace KOTORModSync.Core
                         break;
                     case Instruction.ActionType.Execute:
                     case Instruction.ActionType.Run:
-                        instruction.SetRealPaths();
+                        instruction.SetRealPaths(true);
                         exitCode = await instruction.ExecuteProgramAsync();
                         break;
                     case Instruction.ActionType.Choose:

@@ -122,6 +122,9 @@
     <Exec Condition=" '$(RuntimeIdentifier)' == 'linux-x64' OR '$(RuntimeIdentifier)' == 'osx-x64' " Command="$(CopyCommand) $(SolutionDir)vendor\bin\pykotorcli $(TargetDir)Resources$(DirectorySeparatorChar)" />
     <Exec Condition=" '$(RuntimeIdentifier)' == 'linux-x64' OR '$(RuntimeIdentifier)' == 'osx-x64' " Command="$(CopyCommand) $(SolutionDir)vendor\bin\pykotorcli $(PublishDir)Resources$(DirectorySeparatorChar)" />
 
+    <Exec Condition=" '$(TargetPlatform)' == 'x64' " Command="$(CopyCommand) $(SolutionDir)vendor\lib\7z.dll $(TargetDir)Resources$(DirectorySeparatorChar)" />
+    <Exec Condition=" '$(TargetPlatform)' == 'x64' " Command="$(CopyCommand) $(SolutionDir)vendor\lib\7z.dll $(PublishDir)Resources$(DirectorySeparatorChar)" />
+
     <Exec Condition=" '$(RuntimeIdentifier)' != 'linux-x64' AND '$(RuntimeIdentifier)' != 'osx-x64' " Command="$(CopyCommand) $(SolutionDir)vendor\bin\pykotorcli.exe $(TargetDir)Resources$(DirectorySeparatorChar)" />
     <Exec Condition=" '$(RuntimeIdentifier)' != 'linux-x64' AND '$(RuntimeIdentifier)' != 'osx-x64' " Command="$(CopyCommand) $(SolutionDir)vendor\bin\pykotorcli.exe $(PublishDir)Resources$(DirectorySeparatorChar)" />
   </Target>

@@ -10,6 +10,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
+using static KOTORModSync.Core.Instruction;
 
 namespace KOTORModSync.Core
 {
@@ -51,9 +52,9 @@ namespace KOTORModSync.Core
 
         [UsedImplicitly]
         [NotNull]
-        public IEnumerable<CompatibilityLevel> AllCompatibilityLevels =>
-            Enum.GetValues( typeof( CompatibilityLevel ) )
-                .Cast<CompatibilityLevel>();
+        public static IEnumerable<string> AllCompatibilityLevels => Enum.GetValues(typeof(CompatibilityLevel))
+            .Cast<CompatibilityLevel>()
+            .Select(compatibilityLvl => compatibilityLvl.ToString());
 
         public enum AvailablePatchers
         {
@@ -64,12 +65,12 @@ namespace KOTORModSync.Core
             [Description( "Use PyKotorCLI" )]
             PyKotorCLI = 1,
         }
-
+        
         [UsedImplicitly]
         [NotNull]
-        public IEnumerable<AvailablePatchers> AllAvailablePatchers =>
-            Enum.GetValues( typeof( AvailablePatchers ) )
-                .Cast<AvailablePatchers>();
+        public static IEnumerable<string> AllAvailablePatchers => Enum.GetValues(typeof(AvailablePatchers))
+            .Cast<AvailablePatchers>()
+            .Select(patcher => patcher.ToString());
 
         public static DirectoryInfo SourcePath { get; private set; }
         public static DirectoryInfo DestinationPath { get; private set; }
@@ -78,7 +79,17 @@ namespace KOTORModSync.Core
         public static bool AttemptFixes { get; private set; }
         public static bool DefaultInstall { get; private set; }
         public static AvailablePatchers PatcherOption { get; private set; }
+        public string patcherOptionString
+        {
+            get => PatcherOption.ToString();
+            set => PatcherOption = (AvailablePatchers)Enum.Parse( typeof( AvailablePatchers ), value );
+        }
         public static CompatibilityLevel CurrentCompatibilityLevel { get; private set; }
+        public string currentCompatibilityString
+        {
+            get => CurrentCompatibilityLevel.ToString();
+            set => CurrentCompatibilityLevel = (CompatibilityLevel)Enum.Parse( typeof( CompatibilityLevel ), value );
+        }
         [NotNull][ItemNotNull] public static List<Component> AllComponents { get; set; } = new List<Component>();
 
         [NotNull]

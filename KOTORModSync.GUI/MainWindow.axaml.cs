@@ -1159,6 +1159,7 @@ namespace KOTORModSync
                         this,
                         message: "This component could not be validated, please check the output window."
                     );
+                    return;
                 }
 
                 try

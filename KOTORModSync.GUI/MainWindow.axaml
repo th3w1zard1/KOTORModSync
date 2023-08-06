@@ -639,12 +639,12 @@
                            ToolTip.Tip="Mods are packaged with 'TSLPatcher' by default. Use 'PyKotorCLI' for a one-click install-all approach" />
                 <ComboBox
                     ItemsSource="{Binding AllAvailablePatchers}"
-                    SelectedItem="{Binding patcherOption, Mode=TwoWay, Converter={StaticResource enumConverter}}"
+                    SelectedItem="{Binding patcherOptionString}"
                     IsTabStop="True" />
                 <TextBlock Text="Compatibility Enforcement Level:" ToolTip.Tip="Determines which mods will be skipped." />
                 <ComboBox
                     ItemsSource="{Binding AllCompatibilityLevels}"
-                    SelectedItem="{Binding currentCompatibilityLevel, Mode=TwoWay, Converter={StaticResource enumConverter}}"
+                    SelectedItem="{Binding currentCompatibilityString}"
                     IsTabStop="True" />
                 <TextBlock Text="Theme" />
                 <ComboBox x:Name="StyleComboBox" SelectedIndex="0"

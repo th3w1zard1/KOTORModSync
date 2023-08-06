@@ -9,6 +9,7 @@ using System.Linq;
 using JetBrains.Annotations;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
+using SevenZip;
 using SharpCompress.Archives;
 using SharpCompress.Archives.Rar;
 using SharpCompress.Archives.SevenZip;
@@ -65,6 +66,16 @@ namespace KOTORModSync.Core.Utility
                 Logger.LogException(ex);
                 return (null, null);
             }
+        }
+
+        public static void ExtractWith7Zip(FileStream stream, string destinationDirectory)
+        {
+            string exeDir = Utility.GetExecutingAssemblyDirectory();
+            string sevenzDllPath = Path.Combine( exeDir, "Resources", "7z.dll" );
+
+            SevenZipBase.SetLibraryPath(sevenzDllPath); // Path to 7z.dll
+            var extractor = new SevenZipExtractor( stream );
+            extractor.ExtractArchive(destinationDirectory);
         }
 
 

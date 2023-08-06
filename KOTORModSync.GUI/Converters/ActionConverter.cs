@@ -20,14 +20,10 @@ namespace KOTORModSync.Converters
         public object Convert( object value, Type targetType, object parameter, CultureInfo culture )
         {
             if ( value is null )
-            {
                 return Instruction.ActionType.Unset.ToString();
-            }
 
             if ( value is Instruction.ActionType actionType )
-            {
                 return actionType.ToString();
-            }
 
             if ( value is string strValue && Enum.TryParse( strValue, true, out Instruction.ActionType result ) )
                 return result.ToString();

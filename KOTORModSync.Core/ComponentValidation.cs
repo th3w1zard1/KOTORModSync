@@ -105,17 +105,14 @@ namespace KOTORModSync.Core
                 {
                     foreach ( Instruction instruction in ComponentToValidate.Instructions )
                     {
-                        string strAction = instruction.ActionString;
                         if ( instruction.Action == Instruction.ActionType.Extract )
                         {
-                            continue;
+                            AddError(
+                                $"Missing Required Archives for 'Extract' action: [{string.Join( separator: ",", instruction.Source )}]",
+                                instruction
+                            );
+                            success = false;
                         }
-
-                        AddError(
-                            $"Missing Required Archives for 'Extract' action: [{string.Join( separator: ",", instruction.Source )}]",
-                            instruction
-                        );
-                        success = false;
                     }
 
                     return success;
@@ -285,12 +282,12 @@ namespace KOTORModSync.Core
             bool success = true;
             foreach ( Instruction instruction in ComponentToValidate.Instructions )
             {
-                switch ( instruction.ActionString )
+                switch ( instruction.Action )
                 {
-                    case null:
+                    case Instruction.ActionType.Unset:
                         continue;
                     // tslpatcher must always use <<kotorDirectory>> and nothing else.
-                    case "tslpatcher" when string.IsNullOrEmpty( instruction.Destination ):
+                    case Instruction.ActionType.TSLPatcher when string.IsNullOrEmpty( instruction.Destination ):
                         AddWarning(
                             message:
                             "Destination must be <<kotorDirectory>> with 'TSLPatcher' action, setting it now automatically.",
@@ -299,7 +296,7 @@ namespace KOTORModSync.Core
                         instruction.Destination = "<<kotorDirectory>>";
                         break;
 
-                    case "tslpatcher" when !instruction.Destination.Equals(
+                    case Instruction.ActionType.TSLPatcher when !instruction.Destination.Equals(
                         value: "<<kotorDirectory>>",
                         StringComparison.OrdinalIgnoreCase
                     ):
@@ -313,13 +310,14 @@ namespace KOTORModSync.Core
                         {
                             Logger.Log( "Fixing the above issue automatically." );
                             instruction.Destination = "<<kotorDirectory>>";
+                            success = true;
                         }
 
                         break;
                     // choose, extract, and delete cannot use the 'Destination' key.
-                    case "choose":
-                    case "extract":
-                    case "delete":
+                    case Instruction.ActionType.Choose:
+                    case Instruction.ActionType.Extract:
+                    case Instruction.ActionType.Delete:
                         if ( string.IsNullOrEmpty( instruction.Destination ) )
                             break;
 
@@ -329,17 +327,16 @@ namespace KOTORModSync.Core
                             instruction
                         );
 
-                        if ( !MainConfig.AttemptFixes )
+                        if ( MainConfig.AttemptFixes )
                         {
-                            break;
+                            Logger.Log( "Fixing the above issue automatically." );
+                            instruction.Destination = string.Empty;
+                            success = true;
                         }
-
-                        Logger.Log( "Fixing the above issue automatically." );
-                        instruction.Destination = string.Empty;
 
                         break;
                     // rename should never use <<kotorDirectory>>\\Override
-                    case "rename":
+                    case Instruction.ActionType.Rename:
                         if ( instruction.Destination.Equals(
                                 $"<<kotorDirectory>>{Path.DirectorySeparatorChar}Override",
                                 StringComparison.OrdinalIgnoreCase
@@ -369,6 +366,12 @@ namespace KOTORModSync.Core
                         {
                             success = false;
                             AddError( "Destination cannot be found!" + $" Got '{destinationPath}'", instruction );
+                            if ( PathValidator.IsValidPath(destinationPath) && MainConfig.AttemptFixes )
+                            {
+                                Logger.Log( "Fixing the above error automatically..." );
+                                Directory.CreateDirectory( destinationPath );
+                                success = true;
+                            }
                         }
 
                         break;

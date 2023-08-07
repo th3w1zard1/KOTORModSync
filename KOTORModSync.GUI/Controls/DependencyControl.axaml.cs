@@ -172,5 +172,24 @@ namespace KOTORModSync.Controls
                 Logger.LogException( exception );
             }
         }
+
+        private void DependenciesComboBox_SelectionChanged( object sender, SelectionChangedEventArgs e )
+        {
+            try
+            {
+                object selectedItem = DependenciesComboBox.SelectedItem;
+                if ( !( selectedItem is Component dropdownComponent ) )
+                {
+                    Logger.LogVerbose( "selected item of this dependency component is not a Component!" );
+                    return;
+                }
+
+                OptionsComboBox.ItemsSource = dropdownComponent.Options;
+            }
+            catch ( Exception exception )
+            {
+                Logger.LogException( exception );
+            }
+        }
     }
 }

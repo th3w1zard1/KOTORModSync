@@ -31,12 +31,23 @@ namespace KOTORModSync.Converters
                         selectedComponentNames.Add( component.Name );
                 }
 
-                return selectedComponentNames.Count == 0
-                    ? new List<string>
-                    {
-                        "None Selected",
-                    }
-                    : (object)selectedComponentNames;
+                if ( selectedComponentNames.Count == 0 )
+                {
+                    // Both lists are empty or only selectedComponentNames is empty but guids is not
+                    selectedComponentNames.Add(
+                        guids.Count == 0
+                            ? "None Selected"
+                            : "Non-Existent Component in List"
+                    );
+                }
+
+                // There's a mismatch in counts between selectedComponentNames and guids
+                else if (selectedComponentNames.Count != guids.Count)
+                {
+                    selectedComponentNames.Add("Non-existent Component in List");
+                }
+
+                return selectedComponentNames;
             }
             catch ( Exception e )
             {

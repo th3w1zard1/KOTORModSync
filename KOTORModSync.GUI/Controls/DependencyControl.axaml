@@ -11,25 +11,31 @@
         <converters:ComponentToGuidConverter x:Key="ComponentToGuidConverter" />
     </UserControl.Resources>
     <DockPanel>
-        <ListBox x:Name="DependenciesListBox" SelectionMode="Multiple">
-            <ListBox.ItemsSource>
-                <MultiBinding Converter="{StaticResource GuidListToComponentNames}">
-                    <Binding Path="ThisGuidList"
-                             RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType={x:Type controls:DependencyControl}}" />
-                    <Binding Path="ThisComponentList"
-                             RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType={x:Type controls:DependencyControl}}" />
-                </MultiBinding>
-            </ListBox.ItemsSource>
-            <ListBox.ItemTemplate>
-                <DataTemplate>
-                    <TextBlock Text="{Binding}" />
-                </DataTemplate>
-            </ListBox.ItemTemplate>
-        </ListBox>
-        <StackPanel>
-            <ComboBox x:Name="DependenciesComboBox"
-                      Tag="{Binding ElementName=DependenciesListBox}"
-                      HorizontalAlignment="Stretch">
+        <StackPanel Margin="0">
+            <ListBox MinHeight="100" VerticalAlignment="Top" x:Name="DependenciesListBox" SelectionMode="Multiple">
+                <ListBox.ItemsSource>
+                    <MultiBinding Converter="{StaticResource GuidListToComponentNames}">
+                        <Binding Path="ThisGuidList"
+                                 RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType={x:Type controls:DependencyControl}}" />
+                        <Binding Path="ThisComponentList"
+                                 RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType={x:Type controls:DependencyControl}}" />
+                    </MultiBinding>
+                </ListBox.ItemsSource>
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <TextBlock Text="{Binding}" />
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+            <Button Content="Remove from List" Click="RemoveFromList_Click"
+                    Tag="{Binding ElementName=DependenciesListBox}"
+                    HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" />
+        </StackPanel>
+        <Grid Margin="0" RowDefinitions="Auto,Auto" ColumnDefinitions="*,*" HorizontalAlignment="Stretch" VerticalAlignment="Top">
+            <ComboBox Grid.Column="0" Grid.Row="0" HorizontalAlignment="Stretch"
+                      x:Name="DependenciesComboBox"
+                      SelectionChanged="DependenciesComboBox_SelectionChanged"
+                      Tag="{Binding ElementName=DependenciesListBox}">
                 <ComboBox.ItemsSource>
                     <Binding Path="ThisComponentList"
                              RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType={x:Type controls:DependencyControl}}" />
@@ -40,14 +46,25 @@
                     </DataTemplate>
                 </ComboBox.ItemTemplate>
             </ComboBox>
-            <StackPanel>
-                <Button Content="Add to List" Click="AddToList_Click"
-                        Tag="{Binding ElementName=DependenciesComboBox}"
-                        HorizontalAlignment="Left" HorizontalContentAlignment="Center" />
-                <Button Content="Remove from List" Click="RemoveFromList_Click"
-                        Tag="{Binding ElementName=DependenciesListBox}"
-                        HorizontalAlignment="Left" HorizontalContentAlignment="Center" />
-            </StackPanel>
-        </StackPanel>
+            <Button Grid.Column="0" Grid.Row="1"
+                    Content="Add Mod to List" Click="AddToList_Click"
+                    Tag="{Binding ElementName=DependenciesComboBox}"
+                    HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" />
+            <ComboBox Grid.Column="1" Grid.Row="0"
+                      x:Name="OptionsComboBox"
+                      Tag="{Binding ElementName=DependenciesListBox}"
+                      HorizontalAlignment="Stretch"
+                      ToolTip.Tip="Options chooser for what's selected in the left combobox. Select an item from the left dropdown box first.">
+                <ComboBox.ItemTemplate>
+                    <DataTemplate>
+                        <TextBlock Text="{Binding Name}" />
+                    </DataTemplate>
+                </ComboBox.ItemTemplate>
+            </ComboBox>
+            <Button Grid.Column="1" Grid.Row="1"
+                    Content="Add Option to List" Click="AddToList_Click"
+                    Tag="{Binding ElementName=OptionsComboBox}"
+                    HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" VerticalAlignment="Top"/>
+        </Grid>
     </DockPanel>
 </UserControl>

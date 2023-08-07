@@ -21,7 +21,6 @@ using SharpCompress.Archives;
 using SharpCompress.Archives.Rar;
 using SharpCompress.Archives.SevenZip;
 using SharpCompress.Readers;
-using static KOTORModSync.Core.Instruction;
 
 namespace KOTORModSync.Core
 {

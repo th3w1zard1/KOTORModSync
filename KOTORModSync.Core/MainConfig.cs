@@ -10,7 +10,6 @@ using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
-using static KOTORModSync.Core.Instruction;
 
 namespace KOTORModSync.Core
 {
@@ -23,6 +22,9 @@ namespace KOTORModSync.Core
         checkId: "IDE0079:Remove unnecessary suppression",
         Justification = "<Pending>"
     )]
+    [SuppressMessage( "ReSharper", "MemberCanBeMadeStatic.Global" )]
+    [SuppressMessage( "ReSharper", "InconsistentNaming" )]
+    [SuppressMessage( "ReSharper", "MemberCanBePrivate.Global" )]
     public sealed class MainConfig : INotifyPropertyChanged
     {
         [NotNull]
@@ -42,20 +44,10 @@ namespace KOTORModSync.Core
         public enum CompatibilityLevel
         {
             [Description( "Fully Compatible" )] Compatible = 0,
-
             [Description( "Mostly Compatible" )] MostlyCompatible = 1,
-
             [Description( "Not Tested" )] Untested = 2,
-
             [Description( "INCOMPATIBLE" )] Incompatible = 3,
         }
-
-        [UsedImplicitly]
-        [NotNull]
-        public static IEnumerable<string> AllCompatibilityLevels => Enum.GetValues(typeof(CompatibilityLevel))
-            .Cast<CompatibilityLevel>()
-            .Select(compatibilityLvl => compatibilityLvl.ToString());
-
         public enum AvailablePatchers
         {
             [Description( "Use TSLPatcher" )]
@@ -65,6 +57,12 @@ namespace KOTORModSync.Core
             [Description( "Use PyKotorCLI" )]
             PyKotorCLI = 1,
         }
+
+        [UsedImplicitly]
+        [NotNull]
+        public static IEnumerable<string> AllCompatibilityLevels => Enum.GetValues(typeof(CompatibilityLevel))
+            .Cast<CompatibilityLevel>()
+            .Select(compatibilityLvl => compatibilityLvl.ToString());
         
         [UsedImplicitly]
         [NotNull]
@@ -72,95 +70,86 @@ namespace KOTORModSync.Core
             .Cast<AvailablePatchers>()
             .Select(patcher => patcher.ToString());
 
-        public static DirectoryInfo SourcePath { get; private set; }
-        public static DirectoryInfo DestinationPath { get; private set; }
+        public static bool NoAdmin { get; private set; }
+        public bool noAdmin { get => NoAdmin; set => NoAdmin = value; }
+
         public static bool DebugLogging { get; private set; }
+        public bool debugLogging { [UsedImplicitly] get => DebugLogging; set => DebugLogging = value; }
+
         public static DirectoryInfo LastOutputDirectory { get; private set; }
+        [CanBeNull] public DirectoryInfo lastOutputDirectory { get => LastOutputDirectory; set => LastOutputDirectory = value; }
+
         public static bool AttemptFixes { get; private set; }
+        public bool attemptFixes { [UsedImplicitly] get => AttemptFixes; set => AttemptFixes = value; }
+
         public static bool DefaultInstall { get; private set; }
+        public bool defaultInstall { [UsedImplicitly] get => DefaultInstall; set => DefaultInstall = value; }
+
         public static AvailablePatchers PatcherOption { get; private set; }
-        public string patcherOptionString
-        {
-            get => PatcherOption.ToString();
-            set => PatcherOption = (AvailablePatchers)Enum.Parse( typeof( AvailablePatchers ), value );
-        }
-        public static CompatibilityLevel CurrentCompatibilityLevel { get; private set; }
-        public string currentCompatibilityString
-        {
-            get => CurrentCompatibilityLevel.ToString();
-            set => CurrentCompatibilityLevel = (CompatibilityLevel)Enum.Parse( typeof( CompatibilityLevel ), value );
-        }
-        [NotNull][ItemNotNull] public static List<Component> AllComponents { get; set; } = new List<Component>();
-
-        [NotNull]
-        public List<Component> allComponents
-        {
-            get => AllComponents;
-            set => AllComponents = value ?? throw new ArgumentNullException( nameof( value ) );
-        }
-
-        [CanBeNull]
-        public DirectoryInfo sourcePath
-        {
-            get => SourcePath;
-            set
-            {
-                SourcePath = value;
-                OnPropertyChanged( nameof( sourcePathFullName ) );
-            }
-        }
-
-        [CanBeNull] public string sourcePathFullName => SourcePath?.FullName;
-
-        [CanBeNull]
-        public DirectoryInfo destinationPath
-        {
-            get => DestinationPath;
-            set
-            {
-                DestinationPath = value;
-                OnPropertyChanged( nameof( destinationPathFullName ) );
-            }
-        }
-
-        [CanBeNull] public string destinationPathFullName => DestinationPath?.FullName;
-
         public AvailablePatchers patcherOption
         {
-            get => PatcherOption;
+            [UsedImplicitly] get => PatcherOption;
             set
             {
                 PatcherOption = value;
                 OnPropertyChanged();
             }
         }
+        [NotNull][UsedImplicitly] public string patcherOptionString
+        {
+            get => PatcherOption.ToString();
+            set => PatcherOption = (AvailablePatchers)Enum.Parse( typeof( AvailablePatchers ), value );
+        }
 
+        public static CompatibilityLevel CurrentCompatibilityLevel { get; private set; }
         public CompatibilityLevel currentCompatibilityLevel
         {
-            get => CurrentCompatibilityLevel;
+            [UsedImplicitly] get => CurrentCompatibilityLevel;
             set
             {
                 CurrentCompatibilityLevel = value;
                 OnPropertyChanged();
             }
         }
+        [NotNull][UsedImplicitly] public string currentCompatibilityString
+        {
+            get => CurrentCompatibilityLevel.ToString();
+            set => CurrentCompatibilityLevel = (CompatibilityLevel)Enum.Parse( typeof( CompatibilityLevel ), value );
+        }
 
-        public bool debugLogging { get => DebugLogging; set => DebugLogging = value; }
-
-        [CanBeNull]
-        public DirectoryInfo lastOutputDirectory { get => LastOutputDirectory; set => LastOutputDirectory = value; }
-
-        public bool defaultInstall { get => DefaultInstall; set => DefaultInstall = value; }
-
-        public bool attemptFixes { get => AttemptFixes; set => AttemptFixes = value; }
-
-        public static bool NoAdmin { get; private set; }
-
-        public bool noAdmin { get => NoAdmin; set => NoAdmin = value; }
-
-        public event PropertyChangedEventHandler PropertyChanged;
+        [NotNull][ItemNotNull] public static List<Component> AllComponents { get; set; } = new List<Component>();
+        [NotNull][ItemNotNull] public List<Component> allComponents
+        {
+            get => AllComponents;
+            set => AllComponents = value ?? throw new ArgumentNullException( nameof( value ) );
+        }
+        
+        [CanBeNull] public static DirectoryInfo SourcePath { get; private set; }
+        [CanBeNull] public DirectoryInfo sourcePath
+        {
+            [UsedImplicitly] get => SourcePath;
+            set
+            {
+                SourcePath = value;
+                OnPropertyChanged( nameof( sourcePathFullName ) );
+            }
+        }
+        [CanBeNull] public string sourcePathFullName => SourcePath?.FullName;
+        
+        [CanBeNull] public static DirectoryInfo DestinationPath { get; private set; }
+        [CanBeNull] public DirectoryInfo destinationPath
+        {
+            [UsedImplicitly] get => DestinationPath;
+            set
+            {
+                DestinationPath = value;
+                OnPropertyChanged( nameof( destinationPathFullName ) );
+            }
+        }
+        [CanBeNull] public string destinationPathFullName => DestinationPath?.FullName;
 
         // used for the ui.
+        public event PropertyChangedEventHandler PropertyChanged;
         private void OnPropertyChanged( [CallerMemberName][CanBeNull] string propertyName = null ) =>
             PropertyChanged?.Invoke( this, new PropertyChangedEventArgs( propertyName ) );
     }

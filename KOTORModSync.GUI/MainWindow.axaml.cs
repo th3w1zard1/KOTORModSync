@@ -2026,6 +2026,30 @@ namespace KOTORModSync
             }
         }
 
+        // Set up the event handler for the checkbox
+        void OnCheckBoxOnChecked( object sender, RoutedEventArgs e )
+        {
+            if ( !( sender is CheckBox checkBox ) )
+                return;
+
+            if ( !( checkBox.Tag is Component thisComponent ) )
+                return;
+
+            ComponentCheckboxChecked( thisComponent, new HashSet<Component>() );
+        }
+
+        
+        void OnCheckBoxOnUnchecked( object sender, RoutedEventArgs e )
+        {
+            if ( !( sender is CheckBox checkBox ) )
+                return;
+
+            if ( !( checkBox.Tag is Component thisComponent ) )
+                return;
+
+            ComponentCheckboxUnchecked( thisComponent, new HashSet<Component>() );
+        }
+
         [NotNull]
         private CheckBox CreateComponentCheckbox( [NotNull] Component component )
         {
@@ -2038,15 +2062,16 @@ namespace KOTORModSync
                 IsChecked = true,
                 VerticalContentAlignment = VerticalAlignment.Center,
                 VerticalAlignment = VerticalAlignment.Center,
+                Tag = component,
             };
             var binding = new Binding( "IsSelected" )
             {
-                Source = component, Mode = BindingMode.TwoWay,
+                Source = component,
+                Mode = BindingMode.TwoWay,
             };
 
-            // Set up the event handler for the checkbox
-            checkBox.Checked += ( sender, e ) => ComponentCheckboxChecked( component, new HashSet<Component>() );
-            checkBox.Unchecked += ( sender, e ) => ComponentCheckboxUnchecked( component, new HashSet<Component>() );
+            checkBox.Checked += OnCheckBoxOnChecked;
+            checkBox.Unchecked += OnCheckBoxOnUnchecked;
 
             if ( ToggleButton.IsCheckedProperty != null )
             {

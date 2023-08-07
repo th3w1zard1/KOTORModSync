@@ -128,7 +128,9 @@
                                                     <CheckBox Name="IsSelected"
                                                               VerticalContentAlignment="Center"
                                                               VerticalAlignment="Center"
-                                                              IsChecked="{Binding IsSelected, Mode=TwoWay}" />
+                                                              IsChecked="{Binding IsSelected, Mode=TwoWay}"
+                                                              Checked="OnCheckBoxOnChecked" Unchecked="OnCheckBoxOnUnchecked"
+                                                              Tag="{Binding}"/>
                                                     <TextBlock Text="{Binding Name}" />
                                                 </DockPanel>
                                                 <TextBlock Text="{Binding Description}"/>
@@ -161,7 +163,7 @@
                                                                             Margin="10,0,0,0"
                                                                             TextWrapping="Wrap" />
                                                                         <TextBlock
-                                                                            Text="{Binding Arguments, Converter={StaticResource listToStringConverter}}"
+                                                                            Text="{Binding Arguments}"
                                                                             Margin="10,0,0,0"
                                                                             TextWrapping="Wrap" />
                                                                     </DockPanel>
@@ -177,7 +179,9 @@
                             <TextBlock Text="Instructions Overview:" 
                                        FontWeight="Bold"
                                        Margin="0,10"
-                                       IsVisible="{Binding ElementName=instructionsSummaryRepeater, Path=ItemsSource, Converter={StaticResource listToVisibilityConverter}}"/>
+                                       IsVisible="{Binding ElementName=instructionsSummaryRepeater,
+                                            Path=ItemsSource,
+                                            Converter={StaticResource listToVisibilityConverter}}"/>
                             <ItemsRepeater
                                 x:Name="instructionsSummaryRepeater"
                                 ItemsSource="{Binding Instructions}">
@@ -207,7 +211,7 @@
                                                             Margin="10,0,0,0"
                                                             TextWrapping="Wrap" />
                                                         <TextBlock
-                                                            Text="{Binding Arguments, Converter={StaticResource listToStringConverter}}"
+                                                            Text="{Binding Arguments}"
                                                             Margin="10,0,0,0"
                                                             TextWrapping="Wrap" />
                                                     </DockPanel>
@@ -587,21 +591,21 @@
             </TabItem>
             <TabItem x:Name="RawEditTabItem" Header="Raw Edit"
                 ToolTip.Tip="Click 'Apply Editor Changes' to save raw changes">
-                <StackPanel HorizontalAlignment="Stretch">
-                    <DockPanel>
-                        <Button HorizontalContentAlignment="Center" HorizontalAlignment="Stretch"
-                            x:Name="ApplyEditorButton" Content="Apply Editor Changes"
-                            Click="SaveButton_Click" />
-                        <Button Content="Generate GUID" Click="GenerateGuidButton_Click"
-                            ToolTip.Tip="A GUID is used to ensure uniqueness of items.
-							        Do not replace existing guids unless you know what you're doing,
-								    else anything that relies on the pre-existing GUIDs will have their references broken."/>
-                        <TextBox x:Name="GuidGeneratedTextBox" Focusable="True" HorizontalContentAlignment="Left" />
-                    </DockPanel>
-                    <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
-                        <TextBox x:Name="RawEditTextBox" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="400" />
-                    </ScrollViewer>
-                </StackPanel>
+                <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+                    <StackPanel HorizontalAlignment="Stretch">
+                        <DockPanel>
+                            <Button HorizontalContentAlignment="Center" HorizontalAlignment="Stretch"
+                                x:Name="ApplyEditorButton" Content="Apply Editor Changes"
+                                Click="SaveButton_Click" />
+                            <Button Content="Generate GUID" Click="GenerateGuidButton_Click"
+                                ToolTip.Tip="A GUID is used to ensure uniqueness of items.
+							            Do not replace existing guids unless you know what you're doing,
+								        else anything that relies on the pre-existing GUIDs will have their references broken."/>
+                            <TextBox x:Name="GuidGeneratedTextBox" Focusable="True" HorizontalContentAlignment="Left" />
+                        </DockPanel>
+                                <TextBox x:Name="RawEditTextBox" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="400" />
+                    </StackPanel>
+                </ScrollViewer>
             </TabItem>
         </TabControl>
         <GridSplitter Grid.Column="1" Grid.Row="1" Width="5" HorizontalAlignment="Right" />

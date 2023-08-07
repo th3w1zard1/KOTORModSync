@@ -1201,7 +1201,7 @@ namespace KOTORModSync.Core
             return conflicts;
         }
 
-        //The component will be installed if any of the following conditions are met:
+        //The component will be installed if all of the following conditions are met:
         //The component has no dependencies or restrictions.
         //The component has dependencies, and all of the required components are being installed.
         //The component has restrictions, but none of the restricted components are being installed.
@@ -1446,7 +1446,11 @@ namespace KOTORModSync.Core
 
         public void CreateOption( int index = 0 )
         {
-            var option = new Option();
+            var option = new Option
+            {
+                Name = Path.GetFileNameWithoutExtension( Path.GetTempFileName() ),
+                Guid = Guid.NewGuid(),
+            };
             if ( Instructions.IsNullOrEmptyOrAllNull() )
             {
                 if ( index != 0 )

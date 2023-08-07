@@ -130,8 +130,8 @@
                                                               VerticalAlignment="Center"
                                                               IsChecked="{Binding IsSelected, Mode=TwoWay}"
                                                               Checked="OnCheckBoxOnChecked" Unchecked="OnCheckBoxOnUnchecked"
-                                                              Tag="{Binding}"/>
-                                                    <TextBlock Text="{Binding Name}" />
+                                                              Tag="{Binding}"
+                                                              Content="{Binding Name}"/>
                                                 </DockPanel>
                                                 <TextBlock Text="{Binding Description}"/>
                                                 <ItemsRepeater
@@ -329,7 +329,7 @@
                                                                         Tag="{Binding}"
                                                                         HorizontalContentAlignment="Center" />
                                                             </DockPanel>
-                                                            <ComboBox Grid.Row="3" Grid.Column="0"
+                                                            <ComboBox Grid.Row="3" Grid.Column="0" HorizontalAlignment="Left"
                                                                       ItemsSource="{Binding ActionTypes}"
                                                                       SelectedItem="{Binding ActionString, Converter={StaticResource actionConverter}}"
                                                                       Focusable="True" />
@@ -387,7 +387,8 @@
                                                                 Text="{Binding Arguments}" />
                                                             <ComboBox 
                                                                 Grid.Row="15"
-                                                                Grid.Column="1" 
+                                                                Grid.Column="1"
+                                                                HorizontalAlignment="Left"
                                                                 ItemsSource="{Binding Converter={StaticResource namespacesIniOptionConverter}}" 
                                                                 SelectionChanged="ComboBox_SelectionChanged" />
 
@@ -500,7 +501,7 @@
                                                                                                         Tag="{Binding}"
                                                                                                         HorizontalContentAlignment="Center" />
                                                                                             </DockPanel>
-                                                                                            <ComboBox Grid.Row="3" Grid.Column="0"
+                                                                                            <ComboBox Grid.Row="3" Grid.Column="0" HorizontalAlignment="Left"
                                                                                                       ItemsSource="{Binding ActionTypes}"
                                                                                                       SelectedItem="{Binding ActionString, Converter={StaticResource actionConverter}}"
                                                                                                       Focusable="True" />
@@ -560,7 +561,8 @@
                                                                                                 Text="{Binding Arguments}" />
                                                                                             <ComboBox 
                                                                                                 Grid.Row="15"
-                                                                                                Grid.Column="1" 
+                                                                                                Grid.Column="1"
+                                                                                                HorizontalAlignment="Left"
                                                                                                 ItemsSource="{Binding Converter={StaticResource namespacesIniOptionConverter}}" 
                                                                                                 SelectionChanged="ComboBox_SelectionChanged" />
 
@@ -631,20 +633,20 @@
                 <CheckBox Content="Verbose Logging" IsChecked="{Binding debugLogging}" />
                 <CheckBox Content="Auto-Fix Config Errors" IsChecked="{Binding attemptFixes}" />
                 <CheckBox Content="No Admin" IsChecked="{Binding noAdmin}"
-                          ToolTip.Tip="Do not prompt for admin on any instruction (NOT RECOMMENDED). It's recommended you run KOTORModSync as admin instead. Does nothing on Linux" />
+                          ToolTip.Tip="Do not prompt for admin on any instruction (NOT RECOMMENDED). If you're having problems, it's recommended you run KOTORModSync as admin instead. Does nothing on Linux" />
                 <TextBlock Text="Patcher Option"
                            ToolTip.Tip="Mods are packaged with 'TSLPatcher' by default. Use 'PyKotorCLI' to reduce tedious clicking through tslpatcher windows" />
-                <ComboBox
-                    ItemsSource="{Binding AllAvailablePatchers}"
-                    SelectedItem="{Binding patcherOptionString}"
-                    IsTabStop="True" />
+                <ComboBox HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
+                          ItemsSource="{Binding AllAvailablePatchers}"
+                          SelectedItem="{Binding patcherOptionString}"
+                          IsTabStop="True" />
                 <TextBlock Text="Compatibility Enforcement Level:" ToolTip.Tip="Determines which mods will be skipped." />
-                <ComboBox
-                    ItemsSource="{Binding AllCompatibilityLevels}"
-                    SelectedItem="{Binding currentCompatibilityString}"
-                    IsTabStop="True" />
+                <ComboBox HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
+                          ItemsSource="{Binding AllCompatibilityLevels}"
+                          SelectedItem="{Binding currentCompatibilityString}"
+                          IsTabStop="True" />
                 <TextBlock Text="Theme" />
-                <ComboBox x:Name="StyleComboBox" SelectedIndex="0"
+                <ComboBox x:Name="StyleComboBox" SelectedIndex="0" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
                           SelectionChanged="StyleComboBox_SelectionChanged">
                     <ComboBoxItem Content="TSL Style" Tag="/Styles/Kotor2Style.axaml" />
                     <ComboBoxItem Content="K1 Style" Tag="/Styles/KotorStyle.axaml" />

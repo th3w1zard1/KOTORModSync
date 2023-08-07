@@ -90,20 +90,15 @@ namespace KOTORModSync.Controls
             {
                 if ( !( sender is Button addButton ) )
                     throw new ArgumentException( "Sender is not a Button." );
-
                 if ( !( addButton.Tag is ComboBox comboBox ) )
                     throw new ArgumentException( "Button doesn't have a proper ComboBox tag." );
-
-                if ( !( comboBox.SelectedItem is Component selectedComponent ) )
-                    return; // no selection
-
                 if ( !( comboBox.Tag is ListBox listBox) )
                     throw new ArgumentException( "ComboBox does not have a ListBox Tag." );
 
+                if ( !( comboBox.SelectedItem is Component selectedComponent ) )
+                    return; // no selection
                 if ( ThisGuidList.Contains( selectedComponent.Guid ) )
-                {
                     return; // already in list.
-                }
 
                 ThisGuidList.Add( selectedComponent.Guid );
 
@@ -139,17 +134,14 @@ namespace KOTORModSync.Controls
             {
                 if ( !( sender is Button removeButton ) )
                     throw new ArgumentException( "Sender is not a Button." );
-
                 if ( !( removeButton.Tag is ListBox listBox ) )
                     throw new ArgumentException( "Button doesn't have a proper ListBox tag." );
 
                 int index = listBox.SelectedIndex;
-
                 if ( index < 0 || index >= ThisGuidList.Count )
                     return; // no selection
 
                 ThisGuidList.RemoveAt( index );
-
                 var convertedItems = new Converters.GuidListToComponentNames().Convert(
                     new object[]
                     {

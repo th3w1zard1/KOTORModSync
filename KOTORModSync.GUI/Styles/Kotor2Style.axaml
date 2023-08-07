@@ -96,23 +96,27 @@
         <Setter Property="TextWrapping" Value="Wrap" />
     </Style>
     <Style Selector="ComboBox">
+        <Setter Property="HorizontalAlignment" Value="Center" />
         <Setter Property="Background" Value="#09241D" />
-        <Setter Property="Foreground" Value="#33C3A2" />
-    </Style>
-    <Style Selector="CheckBox:pointerover /template/ Border#PART_BorderElement">
-        <Setter Property="BorderBrush" Value="#FFFFFF" />
-        <Setter Property="Background" Value="#09241D" />
-    </Style>
-    <Style Selector="CheckBox:checked">
-        <Setter Property="BorderBrush" Value="#FFFFFF" />
         <Setter Property="Foreground" Value="#33C3A2" />
     </Style>
     <Style Selector="CheckBox:pointerover">
-        <Setter Property="BorderBrush" Value="#FFFFFF" />
-        <Setter Property="Foreground" Value="#33C3A2" />
+        <Setter Property="Foreground" Value="#43FFD4"/>
+        <Setter Property="BorderBrush" Value="#43FFD4"/>
     </Style>
-    <Style Selector="CheckBox">
-        <Setter Property="Foreground" Value="#33C3A2" />
+    <Style Selector="CheckBox:hover">
+        <Setter Property="Foreground" Value="#43FFD4"/>
+        <Setter Property="BorderBrush" Value="#43FFD4"/>
+    </Style>
+    <Style Selector="CheckBox:checked">
+        <Setter Property="Foreground" Value="#33C3A2"/>
+        <Setter Property="BorderBrush" Value="#33C3A2"/>
+    </Style>
+    <Style Selector="CheckBox:unchecked">
+        <Setter Property="Foreground" Value="#33C3A2"/>
+    </Style>
+    <Style Selector="CheckBox:pointerover /template/ Border#PART_Border">
+        <Setter Property="Background" Value="#43FFD4"/>
     </Style>
 
     <Style Selector="TreeView">

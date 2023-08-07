@@ -25,27 +25,17 @@ namespace KOTORModSync.Converters
                     return null;
 
                 var selectedComponentNames = new List<string>();
-                foreach ( Component component in componentsList )
+                foreach ( Guid cGuid in guids )
                 {
-                    if ( guids.Contains( component.Guid ) )
-                        selectedComponentNames.Add( component.Name );
+                    Component foundComponent = Component.FindComponentFromGuid( cGuid, componentsList );
+                    if ( !( foundComponent is null ) )
+                        selectedComponentNames.Add( foundComponent.Name );
+                    else
+                        selectedComponentNames.Add( cGuid.ToString() );
                 }
 
                 if ( selectedComponentNames.Count == 0 )
-                {
-                    // Both lists are empty or only selectedComponentNames is empty but guids is not
-                    selectedComponentNames.Add(
-                        guids.Count == 0
-                            ? "None Selected"
-                            : "Non-Existent Component in List"
-                    );
-                }
-
-                // There's a mismatch in counts between selectedComponentNames and guids
-                else if (selectedComponentNames.Count != guids.Count)
-                {
-                    selectedComponentNames.Add("Non-existent Component in List");
-                }
+                    selectedComponentNames.Add( "None" );
 
                 return selectedComponentNames;
             }

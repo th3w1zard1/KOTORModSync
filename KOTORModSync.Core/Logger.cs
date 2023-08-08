@@ -41,26 +41,8 @@ namespace KOTORModSync.Core
             }
         }
 
-        public static void Log( [CanBeNull] string message, bool fileOnly = false )
 
-        {
-            string logMessage = $"[{DateTime.Now}] {message}";
-
-            if ( !fileOnly )
-            {
-                Console.WriteLine( logMessage );
-            }
-
-            //Debug.WriteLine( logMessage );
-
-            string formattedDate = DateTime.Now.ToString( "yyyy-MM-dd" );
-
-            // todo: see if file is locked from another async logger first.
-            File.AppendAllText( LogFileName + formattedDate + ".txt", logMessage + Environment.NewLine );
-
-            Logged.Invoke( logMessage ); // Raise the Logged event
-        }
-
+        [NotNull]
         private static async Task LogInternalAsync( [CanBeNull] string internalMessage, bool fileOnly = false )
         {
             internalMessage = internalMessage ?? string.Empty;
@@ -74,23 +56,51 @@ namespace KOTORModSync.Core
                     await Console.Out.WriteLineAsync( logMessage );
                 }
 
-                Debug.WriteLine( logMessage );
+                // Debug.WriteLine( logMessage );
 
                 string formattedDate = DateTime.Now.ToString( "yyyy-MM-dd" );
-                using ( var writer = new StreamWriter( LogFileName + formattedDate + ".txt", append: true ) )
+                var cancellationTokenSource = new CancellationTokenSource(TimeSpan.FromMinutes(2));
+                var token = cancellationTokenSource.Token;
+
+                bool fileWritten = false;
+
+                while (!fileWritten)
                 {
-                    await writer.WriteLineAsync( logMessage + Environment.NewLine );
+                    try
+                    {
+                        // Attempt to write to the file
+                        using (var writer = new StreamWriter(LogFileName + formattedDate + ".txt", append: true))
+                        {
+                            await writer.WriteLineAsync(logMessage + Environment.NewLine);
+                            fileWritten = true; // Successfully written, exit the loop
+                        }
+                    }
+                    catch (IOException)
+                    {
+                        // File is locked; wait a bit before retrying
+                        await Task.Delay(100, token); // Wait 100 milliseconds
+                    }
+
+                    // Throw if cancellation has been requested
+                    token.ThrowIfCancellationRequested();
                 }
 
                 Logged.Invoke( logMessage ); // Raise the Logged event
+            }
+            catch ( Exception ex )
+            {
+                Console.WriteLine( ex );
             }
             finally
             {
                 _ = s_semaphore.Release();
             }
         }
+        
+        public static void Log( [CanBeNull] string message, bool fileOnly = false ) => Task.Run( async () => await LogInternalAsync( message, fileOnly ) );
 
-        [NotNull] public static Task LogAsync( [CanBeNull] string message ) => LogInternalAsync( message );
+        [NotNull]
+        public static Task LogAsync( [CanBeNull] string message ) => LogInternalAsync( message );
 
         public static void LogVerbose( [CanBeNull] string message ) =>
             Log( $"[Verbose] {message}", !MainConfig.DebugLogging );
@@ -99,6 +109,7 @@ namespace KOTORModSync.Core
         public static Task LogVerboseAsync( [CanBeNull] string message ) =>
             LogInternalAsync( $"[Verbose] {message}", !MainConfig.DebugLogging );
 
+        // ReSharper disable once UnusedMember.Global
         public static void LogWarning( [NotNull] string message ) => Log( $"[Warning] {message}" );
 
         [NotNull]
@@ -144,7 +155,7 @@ namespace KOTORModSync.Core
         {
             if ( !( e.ExceptionObject is Exception ex ) )
             {
-                LogError( "appdomain's unhandledexception did not have a valid exception handle?" );
+                LogError( "current appdomain's unhandled exception did not have a valid exception handle?" );
                 return;
             }
 

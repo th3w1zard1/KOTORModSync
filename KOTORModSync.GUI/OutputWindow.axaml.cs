@@ -3,99 +3,111 @@
 // See LICENSE.txt file in the project root for full license information.
 
 using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 using Avalonia.Controls;
+using Avalonia.Controls.Shapes;
 using Avalonia.Threading;
 using KOTORModSync.Core;
+using Path = System.IO.Path;
 
 namespace KOTORModSync
 {
+    public class OutputViewModel : INotifyPropertyChanged
+    {
+        public Queue<string> _logBuilder = new Queue<string>();
+        public string LogText { get; set; } = string.Empty;
+
+        public void AppendLog(string message)
+        {
+            _logBuilder.Enqueue(message);
+            OnPropertyChanged(nameof(LogText));
+        }
+
+        public void RemoveOldestLog()
+        {
+            _logBuilder.Dequeue();
+            OnPropertyChanged(nameof(LogText));
+        }
+
+        // used for ui
+        public event PropertyChangedEventHandler PropertyChanged;
+        protected virtual void OnPropertyChanged(string propertyName)
+        {
+            LogText = string.Join( Environment.NewLine, _logBuilder );
+            PropertyChanged?.Invoke( this, new PropertyChangedEventArgs( propertyName ) );
+        }
+    }
     public partial class OutputWindow : Window
     {
-        private StringBuilder _logBuilder;
-        private readonly int _maxLinesShown = 1000;
+        public OutputViewModel _viewModel;
+        private readonly int _maxLinesShown = 150;
 
         public OutputWindow()
         {
             InitializeComponent();
+            _viewModel = new OutputViewModel();
+            DataContext = _viewModel;
             InitializeControls();
         }
 
         private void InitializeControls()
         {
-            _logBuilder = new StringBuilder( 65535 );
+            Logger.Logged += message => Dispatcher.UIThread.InvokeAsync(() => Task.Run(async () => await AppendLogAsync(message)));
 
-            // Subscribe to the Logger.Logged event to capture log messages
-            Logger.Logged += message =>
+            Logger.ExceptionLogged += ex => Dispatcher.UIThread.InvokeAsync(() =>
             {
-                _ = _logBuilder.AppendLine( message );
-                UpdateLogText();
-            };
+                string exceptionLog = $"Exception: {ex.GetType().Name}: {ex.Message}\nStack trace: {ex.StackTrace}";
+                Task.Run(async () => await AppendLogAsync(exceptionLog) );
+            });
 
-            // Subscribe to the Logger.ExceptionLogged event to capture exceptions
-            Logger.ExceptionLogged += ex =>
-            {
-                _ = _logBuilder.Append( "Exception: " )
-                    .Append( ex.GetType().Name )
-                    .Append( ": " )
-                    .AppendLine( ex.Message )
-                    .Append( "Stack trace: " )
-                    .AppendLine( ex.StackTrace );
-                UpdateLogText();
-            };
-
-            // Open the file and retrieve the last 200 lines
             string logfileName = $"{Logger.LogFileName}{DateTime.Now:yyyy-MM-dd}";
             string executingDirectory = Core.Utility.Utility.GetExecutingAssemblyDirectory();
-            string filePath = Path.Combine( executingDirectory, logfileName + ".txt" );
-            if ( !File.Exists( filePath ) )
-                return;
-
-            string[] lines = File.ReadAllLines( filePath );
-            int startIndex = Math.Max( val1: 0, lines.Length - _maxLinesShown );
-            string recentLines = string.Join( Environment.NewLine, lines, startIndex, lines.Length - startIndex );
-
-            _ = _logBuilder.AppendLine( recentLines );
-            UpdateLogText();
-            LogScrollViewer.ScrollToEnd();
+            string filePath = Path.Combine(executingDirectory, logfileName + ".txt");
+            if (File.Exists(filePath))
+            {
+                string[] lines = File.ReadAllLines(filePath);
+                int startIndex = Math.Max(0, lines.Length - _maxLinesShown);
+                foreach (string line in lines.Skip(startIndex))
+                {
+                    Task.Run(async () => await AppendLogAsync(line) );
+                }
+                LogScrollViewer.ScrollToEnd();
+            }
         }
 
-        private void UpdateLogText()
+        private object _logLock = new object();
+        private async Task AppendLogAsync(string message)
         {
-            lock ( _logBuilder )
+            try
             {
-                // Create a local copy of _logBuilder to avoid accessing it from multiple threads
-                string logText = _logBuilder.ToString();
-
-                // Split the log text into lines
-                string[] lines = logText.Split(
-                    new[]
-                    {
-                        Environment.NewLine,
-                    },
-                    StringSplitOptions.None
-                );
-
-                // Trim the lines if they exceed the desired line count
-                if ( lines.Length > _maxLinesShown )
+                lock ( _logLock )
                 {
-                    lines = lines.Skip( lines.Length - _maxLinesShown ).ToArray();
-                    logText = string.Join( Environment.NewLine, lines );
-                    _logBuilder = _logBuilder.Clear();
-                    _ = _logBuilder.Append( logText );
+                    if ( _viewModel._logBuilder.Count >= _maxLinesShown )
+                    {
+                        _viewModel.RemoveOldestLog();
+                    }
+
+                    _viewModel.AppendLog( message );
                 }
 
-                _ = Dispatcher.UIThread.InvokeAsync(
+                await Dispatcher.UIThread.InvokeAsync(
                     () =>
                     {
-                        LogTextBox.Text = logText;
-
                         // Scroll to the end of the content
                         LogScrollViewer.ScrollToEnd();
                     }
                 );
+            }
+            catch ( Exception ex )
+            {
             }
         }
     }

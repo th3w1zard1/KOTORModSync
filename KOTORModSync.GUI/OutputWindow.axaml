@@ -20,8 +20,9 @@
                      VerticalAlignment="Center"
                      TextWrapping="Wrap"
                      AcceptsReturn="True"
-                     Padding="5"
-                     IsReadOnly="True" />
+                     Padding="1"
+                     IsReadOnly="True"
+                     Text="{Binding LogText}" />
         </ScrollViewer>
     </Grid>
 </Window>

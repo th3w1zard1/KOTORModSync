@@ -50,10 +50,7 @@
     <Content Include="icon53.ico" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\KOTORModSync.Core\KOTORModSync.Core.csproj">
-      <!-- I believe this builds the 'KOTORModSync.Core.dll' separate rather than packaging into EXE/another dll. -->
-      <PrivateAssets>none</PrivateAssets>
-    </ProjectReference>
+    <ProjectReference Include="..\KOTORModSync.Core\KOTORModSync.Core.csproj" />
     <PackageReference Include="Avalonia.Controls.ItemsRepeater" Version="11.0.2" />
     <PackageReference Include="Avalonia.ReactiveUI" Version="11.0.2" />
     <PackageReference Include="Avalonia.Themes.Fluent" Version="11.0.2" />
@@ -125,15 +122,13 @@
     <!-- For x64 Platform -->
     <Copy Condition=" '$(Platform)' == 'x64' " SourceFiles="$(SolutionDir)vendor$(DirectorySeparatorChar)lib$(DirectorySeparatorChar)7z_x64.dll" DestinationFolder="$(TargetDir)Resources$(DirectorySeparatorChar)" />
 	<Copy Condition=" '$(Platform)' == 'x64' " SourceFiles="$(SolutionDir)vendor$(DirectorySeparatorChar)lib$(DirectorySeparatorChar)7z_x64.dll" DestinationFolder="$(PublishDir)Resources$(DirectorySeparatorChar)" />
-
-    <Move Condition=" '$(Platform)' == 'x64' " SourceFiles="$(TargetDir)Resources$(DirectorySeparatorChar)7z_x64.dll" DestinationFiles="$(TargetDir)Resources$(DirectorySeparatorChar)7z.dll" />
+	<Move Condition=" '$(Platform)' == 'x64' " SourceFiles="$(TargetDir)Resources$(DirectorySeparatorChar)7z_x64.dll" DestinationFiles="$(TargetDir)Resources$(DirectorySeparatorChar)7z.dll" />
 	<Move Condition=" '$(Platform)' == 'x64' " SourceFiles="$(PublishDir)Resources$(DirectorySeparatorChar)7z_x64.dll" DestinationFiles="$(PublishDir)Resources$(DirectorySeparatorChar)7z.dll" />
 
     <!-- For x86 Platform -->
     <Copy Condition=" '$(Platform)' == 'x86' " SourceFiles="$(SolutionDir)vendor$(DirectorySeparatorChar)lib$(DirectorySeparatorChar)7z_x86.dll" DestinationFolder="$(TargetDir)Resources$(DirectorySeparatorChar)" />
 	<Copy Condition=" '$(Platform)' == 'x86' " SourceFiles="$(SolutionDir)vendor$(DirectorySeparatorChar)lib$(DirectorySeparatorChar)7z_x86.dll" DestinationFolder="$(PublishDir)Resources$(DirectorySeparatorChar)" />
-
-    <Move Condition=" '$(Platform)' == 'x86' " SourceFiles="$(TargetDir)Resources$(DirectorySeparatorChar)7z_x86.dll" DestinationFiles="$(TargetDir)Resources$(DirectorySeparatorChar)7z.dll" />
+	<Move Condition=" '$(Platform)' == 'x86' " SourceFiles="$(TargetDir)Resources$(DirectorySeparatorChar)7z_x86.dll" DestinationFiles="$(TargetDir)Resources$(DirectorySeparatorChar)7z.dll" />
 	<Move Condition=" '$(Platform)' == 'x86' " SourceFiles="$(PublishDir)Resources$(DirectorySeparatorChar)7z_x86.dll" DestinationFiles="$(PublishDir)Resources$(DirectorySeparatorChar)7z.dll" />
   </Target>
 

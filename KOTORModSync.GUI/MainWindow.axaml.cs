@@ -26,7 +26,9 @@ using Avalonia.Layout;
 using Avalonia.LogicalTree;
 using Avalonia.Markup.Xaml.Styling;
 using Avalonia.Media;
+using Avalonia.Themes.Fluent;
 using Avalonia.Threading;
+using Avalonia.VisualTree;
 using JetBrains.Annotations;
 using KOTORModSync.CallbackDialogs;
 using KOTORModSync.Core;
@@ -39,7 +41,7 @@ using NotNullAttribute = JetBrains.Annotations.NotNullAttribute;
 namespace KOTORModSync
 {
     [SuppressMessage( "ReSharper", "UnusedParameter.Local" )]
-    public partial class MainWindow : Window
+    internal sealed partial class MainWindow : Window
     {
         public static List<Component> ComponentsList => MainConfig.AllComponents;
         public new event EventHandler<PropertyChangedEventArgs> PropertyChanged;
@@ -2511,9 +2513,8 @@ namespace KOTORModSync
         }
 
         private bool _initialize = true;
-
         [UsedImplicitly]
-        private void StyleComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        private async void StyleComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             try
             {
@@ -2523,40 +2524,69 @@ namespace KOTORModSync
                     return;
                 }
 
-                var comboBox = (ComboBox)sender;
-                var selectedItem = (ComboBoxItem)comboBox?.SelectedItem;
+                if ( !( sender is ComboBox comboBox ) )
+                    return;
 
-                string stylePath = selectedItem?.Tag as string;
-
-                if (!(stylePath is null) && stylePath.Equals("default"))
+                var selectedItem = (ComboBoxItem)comboBox.SelectedItem;
+                if ( !(selectedItem?.Tag is string stylePath) )
                 {
-                    Styles.Clear();
-                    TraverseControls(this, (Control)sender);
+                    Logger.LogVerbose( "stylePath cannot be rendered from tag, returning immediately" );
                     return;
                 }
 
-                var styleUriPath = new Uri("avares://KOTORModSync" + stylePath);
-
-                // Apply the selected style dynamically
-                var newStyle = new StyleInclude(styleUriPath)
-                {
-                    Source = styleUriPath
-                };
-
+                // clear existing style before adding a new one.
                 Styles.Clear();
-                Styles.Add(newStyle);
+                Styles.Add( new FluentTheme() );
+                Styles.Clear();
 
-                TraverseControls(this, (Control)sender);
+                if ( !stylePath.Equals( "default", StringComparison.OrdinalIgnoreCase ) )
+                {
+                    // Apply the selected style dynamically
+                    var styleUriPath = new Uri("avares://KOTORModSync" + stylePath);
+                    Styles.Add(
+                        new StyleInclude( styleUriPath )
+                        {
+                            Source = styleUriPath,
+                        }
+                    );
+                }
+
+                // manually update each control in the main window.
+                // TraverseControls( this, comboBox );
+
             }
             catch (Exception exception)
             {
-                Logger.LogException(exception);
+                await Logger.LogExceptionAsync(exception);
             }
         }
 
+        private static void TraverseControls(
+            [NotNull] Control control,
+            [NotNull] Control styleControlComboBox
+        )
+        {
+            if ( control is null )
+                throw new ArgumentNullException( nameof( control ) );
+
+            // Reload the style of the control
+            control.ApplyTemplate();
+
+            var logicalControl = control as ILogical;
+
+            // Traverse the child controls recursively
+            logicalControl.LogicalChildren.OfType<Control>()
+                .ToList()
+                .ForEach(
+                    childControl => TraverseControls(
+                        childControl ?? throw new NullReferenceException( nameof( childControl ) ),
+                        styleControlComboBox
+                    )
+                );
+        }
 
         // Method to get a List<TabItem> from the TabControl
-        [UsedImplicitly][NotNull][ItemNotNull]
+        [NotNull][ItemNotNull]
         public static List<TabItem> GetTabItems( [NotNull] TabControl tabControl)
         {
             if ( tabControl is null )
@@ -2577,34 +2607,6 @@ namespace KOTORModSync
             }
 
             return tabItems;
-        }
-
-        private static void TraverseControls(
-            [NotNull] Control control,
-            [NotNull] Control styleControlComboBox
-        )
-        {
-            if ( control is null )
-                throw new ArgumentNullException( nameof( control ) );
-
-            // fixes a crash that can happen while spamming the combobox style options.
-            if ( control.Equals(styleControlComboBox) )
-                return;
-
-            // Reload the style of the control
-            control.ApplyTemplate();
-
-            var logicalControl = control as ILogical;
-
-            // Traverse the child controls recursively
-            logicalControl.LogicalChildren.OfType<Control>()
-                .ToList()
-                .ForEach(
-                    childControl => TraverseControls(
-                        childControl ?? throw new NullReferenceException( nameof( childControl ) ),
-                        styleControlComboBox
-                    )
-                );
         }
 
         [UsedImplicitly]

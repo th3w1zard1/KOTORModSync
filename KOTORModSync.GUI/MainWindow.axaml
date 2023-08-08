@@ -21,10 +21,6 @@
         <converters:ListToVisibilityConverter x:Key="listToVisibilityConverter" />
     </Window.Resources>
 
-    <Window.Styles>
-        <StyleInclude Source="/Styles/Kotor2Style.axaml" />
-    </Window.Styles>
-
     <Grid x:Name="MainGrid" MinWidth="200" RowDefinitions="Auto,*">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*" MinWidth="250" />
@@ -646,7 +642,7 @@
                           SelectedItem="{Binding currentCompatibilityString}"
                           IsTabStop="True" />
                 <TextBlock Text="Theme" />
-                <ComboBox x:Name="StyleComboBox" SelectedIndex="0" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
+                <ComboBox x:Name="StyleComboBox" SelectedIndex="2" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
                           SelectionChanged="StyleComboBox_SelectionChanged">
                     <ComboBoxItem Content="TSL Style" Tag="/Styles/Kotor2Style.axaml" />
                     <ComboBoxItem Content="K1 Style" Tag="/Styles/KotorStyle.axaml" />

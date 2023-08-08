@@ -18,10 +18,7 @@ namespace KOTORModSync.Controls
 {
     public partial class DependencyControl : UserControl
     {
-        public DependencyControl()
-        {
-            InitializeComponent();
-        }
+        public DependencyControl() => InitializeComponent();
 
         // used to fix the move window code with combo boxes.
         protected override void OnAttachedToVisualTree( VisualTreeAttachmentEventArgs e )

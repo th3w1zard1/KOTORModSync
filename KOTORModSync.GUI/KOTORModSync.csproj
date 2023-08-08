@@ -105,28 +105,36 @@
   <PropertyGroup Condition=" '$(OS)' == 'Windows_NT' ">
     <IsUnix>false</IsUnix>
     <DirectorySeparatorChar>\</DirectorySeparatorChar>
-    <CopyCommand>xcopy /Y</CopyCommand>
-    <DeleteCommand>del /F</DeleteCommand>
-    <RenameCommand>ren</RenameCommand>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(OS)' != 'Windows_NT' ">
     <IsUnix>true</IsUnix>
     <DirectorySeparatorChar>/</DirectorySeparatorChar>
-    <CopyCommand>cp -f</CopyCommand>
-    <DeleteCommand>rm -f</DeleteCommand>
-    <RenameCommand>mv</RenameCommand>
   </PropertyGroup>
 
-  <Target Name="PostBuild" AfterTargets="PostBuildEvent" Condition=" '$(OS)' == 'Windows_NT'">
-    <Exec Condition=" '$(RuntimeIdentifier)' == 'linux-x64' OR '$(RuntimeIdentifier)' == 'osx-x64' " Command="$(CopyCommand) $(SolutionDir)vendor\bin\pykotorcli $(TargetDir)Resources$(DirectorySeparatorChar)" />
-    <Exec Condition=" '$(RuntimeIdentifier)' == 'linux-x64' OR '$(RuntimeIdentifier)' == 'osx-x64' " Command="$(CopyCommand) $(SolutionDir)vendor\bin\pykotorcli $(PublishDir)Resources$(DirectorySeparatorChar)" />
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
 
-    <Exec Condition=" '$(TargetPlatform)' == 'x64' " Command="$(CopyCommand) $(SolutionDir)vendor\lib\7z.dll $(TargetDir)Resources$(DirectorySeparatorChar)" />
-    <Exec Condition=" '$(TargetPlatform)' == 'x64' " Command="$(CopyCommand) $(SolutionDir)vendor\lib\7z.dll $(PublishDir)Resources$(DirectorySeparatorChar)" />
+	<!-- For Linux and macOS -->
+    <Copy Condition=" '$(RuntimeIdentifier)' == 'linux-x64' OR '$(RuntimeIdentifier)' == 'osx-x64' " SourceFiles="$(SolutionDir)vendor/bin/pykotorcli" DestinationFolder="$(TargetDir)Resources/" />
+    <Copy Condition=" '$(RuntimeIdentifier)' == 'linux-x64' OR '$(RuntimeIdentifier)' == 'osx-x64' " SourceFiles="$(SolutionDir)vendor/bin/pykotorcli" DestinationFolder="$(PublishDir)Resources/" />
 
-    <Exec Condition=" '$(RuntimeIdentifier)' != 'linux-x64' AND '$(RuntimeIdentifier)' != 'osx-x64' " Command="$(CopyCommand) $(SolutionDir)vendor\bin\pykotorcli.exe $(TargetDir)Resources$(DirectorySeparatorChar)" />
-    <Exec Condition=" '$(RuntimeIdentifier)' != 'linux-x64' AND '$(RuntimeIdentifier)' != 'osx-x64' " Command="$(CopyCommand) $(SolutionDir)vendor\bin\pykotorcli.exe $(PublishDir)Resources$(DirectorySeparatorChar)" />
+	<!-- For Windows only -->
+	<Copy Condition=" '$(RuntimeIdentifier)' != 'linux-x64' AND '$(RuntimeIdentifier)' != 'osx-x64' " SourceFiles="$(SolutionDir)vendor\bin\pykotorcli.exe" DestinationFolder="$(TargetDir)Resources\" />
+	<Copy Condition=" '$(RuntimeIdentifier)' != 'linux-x64' AND '$(RuntimeIdentifier)' != 'osx-x64' " SourceFiles="$(SolutionDir)vendor\bin\pykotorcli.exe" DestinationFolder="$(PublishDir)Resources\" />
+
+    <!-- For x64 Platform -->
+    <Copy Condition=" '$(Platform)' == 'x64' " SourceFiles="$(SolutionDir)vendor$(DirectorySeparatorChar)lib$(DirectorySeparatorChar)7z_x64.dll" DestinationFolder="$(TargetDir)Resources$(DirectorySeparatorChar)" />
+	<Copy Condition=" '$(Platform)' == 'x64' " SourceFiles="$(SolutionDir)vendor$(DirectorySeparatorChar)lib$(DirectorySeparatorChar)7z_x64.dll" DestinationFolder="$(PublishDir)Resources$(DirectorySeparatorChar)" />
+
+    <Move Condition=" '$(Platform)' == 'x64' " SourceFiles="$(TargetDir)Resources$(DirectorySeparatorChar)7z_x64.dll" DestinationFiles="$(TargetDir)Resources$(DirectorySeparatorChar)7z.dll" />
+	<Move Condition=" '$(Platform)' == 'x64' " SourceFiles="$(PublishDir)Resources$(DirectorySeparatorChar)7z_x64.dll" DestinationFiles="$(PublishDir)Resources$(DirectorySeparatorChar)7z.dll" />
+
+    <!-- For x86 Platform -->
+    <Copy Condition=" '$(Platform)' == 'x86' " SourceFiles="$(SolutionDir)vendor$(DirectorySeparatorChar)lib$(DirectorySeparatorChar)7z_x86.dll" DestinationFolder="$(TargetDir)Resources$(DirectorySeparatorChar)" />
+	<Copy Condition=" '$(Platform)' == 'x86' " SourceFiles="$(SolutionDir)vendor$(DirectorySeparatorChar)lib$(DirectorySeparatorChar)7z_x86.dll" DestinationFolder="$(PublishDir)Resources$(DirectorySeparatorChar)" />
+
+    <Move Condition=" '$(Platform)' == 'x86' " SourceFiles="$(TargetDir)Resources$(DirectorySeparatorChar)7z_x86.dll" DestinationFiles="$(TargetDir)Resources$(DirectorySeparatorChar)7z.dll" />
+	<Move Condition=" '$(Platform)' == 'x86' " SourceFiles="$(PublishDir)Resources$(DirectorySeparatorChar)7z_x86.dll" DestinationFiles="$(PublishDir)Resources$(DirectorySeparatorChar)7z.dll" />
   </Target>
 
   <!-- Delete logs and other temp output -->

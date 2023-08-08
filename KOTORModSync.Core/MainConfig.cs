@@ -28,7 +28,7 @@ namespace KOTORModSync.Core
     public sealed class MainConfig : INotifyPropertyChanged
     {
         [NotNull]
-        public static string CurrentVersion => "0.9.1";
+        public static string CurrentVersion => "0.9.2";
 
         public MainConfig()
         {

@@ -13,15 +13,12 @@
                    Padding="5" />
         <ScrollViewer Grid.Row="1" x:Name="LogScrollViewer" HorizontalScrollBarVisibility="Disabled"
                       VerticalScrollBarVisibility="Auto">
-            <TextBox x:Name="LogTextBox"
+            <SelectableTextBlock x:Name="LogTextBox"
                      FontSize="14"
                      HorizontalAlignment="Stretch"
-                     HorizontalContentAlignment="Left"
                      VerticalAlignment="Center"
                      TextWrapping="Wrap"
-                     AcceptsReturn="True"
                      Padding="1"
-                     IsReadOnly="True"
                      Text="{Binding LogText}" />
         </ScrollViewer>
     </Grid>

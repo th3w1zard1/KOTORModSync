@@ -60,12 +60,12 @@ namespace KOTORModSync
 
         private void InitializeControls()
         {
-            Logger.Logged += message => AppendLogAsync(message);
+            Logger.Logged += AppendLog;
 
             Logger.ExceptionLogged += ex => 
             {
                 string exceptionLog = $"Exception: {ex.GetType().Name}: {ex.Message}\nStack trace: {ex.StackTrace}";
-                AppendLogAsync(exceptionLog);
+                AppendLog( exceptionLog );
             };
 
             string logfileName = $"{Logger.LogFileName}{DateTime.Now:yyyy-MM-dd}";
@@ -77,14 +77,14 @@ namespace KOTORModSync
                 int startIndex = Math.Max(0, lines.Length - _maxLinesShown);
                 foreach (string line in lines.Skip(startIndex))
                 {
-                    AppendLogAsync(line);
+                    AppendLog( line );
                 }
                 LogScrollViewer.ScrollToEnd();
             }
         }
 
         private object _logLock = new object();
-        private async Task AppendLogAsync(string message)
+        private void AppendLog(string message)
         {
             try
             {
@@ -98,13 +98,8 @@ namespace KOTORModSync
                     _viewModel.AppendLog( message );
                 }
 
-                await Dispatcher.UIThread.InvokeAsync(
-                    () =>
-                    {
-                        // Scroll to the end of the content
-                        LogScrollViewer.ScrollToEnd();
-                    }
-                );
+                // Scroll to the end of the content
+                _ = Dispatcher.UIThread.InvokeAsync( () => LogScrollViewer.ScrollToEnd() );
             }
             catch ( Exception ex )
             {

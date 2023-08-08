@@ -632,9 +632,9 @@
             <StackPanel x:Name="MainConfigStackPanel" DataContext="{Binding MainConfigInstance}">
                 <CheckBox Content="Verbose Logging" IsChecked="{Binding debugLogging}" />
                 <CheckBox Content="Auto-Fix Config Errors" IsChecked="{Binding attemptFixes}" />
-                <CheckBox Content="No Admin" IsChecked="{Binding noAdmin}"
+                <CheckBox Content="Don't ask for Admin" IsChecked="{Binding noAdmin}"
                           ToolTip.Tip="Do not prompt for admin on any instruction (NOT RECOMMENDED). If you're having problems, it's recommended you run KOTORModSync as admin instead. Does nothing on Linux" />
-                <TextBlock Text="Patcher Option"
+                <TextBlock Text="Patcher Option:"
                            ToolTip.Tip="Mods are packaged with 'TSLPatcher' by default. Use 'PyKotorCLI' to reduce tedious clicking through tslpatcher windows" />
                 <ComboBox HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
                           ItemsSource="{Binding AllAvailablePatchers}"
@@ -645,7 +645,7 @@
                           ItemsSource="{Binding AllCompatibilityLevels}"
                           SelectedItem="{Binding currentCompatibilityString}"
                           IsTabStop="True" />
-                <TextBlock Text="Theme" />
+                <TextBlock Text="Theme:" />
                 <ComboBox x:Name="StyleComboBox" SelectedIndex="2" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
                           SelectionChanged="StyleComboBox_SelectionChanged">
                     <ComboBoxItem Content="Plain Style" Tag="default" />

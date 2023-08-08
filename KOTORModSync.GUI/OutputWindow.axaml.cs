@@ -60,13 +60,13 @@ namespace KOTORModSync
 
         private void InitializeControls()
         {
-            Logger.Logged += message => Dispatcher.UIThread.InvokeAsync(() => Task.Run(async () => await AppendLogAsync(message)));
+            Logger.Logged += message => AppendLogAsync(message);
 
-            Logger.ExceptionLogged += ex => Dispatcher.UIThread.InvokeAsync(() =>
+            Logger.ExceptionLogged += ex => 
             {
                 string exceptionLog = $"Exception: {ex.GetType().Name}: {ex.Message}\nStack trace: {ex.StackTrace}";
-                Task.Run(async () => await AppendLogAsync(exceptionLog) );
-            });
+                AppendLogAsync(exceptionLog);
+            };
 
             string logfileName = $"{Logger.LogFileName}{DateTime.Now:yyyy-MM-dd}";
             string executingDirectory = Core.Utility.Utility.GetExecutingAssemblyDirectory();
@@ -77,7 +77,7 @@ namespace KOTORModSync
                 int startIndex = Math.Max(0, lines.Length - _maxLinesShown);
                 foreach (string line in lines.Skip(startIndex))
                 {
-                    Task.Run(async () => await AppendLogAsync(line) );
+                    AppendLogAsync(line);
                 }
                 LogScrollViewer.ScrollToEnd();
             }

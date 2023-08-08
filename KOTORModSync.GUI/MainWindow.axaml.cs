@@ -1261,7 +1261,9 @@ namespace KOTORModSync
 
                     Component.InstallExitCode exitCode = Component.InstallExitCode.UnknownError;
 
-                    for ( int index = 0; index < MainConfig.AllComponents.Count; index++ )
+                    List<Component> selectedMods = MainConfig.AllComponents.Where( thisComponent => thisComponent.IsSelected ).ToList();
+
+                    for ( int index = 0; index < selectedMods.LongCount(); index++ )
                     {
                         if ( _progressWindowClosed )
                         {
@@ -1282,7 +1284,7 @@ namespace KOTORModSync
                                     + Environment.NewLine
                                     + component.Directions;
 
-                                double percentComplete = (double)index / MainConfig.AllComponents.Count;
+                                double percentComplete = (double)index / selectedMods.LongCount();
                                 progressWindow.ProgressBar.Value = percentComplete;
                                 progressWindow.InstalledRemaining.Text
                                     = $"{index}/{MainConfig.AllComponents.Count + 1} Components Installed";

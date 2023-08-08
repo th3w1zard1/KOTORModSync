@@ -640,8 +640,8 @@
                           ItemsSource="{Binding AllAvailablePatchers}"
                           SelectedItem="{Binding patcherOptionString}"
                           IsTabStop="True" />
-                <TextBlock Text="Compatibility Enforcement Level:" ToolTip.Tip="Determines which mods will be skipped." />
-                <ComboBox HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
+                <TextBlock Text="Compatibility Enforcement Level:" ToolTip.Tip="Determines which mods will be skipped." IsVisible="False"/>
+                <ComboBox HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" IsVisible="False"
                           ItemsSource="{Binding AllCompatibilityLevels}"
                           SelectedItem="{Binding currentCompatibilityString}"
                           IsTabStop="True" />

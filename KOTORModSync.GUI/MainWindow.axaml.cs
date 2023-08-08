@@ -1263,7 +1263,7 @@ namespace KOTORModSync
 
                     List<Component> selectedMods = MainConfig.AllComponents.Where( thisComponent => thisComponent.IsSelected ).ToList();
 
-                    for ( int index = 0; index < selectedMods.Count; index++ )
+                    for ( int index = 0; index <= selectedMods.Count; index++ )
                     {
                         if ( _progressWindowClosed )
                         {

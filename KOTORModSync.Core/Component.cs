@@ -952,9 +952,7 @@ namespace KOTORModSync.Core
                 Instruction instruction = theseInstructions[instructionIndex - 1];
 
                 if ( !ShouldRunInstruction( instruction, componentsList ) )
-                {
                     continue;
-                }
 
                 // Get the original check-sums before making any modifications
                 /*await Logger.LogAsync( "Checking file hashes of the install location for mismatch..." );

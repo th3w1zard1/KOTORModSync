@@ -1263,7 +1263,7 @@ namespace KOTORModSync
 
                     List<Component> selectedMods = MainConfig.AllComponents.Where( thisComponent => thisComponent.IsSelected ).ToList();
 
-                    for ( int index = 0; index <= selectedMods.Count; index++ )
+                    for ( int index = 0; index < selectedMods.Count; index++ )
                     {
                         if ( _progressWindowClosed )
                         {
@@ -1287,7 +1287,7 @@ namespace KOTORModSync
                                 double percentComplete = (double)index / selectedMods.Count;
                                 progressWindow.ProgressBar.Value = percentComplete;
                                 progressWindow.InstalledRemaining.Text
-                                    = $"{index}/{selectedMods.Count + 1} Total Installed";
+                                    = $"{index}/{selectedMods.Count - 1} Total Installed";
                                 progressWindow.PercentCompleted.Text = $"{Math.Round( percentComplete * 100 )}%";
 
                                 // Additional fallback options

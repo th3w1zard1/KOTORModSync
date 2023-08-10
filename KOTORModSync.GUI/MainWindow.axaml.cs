@@ -1287,7 +1287,7 @@ namespace KOTORModSync
                                 double percentComplete = (double)index / selectedMods.Count;
                                 progressWindow.ProgressBar.Value = percentComplete;
                                 progressWindow.InstalledRemaining.Text
-                                    = $"{index}/{selectedMods.Count - 1} Total Installed";
+                                    = $"{index}/{selectedMods.Count} Total Installed";
                                 progressWindow.PercentCompleted.Text = $"{Math.Round( percentComplete * 100 )}%";
 
                                 // Additional fallback options
@@ -1311,7 +1311,7 @@ namespace KOTORModSync
 
                         await Logger.LogAsync( $"Start Install of '{component.Name}'..." );
                         exitCode = await component.InstallAsync( MainConfig.AllComponents );
-                        await Logger.LogAsync( $"Install of '{component.Name}' finished with exit code {exitCode}" );
+                        await Logger.LogAsync( $"Install of '{component.Name ?? string.Empty}' finished with exit code {exitCode.ToString() ?? string.Empty}" );
 
                         if ( exitCode != 0 )
                         {
@@ -1539,7 +1539,7 @@ namespace KOTORModSync
                 }
                 else if ( lastTabName == "raw edit" )
                 {
-                    shouldSwapTabs = await ShouldSaveChanges( true );
+                    shouldSwapTabs = await ShouldSaveChanges();
                     if ( shouldSwapTabs )
                     {
                         // unload the raw editor
@@ -1654,7 +1654,7 @@ namespace KOTORModSync
                 throw new ArgumentNullException( nameof( selectedComponent ) );
 
             _ = Logger.LogVerboseAsync( $"Loading '{selectedComponent.Name}' into the raw editor..." );
-            if ( CurrentComponentHasChanges() && CurrentComponent != selectedComponent )
+            if ( CurrentComponentHasChanges() )
             {
                 bool? confirmResult = await ConfirmationDialog.ShowConfirmationDialog(
                     parentWindow: this,
@@ -1761,7 +1761,7 @@ namespace KOTORModSync
 
                 // Find the corresponding component in the collection
                 int index = MainConfig.AllComponents.IndexOf( CurrentComponent );
-                if ( index < 0 || index >= MainConfig.AllComponents.Count )
+                if ( index == -1 )
                 {
                     string componentName = string.IsNullOrWhiteSpace( newComponent?.Name )
                         ? "."

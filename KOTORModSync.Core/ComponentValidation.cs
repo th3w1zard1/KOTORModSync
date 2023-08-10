@@ -4,6 +4,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using JetBrains.Annotations;
@@ -118,7 +119,19 @@ namespace KOTORModSync.Core
                     return success;
                 }
 
-                foreach ( Instruction instruction in ComponentToValidate.Instructions )
+                var instructions = ComponentToValidate.Instructions.ToList();
+                foreach ( Option thisOption in ComponentToValidate.Options )
+                {
+                    if ( thisOption is null )
+                        continue;
+
+                    foreach ( Instruction optionInstruction in thisOption.Instructions )
+                    {
+                        instructions.Add( optionInstruction );
+                    }
+                }
+
+                foreach ( Instruction instruction in instructions )
                 {
                     if ( instruction.Action is Instruction.ActionType.Unset )
                     {
@@ -223,7 +236,19 @@ namespace KOTORModSync.Core
         {
             var allArchives = new List<string>();
 
-            foreach ( Instruction instruction in ComponentToValidate.Instructions )
+            var instructions = ComponentToValidate.Instructions.ToList();
+            foreach ( Option thisOption in ComponentToValidate.Options )
+            {
+                if ( thisOption is null )
+                    continue;
+
+                foreach ( Instruction optionInstruction in thisOption.Instructions )
+                {
+                    instructions.Add( optionInstruction );
+                }
+            }
+
+            foreach ( Instruction instruction in instructions )
             {
                 if ( instruction.Action != Instruction.ActionType.Extract )
                     continue;
@@ -280,7 +305,19 @@ namespace KOTORModSync.Core
         private bool ParseDestinationWithAction()
         {
             bool success = true;
-            foreach ( Instruction instruction in ComponentToValidate.Instructions )
+            var instructions = ComponentToValidate.Instructions.ToList();
+            foreach ( Option thisOption in ComponentToValidate.Options )
+            {
+                if ( thisOption is null )
+                    continue;
+
+                foreach ( Instruction optionInstruction in thisOption.Instructions )
+                {
+                    instructions.Add( optionInstruction );
+                }
+            }
+
+            foreach ( Instruction instruction in instructions )
             {
                 switch ( instruction.Action )
                 {

@@ -1262,7 +1262,6 @@ namespace KOTORModSync
                     Component.InstallExitCode exitCode = Component.InstallExitCode.UnknownError;
 
                     List<Component> selectedMods = MainConfig.AllComponents.Where( thisComponent => thisComponent.IsSelected ).ToList();
-
                     for ( int index = 0; index < selectedMods.Count; index++ )
                     {
                         if ( _progressWindowClosed )
@@ -1272,7 +1271,7 @@ namespace KOTORModSync
                             return;
                         }
 
-                        Component component = MainConfig.AllComponents[index];
+                        Component component = selectedMods[index];
                         await Dispatcher.UIThread.InvokeAsync(
                             async () =>
                             {
@@ -1340,7 +1339,10 @@ namespace KOTORModSync
                     }
 
                     if ( exitCode == Component.InstallExitCode.Success)
-                        await InformationDialog.ShowInformationDialog( this, "All components successfully installed!" );
+                    {
+                        await InformationDialog.ShowInformationDialog( this, "Install Completed. Check the output window for information." );
+                        await Logger.LogAsync( "Install completed." );
+                    }
 
                     progressWindow.Close();
                     _installRunning = false;

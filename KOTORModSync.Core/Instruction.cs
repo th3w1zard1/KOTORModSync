@@ -443,7 +443,7 @@ namespace KOTORModSync.Core
                 try
                 {
                     File.Delete( filePath );
-                    Logger.Log( $"Deleted file: '{Path.GetFileNameWithoutExtension( filePath )}'" );
+                    Logger.Log( $"Deleted file: '{filePath}'" );
                 }
                 catch ( Exception ex )
                 {

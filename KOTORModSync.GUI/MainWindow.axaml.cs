@@ -1803,26 +1803,25 @@ namespace KOTORModSync
             }
         }
 
-        private async void MoveComponentListItem( [CanBeNull] Control selectedTreeViewItem, int relativeIndex )
+        private async void MoveComponentListItem( [CanBeNull] Component componentToMove, int relativeIndex )
         {
             try
             {
-                var treeViewComponent = (Component)selectedTreeViewItem?.Tag;
 
-                int index = MainConfig.AllComponents.IndexOf( treeViewComponent );
-                if ( treeViewComponent is null
-                    || index == 0 && relativeIndex < 0
+                int index = MainConfig.AllComponents.IndexOf( componentToMove );
+                if ( componentToMove is null
+                    || (index == 0 && relativeIndex < 0)
                     || index == -1
                     || index + relativeIndex == MainConfig.AllComponents.Count )
                 {
                     return;
                 }
 
-                _ = MainConfig.AllComponents.Remove( treeViewComponent );
-                MainConfigInstance.allComponents.Insert( index + relativeIndex, treeViewComponent );
+                _ = MainConfig.AllComponents.Remove( componentToMove );
+                MainConfigInstance.allComponents.Insert( index + relativeIndex, componentToMove );
                 await ProcessComponentsAsync( MainConfig.AllComponents );
                 await Logger.LogVerboseAsync(
-                    $"Moved '{treeViewComponent.Name}' to index #{MainConfig.AllComponents.IndexOf( treeViewComponent ) + 1}"
+                    $"Moved '{componentToMove.Name}' to index #{MainConfig.AllComponents.IndexOf( componentToMove ) + 1}"
                 );
             }
             catch ( Exception ex )
@@ -1832,22 +1831,12 @@ namespace KOTORModSync
         }
 
         [UsedImplicitly]
-        private void MoveUpButton_Click( [NotNull] object sender, [NotNull] RoutedEventArgs e )
-        {
-            if ( LeftTreeView.SelectedItem is TreeViewItem selectedTreeViewItem )
-            {
-                MoveComponentListItem( selectedTreeViewItem, relativeIndex: -1 );
-            }
-        }
+        private void MoveUpButton_Click( [NotNull] object sender, [NotNull] RoutedEventArgs e ) =>
+            MoveComponentListItem( CurrentComponent, relativeIndex: -1 );
 
         [UsedImplicitly]
-        private void MoveDownButton_Click( [NotNull] object sender, [NotNull] RoutedEventArgs e )
-        {
-            if ( LeftTreeView.SelectedItem is TreeViewItem selectedTreeViewItem )
-            {
-                MoveComponentListItem( selectedTreeViewItem, relativeIndex: 1 );
-            }
-        }
+        private void MoveDownButton_Click( [NotNull] object sender, [NotNull] RoutedEventArgs e ) =>
+            MoveComponentListItem( CurrentComponent, relativeIndex: 1 );
 
         [UsedImplicitly]
         private async void SaveModFile_Click( [NotNull] object sender, [NotNull] RoutedEventArgs e )
@@ -2534,7 +2523,7 @@ namespace KOTORModSync
                 var selectedItem = (ComboBoxItem)comboBox.SelectedItem;
                 if ( !(selectedItem?.Tag is string stylePath) )
                 {
-                    Logger.LogVerbose( "stylePath cannot be rendered from tag, returning immediately" );
+                    await Logger.LogVerboseAsync( "stylePath cannot be rendered from tag, returning immediately" );
                     return;
                 }
 

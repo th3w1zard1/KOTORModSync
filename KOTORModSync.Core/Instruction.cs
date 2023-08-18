@@ -463,9 +463,9 @@ namespace KOTORModSync.Core
                 }
                 else if ( !fileNameCounts.ContainsKey( fileNameWithoutExtension ) )
                 {
-                    Logger.LogVerbose(
-                        $"Conditional 2: '{fileNameWithoutExtension}' is not present in '{fileNameCounts}' ergo not a duplicate"
-                    );
+                    /*Logger.LogVerbose(
+                        $"Conditional 2: '{fileNameWithoutExtension}' is not present in '{fileNameCounts}' ergo not an extension included for this deletion."
+                    );*/
                 }
                 else if ( fileNameCounts[fileNameWithoutExtension] <= 1 )
                 {

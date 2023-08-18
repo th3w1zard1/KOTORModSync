@@ -16,19 +16,19 @@ namespace KOTORModSync.Core
     // there should only ever be one MainConfig instance created at any one time.
     // instance has GET and SET access.
     // Everyone else has readonly GET access.
-    [SuppressMessage( category: "Performance", checkId: "CA1822:Mark members as static", Justification = "<Pending>" )]
+    [SuppressMessage( category: "Performance", checkId: "CA1822:Mark members as static", Justification = "unique naming scheme used for class" )]
     [SuppressMessage(
         category: "CodeQuality",
         checkId: "IDE0079:Remove unnecessary suppression",
         Justification = "<Pending>"
     )]
-    [SuppressMessage( "ReSharper", "MemberCanBeMadeStatic.Global" )]
-    [SuppressMessage( "ReSharper", "InconsistentNaming" )]
-    [SuppressMessage( "ReSharper", "MemberCanBePrivate.Global" )]
+    [SuppressMessage( category: "ReSharper", checkId: "MemberCanBeMadeStatic.Global" )]
+    [SuppressMessage( category: "ReSharper", checkId: "InconsistentNaming" )]
+    [SuppressMessage( category: "ReSharper", checkId: "MemberCanBePrivate.Global" )]
     public sealed class MainConfig : INotifyPropertyChanged
     {
         [NotNull]
-        public static string CurrentVersion => "0.9.3";
+        public static string CurrentVersion => "0.9.4";
 
         public MainConfig()
         {
@@ -97,7 +97,19 @@ namespace KOTORModSync.Core
         }
         [NotNull][UsedImplicitly] public string patcherOptionString
         {
-            get => PatcherOption.ToString();
+            get
+            {
+                try
+                {
+                    return PatcherOption.ToString() ?? throw new InvalidOperationException();
+                }
+                catch ( Exception e )
+                {
+                    Logger.LogException( e );
+                }
+
+                return "UNDEFINED";
+            }
             set => PatcherOption = (AvailablePatchers)Enum.Parse( typeof( AvailablePatchers ), value );
         }
 
@@ -113,7 +125,19 @@ namespace KOTORModSync.Core
         }
         [NotNull][UsedImplicitly] public string currentCompatibilityString
         {
-            get => CurrentCompatibilityLevel.ToString();
+            get
+            {
+                try
+                {
+                    return CurrentCompatibilityLevel.ToString() ?? throw new InvalidOperationException();
+                }
+                catch ( Exception e )
+                {
+                    Logger.LogException( e );
+                }
+
+                return "UNDEFINED";
+            }
             set => CurrentCompatibilityLevel = (CompatibilityLevel)Enum.Parse( typeof( CompatibilityLevel ), value );
         }
 

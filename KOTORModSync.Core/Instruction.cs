@@ -291,9 +291,6 @@ namespace KOTORModSync.Core
                                 if ( reader.Entry.IsDirectory )
                                     continue;
 
-                                if ( argDestinationPath?.FullName is null )
-                                    continue;
-
                                 string extractFolderName = Path.GetFileNameWithoutExtension( thisFile.Name );
                                 string destinationItemPath = Path.Combine(
                                     argDestinationPath.FullName,
@@ -361,8 +358,8 @@ namespace KOTORModSync.Core
                             var thisFile = new FileInfo(sourcePath);
                             using (FileStream stream = File.OpenRead(thisFile.FullName))
                             {
-                                string destinationDirectory = Path.Combine( argDestinationPath?.FullName ?? thisFile.Directory?.FullName, Path.GetFileNameWithoutExtension(thisFile.Name) );
-                                if ( destinationDirectory != null && !Directory.Exists( destinationDirectory ) )
+                                string destinationDirectory = Path.Combine( argDestinationPath?.FullName ?? thisFile.Directory.FullName, Path.GetFileNameWithoutExtension(thisFile.Name) );
+                                if ( !Directory.Exists( destinationDirectory ) )
                                 {
                                     _ = Logger.LogAsync( $"Create directory '{destinationDirectory}'" );
                                     _ = Directory.CreateDirectory( destinationDirectory );
@@ -612,6 +609,7 @@ namespace KOTORModSync.Core
         }
 
         public async Task<ActionExitCode> CopyFileAsync(
+            // ReSharper disable once AssignNullToNotNullAttribute
             [ItemNotNull][NotNull] List<string> sourcePaths = null,
             DirectoryInfo destinationPath = null
         )

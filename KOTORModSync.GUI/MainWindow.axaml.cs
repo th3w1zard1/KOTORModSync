@@ -1340,7 +1340,7 @@ namespace KOTORModSync
 
                     if ( exitCode == Component.InstallExitCode.Success)
                     {
-                        await InformationDialog.ShowInformationDialog( this, "Install Completed. Check the output window for information." );
+                        await InformationDialog.ShowInformationDialog( this, message: "Install Completed. Check the output window for information." );
                         await Logger.LogAsync( "Install completed." );
                     }
 
@@ -1385,8 +1385,8 @@ namespace KOTORModSync
             try
             {
                 string file = await SaveFile(
-                    "Save instructions documentation to file",
-                    new List<string>{ "txt" }
+                    saveWindowTitle: "Save instructions documentation to file",
+                    defaultExt: new List<string>{ "txt" }
                 );
                 if ( file is null )
                     return; // user cancelled
@@ -1797,7 +1797,7 @@ namespace KOTORModSync
                 await Logger.LogExceptionAsync( ex );
                 await InformationDialog.ShowInformationDialog(
                     this,
-                    ex.Message + Environment.NewLine + output
+                    output + Environment.NewLine + ex.Message
                 );
                 return false;
             }
@@ -2026,7 +2026,6 @@ namespace KOTORModSync
         {
             if ( !( sender is CheckBox checkBox ) )
                 return;
-
             if ( !( checkBox.Tag is Component thisComponent ) )
                 return;
 
@@ -2038,7 +2037,6 @@ namespace KOTORModSync
         {
             if ( !( sender is CheckBox checkBox ) )
                 return;
-
             if ( !( checkBox.Tag is Component thisComponent ) )
                 return;
 
@@ -2068,10 +2066,7 @@ namespace KOTORModSync
             checkBox.Checked += OnCheckBoxOnChecked;
             checkBox.Unchecked += OnCheckBoxOnUnchecked;
 
-            if ( ToggleButton.IsCheckedProperty != null )
-            {
-                _ = checkBox.Bind( ToggleButton.IsCheckedProperty, binding );
-            }
+            _ = checkBox.Bind( ToggleButton.IsCheckedProperty, binding );
 
             return checkBox;
         }
@@ -2267,10 +2262,7 @@ namespace KOTORModSync
             );
             
             var binding = new Binding( path: "IsSelected" );
-            if ( ToggleButton.IsCheckedProperty != null )
-            {
-                _ = checkBox.Bind( ToggleButton.IsCheckedProperty, binding );
-            }
+            _ = checkBox.Bind( ToggleButton.IsCheckedProperty, binding );
 
             var rootItem = new TreeViewItem
             {
@@ -2507,7 +2499,7 @@ namespace KOTORModSync
 
         private bool _initialize = true;
         [UsedImplicitly]
-        private async void StyleComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        private async void StyleComboBox_SelectionChanged([NotNull] object sender, [NotNull] SelectionChangedEventArgs e)
         {
             try
             {
@@ -2554,53 +2546,7 @@ namespace KOTORModSync
             }
         }
 
-        private static void TraverseControls(
-            [NotNull] Control control,
-            [NotNull] Control styleControlComboBox
-        )
-        {
-            if ( control is null )
-                throw new ArgumentNullException( nameof( control ) );
-
-            // Reload the style of the control
-            control.ApplyTemplate();
-
-            var logicalControl = control as ILogical;
-
-            // Traverse the child controls recursively
-            logicalControl.LogicalChildren.OfType<Control>()
-                .ToList()
-                .ForEach(
-                    childControl => TraverseControls(
-                        childControl ?? throw new NullReferenceException( nameof( childControl ) ),
-                        styleControlComboBox
-                    )
-                );
-        }
-
         // Method to get a List<TabItem> from the TabControl
-        [NotNull][ItemNotNull]
-        public static List<TabItem> GetTabItems( [NotNull] TabControl tabControl)
-        {
-            if ( tabControl is null )
-                throw new ArgumentNullException( nameof( tabControl ) );
-            if ( tabControl.Items.IsNullOrEmptyOrAllNull() )
-                throw new ArgumentException( $"tabControl.Items failed IsNullOrEmptyOrAllNull({ nameof(tabControl) })" );
-
-            var tabItems = new List<TabItem>();
-            // Access the Items property of the TabControl
-            // ReSharper disable once PossibleNullReferenceException
-            foreach (object item in tabControl.Items)
-            {
-                // Check if the item is of type TabItem
-                if (item is TabItem tabItem)
-                {
-                    tabItems.Add(tabItem);
-                }
-            }
-
-            return tabItems;
-        }
 
         [UsedImplicitly]
         private void ToggleMaximizeButton_Click( [NotNull] object sender, [NotNull] RoutedEventArgs e )

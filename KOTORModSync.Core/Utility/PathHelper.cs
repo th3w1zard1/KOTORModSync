@@ -480,17 +480,17 @@ namespace KOTORModSync.Core.Utility
         
         public static IEnumerable<FileSystemInfo> FindCaseInsensitiveDuplicates(DirectoryInfo dirInfo, bool includeSubFolders=true)
         {
-            return FindDuplicatesRecursively(dirInfo?.FullName, includeSubFolders, isFile: false);
+            return FindCaseInsensitiveDuplicates(dirInfo?.FullName, includeSubFolders, isFile: false);
         }
 
         public static IEnumerable<FileSystemInfo> FindCaseInsensitiveDuplicates(FileInfo fileInfo)
         {
             // assumed Path.GetDirectoryName can't be null when passing a FileInfo's path.
-            return FindDuplicatesRecursively(fileInfo?.DirectoryName, isFile: true);
+            return FindCaseInsensitiveDuplicates(fileInfo?.DirectoryName, isFile: true);
         }
 
         // Finds all duplicate items in a path.
-        public static IEnumerable<FileSystemInfo> FindDuplicatesRecursively(string path, bool includeSubFolders=true, bool? isFile=null)
+        public static IEnumerable<FileSystemInfo> FindCaseInsensitiveDuplicates(string path, bool includeSubFolders=true, bool? isFile=null)
         {
             string formattedPath = FixPathFormatting(path);
             if (formattedPath is null || !PathValidator.IsValidPath(formattedPath))
@@ -569,7 +569,7 @@ namespace KOTORModSync.Core.Utility
 
                 if (includeSubFolders)
                 {
-                    foreach (FileSystemInfo duplicate in FindDuplicatesRecursively(subDirectory.FullName))
+                    foreach (FileSystemInfo duplicate in FindCaseInsensitiveDuplicates(subDirectory.FullName))
                     {
                         yield return duplicate;
                     }

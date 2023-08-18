@@ -844,7 +844,7 @@ namespace KOTORModSync
                 }
 
                 await Logger.LogAsync( "Finding duplicate case-insensitive folders/files in the install destination..." );
-                List<FileSystemInfo> duplicates = PathHelper.FindCaseInsensitiveDuplicates( MainConfig.DestinationPath.FullName );
+                IEnumerable<FileSystemInfo> duplicates = PathHelper.FindCaseInsensitiveDuplicates( MainConfig.DestinationPath.FullName );
                 foreach ( FileSystemInfo duplicate in duplicates )
                 {
                     await Logger.LogErrorAsync( duplicate?.FullName + " has a duplicate, please resolve before attempting an install." );
@@ -2022,7 +2022,7 @@ namespace KOTORModSync
         }
 
         // Set up the event handler for the checkbox
-        void OnCheckBoxOnChecked( object sender, RoutedEventArgs e )
+        private void OnCheckBoxOnChecked( object sender, RoutedEventArgs e )
         {
             if ( !( sender is CheckBox checkBox ) )
                 return;
@@ -2033,8 +2033,8 @@ namespace KOTORModSync
             ComponentCheckboxChecked( thisComponent, new HashSet<Component>() );
         }
 
-        
-        void OnCheckBoxOnUnchecked( object sender, RoutedEventArgs e )
+
+        private void OnCheckBoxOnUnchecked( object sender, RoutedEventArgs e )
         {
             if ( !( sender is CheckBox checkBox ) )
                 return;

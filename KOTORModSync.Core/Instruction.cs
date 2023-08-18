@@ -59,7 +59,7 @@ namespace KOTORModSync.Core
             }
         }
 
-        [JsonProperty("Action")]
+        [JsonProperty(nameof( Action ))]
         public string ActionString
         {
             get => Action.ToString();
@@ -316,7 +316,8 @@ namespace KOTORModSync.Core
                                         () => reader.WriteEntryToDirectory(
                                             destinationDirectory ?? throw new InvalidOperationException(),
                                             ArchiveHelper.DefaultExtractionOptions
-                                        )
+                                        ),
+                                        cancellationToken
                                     );
                                 }
                                 catch ( UnauthorizedAccessException )

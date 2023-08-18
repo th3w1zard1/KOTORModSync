@@ -38,7 +38,7 @@ namespace KOTORModSync.Tests
         [Test]
         public void FindCaseInsensitiveDuplicates_ReturnsEmptyList_WhenDirectoryIsEmpty()
         {
-            List<FileSystemInfo> result = PathHelper.FindCaseInsensitiveDuplicates(_tempDirectory);
+            IEnumerable<FileSystemInfo> result = PathHelper.FindCaseInsensitiveDuplicates(_tempDirectory);
 
             Assert.That( result, Is.Empty );
         }
@@ -53,7 +53,7 @@ namespace KOTORModSync.Tests
             file2.Create().Close();
 
             // Act
-            List<FileSystemInfo> result = PathHelper.FindCaseInsensitiveDuplicates(_tempDirectory);
+            IEnumerable<FileSystemInfo> result = PathHelper.FindCaseInsensitiveDuplicates(_tempDirectory);
 
             // Assert
             Assert.That( result, Is.Empty );
@@ -70,10 +70,10 @@ namespace KOTORModSync.Tests
             file2.Create().Close();
 
             // Act
-            List<FileSystemInfo> result = PathHelper.FindCaseInsensitiveDuplicates(_tempDirectory);
+            IEnumerable<FileSystemInfo> result = PathHelper.FindCaseInsensitiveDuplicates(_tempDirectory);
 
             // Assert
-            Assert.That( result, Has.Count.EqualTo( 2 ) );
+            Assert.That( result?.ToList(), Has.Count.EqualTo( 2 ) );
         }
 
         [Test]
@@ -87,10 +87,10 @@ namespace KOTORModSync.Tests
             file2.Create().Close();
 
             // Act
-            List<FileSystemInfo> result = PathHelper.FindCaseInsensitiveDuplicates(_tempDirectory);
+            IEnumerable<FileSystemInfo> result = PathHelper.FindCaseInsensitiveDuplicates(_tempDirectory);
 
             // Assert
-            Assert.That( result, Has.Count.EqualTo( 2 ) );
+            Assert.That( result?.ToList(), Has.Count.EqualTo( 2 ) );
         }
 
         [Test]
@@ -103,7 +103,7 @@ namespace KOTORModSync.Tests
             file2.Create().Close();
 
             // Act
-            List<FileSystemInfo> result = PathHelper.FindCaseInsensitiveDuplicates(_tempDirectory);
+            IEnumerable<FileSystemInfo> result = PathHelper.FindCaseInsensitiveDuplicates(_tempDirectory);
 
             // Assert
             Assert.That( result, Is.Empty );
@@ -119,7 +119,7 @@ namespace KOTORModSync.Tests
             file2.Create().Close();
 
             // Act
-            List<FileSystemInfo> result = PathHelper.FindCaseInsensitiveDuplicates(_tempDirectory);
+            IEnumerable<FileSystemInfo> result = PathHelper.FindCaseInsensitiveDuplicates(_tempDirectory);
 
             // Assert
             Assert.That( result, Is.Empty );

@@ -4,6 +4,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using JetBrains.Annotations;
@@ -12,6 +13,7 @@ using KOTORModSync.Core.Utility;
 
 namespace KOTORModSync.ConsoleApp
 {
+    [SuppressMessage( "ReSharper", "InconsistentNaming" )]
     internal static class Program
     {
         private static MainConfig MainConfigInstance;

@@ -101,7 +101,7 @@ namespace KOTORModSync
                 // Scroll to the end of the content
                 _ = Dispatcher.UIThread.InvokeAsync( () => LogScrollViewer.ScrollToEnd() );
             }
-            catch ( Exception ex )
+            catch ( Exception )
             {
             }
         }

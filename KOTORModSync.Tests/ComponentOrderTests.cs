@@ -531,7 +531,7 @@ namespace KOTORModSync.Tests
             Assert.Throws<KeyNotFoundException>( () =>
             {
                 _ = Component.ConfirmComponentsInstallOrder(componentsList);
-            }, "ConfirmComponentsInstallOrder should have raised a KeyNotFoundException");
+            }, message: "ConfirmComponentsInstallOrder should have raised a KeyNotFoundException");
 
         }
 

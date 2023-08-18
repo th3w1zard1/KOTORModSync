@@ -46,7 +46,7 @@ Name=hk50 with tslrcm
 
             // Assert
             Assert.That( result, Is.Not.Null );
-            Assert.That( result.Count, Is.EqualTo( 4 ) );
+            Assert.That( result, Has.Count.EqualTo( 4 ) );
 
             Assert.Multiple( () =>
             {
@@ -74,7 +74,7 @@ Namespace4=hk50TSLRCM
             Dictionary<string, Dictionary<string, string>> result = IniHelper.ReadNamespacesIniFromArchive(stream);
 
             // Assert
-            Assert.IsNull(result);
+            Assert.That( result, Is.Null );
         }
 
         [Test]
@@ -88,7 +88,7 @@ Namespace4=hk50TSLRCM
             Dictionary<string, Dictionary<string, string>> result = IniHelper.ReadNamespacesIniFromArchive(stream);
 
             // Assert
-            Assert.IsNull(result);
+            Assert.That( result, Is.Null );
         }
 
         [Test]
@@ -121,8 +121,8 @@ Name=hk50 with tslrcm
                 Dictionary<string, Dictionary<string, string>> result = IniHelper.ParseNamespacesIni(reader);
 
                 // Assert
-                Assert.IsNotNull(result);
-                Assert.That( result.Count, Is.EqualTo( 4 ) );
+                Assert.That( result, Is.Not.Null );
+                Assert.That( result, Has.Count.EqualTo( 4 ) );
                 Assert.Multiple( () =>
                 {
                     Assert.That( result["Namespace1"]["standard"], Is.EqualTo( "standard hk47 no tslrcm" ) );
@@ -154,8 +154,8 @@ Name=hk50 with tslrcm
                 Dictionary<string, Dictionary<string, string>> result = IniHelper.ParseNamespacesIni(reader);
 
                 // Assert
-                Assert.IsNotNull(result);
-                Assert.That( result.Count, Is.EqualTo( 0 ) );
+                Assert.That( result, Is.Not.Null );
+                Assert.That( result, Is.Empty );
             }
         }
     }

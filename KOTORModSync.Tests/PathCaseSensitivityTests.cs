@@ -2,6 +2,8 @@
 // Licensed under the GNU General Public License v3.0 (GPLv3).
 // See LICENSE.txt file in the project root for full license information.
 
+using System.Diagnostics;
+using System.Text;
 using KOTORModSync.Core.Utility;
 
 namespace KOTORModSync.Tests
@@ -12,14 +14,14 @@ namespace KOTORModSync.Tests
         private static string s_testDirectory;
 #pragma warning restore CS8618
 
-        [OneTimeSetUp]
+        [SetUp]
         public static void InitializeTestDirectory()
         {
             s_testDirectory = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
             _ = Directory.CreateDirectory( s_testDirectory );
         }
 
-        [OneTimeTearDown]
+        [TearDown]
         public static void CleanUpTestDirectory() => Directory.Delete(s_testDirectory, recursive: true);
 
         [Test]
@@ -29,9 +31,14 @@ namespace KOTORModSync.Tests
             File.WriteAllText(Path.Combine(s_testDirectory, "File.txt"), "Test content");
             
             var fileInfo = new FileInfo(Path.Combine(s_testDirectory, "file.txt"));
-            IEnumerable<FileSystemInfo> result = PathHelper.FindCaseInsensitiveDuplicates(fileInfo);
+            List<FileSystemInfo> result = PathHelper.FindCaseInsensitiveDuplicates(fileInfo).ToList();
+            var failureMessage = new StringBuilder();
+            foreach (FileSystemInfo item in result)
+            {
+                failureMessage.AppendLine(item.FullName);
+            }
             
-            Assert.AreEqual(2, result.Count());
+            Assert.That( result, Has.Count.EqualTo( 2 ), $"Expected 2 items, but found {result?.Count}. Output: {failureMessage}");
         }
 
         [Test]
@@ -40,9 +47,14 @@ namespace KOTORModSync.Tests
             File.WriteAllText(Path.Combine(s_testDirectory, "file.txt"), "Test content");
             File.WriteAllText(Path.Combine(s_testDirectory, "File.txt"), "Test content");
 
-            IEnumerable<FileSystemInfo> result = PathHelper.FindCaseInsensitiveDuplicates(s_testDirectory);
+            List<FileSystemInfo> result = PathHelper.FindCaseInsensitiveDuplicates(s_testDirectory).ToList();
+            var failureMessage = new StringBuilder();
+            foreach (FileSystemInfo item in result)
+            {
+                failureMessage.AppendLine(item.FullName);
+            }
             
-            Assert.AreEqual(2, result.Count());
+            Assert.That( result, Has.Count.EqualTo( 2 ), $"Expected 2 items, but found {result?.Count}. Output: {failureMessage}");
         }
 
         [Test]
@@ -52,24 +64,14 @@ namespace KOTORModSync.Tests
             _ = Directory.CreateDirectory( Path.Combine( s_testDirectory, "SubDir" ) );
             
             var dirInfo = new DirectoryInfo(s_testDirectory);
-            IEnumerable<FileSystemInfo> result = PathHelper.FindCaseInsensitiveDuplicates(dirInfo);
+            List<FileSystemInfo> result = PathHelper.FindCaseInsensitiveDuplicates(dirInfo).ToList();
+            var failureMessage = new StringBuilder();
+            foreach (FileSystemInfo item in result)
+            {
+                failureMessage.AppendLine(item.FullName);
+            }
             
-            Assert.AreEqual(2, result.Count());
-        }
-
-        [Test]
-        public void TestNoDuplicatesWithDifferentCasingFilesInNestedDirectories()
-        {
-            string subDirectory = Path.Combine(s_testDirectory, "SubDirectory");
-            _ = Directory.CreateDirectory( subDirectory );
-            
-            File.WriteAllText(Path.Combine(s_testDirectory, "file.txt"), "Test content");
-            File.WriteAllText(Path.Combine(subDirectory, "FILE.txt"), "Test content");
-            
-            var dirInfo = new DirectoryInfo(s_testDirectory);
-            IEnumerable<FileSystemInfo> result = PathHelper.FindCaseInsensitiveDuplicates(dirInfo, includeSubFolders: true);
-            
-            Assert.IsFalse(result.Any());
+            Assert.That( result, Has.Count.EqualTo( 2 ), $"Expected 2 items, but found {result?.Count}. Output: {failureMessage}");
         }
 
         [Test]
@@ -79,12 +81,17 @@ namespace KOTORModSync.Tests
             _ = Directory.CreateDirectory( subDirectory );
             
             File.WriteAllText(Path.Combine(s_testDirectory, "file.txt"), "Test content");
-            File.WriteAllText(Path.Combine(subDirectory, "file.txt"), "Test content");
+            File.WriteAllText(Path.Combine(subDirectory, "FILE.txt"), "Test content");
             
             var dirInfo = new DirectoryInfo(s_testDirectory);
-            IEnumerable<FileSystemInfo> result = PathHelper.FindCaseInsensitiveDuplicates(dirInfo, includeSubFolders: true);
-            
-            Assert.AreEqual(2, result.Count());
+            List<FileSystemInfo> result = PathHelper.FindCaseInsensitiveDuplicates(dirInfo, includeSubFolders: true).ToList();
+            var failureMessage = new StringBuilder();
+            foreach (FileSystemInfo item in result)
+            {
+                failureMessage.AppendLine(item.FullName);
+            }
+
+            Assert.That( result, Has.Count.EqualTo(4), $"Expected 4 items, but found {result?.Count}. Output: {failureMessage}");
         }
 
         [Test]
@@ -100,16 +107,21 @@ namespace KOTORModSync.Tests
             File.WriteAllText(Path.Combine(subDir2, "file.txt"), "Test content");
             
             var dirInfo = new DirectoryInfo(s_testDirectory);
-            IEnumerable<FileSystemInfo> result = PathHelper.FindCaseInsensitiveDuplicates(dirInfo, includeSubFolders: true);
+            List<FileSystemInfo> result = PathHelper.FindCaseInsensitiveDuplicates(dirInfo, includeSubFolders: true).ToList();
+            var failureMessage = new StringBuilder();
+            foreach (FileSystemInfo item in result)
+            {
+                failureMessage.AppendLine(item.FullName);
+            }
             
-            Assert.AreEqual(4, result.Count());
+            Assert.That( result, Has.Count.EqualTo( 4 ), $"Expected 4 items, but found {result?.Count}. Output: {failureMessage}");
         }
         
         [Test]
         public void TestInvalidPath()
         {
-            ArgumentException? result = Assert.Throws<ArgumentException>(
-                () => PathHelper.FindCaseInsensitiveDuplicates( "Invalid>Path" )
+            ArgumentException? ex = Assert.Throws<ArgumentException>(
+                () => PathHelper.FindCaseInsensitiveDuplicates( "Invalid>Path" )?.ToList()
             );
         }
 
@@ -201,7 +213,7 @@ namespace KOTORModSync.Tests
         }
 
         [Test]
-        public void GetCaseSensitivePath_NonExistentFile_ReturnsNull()
+        public void GetCaseSensitivePath_NonExistentFile_ReturnsCaseSensitivePath()
         {
             // Arrange
             string nonExistentFileName = "non_existent_file.txt";
@@ -216,7 +228,7 @@ namespace KOTORModSync.Tests
         }
 
         [Test]
-        public void GetCaseSensitivePath_NonExistentDirAndChildFile_ReturnsNull()
+        public void GetCaseSensitivePath_NonExistentDirAndChildFile_ReturnsCaseSensitivePath()
         {
             // Arrange
             string nonExistentRelFilePath = Path.Combine( "non_existent_dir", "non_existent_file.txt" );
@@ -231,7 +243,7 @@ namespace KOTORModSync.Tests
         }
 
         [Test]
-        public void GetCaseSensitivePath_NonExistentDirectory_ReturnsNull()
+        public void GetCaseSensitivePath_NonExistentDirectory_ReturnsCaseSensitivePath()
         {
             // Arrange
             string nonExistentRelPath = Path.Combine( "non_existent_dir", "non_existent_child_dir" );

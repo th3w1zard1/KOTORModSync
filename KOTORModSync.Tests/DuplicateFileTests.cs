@@ -2,6 +2,8 @@
 // Licensed under the GNU General Public License v3.0 (GPLv3).
 // See LICENSE.txt file in the project root for full license information.
 
+using System.Diagnostics;
+using System.Text;
 using KOTORModSync.Core.Utility;
 
 namespace KOTORModSync.Tests
@@ -31,16 +33,21 @@ namespace KOTORModSync.Tests
         public void FindCaseInsensitiveDuplicates_ThrowsArgumentNullException_WhenDirectoryIsNull()
         {
             DirectoryInfo? directory = null;
-            _ = Assert.Throws<ArgumentNullException>( () => PathHelper.FindCaseInsensitiveDuplicates( directory! ) );
+            _ = Assert.Throws<ArgumentNullException>( () => PathHelper.FindCaseInsensitiveDuplicates( directory! )?.ToList() );
         }
 
 
         [Test]
         public void FindCaseInsensitiveDuplicates_ReturnsEmptyList_WhenDirectoryIsEmpty()
         {
-            IEnumerable<FileSystemInfo> result = PathHelper.FindCaseInsensitiveDuplicates(_tempDirectory);
+            List<FileSystemInfo> result = PathHelper.FindCaseInsensitiveDuplicates(_tempDirectory).ToList();
+            var failureMessage = new StringBuilder();
+            foreach (FileSystemInfo item in result)
+            {
+                failureMessage.AppendLine(item.FullName);
+            }
 
-            Assert.That( result, Is.Empty );
+            Assert.That( result, Is.Empty, $"Expected 0 items, but found {result?.Count}. Output: {failureMessage}");
         }
 
         [Test]
@@ -53,10 +60,15 @@ namespace KOTORModSync.Tests
             file2.Create().Close();
 
             // Act
-            IEnumerable<FileSystemInfo> result = PathHelper.FindCaseInsensitiveDuplicates(_tempDirectory);
+            List<FileSystemInfo> result = PathHelper.FindCaseInsensitiveDuplicates(_tempDirectory).ToList();
+            var failureMessage = new StringBuilder();
+            foreach (FileSystemInfo item in result)
+            {
+                failureMessage.AppendLine(item.FullName);
+            }
 
             // Assert
-            Assert.That( result, Is.Empty );
+            Assert.That( result, Is.Empty, $"Expected 0 items, but found {result?.Count}. Output: {failureMessage}");
         }
 
         [Test]
@@ -70,27 +82,15 @@ namespace KOTORModSync.Tests
             file2.Create().Close();
 
             // Act
-            IEnumerable<FileSystemInfo> result = PathHelper.FindCaseInsensitiveDuplicates(_tempDirectory);
+            List<FileSystemInfo> result = PathHelper.FindCaseInsensitiveDuplicates(_tempDirectory).ToList();
+            var failureMessage = new StringBuilder();
+            foreach (FileSystemInfo item in result)
+            {
+                failureMessage.AppendLine(item.FullName);
+            }
 
             // Assert
-            Assert.That( result?.ToList(), Has.Count.EqualTo( 2 ) );
-        }
-
-        [Test]
-        [Ignore("not necessary")]
-        public void FindCaseInsensitiveDuplicates_FindsFolderDuplicates_CaseInsensitive()
-        {
-            // Arrange
-            var file1 = new FileInfo(Path.Combine(_tempDirectory.FullName, "file1.txt"));
-            file1.Create().Close();
-            var file2 = new FileInfo(Path.Combine(_subDirectory.FullName, "FILE1.txt"));
-            file2.Create().Close();
-
-            // Act
-            IEnumerable<FileSystemInfo> result = PathHelper.FindCaseInsensitiveDuplicates(_tempDirectory);
-
-            // Assert
-            Assert.That( result?.ToList(), Has.Count.EqualTo( 2 ) );
+            Assert.That( result?.ToList(), Has.Count.EqualTo( 2 ), $"Expected 2 items, but found {result?.Count}. Output: {failureMessage}");
         }
 
         [Test]
@@ -103,10 +103,15 @@ namespace KOTORModSync.Tests
             file2.Create().Close();
 
             // Act
-            IEnumerable<FileSystemInfo> result = PathHelper.FindCaseInsensitiveDuplicates(_tempDirectory);
+            List<FileSystemInfo> result = PathHelper.FindCaseInsensitiveDuplicates(_tempDirectory).ToList();
+            var failureMessage = new StringBuilder();
+            foreach (FileSystemInfo item in result)
+            {
+                failureMessage.AppendLine(item.FullName);
+            }
 
             // Assert
-            Assert.That( result, Is.Empty );
+            Assert.That( result, Is.Empty, $"Expected 0 items, but found {result?.Count}. Output: {failureMessage}");
         }
 
         [Test]
@@ -119,10 +124,15 @@ namespace KOTORModSync.Tests
             file2.Create().Close();
 
             // Act
-            IEnumerable<FileSystemInfo> result = PathHelper.FindCaseInsensitiveDuplicates(_tempDirectory);
+            List<FileSystemInfo> result = PathHelper.FindCaseInsensitiveDuplicates(_tempDirectory).ToList();
+            var failureMessage = new StringBuilder();
+            foreach (FileSystemInfo item in result)
+            {
+                failureMessage.AppendLine(item.FullName);
+            }
 
             // Assert
-            Assert.That( result, Is.Empty );
+            Assert.That( result, Is.Empty, $"Expected 0 items, but found {result?.Count}. Output: {failureMessage}");
         }
     }
 }

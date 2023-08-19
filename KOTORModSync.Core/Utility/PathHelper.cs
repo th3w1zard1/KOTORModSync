@@ -263,18 +263,18 @@ namespace KOTORModSync.Core.Utility
             if (!PathValidator.IsValidPath(path))
                 throw new ArgumentException($"{path} is not a valid path!");
 
-            path = Path.GetFullPath(path);
-            if (File.Exists(path) || Directory.Exists(path))
-                return ConvertWindowsPathToCaseSensitive(path);
-
-            string originalPath = path;
-            var caseSensitivePath = new StringBuilder();
-            string[] parts = path.Split(Path.DirectorySeparatorChar);
+            string formattedPath = FixPathFormatting(Path.GetFullPath(path));
+            if (File.Exists(formattedPath) || Directory.Exists(formattedPath))
+                return ConvertWindowsPathToCaseSensitive(formattedPath);
+            
+            string[] parts = formattedPath.Split(Path.DirectorySeparatorChar);
 
             // Start with the root directory
-            string currentPath = parts[0] + Path.DirectorySeparatorChar;
-            _ = caseSensitivePath.Append( currentPath );
+            string currentPath = Path.GetPathRoot(formattedPath);
+            parts[0] = currentPath;
 
+            string caseSensitiveCurrentPath = string.Empty;
+            int largestExistingPathPartsIndex = -1;
             for (int i = 1; i < parts.Length; i++)
             {
                 currentPath = Path.Combine(currentPath, parts[i]);
@@ -284,35 +284,31 @@ namespace KOTORModSync.Core.Utility
                     var parentDir = new DirectoryInfo(Path.GetDirectoryName(currentPath));
                     DirectoryInfo[] childDirs = parentDir.GetDirectories(parts[i], SearchOption.TopDirectoryOnly);
 
-                    if (childDirs.Length == 0)
-                    {
-                        // If there are no directories matching the name, then it's likely a non-existent subdirectory
-                        // Append it as-is
-                        _ = caseSensitivePath.Append( parts[i] + Path.DirectorySeparatorChar );
-                    }
-                    else
+                    if ( childDirs.Length != 0 )
                     {
                         // Append the correct case version of the directory name
-                        _ = caseSensitivePath.Append( childDirs[0].Name + Path.DirectorySeparatorChar );
+                        parts[i] = childDirs[0].Name;
                     }
                 }
                 else
                 {
                     // Directory doesn't exist yet, append it as-is
                     // Get the case-sensitive path based on the existing parts we've determined.
-                    string currentExistingPath = caseSensitivePath.ToString();
+                    largestExistingPathPartsIndex = i - 1;
+                    string currentExistingPath = Path.Combine(parts.Take(largestExistingPathPartsIndex).ToArray());
                     if (File.Exists( currentExistingPath ) || Directory.Exists( currentExistingPath ))
                     {
-                        string caseSensitiveCurrentPath = ConvertWindowsPathToCaseSensitive(caseSensitivePath.ToString());
-                        caseSensitivePath.Clear();
-                        caseSensitivePath.Append(caseSensitiveCurrentPath + Path.DirectorySeparatorChar);
+                        caseSensitiveCurrentPath = ConvertWindowsPathToCaseSensitive(currentExistingPath);
                     }
-
-                    _ = caseSensitivePath.Append( parts[i] + Path.DirectorySeparatorChar );
                 }
             }
 
-            return caseSensitivePath.ToString().TrimEnd( Path.DirectorySeparatorChar );
+            return Path.GetFullPath(
+                    Path.Combine(
+                    caseSensitiveCurrentPath,
+                    Path.Combine(parts.Skip(largestExistingPathPartsIndex).ToArray())
+                ).TrimEnd( Path.DirectorySeparatorChar )
+            );
         }
 
 
@@ -378,7 +374,7 @@ namespace KOTORModSync.Core.Utility
                 try
                 {
                     string formattedPath = FixPathFormatting(path);
-                    if (!PathValidator.IsValidPath(formattedPath))
+                    if ( path.IndexOfAny( Path.GetInvalidPathChars() ) >= 0 && path.IndexOfAny( Path.GetInvalidFileNameChars() ) >= 0 )
                         throw new ArgumentException($"Not a valid path: '{path}'");
                     
                     // ReSharper disable once AssignNullToNotNullAttribute

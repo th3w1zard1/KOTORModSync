@@ -51,9 +51,9 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\KOTORModSync.Core\KOTORModSync.Core.csproj" />
-    <PackageReference Include="Avalonia.Controls.ItemsRepeater" Version="11.0.3" />
-    <PackageReference Include="Avalonia.ReactiveUI" Version="11.0.3" />
-    <PackageReference Include="Avalonia.Themes.Fluent" Version="11.0.3" />
+    <PackageReference Include="Avalonia.Controls.ItemsRepeater" Version="11.0.4" />
+    <PackageReference Include="Avalonia.ReactiveUI" Version="11.0.4" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="11.0.4" />
     <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
   </ItemGroup>
 
@@ -66,11 +66,11 @@
   <ItemGroup>
     <ProjectCapability Include="Avalonia" />
     <TrimmerRootAssembly Include="Avalonia.Themes.Fluent" />
-    <PackageReference Include="Avalonia" Version="11.0.3" />
-    <PackageReference Include="Avalonia.Desktop" Version="11.0.3" />
-    <PackageReference Include="Avalonia.LinuxFramebuffer" Version="11.0.3" />
+    <PackageReference Include="Avalonia" Version="11.0.4" />
+    <PackageReference Include="Avalonia.Desktop" Version="11.0.4" />
+    <PackageReference Include="Avalonia.LinuxFramebuffer" Version="11.0.4" />
     <!--Condition below is needed to remove Avalonia.Diagnostics package from build output in Release configuration.-->
-    <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="11.0.3" />
+    <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="11.0.4" />
     <AvaloniaXaml Update="Styles\LegacyStyle.axaml">
 	    <Generator>MSBuild:Compile</Generator>
     </AvaloniaXaml>

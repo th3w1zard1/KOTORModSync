@@ -604,13 +604,12 @@ namespace KOTORModSync.Core.Utility
                 if (!file.Exists)
                     continue;
 
-                string filePath = file.FullName;
+                string filePath = file.FullName.ToLowerInvariant();
                 if (!fileList.TryGetValue(filePath, out List<FileSystemInfo> files))
                 {
                     files = new List<FileSystemInfo>();
                     fileList.Add(filePath, files);
                 }
-
                 files.Add(file);
             }
             
@@ -635,16 +634,16 @@ namespace KOTORModSync.Core.Utility
                 if (!subDirectory.Exists)
                     continue;
 
-                if (!folderList.TryGetValue(subDirectory.FullName, out List<FileSystemInfo> folders))
+                if (!folderList.TryGetValue(subDirectory.FullName.ToLowerInvariant(), out List<FileSystemInfo> folders))
                 {
                     folders = new List<FileSystemInfo>();
-                    folderList.Add(subDirectory.FullName, folders);
+                    folderList.Add(subDirectory.FullName.ToLowerInvariant(), folders);
                 }
                 folders.Add(subDirectory);
 
                 if (includeSubFolders)
                 {
-                    foreach (FileSystemInfo duplicate in FindCaseInsensitiveDuplicates(subDirectory.FullName))
+                    foreach (FileSystemInfo duplicate in FindCaseInsensitiveDuplicates(subDirectory))
                     {
                         yield return duplicate;
                     }

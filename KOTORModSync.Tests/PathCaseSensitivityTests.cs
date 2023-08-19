@@ -29,7 +29,7 @@ namespace KOTORModSync.Tests
             File.WriteAllText(Path.Combine(s_testDirectory, "File.txt"), "Test content");
             
             var fileInfo = new FileInfo(Path.Combine(s_testDirectory, "file.txt"));
-            var result = PathHelper.FindCaseInsensitiveDuplicates(fileInfo);
+            IEnumerable<FileSystemInfo> result = PathHelper.FindCaseInsensitiveDuplicates(fileInfo);
             
             Assert.AreEqual(2, result.Count());
         }
@@ -39,8 +39,8 @@ namespace KOTORModSync.Tests
         {
             File.WriteAllText(Path.Combine(s_testDirectory, "file.txt"), "Test content");
             File.WriteAllText(Path.Combine(s_testDirectory, "File.txt"), "Test content");
-            
-            var result = PathHelper.FindCaseInsensitiveDuplicates(s_testDirectory);
+
+            IEnumerable<FileSystemInfo> result = PathHelper.FindCaseInsensitiveDuplicates(s_testDirectory);
             
             Assert.AreEqual(2, result.Count());
         }
@@ -48,11 +48,11 @@ namespace KOTORModSync.Tests
         [Test]
         public void TestDuplicateDirectories()
         {
-            Directory.CreateDirectory(Path.Combine(s_testDirectory, "subdir"));
-            Directory.CreateDirectory(Path.Combine(s_testDirectory, "SubDir"));
+            _ = Directory.CreateDirectory( Path.Combine( s_testDirectory, "subdir" ) );
+            _ = Directory.CreateDirectory( Path.Combine( s_testDirectory, "SubDir" ) );
             
             var dirInfo = new DirectoryInfo(s_testDirectory);
-            var result = PathHelper.FindCaseInsensitiveDuplicates(dirInfo);
+            IEnumerable<FileSystemInfo> result = PathHelper.FindCaseInsensitiveDuplicates(dirInfo);
             
             Assert.AreEqual(2, result.Count());
         }
@@ -60,14 +60,14 @@ namespace KOTORModSync.Tests
         [Test]
         public void TestNoDuplicatesWithDifferentCasingFilesInNestedDirectories()
         {
-            var subDirectory = Path.Combine(s_testDirectory, "SubDirectory");
-            Directory.CreateDirectory(subDirectory);
+            string subDirectory = Path.Combine(s_testDirectory, "SubDirectory");
+            _ = Directory.CreateDirectory( subDirectory );
             
             File.WriteAllText(Path.Combine(s_testDirectory, "file.txt"), "Test content");
             File.WriteAllText(Path.Combine(subDirectory, "FILE.txt"), "Test content");
             
             var dirInfo = new DirectoryInfo(s_testDirectory);
-            var result = PathHelper.FindCaseInsensitiveDuplicates(dirInfo, includeSubFolders: true);
+            IEnumerable<FileSystemInfo> result = PathHelper.FindCaseInsensitiveDuplicates(dirInfo, includeSubFolders: true);
             
             Assert.IsFalse(result.Any());
         }
@@ -75,14 +75,14 @@ namespace KOTORModSync.Tests
         [Test]
         public void TestDuplicatesWithDifferentCasingFilesInNestedDirectories()
         {
-            var subDirectory = Path.Combine(s_testDirectory, "SubDirectory");
-            Directory.CreateDirectory(subDirectory);
+            string subDirectory = Path.Combine(s_testDirectory, "SubDirectory");
+            _ = Directory.CreateDirectory( subDirectory );
             
             File.WriteAllText(Path.Combine(s_testDirectory, "file.txt"), "Test content");
             File.WriteAllText(Path.Combine(subDirectory, "file.txt"), "Test content");
             
             var dirInfo = new DirectoryInfo(s_testDirectory);
-            var result = PathHelper.FindCaseInsensitiveDuplicates(dirInfo, includeSubFolders: true);
+            IEnumerable<FileSystemInfo> result = PathHelper.FindCaseInsensitiveDuplicates(dirInfo, includeSubFolders: true);
             
             Assert.AreEqual(2, result.Count());
         }
@@ -90,17 +90,17 @@ namespace KOTORModSync.Tests
         [Test]
         public void TestDuplicateNestedDirectories()
         {
-            var subDir1 = Path.Combine(s_testDirectory, "SubDir");
-            var subDir2 = Path.Combine(s_testDirectory, "subdir");
-            
-            Directory.CreateDirectory(subDir1);
-            Directory.CreateDirectory(subDir2);
+            string subDir1 = Path.Combine(s_testDirectory, "SubDir");
+            string subDir2 = Path.Combine(s_testDirectory, "subdir");
+
+            _ = Directory.CreateDirectory( subDir1 );
+            _ = Directory.CreateDirectory( subDir2 );
             
             File.WriteAllText(Path.Combine(subDir1, "file.txt"), "Test content");
             File.WriteAllText(Path.Combine(subDir2, "file.txt"), "Test content");
             
             var dirInfo = new DirectoryInfo(s_testDirectory);
-            var result = PathHelper.FindCaseInsensitiveDuplicates(dirInfo, includeSubFolders: true);
+            IEnumerable<FileSystemInfo> result = PathHelper.FindCaseInsensitiveDuplicates(dirInfo, includeSubFolders: true);
             
             Assert.AreEqual(4, result.Count());
         }

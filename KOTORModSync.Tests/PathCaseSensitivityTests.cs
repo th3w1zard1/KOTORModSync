@@ -197,7 +197,6 @@ namespace KOTORModSync.Tests
         
 
         [Test]
-        // TODO: doesn't work correctly on windows (returns "...Data\\Local\\Temp\\426FCFF0-3DC3-4FD7-9C7A-D6C0878DACDF\\test.txt" instead of "...Data\\Local\\Temp\\426fcff0-3dc3-4fd7-9c7a-d6c0878dacdf\\test.txt")
         public void GetCaseSensitivePath_EntirePathCaseIncorrect_ReturnsCorrectPath()
         {
             // Arrange

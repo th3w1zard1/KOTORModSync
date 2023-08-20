@@ -183,13 +183,13 @@ namespace KOTORModSync.Core.Utility
 
         public static string ConvertWindowsPathToCaseSensitive(string path)
         {
+            if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+                return path;
             if (string.IsNullOrWhiteSpace(path))
                 throw new ArgumentException($"'{nameof(path)}' cannot be null or whitespace.", nameof(path));
             if (!PathValidator.IsValidPath(path))
                 throw new ArgumentException($"{path} is not a valid path!");
 
-            if (Environment.OSVersion.Platform != PlatformID.Win32NT)
-                return path;
 
             const uint FILE_SHARE_READ = 1;
             const uint OPEN_EXISTING = 3;
@@ -267,50 +267,59 @@ namespace KOTORModSync.Core.Utility
             if (File.Exists(formattedPath) || Directory.Exists(formattedPath))
                 return ConvertWindowsPathToCaseSensitive(formattedPath);
             
-            string[] parts = formattedPath.Split(Path.DirectorySeparatorChar);
-
-            // Start with the root directory
-            string currentPath = Path.GetPathRoot(formattedPath);
-            parts[0] = currentPath;
-
-            string caseSensitiveCurrentPath = string.Empty;
-            int largestExistingPathPartsIndex = -1;
-            for (int i = 1; i < parts.Length; i++)
+            var parts = formattedPath.Split(new[] { Path.DirectorySeparatorChar }, StringSplitOptions.RemoveEmptyEntries).ToList();
+            
+            string currentPath = Path.GetPathRoot( formattedPath );
+            if ( currentPath != parts[0] )
             {
-                currentPath = Path.Combine(currentPath, parts[i]);
-
-                if (Directory.Exists(currentPath))
-                {
-                    var parentDir = new DirectoryInfo(Path.GetDirectoryName(currentPath));
-                    DirectoryInfo[] childDirs = parentDir.GetDirectories(parts[i], SearchOption.TopDirectoryOnly);
-
-                    if ( childDirs.Length != 0 )
-                    {
-                        // Append the correct case version of the directory name
-                        parts[i] = childDirs[0].Name;
-                    }
-                }
-                else
-                {
-                    // Directory doesn't exist yet, append it as-is
-                    // Get the case-sensitive path based on the existing parts we've determined.
-                    largestExistingPathPartsIndex = i - 1;
-                    string currentExistingPath = Path.Combine(parts.Take(largestExistingPathPartsIndex).ToArray());
-                    if (File.Exists( currentExistingPath ) || Directory.Exists( currentExistingPath ))
-                    {
-                        caseSensitiveCurrentPath = ConvertWindowsPathToCaseSensitive(currentExistingPath);
-                    }
-                }
+                parts.Insert(index: 0, currentPath);
             }
 
-            return Path.GetFullPath(
-                    Path.Combine(
+            int largestExistingPathPartsIndex = -1;
+            string caseSensitiveCurrentPath = string.Empty;
+            for (int i = 1; i < parts.Count; i++)
+            {
+                string parentDir = i == 1
+                    ? parts[0]
+                    : Path.Combine(parts.Take(i).ToArray());
+
+                if ( Directory.Exists( parentDir ) )
+                {
+                    foreach ( string childFolder in Directory.EnumerateFileSystemEntries(parentDir) )
+                    {
+                        string childFolderActual = Path.GetFileName(childFolder);
+                        if ( !childFolderActual.Equals( parts[i], StringComparison.OrdinalIgnoreCase ) )
+                            continue;
+
+                        parts[i] = childFolderActual;
+                        break;
+                    }
+                }
+
+                currentPath = Path.Combine(currentPath, parts[i]);
+
+                if ( !File.Exists( currentPath )
+                    && !Directory.Exists( currentPath )
+                    && string.IsNullOrEmpty( caseSensitiveCurrentPath ) )
+                {
+                    // Get the case-sensitive path based on the existing parts we've determined.
+                    largestExistingPathPartsIndex = i-1;
+                    string currentExistingPath = Path.Combine(parts.Take(largestExistingPathPartsIndex).ToArray());
+                    caseSensitiveCurrentPath = ConvertWindowsPathToCaseSensitive(currentExistingPath);
+                }
+
+            }
+
+            if (largestExistingPathPartsIndex > -1)
+            {
+                return Path.Combine(
                     caseSensitiveCurrentPath,
                     Path.Combine(parts.Skip(largestExistingPathPartsIndex).ToArray())
-                ).TrimEnd( Path.DirectorySeparatorChar )
-            );
-        }
+                );
+            }
 
+            return Path.Combine( parts.ToArray() );
+        }
 
 
         [CanBeNull]

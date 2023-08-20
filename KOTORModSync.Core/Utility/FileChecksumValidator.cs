@@ -226,10 +226,14 @@ namespace KOTORModSync.Core.Utility
                             continue;
                         }
 
+                        if ( hashBytes is null )
+                            throw new NullReferenceException(nameof( hashBytes ));
+
                         await Logger.LogAsync( $"Hash for {fileInfo.FullName}: {BitConverter.ToString( hashBytes )}" );
 
                         var sha1 = SHA1.Create();
-                        byte[] computedHash = sha1?.ComputeHash( fileBytes );
+                        byte[] computedHash = sha1?.ComputeHash( fileBytes ) ?? throw new NullReferenceException(nameof( computedHash ));
+
                         await Logger.LogAsync(
                             $"Computed hash for {fileInfo.FullName}: {BitConverter.ToString( computedHash )}"
                         );

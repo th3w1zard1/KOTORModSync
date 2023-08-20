@@ -15,9 +15,9 @@ using Path = System.IO.Path;
 
 namespace KOTORModSync
 {
-    public class OutputViewModel : INotifyPropertyChanged
+    public sealed class OutputViewModel : INotifyPropertyChanged
     {
-        public Queue<string> _logBuilder = new Queue<string>();
+        public readonly Queue<string> _logBuilder = new Queue<string>();
         public string LogText { get; set; } = string.Empty;
 
         public void AppendLog(string message)
@@ -34,7 +34,8 @@ namespace KOTORModSync
 
         // used for ui
         public event PropertyChangedEventHandler PropertyChanged;
-        protected virtual void OnPropertyChanged(string propertyName)
+
+        private void OnPropertyChanged(string propertyName)
         {
             LogText = string.Join( Environment.NewLine, _logBuilder );
             PropertyChanged?.Invoke( this, new PropertyChangedEventArgs( propertyName ) );
@@ -42,7 +43,7 @@ namespace KOTORModSync
     }
     public partial class OutputWindow : Window
     {
-        public OutputViewModel _viewModel;
+        public readonly OutputViewModel _viewModel;
         private readonly int _maxLinesShown = 150;
 
         public OutputWindow()
@@ -96,8 +97,9 @@ namespace KOTORModSync
                 // Scroll to the end of the content
                 _ = Dispatcher.UIThread.InvokeAsync( () => LogScrollViewer.ScrollToEnd() );
             }
-            catch ( Exception )
+            catch ( Exception ex)
             {
+                Console.WriteLine($"An error occurred appending the log to the output window: '{ex.Message}'");
             }
         }
     }

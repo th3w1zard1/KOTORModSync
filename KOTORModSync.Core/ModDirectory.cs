@@ -3,6 +3,8 @@
 // See LICENSE.txt file in the project root for full license information.
 
 using System.Collections.Generic;
+// ReSharper disable UnusedAutoPropertyAccessor.Global
+// ReSharper disable UnusedType.Global
 
 namespace KOTORModSync.Core
 {

@@ -42,7 +42,7 @@ namespace KOTORModSync.Core
 
 
         [NotNull]
-        private static async Task LogInternalAsync( [CanBeNull] string internalMessage, bool fileOnly = false )
+        private static async Task LogInternalAsync([CanBeNull] string internalMessage, bool fileOnly = false)
         {
             internalMessage = internalMessage ?? string.Empty;
 
@@ -50,16 +50,12 @@ namespace KOTORModSync.Core
             try
             {
                 string logMessage = $"[{DateTime.Now}] {internalMessage}";
-                if ( !fileOnly )
-                {
-                    await Console.Out.WriteLineAsync( logMessage );
-                }
+                if (!fileOnly)
+                    await Console.Out.WriteLineAsync(logMessage);
 
-                // Debug.WriteLine( logMessage );
-
-                string formattedDate = DateTime.Now.ToString( "yyyy-MM-dd" );
+                string formattedDate = DateTime.Now.ToString("yyyy-MM-dd");
                 var cancellationTokenSource = new CancellationTokenSource(TimeSpan.FromMinutes(2));
-                var token = cancellationTokenSource.Token;
+                CancellationToken token = cancellationTokenSource.Token;
 
                 bool fileWritten = false;
 
@@ -67,36 +63,40 @@ namespace KOTORModSync.Core
                 {
                     try
                     {
-                        // Attempt to write to the file
                         using (var writer = new StreamWriter(LogFileName + formattedDate + ".txt", append: true))
                         {
                             await writer.WriteLineAsync(logMessage + Environment.NewLine);
-                            fileWritten = true; // Successfully written, exit the loop
+                            fileWritten = true;
                         }
                     }
-                    catch (IOException)
+                    catch (IOException ex)
                     {
-                        // File is locked; wait a bit before retrying
-                        await Task.Delay(100, token); // Wait 100 milliseconds
+                        Console.WriteLine($"IOException occurred while writing log message: {ex.Message}");
+                        await Task.Delay(millisecondsDelay: 100, token);
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Unexpected exception occurred while writing log message: {ex}");
+                        break;
                     }
 
-                    // Throw if cancellation has been requested
                     token.ThrowIfCancellationRequested();
                 }
 
-                Logged.Invoke( logMessage ); // Raise the Logged event
+                Logged.Invoke(logMessage);
             }
-            catch ( Exception ex )
+            catch (Exception ex)
             {
-                Console.WriteLine( ex );
+                Console.WriteLine($"Exception occurred in LogInternalAsync: {ex}");
             }
             finally
             {
                 _ = s_semaphore.Release();
             }
         }
+
         
-        public static void Log( [CanBeNull] string message, bool fileOnly = false ) => Task.Run( async () => await LogInternalAsync( message, fileOnly ) );
+        public static void Log( [CanBeNull] string message, bool fileOnly = false ) => _ = LogInternalAsync( message, fileOnly );
 
         [NotNull]
         public static Task LogAsync( [CanBeNull] string message ) => LogInternalAsync( message );

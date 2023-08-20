@@ -22,7 +22,12 @@ namespace KOTORModSync.Converters
 {
     public class OpenLinkConverter : IValueConverter
     {
-        public object Convert( object value, Type targetType, object parameter, CultureInfo culture )
+        public object Convert(
+            [CanBeNull] object value,
+            [NotNull] Type targetType,
+            [CanBeNull] object parameter,
+            [NotNull] CultureInfo culture
+        )
         {
             if ( value is string url )
             {
@@ -32,8 +37,12 @@ namespace KOTORModSync.Converters
             return null;
         }
 
-        public object ConvertBack( object value, Type targetType, object parameter, CultureInfo culture ) =>
-            throw new NotImplementedException();
+        public object ConvertBack(
+            [CanBeNull] object value,
+            [NotNull] Type targetType,
+            [CanBeNull] object parameter,
+            [NotNull] CultureInfo culture
+        ) => throw new NotImplementedException();
 
         private static void OpenLink( [NotNull] string url )
         {

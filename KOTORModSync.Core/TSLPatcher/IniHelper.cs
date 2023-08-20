@@ -145,18 +145,19 @@ namespace KOTORModSync.Core.TSLPatcher
                 }
                 else
                 {
-                    string directoryName = Path.GetDirectoryName( entry.Key.Replace('\\', '/') );
-                    string fileName = Path.GetFileName(entry.Key);
+                    string directoryName = Path.GetDirectoryName( entry?.Key.Replace(oldChar: '\\', newChar: '/') );
+                    string fileName = Path.GetFileName(entry?.Key);
 
-                    if (string.Equals(directoryName, currentDirectory, StringComparison.OrdinalIgnoreCase) &&
-                        string.Equals(fileName, "namespaces.ini", StringComparison.OrdinalIgnoreCase) &&
-                        currentDirectory.Split(new[] { '/', '\\' },
-                                StringSplitOptions.RemoveEmptyEntries
-                        ).Any(dir => dir.Equals("tslpatchdata", StringComparison.OrdinalIgnoreCase)))
+                    if ( string.Equals( directoryName, currentDirectory, StringComparison.OrdinalIgnoreCase )
+                        && string.Equals( fileName, "namespaces.ini", StringComparison.OrdinalIgnoreCase )
+                        && currentDirectory.Split(
+                                new[] { '/', '\\' }, StringSplitOptions.RemoveEmptyEntries
+                            ).Any( dir => dir.Equals( "tslpatchdata", StringComparison.OrdinalIgnoreCase ) )
+                        )
                     {
-                        using (var reader = new StreamReader(entry.OpenEntryStream()))
+                        using ( var reader = new StreamReader( entry.OpenEntryStream() ) )
                         {
-                            return ParseNamespacesIni(reader);
+                            return ParseNamespacesIni( reader );
                         }
                     }
                 }

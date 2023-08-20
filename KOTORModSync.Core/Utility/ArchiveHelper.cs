@@ -71,9 +71,9 @@ namespace KOTORModSync.Core.Utility
         public static void ExtractWith7Zip(FileStream stream, string destinationDirectory)
         {
             string exeDir = Utility.GetExecutingAssemblyDirectory();
-            string sevenzDllPath = Path.Combine( exeDir, "Resources", "7z.dll" );
+            string sevenZDllPath = Path.Combine( exeDir, "Resources", "7z.dll" );
 
-            SevenZipBase.SetLibraryPath(sevenzDllPath); // Path to 7z.dll
+            SevenZipBase.SetLibraryPath(sevenZDllPath); // Path to 7z.dll
             var extractor = new SevenZipExtractor( stream );
             extractor.ExtractArchive(destinationDirectory);
         }
@@ -161,7 +161,7 @@ namespace KOTORModSync.Core.Utility
 
                     fileInfo["Contents"] = archiveRoot["Contents"];
 
-                    ( root["Contents"] as List<object> ).Add( fileInfo );
+                    ( root["Contents"] as List<object> )?.Add( fileInfo );
                 }
 
                 /*foreach (var subdirectory in directory.EnumerateDirectories())
@@ -246,7 +246,6 @@ namespace KOTORModSync.Core.Utility
                         $"Unexpected data type for directory contents: '{currentDirectory["Contents"]?.GetType()}'"
                     );
 
-                string name1 = name;
                 object existingChild = existingDirectory.Find(
                     c => c is Dictionary<string, object> dict
                         && dict.ContainsKey( "Name" )

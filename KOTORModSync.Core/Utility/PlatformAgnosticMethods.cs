@@ -34,7 +34,13 @@ namespace KOTORModSync.Core.Utility
                 Parallel.Invoke( () => maxParallelism = Math.Max( val1: 1, maxParallelism / 2 ) );
             }
 
-            var maxDiskSpeedTask = Task.Run( () => GetMaxDiskSpeed( Path.GetPathRoot( thisDir.FullName ) ) );
+            var maxDiskSpeedTask = Task.Run( () =>
+            {
+                if ( thisDir is null )
+                    throw new NullReferenceException(nameof( thisDir ));
+
+                return GetMaxDiskSpeed( Path.GetPathRoot( thisDir.FullName ) );
+            } );
             double maxDiskSpeed = await maxDiskSpeedTask;
 
             const double diskSpeedThreshold = 100.0; // MB/sec threshold

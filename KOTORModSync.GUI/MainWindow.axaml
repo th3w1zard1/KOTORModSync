@@ -13,12 +13,11 @@
         SystemDecorations="BorderOnly">
 
     <Window.Resources>
-        <converters:ListToStringConverter x:Key="listToStringConverter" />
-        <converters:IndexConverter x:Key="indexConverter" />
-        <converters:ActionConverter x:Key="actionConverter" />
-        <converters:EnumDescriptionConverter x:Key="enumConverter" />
-        <converters:NamespacesIniOptionConverter x:Key="namespacesIniOptionConverter" />
-        <converters:ListToVisibilityConverter x:Key="listToVisibilityConverter" />
+        <converters:ListToStringConverter x:Key="ListToStringConverter" />
+        <converters:IndexConverter x:Key="IndexConverter" />
+        <converters:ActionConverter x:Key="ActionConverter" />
+        <converters:NamespacesIniOptionConverter x:Key="NamespacesIniOptionConverter" />
+        <converters:ListToVisibilityConverter x:Key="ListToVisibilityConverter" />
     </Window.Resources>
 
     <Window.Styles>
@@ -112,7 +111,7 @@
                                        Margin="0,15,0,0"
                                        IsVisible="{Binding ElementName=optionsSummaryRepeater,
                                             Path=ItemsSource,
-                                            Converter={StaticResource listToVisibilityConverter}}" />
+                                            Converter={StaticResource ListToVisibilityConverter}}" />
                             <ItemsRepeater
                                 x:Name="optionsSummaryRepeater"
                                 ItemsSource="{Binding Options}"
@@ -147,7 +146,7 @@
                                                                         Grid.Column="0"
                                                                         Grid.Row="0"
                                                                         Text="{Binding
-                                                                                   Converter={StaticResource indexConverter},
+                                                                                   Converter={StaticResource IndexConverter},
                                                                                    ConverterParameter={Binding Instructions,
                                                                                    ElementName=instructionsRepeater}}"
                                                                         FontWeight="Bold" />
@@ -159,7 +158,7 @@
                                                                             Margin="10,0,0,0"
                                                                             TextWrapping="Wrap" />
                                                                         <TextBlock
-                                                                            Text="{Binding Source, Converter={StaticResource listToStringConverter}}"
+                                                                            Text="{Binding Source, Converter={StaticResource ListToStringConverter}}"
                                                                             Margin="10,0,0,0"
                                                                             TextWrapping="Wrap" />
                                                                         <TextBlock
@@ -181,7 +180,7 @@
                                        Margin="0,10"
                                        IsVisible="{Binding ElementName=instructionsSummaryRepeater,
                                             Path=ItemsSource,
-                                            Converter={StaticResource listToVisibilityConverter}}"/>
+                                            Converter={StaticResource ListToVisibilityConverter}}"/>
                             <ItemsRepeater
                                 x:Name="instructionsSummaryRepeater"
                                 ItemsSource="{Binding Instructions}">
@@ -196,7 +195,7 @@
                                                     Grid.Column="0"
                                                     Grid.Row="0"
                                                     Text="{Binding
-                                                               Converter={StaticResource indexConverter},
+                                                               Converter={StaticResource IndexConverter},
                                                                ConverterParameter={Binding Instructions,
                                                                ElementName=instructionsSummaryRepeater}}"
                                                     FontWeight="Bold" />
@@ -207,7 +206,7 @@
                                                             FontWeight="DemiBold"
                                                             TextWrapping="Wrap" />
                                                         <TextBlock
-                                                            Text="{Binding Source, Converter={StaticResource listToStringConverter}}"
+                                                            Text="{Binding Source, Converter={StaticResource ListToStringConverter}}"
                                                             Margin="10,0,0,0"
                                                             TextWrapping="Wrap" />
                                                         <TextBlock
@@ -266,7 +265,7 @@
                                     <TextBlock Text="Mod Website:" ToolTip.Tip="Download the mod here."/>
                                     <TextBox
                                         Focusable="True" HorizontalAlignment="Stretch" AcceptsReturn="True"
-                                        Text="{Binding ModLink, Converter={StaticResource listToStringConverter}}" />
+                                        Text="{Binding ModLink, Converter={StaticResource ListToStringConverter}}" />
 
                                     <TextBlock Text="Dependencies:"
                                                Margin="0, 15, 0, 5" ToolTip.Tip="This mod will not be installed if any of these dependencies are NOT SELECTED for install."/>
@@ -312,7 +311,7 @@
                                                                        HorizontalAlignment="Left">
                                                                 <TextBlock
                                                                     Text="{Binding
-                                                                        Converter={StaticResource indexConverter},
+                                                                        Converter={StaticResource IndexConverter},
                                                                         ConverterParameter={Binding Instructions, ElementName=instructionsRepeater}}" />
                                                                 <TextBlock Text="Action:"
                                                                            VerticalAlignment="Center"
@@ -331,7 +330,7 @@
                                                             </DockPanel>
                                                             <ComboBox Grid.Row="3" Grid.Column="0" HorizontalAlignment="Left"
                                                                       ItemsSource="{Binding ActionTypes}"
-                                                                      SelectedItem="{Binding ActionString, Converter={StaticResource actionConverter}}"
+                                                                      SelectedItem="{Binding ActionString, Converter={StaticResource ActionConverter}}"
                                                                       Focusable="True" />
 
                                                             <TextBlock Grid.Row="4" Grid.Column="0" Text="Source:" />
@@ -340,7 +339,7 @@
                                                                      HorizontalAlignment="Stretch"
                                                                      Focusable="True"
                                                                      x:Name="SourceTextBox"
-                                                                     Text="{Binding Source, Converter={StaticResource listToStringConverter}}" />
+                                                                     Text="{Binding Source, Converter={StaticResource ListToStringConverter}}" />
 
                                                             <Button Grid.Row="5" Grid.Column="1"
                                                                     HorizontalAlignment="Stretch"
@@ -389,7 +388,7 @@
                                                                 Grid.Row="15"
                                                                 Grid.Column="1"
                                                                 HorizontalAlignment="Left"
-                                                                ItemsSource="{Binding Converter={StaticResource namespacesIniOptionConverter}}" 
+                                                                ItemsSource="{Binding Converter={StaticResource NamespacesIniOptionConverter}}" 
                                                                 SelectionChanged="ComboBox_SelectionChanged" />
 
                                                         </Grid>
@@ -422,7 +421,7 @@
                                                                        HorizontalAlignment="Left">
                                                                 <TextBlock
                                                                     Text="{Binding
-                                                                        Converter={StaticResource indexConverter},
+                                                                        Converter={StaticResource IndexConverter},
                                                                         ConverterParameter={Binding Instructions, ElementName=instructionsRepeater}}"/>
                                                                 <TextBlock Text="Name:"
                                                                            VerticalAlignment="Center"
@@ -484,7 +483,7 @@
                                                                                                        HorizontalAlignment="Left">
                                                                                                 <TextBlock
                                                                                                     Text="{Binding
-                                                                                                        Converter={StaticResource indexConverter},
+                                                                                                        Converter={StaticResource IndexConverter},
                                                                                                         ConverterParameter={Binding Instructions, ElementName=instructionsRepeater}}" />
                                                                                                 <TextBlock Text="Action:"
                                                                                                            VerticalAlignment="Center"
@@ -503,7 +502,7 @@
                                                                                             </DockPanel>
                                                                                             <ComboBox Grid.Row="3" Grid.Column="0" HorizontalAlignment="Left"
                                                                                                       ItemsSource="{Binding ActionTypes}"
-                                                                                                      SelectedItem="{Binding ActionString, Converter={StaticResource actionConverter}}"
+                                                                                                      SelectedItem="{Binding ActionString, Converter={StaticResource ActionConverter}}"
                                                                                                       Focusable="True" />
 
                                                                                             <TextBlock Grid.Row="4" Grid.Column="0" Text="Source:" />
@@ -512,7 +511,7 @@
                                                                                                      HorizontalAlignment="Stretch"
                                                                                                      Focusable="True"
                                                                                                      x:Name="SourceTextBox"
-                                                                                                     Text="{Binding Source, Converter={StaticResource listToStringConverter}}" />
+                                                                                                     Text="{Binding Source, Converter={StaticResource ListToStringConverter}}" />
 
                                                                                             <Button Grid.Row="5" Grid.Column="1"
                                                                                                     HorizontalAlignment="Stretch"
@@ -563,7 +562,7 @@
                                                                                                 Grid.Row="15"
                                                                                                 Grid.Column="1"
                                                                                                 HorizontalAlignment="Left"
-                                                                                                ItemsSource="{Binding Converter={StaticResource namespacesIniOptionConverter}}" 
+                                                                                                ItemsSource="{Binding Converter={StaticResource NamespacesIniOptionConverter}}" 
                                                                                                 SelectionChanged="ComboBox_SelectionChanged" />
 
                                                                                         </Grid>

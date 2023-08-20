@@ -29,8 +29,11 @@ namespace KOTORModSync.Core.FileSystemPathing
         [CanBeNull]
         public static DirectoryInfo TryGetValidDirectoryInfo( [CanBeNull] string folderPath )
         {
+            if ( string.IsNullOrWhiteSpace( folderPath ) )
+                return null;
+
             string formattedPath = FixPathFormatting( folderPath );
-            if ( formattedPath is null || PathValidator.IsValidPath( formattedPath ) )
+            if ( PathValidator.IsValidPath( formattedPath ) )
                 return null;
 
             try
@@ -48,8 +51,11 @@ namespace KOTORModSync.Core.FileSystemPathing
         [CanBeNull]
         public static FileInfo TryGetValidFileInfo( [CanBeNull] string filePath )
         {
+            if ( string.IsNullOrWhiteSpace( filePath ) )
+                return null;
+
             string formattedPath = FixPathFormatting( filePath );
-            if ( formattedPath is null || PathValidator.IsValidPath( formattedPath ) )
+            if ( PathValidator.IsValidPath( formattedPath ) )
                 return null;
 
             try
@@ -63,9 +69,6 @@ namespace KOTORModSync.Core.FileSystemPathing
                 return null;
             }
         }
-
-        [DllImport( "kernel32.dll", CharSet = CharSet.Auto, SetLastError = true )]
-        private static extern int GetLongPathName( string shortPath, StringBuilder longPath, int bufferSize );
 
         public static string ConvertWindowsPathToCaseSensitive( string path )
         {
@@ -84,12 +87,13 @@ namespace KOTORModSync.Core.FileSystemPathing
 
             IntPtr handle = CreateFile(
                 path,
-                0,
+                dwDesiredAccess: 0,
                 FILE_SHARE_READ,
-                IntPtr.Zero,
-                OPEN_EXISTING,
-                FILE_FLAG_BACKUP_SEMANTICS,
-                IntPtr.Zero );
+                lpSecurityAttributes: IntPtr.Zero,
+                dwCreationDisposition: OPEN_EXISTING,
+                dwFlagsAndAttributes: FILE_FLAG_BACKUP_SEMANTICS,
+                hTemplateFile: IntPtr.Zero
+            );
 
             if ( handle == IntPtr.Zero )
                 throw new Win32Exception( Marshal.GetLastWin32Error() );
@@ -226,11 +230,17 @@ namespace KOTORModSync.Core.FileSystemPathing
                 }
             }
 
-            string combinedPath = largestExistingPathPartsIndex > -1
-                ? Path.Combine(caseSensitiveCurrentPath, Path.Combine(parts.Skip(largestExistingPathPartsIndex).ToArray()))
-                : Path.Combine(parts);
+            if ( caseSensitiveCurrentPath is null )
+                return ( Path.Combine( parts ), isFile );
 
-            return (combinedPath, isFile);
+            string combinedPath = largestExistingPathPartsIndex > -1
+                ? Path.Combine(
+                    caseSensitiveCurrentPath,
+                    Path.Combine( parts.Skip( largestExistingPathPartsIndex ).ToArray() )
+                )
+                : Path.Combine( parts );
+
+            return ( combinedPath, isFile );
         }
 
         private static int GetMatchingCharactersCount(string str1, string str2)
@@ -386,15 +396,15 @@ namespace KOTORModSync.Core.FileSystemPathing
             patternInput = FixPathFormatting( patternInput );
 
             // Split the input and patternInput into directory levels
-            string[] inputLevels = input?.Split( Path.DirectorySeparatorChar );
-            string[] patternLevels = patternInput?.Split( Path.DirectorySeparatorChar );
+            string[] inputLevels = input.Split( Path.DirectorySeparatorChar );
+            string[] patternLevels = patternInput.Split( Path.DirectorySeparatorChar );
 
             // Ensure the number of levels match
-            if ( inputLevels?.Length != patternLevels?.Length )
+            if ( inputLevels.Length != patternLevels.Length )
                 return false;
 
             // Iterate over each level and perform wildcard matching
-            for ( int i = 0; i < inputLevels?.Length; i++ )
+            for ( int i = 0; i < inputLevels.Length; i++ )
             {
                 string inputLevel = inputLevels[i];
                 string patternLevel = patternLevels[i];
@@ -461,11 +471,13 @@ namespace KOTORModSync.Core.FileSystemPathing
 
         public static IEnumerable<FileSystemInfo> FindCaseInsensitiveDuplicates( DirectoryInfo dirInfo, bool includeSubFolders = true )
         {
+            // ReSharper disable once AssignNullToNotNullAttribute - no point duplicating the null check
             return FindCaseInsensitiveDuplicates( dirInfo?.FullName, includeSubFolders, isFile: false );
         }
 
         public static IEnumerable<FileSystemInfo> FindCaseInsensitiveDuplicates( FileInfo fileInfo )
         {
+            // ReSharper disable once AssignNullToNotNullAttribute - no point duplicating the null check
             return FindCaseInsensitiveDuplicates( fileInfo?.FullName, isFile: true );
         }
 

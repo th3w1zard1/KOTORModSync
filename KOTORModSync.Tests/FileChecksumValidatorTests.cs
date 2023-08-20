@@ -225,23 +225,6 @@ namespace KOTORModSync.Tests
             Console.WriteLine( $"Expected: {expectedChecksum} Actual: {actualChecksum}" );
         }
 
-        // Custom converter for DirectoryInfo
-        public class DirectoryInfoConverter : JsonConverter<DirectoryInfo>
-        {
-            public override DirectoryInfo? ReadJson(
-                JsonReader reader,
-                Type objectType,
-                DirectoryInfo? existingValue,
-                bool hasExistingValue,
-                JsonSerializer serializer
-            ) => reader.Value is string path
-                ? new DirectoryInfo( path )
-                : null;
-
-            public override void WriteJson( JsonWriter writer, DirectoryInfo? value, JsonSerializer serializer ) =>
-                writer.WriteValue( value!.FullName );
-        }
-
         // Test method
         [Test]
         [Ignore( "TestNotFinished" )]

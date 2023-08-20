@@ -33,6 +33,9 @@ namespace KOTORModSync.Tests
             var guid = Guid.NewGuid();
             object? serialized = Serializer.SerializeObject( guid );
 
+            if ( serialized is null )
+                throw new NullReferenceException(nameof( serialized ));
+
             Assert.That(
                 serialized,
                 Is.EqualTo( guid.ToString() ),
@@ -117,6 +120,7 @@ namespace KOTORModSync.Tests
             try
             {
                 // Hook into the unhandled exception event to capture any unhandled exceptions
+                // ReSharper disable once UnusedParameter.Local
                 AppDomain.CurrentDomain.UnhandledException += ( sender, args ) =>
                 {
                     if ( args.ExceptionObject is StackOverflowException )

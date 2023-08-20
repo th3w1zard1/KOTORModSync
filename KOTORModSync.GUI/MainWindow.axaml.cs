@@ -157,7 +157,8 @@ namespace KOTORModSync
             // Get the root item of the TreeView
             var rootItem = (TreeViewItem)LeftTreeView.ContainerFromIndex(0);
 
-            FilterControlListItems( rootItem, SearchText );
+            if ( !( rootItem is null ) && !( SearchText is null ) )
+                FilterControlListItems( rootItem, SearchText );
         }
 
         public static void FilterControlListItems( [NotNull] object item, [NotNull] string searchText )
@@ -201,7 +202,7 @@ namespace KOTORModSync
         }
 
         // test the options dialog for use with the 'Options' IDictionary<string, object>.
-        public async void Testwindow()
+        public async void TestWindow()
         {
             // Create an instance of OptionsDialogCallback
             var optionsDialogCallback = new OptionsDialogCallback( this );
@@ -234,7 +235,7 @@ namespace KOTORModSync
             if ( !( control is ILogical visual ) )
                 throw new ArgumentNullException( nameof( control ) );
 
-            if ( control is ComboBox _ )
+            if ( control is ComboBox )
             {
                 control.Tapped -= ComboBox_Opened;
                 control.PointerCaptureLost -= ComboBox_Opened;
@@ -580,6 +581,9 @@ namespace KOTORModSync
                 if ( !PathValidator.IsValidPath( filePath ) )
                     return;
 
+                if ( filePath is null )
+                    throw new NullReferenceException(nameof( filePath ));
+
                 var thisFile = new FileInfo( filePath );
 
                 // Verify the file type
@@ -845,7 +849,8 @@ namespace KOTORModSync
 
                 await Logger.LogAsync( "Finding duplicate case-insensitive folders/files in the install destination..." );
                 IEnumerable<FileSystemInfo> duplicates = PathHelper.FindCaseInsensitiveDuplicates( MainConfig.DestinationPath.FullName );
-                foreach ( FileSystemInfo duplicate in duplicates )
+                var fileSystemInfos = duplicates.ToList();
+                foreach ( FileSystemInfo duplicate in fileSystemInfos )
                 {
                     await Logger.LogErrorAsync( duplicate?.FullName + " has a duplicate, please resolve before attempting an install." );
                 }
@@ -958,7 +963,7 @@ namespace KOTORModSync
                 }
 
 
-                if ( duplicates.Any() )
+                if ( fileSystemInfos.Any() )
                 {
                     informationMessage =
                         "You have duplicate files/folders in your installation directory in a case-insensitive environment."
@@ -968,10 +973,8 @@ namespace KOTORModSync
                 if ( !informationMessage.Equals( string.Empty ) )
                     return ( false, informationMessage );
 
-                return (
-                    true,
-                    "No issues found. If you encounter any problems during the installation, please contact the developer."
-                );
+                return ( true,
+                    "No issues found. If you encounter any problems during the installation, please contact the developer." );
 
             }
             catch ( Exception e )
@@ -986,7 +989,7 @@ namespace KOTORModSync
         {
             try
             {
-                ( bool success, string informationMessage ) = await PreinstallValidation();
+                ( bool _, string informationMessage ) = await PreinstallValidation();
                 await InformationDialog.ShowInformationDialog( this, informationMessage );
             }
             catch ( Exception ex )
@@ -1001,10 +1004,12 @@ namespace KOTORModSync
             // Create a new default component with a new GUID
             try
             {
-                var newComponent = new Component();
+                var newComponent = new Component
+                {
+                    Guid = Guid.NewGuid(),
+                    Name = "new mod_" + Path.GetFileNameWithoutExtension( Path.GetRandomFileName() ),
+                };
 
-                newComponent.Guid = Guid.NewGuid();
-                newComponent.Name = "new mod_" + Path.GetFileNameWithoutExtension( Path.GetRandomFileName() );
                 // Add the new component to the collection
                 MainConfigInstance.allComponents.Add( newComponent );
 
@@ -1310,7 +1315,7 @@ namespace KOTORModSync
 
                         await Logger.LogAsync( $"Start Install of '{component.Name}'..." );
                         exitCode = await component.InstallAsync( MainConfig.AllComponents );
-                        await Logger.LogAsync( $"Install of '{component.Name ?? string.Empty}' finished with exit code {exitCode.ToString() ?? string.Empty}" );
+                        await Logger.LogAsync( $"Install of '{component.Name}' finished with exit code {exitCode}" );
 
                         if ( exitCode != 0 )
                         {
@@ -2323,6 +2328,9 @@ namespace KOTORModSync
                 // Expand the tree. Too lazy to figure out the proper way.
                 IEnumerator treeEnumerator = LeftTreeView.Items.GetEnumerator();
                 _ = treeEnumerator.MoveNext();
+                if ( treeEnumerator.Current is null )
+                    throw new NullReferenceException("treeEnumerator.Current");
+
                 LeftTreeView.ExpandSubTree( (TreeViewItem)treeEnumerator.Current );
 
                 if ( componentsList.Count > 0 || TabControl is null )
@@ -2448,6 +2456,9 @@ namespace KOTORModSync
 
                 var thisInstruction = (Instruction)( (Button)sender ).Tag;
                 int index = CurrentComponent.Instructions.IndexOf( thisInstruction );
+
+                if ( thisInstruction is null )
+                    throw new NullReferenceException($"Could not get instruction instance from button's tag: {((Button)sender).Content}");
 
                 CurrentComponent.MoveInstructionToIndex( thisInstruction, index + 1 );
                 LoadComponentDetails( CurrentComponent );
@@ -2648,6 +2659,9 @@ namespace KOTORModSync
 
                 var thisOption = (Option)( (Button)sender ).Tag;
                 int index = CurrentComponent.Options.IndexOf( thisOption );
+                
+                if ( thisOption is null )
+                    throw new NullReferenceException($"Could not get option instance from button's tag: {((Button)sender).Content}");
 
                 CurrentComponent.MoveOptionToIndex( thisOption, index - 1 );
                 LoadComponentDetails( CurrentComponent );
@@ -2671,6 +2685,9 @@ namespace KOTORModSync
 
                 var thisOption = (Option)( (Button)sender ).Tag;
                 int index = CurrentComponent.Options.IndexOf( thisOption );
+                
+                if ( thisOption is null )
+                    throw new NullReferenceException($"Could not get option instance from button's tag: {((Button)sender).Content}");
 
                 CurrentComponent.MoveOptionToIndex( thisOption, index + 1 );
                 LoadComponentDetails( CurrentComponent );

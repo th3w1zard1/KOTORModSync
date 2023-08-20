@@ -5,10 +5,8 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Dynamic;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using JetBrains.Annotations;
 
 namespace KOTORModSync.Core.FileSystemPathing
@@ -18,7 +16,7 @@ namespace KOTORModSync.Core.FileSystemPathing
     public class InsensitivePath : FileSystemInfo
     {
         [CanBeNull] private FileSystemInfo _fileSystemInfo { get; set; }
-        private bool? _isFile { get; set; }
+        private bool? _isFile { get; }
         public bool? IsFile => _isFile ??
             _fileSystemInfo is FileInfo
                 ? true

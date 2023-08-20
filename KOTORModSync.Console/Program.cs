@@ -65,7 +65,7 @@ namespace KOTORModSync.ConsoleApp
                             );
                             Console.WriteLine( "VERY IMPORTANT: Do not extract or rename any mod archives." );
                             Console.WriteLine(
-                                "Please specify the directory your mods are downloaded in (e.g. \"%UserProfile%\\Documents\\tslmods\")"
+                                "Please specify the directory your mods are downloaded in (e.g. \"%UserProfile%\\Documents\\tsl_mods\")"
                             );
                             DirectoryInfo modDownloads = Utility.ChooseDirectory();
                             MainConfigInstance.sourcePath = modDownloads;
@@ -151,7 +151,7 @@ namespace KOTORModSync.ConsoleApp
 
                             string outputPath = Path.Combine(
                                 MainConfig.LastOutputDirectory.FullName,
-                                path2: "modtreeoutput.json"
+                                path2: "mod_tree_output.json"
                             );
                             ArchiveHelper.OutputModTree( MainConfig.SourcePath, outputPath );
                             Console.WriteLine( "Press any key to continue..." );

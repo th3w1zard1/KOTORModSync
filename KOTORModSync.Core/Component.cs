@@ -210,13 +210,11 @@ namespace KOTORModSync.Core
             {
                 if (_options != value)
                 {
-                    if (_options != null)
-                        _options.CollectionChanged -= CollectionChanged;
+                    _options.CollectionChanged -= CollectionChanged;
 
                     _options = value;
 
-                    if (_options != null)
-                        _options.CollectionChanged += CollectionChanged;
+                    _options.CollectionChanged += CollectionChanged;
 
                     OnPropertyChanged();
                 }
@@ -257,12 +255,12 @@ namespace KOTORModSync.Core
         }
 
         [NotNull]
-        private DirectoryInfo _tempPath;
-
-        [NotNull]
         public string SerializeComponent()
         {
             var serializedComponentDict = (Dictionary<string, object>)Serializer.SerializeObject( this );
+            if ( serializedComponentDict is null )
+                throw new NullReferenceException(nameof( serializedComponentDict ));
+
             CollectionUtils.RemoveEmptyCollections( serializedComponentDict );
             StringBuilder tomlString = FixSerializedTomlDict( serializedComponentDict );
 
@@ -358,8 +356,6 @@ namespace KOTORModSync.Core
         {
             if ( !( componentDict is TomlTable ) )
                 throw new ArgumentException( "[TomlError] Expected a TOML table for component data." );
-
-            _tempPath = new DirectoryInfo( Path.GetTempPath() );
 
             Name = GetRequiredValue<string>( componentDict, key: "Name" );
             _ = Logger.LogAsync( $"{Environment.NewLine}== Deserialize next component '{Name}' ==" );
@@ -518,6 +514,7 @@ namespace KOTORModSync.Core
 
             var instructions = new ObservableCollection<Instruction>();
 
+            // ReSharper disable once PossibleNullReferenceException
             for ( int index = 0; index < instructionsSerializedList.Count; index++ )
             {
                 Dictionary<string, object> instructionDict =
@@ -573,6 +570,7 @@ namespace KOTORModSync.Core
 
             var options = new ObservableCollection<Option>();
 
+            // ReSharper disable once PossibleNullReferenceException
             for ( int index = 0; index < optionsSerializedList.Count; index++ )
             {
                 var optionsDict = (IDictionary<string, object>)optionsSerializedList[index];
@@ -588,7 +586,7 @@ namespace KOTORModSync.Core
                 );
 
                 option.Name = GetRequiredValue<string>( optionsDict, key: "Name" );
-                option.Description = GetValueOrDefault<string>( optionsDict, key: "Description" );
+                option.Description = GetValueOrDefault<string>( optionsDict, key: "Description" ) ?? string.Empty;
                 _ = Logger.LogAsync( $"{Environment.NewLine}== Deserialize next option '{Name}' ==" );
                 option.Guid = GetRequiredValue<Guid>( optionsDict, key: "Guid" );
                 option.Restrictions
@@ -682,7 +680,7 @@ namespace KOTORModSync.Core
                         }
 
                         if ( targetType == typeof( string ) )
-                            return (T)(object)valueStr;
+                            return (T)(valueStr as object);
 
                         break;
                 }

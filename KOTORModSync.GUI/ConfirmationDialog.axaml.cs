@@ -114,6 +114,7 @@ namespace KOTORModSync
             );
         private void OnOpened( [CanBeNull] object sender, [CanBeNull] EventArgs e ) => ConfirmTextBlock.Text = ConfirmText;
 
+        // ReSharper disable twice UnusedParameter.Local
         private void YesButton_Click( [CanBeNull] object sender, [CanBeNull] RoutedEventArgs e ) =>
             RaiseEvent( new RoutedEventArgs( s_yesButtonClickedEvent ) );
         private void NoButton_Click( [CanBeNull] object sender, [CanBeNull] RoutedEventArgs e ) =>

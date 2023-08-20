@@ -45,7 +45,8 @@ namespace KOTORModSync
             UpdateInfoText();
         }
 
-        private void OKButton_Click( [CanBeNull] object sender, [CanBeNull] RoutedEventArgs e ) => Close();
+        // ReSharper disable twice UnusedParameter.Local
+        private void OKButton_Click( [NotNull] object sender, [NotNull] RoutedEventArgs e ) => Close();
         private void UpdateInfoText() => Dispatcher.UIThread.InvokeAsync( () => InfoTextBlock.Text = InfoText );
     }
 }

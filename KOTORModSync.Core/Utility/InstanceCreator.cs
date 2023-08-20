@@ -40,6 +40,9 @@ namespace KOTORModSync.Core.Utility
                 s_cachedConstructors[type] = constructors;
             }
 
+            if ( constructorParameters is null )
+                throw new NullReferenceException(nameof( constructorParameters ));
+
             int parameterCount = constructorParameters.Length;
             foreach ( ConstructorInfo constructor in
                 from constructor in constructors

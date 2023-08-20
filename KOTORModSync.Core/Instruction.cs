@@ -204,6 +204,7 @@ namespace KOTORModSync.Core
             RealDestinationPath = thisDestination;
         }
 
+        // ReSharper disable once AssignNullToNotNullAttribute
         public async Task<ActionExitCode> ExtractFileAsync(DirectoryInfo argDestinationPath = null, [NotNull][ItemNotNull] List<string> argSourcePaths = null)
         {
             try
@@ -237,6 +238,7 @@ namespace KOTORModSync.Core
                             return;
                         }
 
+                        // (attempt to) handle self-extracting executable archives (7zip)
                         if ( thisFile.Extension.Equals( ".exe", StringComparison.OrdinalIgnoreCase ) )
                         {
                             (int, string, string) result = await PlatformAgnosticMethods.ExecuteProcessAsync(
@@ -350,6 +352,7 @@ namespace KOTORModSync.Core
                             var thisFile = new FileInfo(sourcePath);
                             using (FileStream stream = File.OpenRead(thisFile.FullName))
                             {
+                                // ReSharper disable once PossibleNullReferenceException
                                 var destinationDirectory = new InsensitivePath(Path.Combine( argDestinationPath?.FullName ?? thisFile.Directory.FullName, Path.GetFileNameWithoutExtension(thisFile.Name) ));
                                 if ( !destinationDirectory.Exists || destinationDirectory.IsFile != true )
                                 {
@@ -494,6 +497,7 @@ namespace KOTORModSync.Core
 
             try
             {
+                // ReSharper disable once PossibleNullReferenceException
                 foreach ( string thisFilePath in sourcePaths )
                 {
                     var thisFile = new InsensitivePath( thisFilePath, isFile:true );
@@ -542,6 +546,7 @@ namespace KOTORModSync.Core
             try
             {
                 ActionExitCode exitCode = ActionExitCode.Success;
+                // ReSharper disable once PossibleNullReferenceException
                 foreach ( string sourcePath in sourcePaths )
                 {
                     // Check if the source file already exists
@@ -616,7 +621,7 @@ namespace KOTORModSync.Core
             if (destinationPath?.Exists != true)
                 throw new ArgumentNullException(nameof(destinationPath));
 
-            int initialCount = 4;
+            const int initialCount = 4;
             int maxCount = Environment.ProcessorCount * 4;
             var semaphore = new SemaphoreSlim(initialCount, maxCount);
 
@@ -676,6 +681,7 @@ namespace KOTORModSync.Core
         }
 
         public async Task<ActionExitCode> MoveFileAsync(
+            // ReSharper disable once AssignNullToNotNullAttribute
             [ItemNotNull][NotNull] List<string> sourcePaths = null,
             DirectoryInfo destinationPath = null
         )
@@ -690,7 +696,7 @@ namespace KOTORModSync.Core
             if (destinationPath?.Exists != true)
                 throw new ArgumentNullException(nameof(destinationPath));
 
-            int initialCount = 4;
+            const int initialCount = 4;
             int maxCount = Environment.ProcessorCount * 4;
             var semaphore = new SemaphoreSlim(initialCount, maxCount);
 
@@ -701,7 +707,7 @@ namespace KOTORModSync.Core
                 try
                 {
                     string fileName = Path.GetFileName(sourcePath);
-                    string destinationFilePath = Path.Combine(destinationPath.FullName, fileName);
+                    string destinationFilePath = PathHelper.GetCaseSensitivePath(Path.Combine(destinationPath.FullName, fileName), isFile: true).Item1;
 
                     // Check if the destination file already exists
                     if (File.Exists(destinationFilePath))
@@ -729,9 +735,12 @@ namespace KOTORModSync.Core
                 }
                 finally
                 {
-                    semaphore.Release(); // Release the semaphore slot
+                    _ = semaphore.Release(); // Release the semaphore slot
                 }
             }
+
+            if ( sourcePaths is null )
+                throw new NullReferenceException(nameof( sourcePaths ));
 
             var tasks = sourcePaths.Select(MoveIndividualFileAsync).ToList();
 
@@ -748,7 +757,6 @@ namespace KOTORModSync.Core
 
 
         // todo: define exit codes here.
-        // ReSharper disable once InconsistentNaming
         public async Task<ActionExitCode> ExecuteTSLPatcherAsync()
         {
             try
@@ -825,6 +833,7 @@ namespace KOTORModSync.Core
                         await Logger.LogVerboseAsync( $"Using CLI to run command: '{tslPatcherCliPath} {args}'" );
                     }
 
+                    // ReSharper disable twice UnusedVariable
                     ( int exitCode, string output, string error ) = await PlatformAgnosticMethods.ExecuteProcessAsync(
                         tslPatcherCliPath.FullName,
                         args,
@@ -994,20 +1003,6 @@ namespace KOTORModSync.Core
 
         private void OnPropertyChanged( [CallerMemberName][CanBeNull] string propertyName = null ) =>
             PropertyChanged?.Invoke( this, new PropertyChangedEventArgs( propertyName ) );
-
-        private bool SetField<T>(
-            [CanBeNull] ref T field,
-            [CanBeNull] T value,
-            [CallerMemberName] string propertyName = null
-        )
-        {
-            if ( EqualityComparer<T>.Default.Equals( field, value ) )
-                return false;
-
-            field = value;
-            OnPropertyChanged( propertyName );
-            return true;
-        }
 
         [NotNull]
         [ItemNotNull]

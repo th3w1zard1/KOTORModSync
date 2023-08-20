@@ -15,9 +15,9 @@ namespace KOTORModSync.Converters
         [CanBeNull]
         public object Convert(
             [CanBeNull] object value,
-            [CanBeNull] Type targetType,
+            [NotNull] Type targetType,
             [CanBeNull] object parameter,
-            [CanBeNull] CultureInfo culture
+            [NotNull] CultureInfo culture
         ) =>
             value is string action
                 ? new ComboBoxItem
@@ -29,9 +29,9 @@ namespace KOTORModSync.Converters
         [CanBeNull]
         public object ConvertBack(
             [CanBeNull] object value,
-            [CanBeNull] Type targetType,
+            [NotNull] Type targetType,
             [CanBeNull] object parameter,
-            [CanBeNull] CultureInfo culture
+            [NotNull] CultureInfo culture
         ) =>
             value is ComboBoxItem comboBoxItem
                 ? comboBoxItem.Content?.ToString()

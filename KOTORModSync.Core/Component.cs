@@ -15,6 +15,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
+using KOTORModSync.Core.FileSystemPathing;
 using KOTORModSync.Core.Utility;
 using Microsoft.CSharp.RuntimeBinder;
 using SharpCompress;
@@ -417,7 +418,7 @@ namespace KOTORModSync.Core
             }
 
             string tomlinString = stringBuilder.ToString();
-            File.WriteAllText( filePath, tomlinString );
+            File.WriteAllText( new InsensitivePath(filePath), tomlinString );
         }
 
         [NotNull]
@@ -812,7 +813,7 @@ namespace KOTORModSync.Core
             try
             {
                 // Read the contents of the file into a string
-                string tomlString = File.ReadAllText( filePath )
+                string tomlString = File.ReadAllText( new InsensitivePath(filePath) )
                     // the code expects instructions to always be defined. When it's not, code errors and prevents a save.
                     // make the user experience better by just removing the empty instructions key.
                     .Replace( oldValue: "Instructions = []", string.Empty )

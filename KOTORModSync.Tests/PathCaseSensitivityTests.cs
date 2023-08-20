@@ -2,9 +2,8 @@
 // Licensed under the GNU General Public License v3.0 (GPLv3).
 // See LICENSE.txt file in the project root for full license information.
 
-using System.Diagnostics;
 using System.Text;
-using KOTORModSync.Core.Utility;
+using KOTORModSync.Core.FileSystemPathing;
 
 namespace KOTORModSync.Tests
 {
@@ -24,6 +23,143 @@ namespace KOTORModSync.Tests
         [TearDown]
         public static void CleanUpTestDirectory() => Directory.Delete(s_testDirectory, recursive: true);
 
+        private DirectoryInfo _tempDirectory;
+        private DirectoryInfo _subDirectory;
+
+        [SetUp]
+        public void Setup()
+        {
+            _tempDirectory = new DirectoryInfo(Path.Combine(Path.GetTempPath(), "UnitTestTempDir"));
+            _tempDirectory.Create();
+            _subDirectory = new DirectoryInfo(Path.Combine(_tempDirectory.FullName, "SubDir"));
+            _subDirectory.Create();
+        }
+
+        [TearDown]
+        public void TearDown()
+        {
+            _subDirectory.Delete(true);
+            _tempDirectory.Delete(true);
+        }
+
+        [Test]
+        public void FindCaseInsensitiveDuplicates_ThrowsArgumentNullException_WhenDirectoryIsNull()
+        {
+            DirectoryInfo? directory = null;
+            _ = Assert.Throws<ArgumentNullException>( () => PathHelper.FindCaseInsensitiveDuplicates( directory! )?.ToList() );
+        }
+
+
+        [Test]
+        public void FindCaseInsensitiveDuplicates_ReturnsEmptyList_WhenDirectoryIsEmpty()
+        {
+            List<FileSystemInfo> result = PathHelper.FindCaseInsensitiveDuplicates(_tempDirectory).ToList();
+            var failureMessage = new StringBuilder();
+            foreach (FileSystemInfo item in result)
+            {
+                failureMessage.AppendLine(item.FullName);
+            }
+
+            Assert.That( result, Is.Empty, $"Expected 0 items, but found {result.Count}. Output: {failureMessage}");
+        }
+
+        [Test]
+        public void FindCaseInsensitiveDuplicates_ReturnsEmptyList_WhenNoDuplicatesExist()
+        {
+            // Arrange
+            var file1 = new FileInfo(Path.Combine(_tempDirectory.FullName, "file1.txt"));
+            file1.Create().Close();
+            var file2 = new FileInfo(Path.Combine(_tempDirectory.FullName, "file2.txt"));
+            file2.Create().Close();
+
+            // Act
+            List<FileSystemInfo> result = PathHelper.FindCaseInsensitiveDuplicates(_tempDirectory).ToList();
+            var failureMessage = new StringBuilder();
+            foreach (FileSystemInfo item in result)
+            {
+                failureMessage.AppendLine(item.FullName);
+            }
+
+            // Assert
+            Assert.That( result, Is.Empty, $"Expected 0 items, but found {result.Count}. Output: {failureMessage}");
+        }
+
+        [Test]
+        // will always fail on windows
+        public void FindCaseInsensitiveDuplicates_FindsFileDuplicates_CaseInsensitive()
+        {
+            // Arrange
+            var file1 = new FileInfo(Path.Combine(_tempDirectory.FullName, "file1.txt"));
+            file1.Create().Close();
+            var file2 = new FileInfo(Path.Combine(_tempDirectory.FullName, "FILE1.txt"));
+            file2.Create().Close();
+
+            // Act
+            List<FileSystemInfo> result = PathHelper.FindCaseInsensitiveDuplicates(_tempDirectory).ToList();
+            var failureMessage = new StringBuilder();
+            foreach (FileSystemInfo item in result)
+            {
+                failureMessage.AppendLine(item.FullName);
+            }
+
+            // Assert
+            Assert.That( result.ToList(), Has.Count.EqualTo( 2 ), $"Expected 2 items, but found {result.Count}. Output: {failureMessage}");
+        }
+
+        [Test]
+        public void FindCaseInsensitiveDuplicates_IgnoresNonDuplicates()
+        {
+            // Arrange
+            var file1 = new FileInfo(Path.Combine(_tempDirectory.FullName, "file1.txt"));
+            file1.Create().Close();
+            var file2 = new FileInfo(Path.Combine(_subDirectory.FullName, "file2.txt"));
+            file2.Create().Close();
+
+            // Act
+            List<FileSystemInfo> result = PathHelper.FindCaseInsensitiveDuplicates(_tempDirectory).ToList();
+            var failureMessage = new StringBuilder();
+            foreach (FileSystemInfo item in result)
+            {
+                failureMessage.AppendLine(item.FullName);
+            }
+
+            // Assert
+            Assert.That( result, Is.Empty, $"Expected 0 items, but found {result.Count}. Output: {failureMessage}");
+        }
+
+        [Test]
+        public void FindCaseInsensitiveDuplicates_IgnoresExtensions()
+        {
+            // Arrange
+            var file1 = new FileInfo(Path.Combine(_tempDirectory.FullName, "file1.txt"));
+            file1.Create().Close();
+            var file2 = new FileInfo(Path.Combine(_subDirectory.FullName, "FILE1.png"));
+            file2.Create().Close();
+
+            // Act
+            List<FileSystemInfo> result = PathHelper.FindCaseInsensitiveDuplicates(_tempDirectory).ToList();
+            var failureMessage = new StringBuilder();
+            foreach (FileSystemInfo item in result)
+            {
+                failureMessage.AppendLine(item.FullName);
+            }
+
+            // Assert
+            Assert.That( result, Is.Empty, $"Expected 0 items, but found {result.Count}. Output: {failureMessage}");
+        }
+
+        [Test]
+        public void TestGetClosestMatchingEntry()
+        {
+            string file1 = Path.Combine( s_testDirectory, "file.txt" );
+            string file2 = Path.Combine( s_testDirectory, "FILE.TXT" );
+            File.WriteAllText( file1, "Test content" );
+            File.WriteAllText( file2, "Test content" );
+            
+            Assert.That( PathHelper.GetClosestMatchingEntry( Path.Combine( Path.GetDirectoryName(file1), Path.GetFileName(file1).ToUpperInvariant()) ).Item1.FullName, Is.EqualTo( file2 ) );
+            Assert.That( PathHelper.GetClosestMatchingEntry( file1.ToUpperInvariant() ).Item1.FullName, Is.EqualTo( file2 ) );
+        }
+
         [Test]
         public void TestDuplicatesWithFileInfo()
         {
@@ -38,7 +174,7 @@ namespace KOTORModSync.Tests
                 failureMessage.AppendLine(item.FullName);
             }
             
-            Assert.That( result, Has.Count.EqualTo( 2 ), $"Expected 2 items, but found {result?.Count}. Output: {failureMessage}");
+            Assert.That( result, Has.Count.EqualTo( 2 ), $"Expected 2 items, but found {result.Count}. Output: {failureMessage}");
         }
 
         [Test]
@@ -54,7 +190,7 @@ namespace KOTORModSync.Tests
                 failureMessage.AppendLine(item.FullName);
             }
             
-            Assert.That( result, Has.Count.EqualTo( 2 ), $"Expected 2 items, but found {result?.Count}. Output: {failureMessage}");
+            Assert.That( result, Has.Count.EqualTo( 2 ), $"Expected 2 items, but found {result.Count}. Output: {failureMessage}");
         }
 
         [Test]
@@ -71,7 +207,7 @@ namespace KOTORModSync.Tests
                 failureMessage.AppendLine(item.FullName);
             }
             
-            Assert.That( result, Has.Count.EqualTo( 2 ), $"Expected 2 items, but found {result?.Count}. Output: {failureMessage}");
+            Assert.That( result, Has.Count.EqualTo( 2 ), $"Expected 2 items, but found {result.Count}. Output: {failureMessage}");
         }
 
         [Test]
@@ -93,7 +229,7 @@ namespace KOTORModSync.Tests
                 failureMessage.AppendLine(item.FullName);
             }
 
-            Assert.That( result, Has.Count.EqualTo(4), $"Expected 4 items, but found {result?.Count}. Output: {failureMessage}");
+            Assert.That( result, Has.Count.EqualTo(4), $"Expected 4 items, but found {result.Count}. Output: {failureMessage}");
         }
 
         [Test]
@@ -116,7 +252,7 @@ namespace KOTORModSync.Tests
                 failureMessage.AppendLine(item.FullName);
             }
             
-            Assert.That( result, Has.Count.EqualTo( 2 ), $"Expected 2 items, but found {result?.Count}. Output: {failureMessage}");
+            Assert.That( result, Has.Count.EqualTo( 2 ), $"Expected 2 items, but found {result.Count}. Output: {failureMessage}");
         }
         
         [Test]

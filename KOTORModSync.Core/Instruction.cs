@@ -14,6 +14,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
 using KOTORModSync.Core.Data;
+using KOTORModSync.Core.FileSystemPathing;
 using KOTORModSync.Core.TSLPatcher;
 using KOTORModSync.Core.Utility;
 using Newtonsoft.Json;
@@ -185,28 +186,20 @@ namespace KOTORModSync.Core
                     $"Could not find any files in the 'Source' path! Got [{string.Join( separator: ", ", Source )}]"
                 );
             }
-
-            // ReSharper disable once AssignNullToNotNullAttribute
+            
             RealSourcePaths = newSourcePaths;
 
             string destinationPath = Utility.Utility.ReplaceCustomVariables( Destination );
-            if ( string.IsNullOrWhiteSpace( destinationPath ) )
-                return;
+            DirectoryInfo thisDestination = PathHelper.TryGetValidDirectoryInfo( destinationPath );
+            if ( !noValidate && (thisDestination == null || !thisDestination.Exists) )
+                throw new DirectoryNotFoundException( "Could not find the 'Destination' path!" );
 
-            DirectoryInfo thisDestination = PathValidator.IsValidPath( destinationPath )
-                ? new DirectoryInfo( destinationPath )
-                : throw new InvalidDataException( destinationPath + " is not a valid path!" );
-
-            if ( !thisDestination.Exists )
+            if ( thisDestination == null || !thisDestination.Exists )
             {
-                string caseSensitiveDestination = PathHelper.GetCaseSensitivePath( thisDestination.FullName );
-                if ( !noValidate && caseSensitiveDestination is null )
+                string caseSensitiveDestination = PathHelper.GetCaseSensitivePath( thisDestination?.FullName );
+                thisDestination = PathHelper.TryGetValidDirectoryInfo( caseSensitiveDestination );
+                if ( !noValidate && (thisDestination == null || !thisDestination.Exists) )
                     throw new DirectoryNotFoundException( "Could not find the 'Destination' path!" );
-
-                if ( caseSensitiveDestination is null )
-                    return;
-
-                thisDestination = new DirectoryInfo( caseSensitiveDestination );
             }
 
             RealDestinationPath = thisDestination;
@@ -297,9 +290,9 @@ namespace KOTORModSync.Core
                                     extractFolderName,
                                     reader.Entry.Key
                                 );
-                                string destinationDirectory = Path.GetDirectoryName( destinationItemPath );
+                                var destinationDirectory = new InsensitivePath(Path.GetDirectoryName( destinationItemPath ));
 
-                                if ( destinationDirectory != null && !Directory.Exists( destinationDirectory ) )
+                                if ( !destinationDirectory.Exists || destinationDirectory.IsDirectory == false )
                                 {
                                     _ = Logger.LogAsync( $"Create directory '{destinationDirectory}'" );
                                     _ = Directory.CreateDirectory( destinationDirectory );
@@ -311,7 +304,7 @@ namespace KOTORModSync.Core
                                 {
                                     await Task.Run(
                                         () => reader.WriteEntryToDirectory(
-                                            destinationDirectory ?? throw new InvalidOperationException(),
+                                            destinationDirectory,
                                             ArchiveHelper.DefaultExtractionOptions
                                         ),
                                         cancellationToken
@@ -358,8 +351,8 @@ namespace KOTORModSync.Core
                             var thisFile = new FileInfo(sourcePath);
                             using (FileStream stream = File.OpenRead(thisFile.FullName))
                             {
-                                string destinationDirectory = Path.Combine( argDestinationPath?.FullName ?? thisFile.Directory.FullName, Path.GetFileNameWithoutExtension(thisFile.Name) );
-                                if ( !Directory.Exists( destinationDirectory ) )
+                                var destinationDirectory = new InsensitivePath(Path.Combine( argDestinationPath?.FullName ?? thisFile.Directory.FullName, Path.GetFileNameWithoutExtension(thisFile.Name) ));
+                                if ( !destinationDirectory.Exists || destinationDirectory.IsDirectory == false )
                                 {
                                     _ = Logger.LogAsync( $"Create directory '{destinationDirectory}'" );
                                     _ = Directory.CreateDirectory( destinationDirectory );
@@ -550,7 +543,7 @@ namespace KOTORModSync.Core
             try
             {
                 ActionExitCode exitCode = ActionExitCode.Success;
-                foreach ( string sourcePath in Source.ConvertAll( Utility.Utility.ReplaceCustomVariables ) )
+                foreach ( string sourcePath in sourcePaths )
                 {
                     // Check if the source file already exists
                     string fileName = Path.GetFileName( sourcePath );
@@ -580,7 +573,7 @@ namespace KOTORModSync.Core
                             continue;
                         }
 
-                        Logger.Log( $"Replacing pre-existing '{destinationFilePath}'" );
+                        Logger.Log( $"Replacing pre-existing file '{destinationFilePath}'" );
                         File.Delete( destinationFilePath );
                     }
 
@@ -635,7 +628,7 @@ namespace KOTORModSync.Core
                 try
                 {
                     string fileName = Path.GetFileName(sourcePath);
-                    string destinationFilePath = Path.Combine(destinationPath.FullName, fileName);
+                    string destinationFilePath = PathHelper.GetCaseSensitivePath(Path.Combine(destinationPath.FullName, fileName));
 
                     // Check if the destination file already exists
                     if (File.Exists(destinationFilePath))

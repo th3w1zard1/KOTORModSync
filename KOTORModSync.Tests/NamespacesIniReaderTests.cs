@@ -125,10 +125,10 @@ Name=hk50 with tslrcm
                 Assert.That( result, Has.Count.EqualTo( 4 ) );
                 Assert.Multiple( () =>
                 {
-                    Assert.That( result["Namespace1"]["standard"], Is.EqualTo( "standard hk47 no tslrcm" ) );
-                    Assert.That( result["Namespace2"]["hk50"], Is.EqualTo( "hk50 no tslrcm" ) );
-                    Assert.That( result["Namespace3"]["standardTSLRCM"], Is.EqualTo( "standard hk47 with tslrcm" ) );
-                    Assert.That( result["Namespace4"]["hk50TSLRCM"], Is.EqualTo( "hk50 with tslrcm" ) );
+                    Assert.That( result["standard"]["Name"], Is.EqualTo( "standard hk47 no tslrcm" ) );
+                    Assert.That( result["hk50"]["Name"], Is.EqualTo( "hk50 no tslrcm" ) );
+                    Assert.That( result["standardTSLRCM"]["Name"], Is.EqualTo( "standard hk47 with tslrcm" ) );
+                    Assert.That( result["hk50TSLRCM"]["Name"], Is.EqualTo( "hk50 with tslrcm" ) );
                 } );
             }
         }

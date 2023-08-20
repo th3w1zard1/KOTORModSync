@@ -28,10 +28,10 @@ using Avalonia.Markup.Xaml.Styling;
 using Avalonia.Media;
 using Avalonia.Themes.Fluent;
 using Avalonia.Threading;
-using Avalonia.VisualTree;
 using JetBrains.Annotations;
 using KOTORModSync.CallbackDialogs;
 using KOTORModSync.Core;
+using KOTORModSync.Core.FileSystemPathing;
 using KOTORModSync.Core.Utility;
 using Component = KOTORModSync.Core.Component;
 using NotNullAttribute = JetBrains.Annotations.NotNullAttribute;
@@ -1765,7 +1765,7 @@ namespace KOTORModSync
                 int index = MainConfig.AllComponents.IndexOf( CurrentComponent );
                 if ( index == -1 )
                 {
-                    string componentName = string.IsNullOrWhiteSpace( newComponent?.Name )
+                    string componentName = string.IsNullOrWhiteSpace( newComponent.Name )
                         ? "."
                         : $" '{newComponent.Name}'.";
                     output = $"Could not find the index of component{componentName}"
@@ -1993,7 +1993,7 @@ namespace KOTORModSync
                 {
                     DockPanel headerPanel = (DockPanel)rootItem.Header
                         ?? throw new InvalidCastException( "Your TreeView isn't supported: header must be wrapped by top-level DockPanel" );
-                    CheckBox checkBox = headerPanel.Children?.OfType<CheckBox>()
+                    CheckBox checkBox = headerPanel.Children.OfType<CheckBox>()
                         .FirstOrDefault();
 
                     if ( checkBox != null && !suppressErrors )

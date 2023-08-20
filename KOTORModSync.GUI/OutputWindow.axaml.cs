@@ -3,19 +3,14 @@
 // See LICENSE.txt file in the project root for full license information.
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 using Avalonia.Controls;
-using Avalonia.Controls.Shapes;
 using Avalonia.Threading;
 using KOTORModSync.Core;
+using KOTORModSync.Core.FileSystemPathing;
 using Path = System.IO.Path;
 
 namespace KOTORModSync
@@ -70,20 +65,20 @@ namespace KOTORModSync
 
             string logfileName = $"{Logger.LogFileName}{DateTime.Now:yyyy-MM-dd}";
             string executingDirectory = Core.Utility.Utility.GetExecutingAssemblyDirectory();
-            string filePath = Path.Combine(executingDirectory, logfileName + ".txt");
-            if (File.Exists(filePath))
+            var filePath = new InsensitivePath(Path.Combine(executingDirectory, logfileName + ".txt"));
+            if ( !File.Exists( filePath ) )
+                return;
+
+            string[] lines = File.ReadAllLines(filePath);
+            int startIndex = Math.Max(0, lines.Length - _maxLinesShown);
+            foreach (string line in lines.Skip(startIndex))
             {
-                string[] lines = File.ReadAllLines(filePath);
-                int startIndex = Math.Max(0, lines.Length - _maxLinesShown);
-                foreach (string line in lines.Skip(startIndex))
-                {
-                    AppendLog( line );
-                }
-                LogScrollViewer.ScrollToEnd();
+                AppendLog( line );
             }
+            LogScrollViewer.ScrollToEnd();
         }
 
-        private object _logLock = new object();
+        private readonly object _logLock = new object();
         private void AppendLog(string message)
         {
             try

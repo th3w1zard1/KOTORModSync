@@ -7,6 +7,7 @@ using System.ComponentModel;
 using System.IO;
 using System.Reflection;
 using JetBrains.Annotations;
+using KOTORModSync.Core.FileSystemPathing;
 
 namespace KOTORModSync.Core.Utility
 {
@@ -71,20 +72,20 @@ namespace KOTORModSync.Core.Utility
         {
             if ( dirPath is null )
                 throw new ArgumentNullException( nameof( dirPath ) );
-
+            
             try
             {
-                using ( FileStream fs = File.Create(
+                using (
+                    File.Create(
                         Path.Combine(
-                            dirPath.FullName,
+                            new InsensitivePath(dirPath.FullName),
                             Path.GetRandomFileName()
                         ),
                         bufferSize: 1,
                         FileOptions.DeleteOnClose
-                    )
+                    ) 
                 )
-                {
-                }
+                { }
 
                 return true;
             }

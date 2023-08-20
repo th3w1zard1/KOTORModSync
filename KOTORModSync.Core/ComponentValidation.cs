@@ -4,10 +4,10 @@
 
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using JetBrains.Annotations;
+using KOTORModSync.Core.FileSystemPathing;
 using KOTORModSync.Core.Utility;
 using SharpCompress.Archives;
 using SharpCompress.Archives.Rar;
@@ -390,23 +390,22 @@ namespace KOTORModSync.Core
 
                         break;
                     default:
-
-                        string destinationPath = string.Empty;
+                        
                         if ( !string.IsNullOrEmpty( instruction.Destination ) )
                         {
-                            destinationPath = Utility.Utility.ReplaceCustomVariables( instruction.Destination );
+                            instruction.Destination = new InsensitivePath(Utility.Utility.ReplaceCustomVariables( instruction.Destination ));
                         }
 
-                        if ( string.IsNullOrWhiteSpace( destinationPath )
-                            || destinationPath.Any( c => Path.GetInvalidPathChars().Contains( c ) )
-                            || !Directory.Exists( destinationPath ) )
+                        if ( string.IsNullOrWhiteSpace( instruction.Destination )
+                            || !PathValidator.IsValidPath(instruction.Destination)
+                            || !Directory.Exists( instruction.Destination ) )
                         {
                             success = false;
-                            AddError( "Destination cannot be found!" + $" Got '{destinationPath}'", instruction );
-                            if ( PathValidator.IsValidPath(destinationPath) && MainConfig.AttemptFixes )
+                            AddError( "Destination cannot be found!" + $" Got '{instruction.Destination}'", instruction );
+                            if ( PathValidator.IsValidPath(instruction.Destination) && MainConfig.AttemptFixes )
                             {
                                 Logger.Log( "Fixing the above error automatically..." );
-                                Directory.CreateDirectory( destinationPath );
+                                Directory.CreateDirectory( instruction.Destination );
                                 success = true;
                             }
                         }

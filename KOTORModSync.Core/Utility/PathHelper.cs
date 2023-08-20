@@ -565,18 +565,20 @@ namespace KOTORModSync.Core.Utility
 
         public static IEnumerable<FileSystemInfo> FindCaseInsensitiveDuplicates(FileInfo fileInfo)
         {
-            // assumed Path.GetDirectoryName can't be null when passing a FileInfo's path.
-            return FindCaseInsensitiveDuplicates(fileInfo?.DirectoryName, isFile: true);
+            return FindCaseInsensitiveDuplicates(fileInfo?.FullName, isFile: true);
         }
 
         // Finds all duplicate items in a path.
-        public static IEnumerable<FileSystemInfo> FindCaseInsensitiveDuplicates(string path, bool includeSubFolders=true, bool? isFile=null)
+        public static IEnumerable<FileSystemInfo> FindCaseInsensitiveDuplicates( [NotNull] string path, bool includeSubFolders=true, bool? isFile=null)
         {
+            if ( path is null )
+                throw new ArgumentNullException( nameof( path ) );
+
             string formattedPath = FixPathFormatting(path);
-            if (formattedPath is null || !PathValidator.IsValidPath(formattedPath))
+            if (!PathValidator.IsValidPath(formattedPath))
                 throw new ArgumentException( $"'{path}' is not a valid path string" );
 
-            // determine if path arg is a folder or a file.
+            // determine if path is a folder or a file.
             DirectoryInfo dirInfo;
             if (isFile == false)
             {
@@ -634,39 +636,41 @@ namespace KOTORModSync.Core.Utility
             if (isFile == true)
                 yield break;
 
-            foreach (DirectoryInfo subDirectory in dirInfo.GetDirectories())
+            foreach ( DirectoryInfo subDirectory in dirInfo.GetDirectories() )
             {
-                if (!subDirectory.Exists)
+                if ( !subDirectory.Exists )
                     continue;
 
-                if (!folderList.TryGetValue(subDirectory.FullName.ToLowerInvariant(), out List<FileSystemInfo> folders))
+                if ( !folderList.TryGetValue(
+                    subDirectory.FullName.ToLowerInvariant(),
+                    out List<FileSystemInfo> folders
+                ) )
                 {
                     folders = new List<FileSystemInfo>();
-                    folderList.Add(subDirectory.FullName.ToLowerInvariant(), folders);
+                    folderList.Add( subDirectory.FullName.ToLowerInvariant(), folders );
                 }
-                folders.Add(subDirectory);
 
-                if (includeSubFolders)
+                folders.Add( subDirectory );
+
+                if ( includeSubFolders )
                 {
-                    foreach (FileSystemInfo duplicate in FindCaseInsensitiveDuplicates(subDirectory))
+                    foreach ( FileSystemInfo duplicate in FindCaseInsensitiveDuplicates( subDirectory ) )
                     {
                         yield return duplicate;
                     }
                 }
+            }
+            
+            foreach (KeyValuePair<string, List<FileSystemInfo>> folderListEntry in folderList)
+            {
+                List<FileSystemInfo> foldersInCurrentDir = folderListEntry.Value;
+                if (foldersInCurrentDir.Count <= 1)
+                    continue;
 
-                foreach (KeyValuePair<string, List<FileSystemInfo>> folderListEntry in folderList)
+                foreach (FileSystemInfo duplicate in foldersInCurrentDir)
                 {
-                    List<FileSystemInfo> foldersInCurrentDir = folderListEntry.Value;
-                    if (foldersInCurrentDir.Count <= 1)
-                        continue;
-
-                    foreach (FileSystemInfo duplicate in foldersInCurrentDir)
-                    {
-                        yield return duplicate;
-                    }
+                    yield return duplicate;
                 }
-                
-                folderList.Clear();
             }
         }
 

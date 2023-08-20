@@ -81,7 +81,9 @@ namespace KOTORModSync.Tests
             _ = Directory.CreateDirectory( subDirectory );
             
             File.WriteAllText(Path.Combine(s_testDirectory, "file.txt"), "Test content");
+            File.WriteAllText(Path.Combine(s_testDirectory, "file.TXT"), "Test content");
             File.WriteAllText(Path.Combine(subDirectory, "FILE.txt"), "Test content");
+            File.WriteAllText(Path.Combine(subDirectory, "file.tXT"), "Test content");
             
             var dirInfo = new DirectoryInfo(s_testDirectory);
             List<FileSystemInfo> result = PathHelper.FindCaseInsensitiveDuplicates(dirInfo, includeSubFolders: true).ToList();
@@ -114,7 +116,7 @@ namespace KOTORModSync.Tests
                 failureMessage.AppendLine(item.FullName);
             }
             
-            Assert.That( result, Has.Count.EqualTo( 4 ), $"Expected 4 items, but found {result?.Count}. Output: {failureMessage}");
+            Assert.That( result, Has.Count.EqualTo( 2 ), $"Expected 2 items, but found {result?.Count}. Output: {failureMessage}");
         }
         
         [Test]

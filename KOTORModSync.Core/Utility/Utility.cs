@@ -78,14 +78,13 @@ namespace KOTORModSync.Core.Utility
                 using (
                     File.Create(
                         Path.Combine(
-                            new InsensitivePath(dirPath.FullName),
+                            PathHelper.GetCaseSensitivePath(dirPath).FullName,
                             Path.GetRandomFileName()
                         ),
                         bufferSize: 1,
                         FileOptions.DeleteOnClose
-                    ) 
-                )
-                { }
+                    )
+                ) { }
 
                 return true;
             }

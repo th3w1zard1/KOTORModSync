@@ -393,7 +393,7 @@ namespace KOTORModSync.Core
                         
                         if ( !string.IsNullOrEmpty( instruction.Destination ) )
                         {
-                            instruction.Destination = new InsensitivePath(Utility.Utility.ReplaceCustomVariables( instruction.Destination ));
+                            instruction.Destination = new InsensitivePath(Utility.Utility.ReplaceCustomVariables( instruction.Destination )).FullName;
                         }
 
                         if ( string.IsNullOrWhiteSpace( instruction.Destination )
@@ -405,7 +405,7 @@ namespace KOTORModSync.Core
                             if ( PathValidator.IsValidPath(instruction.Destination) && MainConfig.AttemptFixes )
                             {
                                 Logger.Log( "Fixing the above error automatically..." );
-                                Directory.CreateDirectory( instruction.Destination );
+                                _ = Directory.CreateDirectory( instruction.Destination );
                                 success = true;
                             }
                         }

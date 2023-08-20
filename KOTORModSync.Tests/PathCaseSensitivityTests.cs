@@ -156,8 +156,8 @@ namespace KOTORModSync.Tests
             File.WriteAllText( file1, "Test content" );
             File.WriteAllText( file2, "Test content" );
             
-            Assert.That( PathHelper.GetClosestMatchingEntry( Path.Combine( Path.GetDirectoryName(file1), Path.GetFileName(file1).ToUpperInvariant()) ).Item1.FullName, Is.EqualTo( file2 ) );
-            Assert.That( PathHelper.GetClosestMatchingEntry( file1.ToUpperInvariant() ).Item1.FullName, Is.EqualTo( file2 ) );
+            Assert.That( PathHelper.GetCaseSensitivePath( Path.Combine( Path.GetDirectoryName(file1), Path.GetFileName(file1).ToUpperInvariant()) ).Item1, Is.EqualTo( file2 ) );
+            Assert.That( PathHelper.GetCaseSensitivePath( file1.ToUpperInvariant() ).Item1, Is.EqualTo( file2 ) );
         }
 
         [Test]
@@ -271,7 +271,7 @@ namespace KOTORModSync.Tests
             File.Create(testFilePath).Close();
 
             // Act
-            string? result = PathHelper.GetCaseSensitivePath(testFilePath);
+            string? result = PathHelper.GetCaseSensitivePath(testFilePath, isFile:true).Item1;
 
             // Assert
             Assert.That( result, Is.EqualTo( testFilePath ) );
@@ -285,10 +285,10 @@ namespace KOTORModSync.Tests
             _ = Directory.CreateDirectory( testDirPath );
 
             // Act
-            string? result = PathHelper.GetCaseSensitivePath(testDirPath);
+            DirectoryInfo? result = PathHelper.GetCaseSensitivePath(new DirectoryInfo(testDirPath));
 
             // Assert
-            Assert.That( result, Is.EqualTo( testDirPath ) );
+            Assert.That( result.FullName, Is.EqualTo( testDirPath ) );
         }
 
         [Test]
@@ -306,14 +306,17 @@ namespace KOTORModSync.Tests
         }
 
         [Test]
-        public void GetCaseSensitivePath_InvalidCharactersInPath_ThrowsArgumentException()
+        public void GetCaseSensitivePath_InvalidCharactersInPath_ReturnsOriginalPath()
         {
             // Arrange
-            string invalidPath = Path.Combine(s_testDirectory, "invalid>path");
+            string fileName = "invalid>path";
+            string invalidPath = Path.Combine(s_testDirectory, fileName);
             string upperCasePath = invalidPath.ToUpperInvariant();
 
             // Act & Assert
-            _ = Assert.Throws<ArgumentException>( () => PathHelper.GetCaseSensitivePath( upperCasePath ) );
+            (string, bool?) result = PathHelper.GetCaseSensitivePath( upperCasePath );
+            Assert.That( result.Item1, Is.EqualTo(Path.Combine( s_testDirectory, fileName.ToUpperInvariant() )) );
+            Assert.That( result.Item2, Is.Null );
         }
 
         [Test]
@@ -326,7 +329,7 @@ namespace KOTORModSync.Tests
             string upperCasePath = relativePath.ToUpperInvariant();
 
             // Act
-            string? result = PathHelper.GetCaseSensitivePath(upperCasePath);
+            string? result = PathHelper.GetCaseSensitivePath(upperCasePath).Item1;
 
             // Assert
             Assert.That( result, Is.EqualTo( testFilePath ) );
@@ -343,7 +346,7 @@ namespace KOTORModSync.Tests
             string upperCasePath = testFilePath.ToUpperInvariant();
 
             // Act
-            string? result = PathHelper.GetCaseSensitivePath( upperCasePath );
+            string? result = PathHelper.GetCaseSensitivePath( upperCasePath, isFile:true ).Item1;
 
             // Assert
             Assert.That( result, Is.EqualTo( testFilePath ) );
@@ -358,7 +361,7 @@ namespace KOTORModSync.Tests
             string upperCasePath = nonExistentFilePath.ToUpperInvariant();
 
             // Act
-            string? result = PathHelper.GetCaseSensitivePath(upperCasePath);
+            string? result = PathHelper.GetCaseSensitivePath(upperCasePath).Item1;
 
             // Assert
             Assert.That( result, Is.EqualTo( Path.Combine(s_testDirectory, nonExistentFileName.ToUpperInvariant()) ) );
@@ -373,7 +376,7 @@ namespace KOTORModSync.Tests
             string upperCasePath = nonExistentFilePath.ToUpperInvariant();
 
             // Act
-            string? result = PathHelper.GetCaseSensitivePath(upperCasePath);
+            string? result = PathHelper.GetCaseSensitivePath(upperCasePath, isFile:true).Item1;
 
             // Assert
             Assert.That(result, Is.EqualTo(Path.Combine( s_testDirectory, nonExistentRelFilePath.ToUpperInvariant() )));
@@ -388,7 +391,7 @@ namespace KOTORModSync.Tests
             string upperCasePath = nonExistentDirPath.ToUpperInvariant();
 
             // Act
-            string? result = PathHelper.GetCaseSensitivePath(upperCasePath);
+            string? result = PathHelper.GetCaseSensitivePath(upperCasePath).Item1;
 
             // Assert
             Assert.That( result, Is.EqualTo( Path.Combine(s_testDirectory, nonExistentRelPath.ToUpperInvariant()) ) );

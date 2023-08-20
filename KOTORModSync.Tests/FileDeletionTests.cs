@@ -40,7 +40,7 @@ namespace KOTORModSync.Tests
             string fileExtension = ".txt";
 
             // Act
-            new Instruction().DeleteDuplicateFile( new InsensitivePath( directory ), fileExtension );
+            new Instruction().DeleteDuplicateFile( new DirectoryInfo(directory), fileExtension );
 
             // Assert
             Assert.Multiple(
@@ -68,7 +68,7 @@ namespace KOTORModSync.Tests
             string fileExtension = ".txt";
 
             // Act
-            new Instruction().DeleteDuplicateFile( new InsensitivePath(directory), fileExtension );
+            new Instruction().DeleteDuplicateFile( new DirectoryInfo(directory), fileExtension );
 
             // Assert
             Assert.Multiple(
@@ -95,7 +95,7 @@ namespace KOTORModSync.Tests
 
             // Act
             new Instruction().DeleteDuplicateFile(
-                new InsensitivePath( directory ),
+                new DirectoryInfo( directory ),
                 fileExtension,
                 caseInsensitive: true
             );
@@ -123,7 +123,7 @@ namespace KOTORModSync.Tests
             string fileExtension = ".txt";
 
             // Act
-            new Instruction().DeleteDuplicateFile( new InsensitivePath( directory ), fileExtension );
+            new Instruction().DeleteDuplicateFile( new DirectoryInfo( directory ), fileExtension );
 
             // Assert
             Assert.Multiple(
@@ -144,7 +144,7 @@ namespace KOTORModSync.Tests
             string fileExtension = ".txt";
 
             // Act
-            new Instruction().DeleteDuplicateFile( new InsensitivePath( directory ), fileExtension );
+            new Instruction().DeleteDuplicateFile( new DirectoryInfo( directory ), fileExtension );
 
             // Assert
             Assert.Multiple(
@@ -171,7 +171,7 @@ namespace KOTORModSync.Tests
             string fileExtension = ".txt";
 
             // Act
-            new Instruction().DeleteDuplicateFile( new InsensitivePath( directory ), fileExtension );
+            new Instruction().DeleteDuplicateFile( new DirectoryInfo( directory ), fileExtension );
 
             // Assert
             Assert.Multiple(
@@ -199,7 +199,7 @@ namespace KOTORModSync.Tests
             string fileExtension = ".tpc";
 
             // Act
-            new Instruction().DeleteDuplicateFile( new InsensitivePath( directory ), fileExtension );
+            new Instruction().DeleteDuplicateFile( new DirectoryInfo( directory ), fileExtension );
 
             // Assert
             Assert.Multiple(

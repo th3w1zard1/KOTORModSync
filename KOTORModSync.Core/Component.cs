@@ -418,7 +418,7 @@ namespace KOTORModSync.Core
             }
 
             string tomlinString = stringBuilder.ToString();
-            File.WriteAllText( new InsensitivePath(filePath), tomlinString );
+            File.WriteAllText( new InsensitivePath(filePath).FullName, tomlinString );
         }
 
         [NotNull]
@@ -813,7 +813,7 @@ namespace KOTORModSync.Core
             try
             {
                 // Read the contents of the file into a string
-                string tomlString = File.ReadAllText( new InsensitivePath(filePath) )
+                string tomlString = File.ReadAllText( new InsensitivePath(filePath).FullName )
                     // the code expects instructions to always be defined. When it's not, code errors and prevents a save.
                     // make the user experience better by just removing the empty instructions key.
                     .Replace( oldValue: "Instructions = []", string.Empty )

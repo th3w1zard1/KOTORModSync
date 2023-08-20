@@ -4,6 +4,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Dynamic;
 using System.IO;
 using System.Linq;
@@ -12,74 +13,89 @@ using JetBrains.Annotations;
 
 namespace KOTORModSync.Core.FileSystemPathing
 {
+    [SuppressMessage(category: "ReSharper", checkId: "UnusedAutoPropertyAccessor.Local")]
+    [SuppressMessage(category: "ReSharper", checkId: "UnusedMember.Global")]
     public class InsensitivePath : FileSystemInfo
     {
-        private FileSystemInfo _fileSystemInfo { get; set; }
-        public List<FileSystemInfo> Duplicates { get; private set; }
-        public bool? IsDirectory =>
-            _fileSystemInfo is DirectoryInfo
-                ? Duplicates.OfType<FileInfo>().Any()
-                    ? (bool?)null
-                    : true
-                : Duplicates.OfType<FileInfo>().Any()
-                    ? (bool?)null
-                    : false;
-        
-        public bool? IsFile =>
+        [CanBeNull] private FileSystemInfo _fileSystemInfo { get; set; }
+        private bool? _isFile { get; set; }
+        public bool? IsFile => _isFile ??
             _fileSystemInfo is FileInfo
-                ? Duplicates.OfType<DirectoryInfo>().Any()
-                    ? (bool?)null
-                    : true
-                : Duplicates.OfType<DirectoryInfo>().Any()
-                    ? (bool?)null
-                    : false;
-        
-        public override string Name => _fileSystemInfo?.Name;
-        public override string FullName => Exists ? _fileSystemInfo?.FullName : Resolve().FullName;
-        public override bool Exists
-        {
-            get
-            {
-                if (_fileSystemInfo != null)
-                    return _fileSystemInfo.Exists;
-
-                Resolve();
-                return _fileSystemInfo?.Exists ?? false;
-            }
-        }
-
-
+                ? true
+                : _fileSystemInfo is DirectoryInfo
+                    ? false
+                    : (bool?)null;
+        public List<FileSystemInfo> Duplicates { get; private set; } = new List<FileSystemInfo>();
+        public List<FileSystemInfo> FindDuplicates() => PathHelper.FindCaseInsensitiveDuplicates( FullName, includeSubFolders: true, isFile: IsFile ).ToList();
+        public override string Name => _fileSystemInfo?.Name ?? Path.GetFileName( OriginalPath );
+        public override string FullName => _fileSystemInfo?.FullName ?? OriginalPath;
+        public override bool Exists => _fileSystemInfo?.Exists ?? false;
+        public static InsensitivePath Empty { get; } = new InsensitivePath();
+        private InsensitivePath() { }
         public override void Delete()
         {
-            if ( !Exists ) _ = Resolve();
-            _fileSystemInfo.Delete();
+            if ( Directory.Exists( Path.GetDirectoryName(FullName) ) )
+                _fileSystemInfo?.Delete();
         }
         public override string ToString() => FullName;
 
-        public InsensitivePath( string inputPath )
+        public InsensitivePath( string inputPath, bool? isFile = null )
         {
-            if ( string.IsNullOrEmpty( inputPath ) )
-                throw new ArgumentException( "Input path cannot be null or empty.", nameof( inputPath ) );
+            if ( string.IsNullOrWhiteSpace( inputPath ) )
+                throw new ArgumentException( "Input path cannot be null or empty or whitespace.", nameof( inputPath ) );
 
-            OriginalPath = PathHelper.FixPathFormatting( inputPath );
-            _ = Resolve();
+            string formattedPath = PathHelper.FixPathFormatting( inputPath );
+            OriginalPath = formattedPath;
+            _isFile = isFile;
+            Refresh();
+        }
+        
+        public new void Refresh()
+        {
+            if ( IsFile == true && File.Exists( _fileSystemInfo?.FullName ) )
+            {
+                // ReSharper disable once PossibleNullReferenceException
+                // can't be null otherwise File.Exists would fail?
+                _fileSystemInfo.Refresh();
+                return;
+            }
+
+            if ( IsFile == false && Directory.Exists( _fileSystemInfo?.FullName ) )
+            {
+                _fileSystemInfo.Refresh();
+                return;
+            }
+
+            (string fileSystemItemPath, bool? isFile) = PathHelper.GetCaseSensitivePath( OriginalPath );
+
+            if ( isFile == true )
+                _fileSystemInfo = new FileInfo( fileSystemItemPath );
+            else if ( isFile == false )
+                _fileSystemInfo = new DirectoryInfo( fileSystemItemPath );
         }
 
-        private FileSystemInfo Resolve()
+        public override bool Equals(object obj) => obj is InsensitivePath other && Equals( other );
+        public bool Equals(InsensitivePath other)
         {
-            if ( _fileSystemInfo?.Exists == true ) return _fileSystemInfo;
-            ( FileSystemInfo fileSystemInfo, List<FileSystemInfo> duplicates ) =
-                PathHelper.GetClosestMatchingEntry( OriginalPath );
-
-            _fileSystemInfo = fileSystemInfo;
-            Duplicates = duplicates;
-
-            return fileSystemInfo;
+            return other is null
+                ? _fileSystemInfo is null
+                : ReferenceEquals( this, other ) || ( _fileSystemInfo is null && other._fileSystemInfo is null );
         }
 
-        public IEnumerable<FileSystemInfo> FindDuplicates() => PathHelper.FindCaseInsensitiveDuplicates( _fileSystemInfo.FullName );
+        // ReSharper disable once NonReadonlyMemberInGetHashCode - TODO:
+        public override int GetHashCode() => _fileSystemInfo?.GetHashCode() ?? 0;
+        
+        public static bool operator !=(InsensitivePath left, InsensitivePath right) => !(left == right);
+        public static bool operator ==(InsensitivePath left, InsensitivePath right) =>
+            ReferenceEquals( left, right )
+            || (
+                !( left is null )
+                && !( right is null )
+                && left.Equals( right )
+            );
 
-        public static implicit operator string( InsensitivePath insensitivePath ) => insensitivePath._fileSystemInfo.FullName;
+
+        //public static implicit operator string( InsensitivePath insensitivePath ) => insensitivePath._fileSystemInfo?.FullName;
         public static implicit operator FileInfo( InsensitivePath insensitivePath ) => insensitivePath._fileSystemInfo as FileInfo;
         public static implicit operator DirectoryInfo( InsensitivePath insensitivePath ) => insensitivePath._fileSystemInfo as DirectoryInfo;
     }

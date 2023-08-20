@@ -133,73 +133,128 @@ namespace KOTORModSync.Core.FileSystemPathing
             uint dwFlagsAndAttributes,
             IntPtr hTemplateFile );
 
-        [CanBeNull] public static string GetCaseSensitivePath( FileInfo file ) => GetCaseSensitivePath( file?.FullName );
-        [CanBeNull] public static string GetCaseSensitivePath( DirectoryInfo directory ) => GetCaseSensitivePath( directory?.FullName );
-
-        public static string GetCaseSensitivePath( string path )
+        
+        public static FileSystemInfo GetCaseSensitivePath(FileSystemInfo fileSystemInfoItem)
         {
-            if ( string.IsNullOrWhiteSpace( path ) )
-                throw new ArgumentException( $"'{nameof( path )}' cannot be null or whitespace.", nameof( path ) );
+            switch ( fileSystemInfoItem )
+            {
+                case DirectoryInfo dirInfo:
+                    {
+                        return GetCaseSensitivePath( dirInfo );
+                    }
+                case FileInfo fileInfo:
+                    {
+                        return GetCaseSensitivePath( fileInfo );
+                    }
+                default:
+                    return null;
+            }
+        }
+        
+        public static FileInfo GetCaseSensitivePath( FileInfo file )
+        {
+            ( string thisFilePath, _ ) = GetCaseSensitivePath( file?.FullName, isFile: true);
+            return new FileInfo( thisFilePath );
+        }
+        
+        public static DirectoryInfo GetCaseSensitivePath( DirectoryInfo file )
+        {
+            ( string thisFilePath, _ ) = GetCaseSensitivePath( file?.FullName, isFile: true);
+            return new DirectoryInfo( thisFilePath );
+        }
 
-            string formattedPath = FixPathFormatting( Path.GetFullPath( path ) );
-            if ( File.Exists( formattedPath ) || Directory.Exists( formattedPath ) )
-                return ConvertWindowsPathToCaseSensitive( formattedPath );
+        public static (string, bool?) GetCaseSensitivePath(string path, bool? isFile = null)
+        {
+            if (string.IsNullOrWhiteSpace(path))
+                throw new ArgumentException($"'{nameof(path)}' cannot be null or whitespace.", nameof(path));
 
-            var parts = formattedPath.Split(
-                new[] { Path.DirectorySeparatorChar },
-                StringSplitOptions.RemoveEmptyEntries
-            ).ToList();
+            string formattedPath = FixPathFormatting(Path.GetFullPath(path));
 
-            if ( parts.Count == 0 )
-                parts.Insert( index: 0, formattedPath );
+            // quick lookup
+            bool fileExists = File.Exists(formattedPath);
+            bool folderExists = Directory.Exists(formattedPath);
+            if (fileExists && (isFile == true || !folderExists)) return (ConvertWindowsPathToCaseSensitive(formattedPath), true);
+            if (folderExists && (isFile == false || !fileExists)) return (ConvertWindowsPathToCaseSensitive(formattedPath), false);
 
-            string currentPath = Path.GetPathRoot( formattedPath );
-            if ( currentPath != parts[0] && !string.IsNullOrEmpty( currentPath ) )
-                parts.Insert( index: 0, currentPath );
+            string[] parts = formattedPath.Split(new [] {Path.DirectorySeparatorChar}, StringSplitOptions.RemoveEmptyEntries);
+
+            // no path parts available ( no separators found ). Maybe it's a file/folder that exists in cur directory.
+            if (parts.Length == 0)
+                parts = new[] { formattedPath };
+
+            // insert the root into the list (will be / on unix, and drive name (e.g. C:\\ on windows)
+            string currentPath = Path.GetPathRoot(formattedPath);
+            if (currentPath != parts[0] && !string.IsNullOrEmpty(currentPath))
+                parts = new[] { currentPath }.Concat(parts).ToArray();
 
             int largestExistingPathPartsIndex = -1;
             string caseSensitiveCurrentPath = null;
-            for ( int i = 1; i < parts.Count; i++ )
+            for (int i = 1; i < parts.Length; i++)
             {
-                var parentDir = new DirectoryInfo( Path.Combine( parts.Take( i ).ToArray() ) );
-                if ( parentDir.Exists )
+                // find the closest matching file/folder in the current path for unix, useful for duplicates.
+                string previousCurrentPath = Path.Combine(parts.Take(i).ToArray());
+                currentPath = Path.Combine(previousCurrentPath, parts[i]);
+                if (Environment.OSVersion.Platform != PlatformID.Win32NT && Directory.Exists(previousCurrentPath))
                 {
-                    if ( GetCaseSensitiveChildItem( parentDir, parts[i] ) is string childItem )
-                        parts[i] = childItem;
+                    int maxMatchingCharacters = -1;
+                    string closestMatch = formattedPath;
+                    foreach (FileSystemInfo folderOrFileInfo in new DirectoryInfo(previousCurrentPath).EnumerateFileSystemInfos())
+                    {
+                        if (!folderOrFileInfo.Exists)
+                            continue;
+                        int matchingCharacters = GetMatchingCharactersCount(folderOrFileInfo.Name, parts[i]);
+                        if (matchingCharacters <= maxMatchingCharacters)
+                            continue;
+
+                        closestMatch = folderOrFileInfo.FullName;
+                        maxMatchingCharacters = matchingCharacters;
+                        if (i == parts.Length)
+                            isFile = folderOrFileInfo is FileInfo;
+                    }
+
+                    if (!closestMatch.Equals(formattedPath, StringComparison.Ordinal))
+                        parts[i] = closestMatch;
                 }
-                // if the root path cannot be determined, return original path as is.
-                else if ( i == 1 )
-                {
-                    return path;
-                }
-                currentPath = Path.Combine( currentPath, parts[i] );
-                if ( !File.Exists( currentPath )
-                    && !Directory.Exists( currentPath )
-                    && string.IsNullOrEmpty( caseSensitiveCurrentPath ) )
+                // resolve case-sensitive pathing. largestExistingPathPartsIndex determines the largest index of the existing path parts.
+                else if (!File.Exists(currentPath)
+                    && !Directory.Exists(currentPath)
+                    && string.IsNullOrEmpty(caseSensitiveCurrentPath))
                 {
                     // Get the case-sensitive path based on the existing parts we've determined.
                     largestExistingPathPartsIndex = i;
-                    caseSensitiveCurrentPath = ConvertWindowsPathToCaseSensitive( parentDir.FullName );
+                    caseSensitiveCurrentPath = ConvertWindowsPathToCaseSensitive(previousCurrentPath);
                 }
             }
 
-            return largestExistingPathPartsIndex > -1
-                ? Path.Combine(
-                    caseSensitiveCurrentPath,
-                    Path.Combine( parts.Skip( largestExistingPathPartsIndex ).ToArray() )
-                )
-                : Path.Combine( parts.ToArray() );
+            string combinedPath = largestExistingPathPartsIndex > -1
+                ? Path.Combine(caseSensitiveCurrentPath, Path.Combine(parts.Skip(largestExistingPathPartsIndex).ToArray()))
+                : Path.Combine(parts);
+
+            return (combinedPath, isFile);
         }
 
-
-        [CanBeNull]
-        private static string GetCaseSensitiveChildItem(DirectoryInfo parentDir, string finalPathPart)
+        private static int GetMatchingCharactersCount(string str1, string str2)
         {
-            return parentDir?.GetFileSystemInfos("*")
-                .FirstOrDefault(item => item.Name.Equals(finalPathPart, StringComparison.OrdinalIgnoreCase))
-                ?.Name;
+            if (string.IsNullOrEmpty(str1))
+                throw new ArgumentException("Value cannot be null or empty.", nameof(str1));
+            if (string.IsNullOrEmpty(str2))
+                throw new ArgumentException("Value cannot be null or empty.", nameof(str2));
+
+            int matchingCount = 0;
+            for (int i = 0; i < str1.Length && i < str2.Length; i++)
+            {
+                // don't consider a match if any char in the paths are not case-insensitive matches.
+                if (char.ToLowerInvariant(str1[i]) != char.ToLowerInvariant(str2[i]))
+                    return -1;
+
+                // increment matching count if case-sensitive match at this char index succeeds
+                if (str1[i] == str2[i])
+                    matchingCount++;
+            }
+
+            return matchingCount;
         }
-        
+
 
         public static async Task MoveFileAsync( string sourcePath, string destinationPath )
         {
@@ -252,7 +307,7 @@ namespace KOTORModSync.Core.FileSystemPathing
 
                 try
                 {
-                    var formattedPath = new InsensitivePath( path );
+                    string formattedPath = FixPathFormatting( path );
 
                     // ReSharper disable once AssignNullToNotNullAttribute
                     if ( !ContainsWildcards( formattedPath ) )
@@ -260,18 +315,6 @@ namespace KOTORModSync.Core.FileSystemPathing
                         // Handle non-wildcard paths
                         if ( File.Exists( formattedPath ) )
                             result.Add( formattedPath );
-                        else if ( Directory.Exists( formattedPath ) )
-                        {
-                            IEnumerable<string> matchingFiles = Directory.EnumerateFiles(
-                                formattedPath,
-                                searchPattern: "*",
-                                includeSubFolders
-                                    ? SearchOption.AllDirectories
-                                    : SearchOption.TopDirectoryOnly
-                            );
-
-                            result.AddRange( matchingFiles );
-                        }
 
                         continue;
                     }
@@ -295,17 +338,27 @@ namespace KOTORModSync.Core.FileSystemPathing
                     if ( !Directory.Exists( currentDir ) )
                         continue;
 
-                    // Get all files in the parent directory.
-                    IEnumerable<string> checkFiles = Directory.EnumerateFiles(
-                        currentDir,
-                        searchPattern: "*",
-                        includeSubFolders
-                            ? SearchOption.AllDirectories
-                            : SearchOption.TopDirectoryOnly
-                    );
+                    var insensitiveCurrentDirPath = new InsensitivePath( currentDir, isFile:false );
+                    List<FileSystemInfo> duplicatesAndOriginal = insensitiveCurrentDirPath.FindDuplicates();
+                    duplicatesAndOriginal.Add( (DirectoryInfo)insensitiveCurrentDirPath );
+                    foreach ( FileSystemInfo thisDuplicateFolder in duplicatesAndOriginal )
+                    {
+                        // Get all files in the parent directory.
+                        if ( !(thisDuplicateFolder is DirectoryInfo dirInfo) )
+                            throw new NullReferenceException(nameof( dirInfo ));
 
-                    // wildcard match them all with WildcardPatchMatch and add to result
-                    result.AddRange( checkFiles.Where( thisFile => WildcardPathMatch( thisFile, formattedPath ) ) );
+                        IEnumerable<FileInfo> checkFiles = dirInfo.EnumerateFiles(
+                            searchPattern: "*",
+                            includeSubFolders
+                                ? SearchOption.AllDirectories
+                                : SearchOption.TopDirectoryOnly
+                        );
+
+                        // wildcard match them all with WildcardPatchMatch and add to result
+                        result.AddRange(checkFiles.Where(thisFile => WildcardPathMatch(thisFile.FullName, formattedPath))
+                            .Select(thisFile => thisFile.FullName));
+
+                    }
                 }
                 catch ( Exception ex )
                 {
@@ -429,43 +482,43 @@ namespace KOTORModSync.Core.FileSystemPathing
             // determine if path is a folder or a file.
             DirectoryInfo dirInfo;
             string fileName = Path.GetFileName( formattedPath );
-            switch ( isFile )
+            if ( isFile == false )
             {
-                case false:
-                    {
-                        dirInfo = new DirectoryInfo( formattedPath );
-                        if ( !dirInfo.Exists )
-                            dirInfo = new DirectoryInfo( GetCaseSensitivePath( formattedPath ) );
-                        break;
-                    }
-                case true:
-                    {
-                        string parentDir = Path.GetDirectoryName( formattedPath );
-                        dirInfo = new DirectoryInfo( parentDir );
-                        if ( !dirInfo.Exists )
-                            dirInfo = new DirectoryInfo( GetCaseSensitivePath( parentDir ) );
-                        break;
-                    }
-                default:
-                    {
-                        dirInfo = new DirectoryInfo( formattedPath );
-                        string caseSensitivePath = formattedPath;
-                        if ( !dirInfo.Exists )
-                        {
-                            caseSensitivePath = GetCaseSensitivePath( formattedPath );
-                            dirInfo = new DirectoryInfo( caseSensitivePath );
-                        }
+                dirInfo = new DirectoryInfo( formattedPath );
+                if ( !dirInfo.Exists )
+                {
+                    dirInfo = new DirectoryInfo(
+                        GetCaseSensitivePath( formattedPath ).Item1
+                    );
+                }
+            }
+            else if ( isFile == true )
+            {
+                string parentDir = Path.GetDirectoryName( formattedPath );
+                if ( string.IsNullOrEmpty(parentDir) || !( dirInfo = new DirectoryInfo( parentDir ) ).Exists )
+                {
+                    dirInfo = new DirectoryInfo(
+                        GetCaseSensitivePath( parentDir ).Item1
+                    );
+                }
+            }
+            else
+            {
+                dirInfo = new DirectoryInfo( formattedPath );
+                string caseSensitivePath = formattedPath;
+                if ( !dirInfo.Exists )
+                {
+                    caseSensitivePath = GetCaseSensitivePath( formattedPath ).Item1;
+                    dirInfo = new DirectoryInfo( caseSensitivePath );
+                }
 
-                        if ( !dirInfo.Exists )
-                        {
-                            string folderPath = Path.GetDirectoryName( caseSensitivePath );
-                            isFile = true;
-                            if ( !( folderPath is null ) )
-                                dirInfo = new DirectoryInfo( folderPath );
-                        }
-
-                        break;
-                    }
+                if ( !dirInfo.Exists )
+                {
+                    string folderPath = Path.GetDirectoryName( caseSensitivePath );
+                    isFile = true;
+                    if ( !( folderPath is null ) )
+                        dirInfo = new DirectoryInfo( folderPath );
+                }
             }
 
             if ( !dirInfo.Exists )
@@ -478,7 +531,7 @@ namespace KOTORModSync.Core.FileSystemPathing
             {
                 if ( !file.Exists )
                     continue;
-                if ( isFile == true && !file.Name.Equals( fileName, StringComparison.OrdinalIgnoreCase ) )
+                if (isFile == true && !file.Name.Equals( fileName, StringComparison.OrdinalIgnoreCase ))
                     continue;
 
                 string filePath = file.FullName.ToLowerInvariant();
@@ -542,69 +595,6 @@ namespace KOTORModSync.Core.FileSystemPathing
                     yield return duplicate;
                 }
             }
-        }
-
-        public static (FileSystemInfo, List<FileSystemInfo>) GetClosestMatchingEntry( string path )
-        {
-            if ( !PathValidator.IsValidPath( path ) )
-                throw new ArgumentException( nameof( path ) + " is not a valid path string" );
-
-            FileSystemInfo closestMatch = null;
-            int maxMatchingCharacters = -1;
-            string formattedPath = FixPathFormatting( path );
-            var duplicatePaths = FindCaseInsensitiveDuplicates( formattedPath ).ToList();
-
-            foreach ( FileSystemInfo duplicate in duplicatePaths )
-            {
-                int matchingCharacters = GetMatchingCharactersCount( duplicate?.FullName, path );
-                if ( matchingCharacters > maxMatchingCharacters )
-                {
-                    closestMatch = duplicate;
-                    maxMatchingCharacters = matchingCharacters;
-                }
-            }
-
-            if ( !( closestMatch is null ) )
-                return (closestMatch, duplicatePaths);
-
-            if ( File.Exists( formattedPath ) )
-                return (new FileInfo( formattedPath ), duplicatePaths);
-            if ( Directory.Exists( formattedPath ) )
-                return (new DirectoryInfo( formattedPath ), duplicatePaths);
-
-            string caseSensitivePath = GetCaseSensitivePath( path );
-            if ( File.Exists( caseSensitivePath ) )
-                return (new FileInfo( caseSensitivePath ), duplicatePaths);
-            if ( Directory.Exists( caseSensitivePath ) )
-                return (new DirectoryInfo( caseSensitivePath ), duplicatePaths);
-
-            return (null, new List<FileSystemInfo>());
-        }
-
-        private static int GetMatchingCharactersCount( string str1, string str2 )
-        {
-            if ( string.IsNullOrEmpty( str1 ) )
-                throw new ArgumentException( message: "Value cannot be null or empty.", nameof( str1 ) );
-            if ( string.IsNullOrEmpty( str2 ) )
-                throw new ArgumentException( message: "Value cannot be null or empty.", nameof( str2 ) );
-
-            int matchingCount = 0;
-            for (
-                int i = 0;
-                i < str1.Length && i < str2.Length;
-                i++
-            )
-            {
-                // don't consider a match if any char in the paths are not case-insensitive matches.
-                if ( char.ToLowerInvariant( str1[i] ) != char.ToLowerInvariant( str2[i] ) )
-                    return 0;
-
-                // increment matching count if case-sensitive match at this char index succeeds
-                if ( str1[i] == str2[i] )
-                    matchingCount++;
-            }
-
-            return matchingCount;
         }
     }
 }

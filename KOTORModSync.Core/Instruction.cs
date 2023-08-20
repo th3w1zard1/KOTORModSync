@@ -196,8 +196,7 @@ namespace KOTORModSync.Core
 
             if ( thisDestination == null || !thisDestination.Exists )
             {
-                string caseSensitiveDestination = PathHelper.GetCaseSensitivePath( thisDestination?.FullName );
-                thisDestination = PathHelper.TryGetValidDirectoryInfo( caseSensitiveDestination );
+                thisDestination = PathHelper.GetCaseSensitivePath( thisDestination );
                 if ( !noValidate && (thisDestination == null || !thisDestination.Exists) )
                     throw new DirectoryNotFoundException( "Could not find the 'Destination' path!" );
             }
@@ -292,10 +291,10 @@ namespace KOTORModSync.Core
                                 );
                                 var destinationDirectory = new InsensitivePath(Path.GetDirectoryName( destinationItemPath ));
 
-                                if ( !destinationDirectory.Exists || destinationDirectory.IsDirectory == false )
+                                if ( !Directory.Exists( destinationDirectory.FullName ) || destinationDirectory.IsFile != true )
                                 {
                                     _ = Logger.LogAsync( $"Create directory '{destinationDirectory}'" );
-                                    _ = Directory.CreateDirectory( destinationDirectory );
+                                    _ = Directory.CreateDirectory( destinationDirectory.FullName );
                                 }
 
                                 _ = Logger.LogAsync( $"Extract '{reader.Entry.Key}' to '{argDestinationPath.FullName}'" );
@@ -304,7 +303,7 @@ namespace KOTORModSync.Core
                                 {
                                     await Task.Run(
                                         () => reader.WriteEntryToDirectory(
-                                            destinationDirectory,
+                                            destinationDirectory.FullName,
                                             ArchiveHelper.DefaultExtractionOptions
                                         ),
                                         cancellationToken
@@ -352,12 +351,12 @@ namespace KOTORModSync.Core
                             using (FileStream stream = File.OpenRead(thisFile.FullName))
                             {
                                 var destinationDirectory = new InsensitivePath(Path.Combine( argDestinationPath?.FullName ?? thisFile.Directory.FullName, Path.GetFileNameWithoutExtension(thisFile.Name) ));
-                                if ( !destinationDirectory.Exists || destinationDirectory.IsDirectory == false )
+                                if ( !destinationDirectory.Exists || destinationDirectory.IsFile != true )
                                 {
                                     _ = Logger.LogAsync( $"Create directory '{destinationDirectory}'" );
-                                    _ = Directory.CreateDirectory( destinationDirectory );
+                                    _ = Directory.CreateDirectory( destinationDirectory.FullName );
                                 }
-                                ArchiveHelper.ExtractWith7Zip(stream, destinationDirectory);
+                                ArchiveHelper.ExtractWith7Zip(stream, destinationDirectory.FullName);
                             }
                             return Task.CompletedTask;
                         }).ToList();
@@ -497,12 +496,12 @@ namespace KOTORModSync.Core
             {
                 foreach ( string thisFilePath in sourcePaths )
                 {
-                    var thisFile = new FileInfo( PathHelper.GetCaseSensitivePath( thisFilePath ) );
+                    var thisFile = new InsensitivePath( thisFilePath, isFile:true );
 
-                    if ( !Path.IsPathRooted( thisFilePath ) || !thisFile.Exists )
+                    if ( !Path.IsPathRooted( thisFile.FullName ) || !thisFile.Exists )
                     {
                         var ex = new ArgumentNullException(
-                            $"Invalid wildcards or file does not exist: '{thisFilePath}'"
+                            $"Invalid wildcards or file does not exist: '{thisFile.FullName}'"
                         );
                         Logger.LogException( ex );
                         return ActionExitCode.FileNotFoundPost;
@@ -511,8 +510,8 @@ namespace KOTORModSync.Core
                     // Delete the file synchronously
                     try
                     {
-                        File.Delete( thisFilePath );
-                        Logger.Log( $"Deleting '{thisFilePath}'..." );
+                        File.Delete( thisFile.FullName );
+                        Logger.Log( $"Deleting '{thisFile.FullName}'..." );
                     }
                     catch ( Exception ex )
                     {
@@ -628,7 +627,7 @@ namespace KOTORModSync.Core
                 try
                 {
                     string fileName = Path.GetFileName(sourcePath);
-                    string destinationFilePath = PathHelper.GetCaseSensitivePath(Path.Combine(destinationPath.FullName, fileName));
+                    string destinationFilePath = PathHelper.GetCaseSensitivePath(Path.Combine(destinationPath.FullName, fileName), isFile: true).Item1;
 
                     // Check if the destination file already exists
                     if (File.Exists(destinationFilePath))
@@ -656,9 +655,12 @@ namespace KOTORModSync.Core
                 }
                 finally
                 {
-                    semaphore.Release(); // Release the semaphore slot
+                    _ = semaphore.Release(); // Release the semaphore slot
                 }
             }
+
+            if ( sourcePaths is null )
+                throw new NullReferenceException(nameof( sourcePaths ));
 
             var tasks = sourcePaths.Select(MoveIndividualFileAsync).ToList();
 

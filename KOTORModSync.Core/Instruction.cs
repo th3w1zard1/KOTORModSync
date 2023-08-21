@@ -186,19 +186,23 @@ namespace KOTORModSync.Core
                     $"Could not find any files in the 'Source' path! Got [{string.Join( separator: ", ", Source )}]"
                 );
             }
-            
+
+            // ReSharper disable once AssignNullToNotNullAttribute
             RealSourcePaths = newSourcePaths;
 
             string destinationPath = Utility.Utility.ReplaceCustomVariables( Destination );
-            DirectoryInfo thisDestination = PathHelper.TryGetValidDirectoryInfo( destinationPath );
-            if ( !noValidate && (thisDestination == null || !thisDestination.Exists) )
-                throw new DirectoryNotFoundException( "Could not find the 'Destination' path!" );
+            if ( string.IsNullOrWhiteSpace( destinationPath ) )
+                return;
 
-            if ( thisDestination == null || !thisDestination.Exists )
+            DirectoryInfo thisDestination = PathHelper.TryGetValidDirectoryInfo( destinationPath );
+            if ( !thisDestination?.Exists == true )
             {
                 thisDestination = PathHelper.GetCaseSensitivePath( thisDestination );
-                if ( !noValidate && (thisDestination == null || !thisDestination.Exists) )
+                if ( !noValidate && thisDestination is null )
                     throw new DirectoryNotFoundException( "Could not find the 'Destination' path!" );
+
+                if ( thisDestination is null )
+                    return;
             }
 
             RealDestinationPath = thisDestination;
@@ -293,7 +297,7 @@ namespace KOTORModSync.Core
                                 );
                                 var destinationDirectory = new InsensitivePath(Path.GetDirectoryName( destinationItemPath ));
 
-                                if ( !Directory.Exists( destinationDirectory.FullName ) || destinationDirectory.IsFile != true )
+                                if ( !Directory.Exists( destinationDirectory.FullName ) && destinationDirectory.IsFile != true )
                                 {
                                     _ = Logger.LogAsync( $"Create directory '{destinationDirectory}'" );
                                     _ = Directory.CreateDirectory( destinationDirectory.FullName );

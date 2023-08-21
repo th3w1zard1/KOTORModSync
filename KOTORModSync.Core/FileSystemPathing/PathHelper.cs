@@ -33,7 +33,7 @@ namespace KOTORModSync.Core.FileSystemPathing
                 return null;
 
             string formattedPath = FixPathFormatting( folderPath );
-            if ( PathValidator.IsValidPath( formattedPath ) )
+            if ( !PathValidator.IsValidPath( formattedPath ) )
                 return null;
 
             try
@@ -55,7 +55,7 @@ namespace KOTORModSync.Core.FileSystemPathing
                 return null;
 
             string formattedPath = FixPathFormatting( filePath );
-            if ( PathValidator.IsValidPath( formattedPath ) )
+            if ( !PathValidator.IsValidPath( formattedPath ) )
                 return null;
 
             try
@@ -182,14 +182,17 @@ namespace KOTORModSync.Core.FileSystemPathing
 
             string[] parts = formattedPath.Split(new [] {Path.DirectorySeparatorChar}, StringSplitOptions.RemoveEmptyEntries);
 
-            // no path parts available ( no separators found ). Maybe it's a file/folder that exists in cur directory.
+            // no path parts available (no separators found). Maybe it's a file/folder that exists in cur directory.
             if (parts.Length == 0)
                 parts = new[] { formattedPath };
 
             // insert the root into the list (will be / on unix, and drive name (e.g. C:\\ on windows)
             string currentPath = Path.GetPathRoot(formattedPath);
-            if (currentPath != parts[0] && !string.IsNullOrEmpty(currentPath))
-                parts = new[] { currentPath }.Concat(parts).ToArray();
+            if (!string.IsNullOrEmpty(currentPath) && !Path.IsPathRooted(parts[0]))
+                parts = new[] { currentPath }.Concat( parts ).ToArray();
+            
+            if (parts[0].EndsWith(":"))
+                parts[0] += Path.DirectorySeparatorChar;
 
             int largestExistingPathPartsIndex = -1;
             string caseSensitiveCurrentPath = null;

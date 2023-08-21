@@ -40,7 +40,7 @@ using NotNullAttribute = JetBrains.Annotations.NotNullAttribute;
 
 namespace KOTORModSync
 {
-    [SuppressMessage( "ReSharper", "UnusedParameter.Local" )]
+    [SuppressMessage( category: "ReSharper", checkId: "UnusedParameter.Local" )]
     internal sealed partial class MainWindow : Window
     {
         public static List<Component> ComponentsList => MainConfig.AllComponents;
@@ -78,6 +78,8 @@ namespace KOTORModSync
                 );
 
                 PropertyChanged += SearchText_PropertyChanged;
+
+                //DisableQuickEdit(); // Fixes an annoying problem where selecting the console window causes the app to hang.
             }
             catch ( Exception e )
             {
@@ -85,6 +87,25 @@ namespace KOTORModSync
                 throw;
             }
         }
+        
+        /*const uint ENABLE_QUICK_EDIT = 0x0040;
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        private static extern IntPtr GetConsoleWindow();
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        private static extern bool GetConsoleMode(IntPtr hConsoleHandle, out uint lpMode);
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        private static extern bool SetConsoleMode(IntPtr hConsoleHandle, uint dwMode);
+        
+        public static void DisableQuickEdit()
+        {
+            IntPtr consoleHandle = GetConsoleWindow();
+            _ = GetConsoleMode( consoleHandle, out uint consoleMode );
+            consoleMode &= ~ENABLE_QUICK_EDIT;
+            _ = SetConsoleMode( consoleHandle, consoleMode );
+        }*/
 
         public void InitializeControls()
         {
@@ -825,6 +846,77 @@ namespace KOTORModSync
             catch ( Exception ex )
             {
                 await Logger.LogExceptionAsync( ex );
+            }
+        }
+
+        private async void ResolveDuplicateFilesAndFolders( [NotNull] object sender, [NotNull] RoutedEventArgs e )
+        {
+            try
+            {
+                bool? answer = await ConfirmationDialog.ShowConfirmationDialog(
+                    this,
+                    "This button will resolve all case-sensitive duplicate files/folders in your install directory and your mod download directory."
+                    + Environment.NewLine
+                    + " WARNING: This method may take a while and cannot be stopped until it finishes. Really continue?"
+                );
+                if ( answer != true )
+                    return;
+
+                await Logger.LogAsync( "Finding duplicate case-insensitive folders/files in the install destination..." );
+                IEnumerable<FileSystemInfo> duplicates = PathHelper.FindCaseInsensitiveDuplicates( MainConfig.DestinationPath.FullName );
+                var fileSystemInfos = duplicates.ToList();
+                foreach ( FileSystemInfo duplicate in fileSystemInfos )
+                {
+                    await Logger.LogWarningAsync( duplicate?.FullName + " is duplicated on the storage drive." );
+                }
+
+                answer = await ConfirmationDialog.ShowConfirmationDialog(
+                    this,
+                    "Duplicate file/folder search finished." + Environment.NewLine
+                    + $" Found {fileSystemInfos.Count} files/folders that have duplicates in your install dir." + Environment.NewLine
+                    + " Would you like to delete all duplicates except the ones most recently modified?"
+                );
+                if ( answer != true )
+                    return;
+
+                IEnumerable<IGrouping<string, FileSystemInfo>> groupedDuplicates = fileSystemInfos.GroupBy(fs => fs.Name.ToLowerInvariant());
+
+                foreach (IGrouping<string, FileSystemInfo> group in groupedDuplicates)
+                {
+                    var orderedDuplicates = group.OrderByDescending(fs => fs.LastWriteTime).ToList();
+                    if ( orderedDuplicates.Count <= 1 )
+                        continue;
+
+                    for (int i = 1; i < orderedDuplicates.Count; i++)
+                    {
+                        try
+                        {
+                            switch ( orderedDuplicates[i] )
+                            {
+                                case FileInfo fileInfo:
+                                    fileInfo.Delete();
+                                    break;
+                                case DirectoryInfo directoryInfo:
+                                    directoryInfo.Delete(true); // recursive delete
+                                    break;
+                                default:
+                                    Logger.Log( orderedDuplicates[i].FullName + " does not exist somehow?" );
+                                    continue;
+                            }
+
+                            await Logger.LogAsync($"Deleted {orderedDuplicates[i].FullName}");
+                        }
+                        catch (Exception deletionException)
+                        {
+                            await Logger.LogExceptionAsync(deletionException, $"Failed to delete {orderedDuplicates[i].FullName}");
+                        }
+                    }
+                }
+
+            }
+            catch ( Exception exception )
+            {
+                await Logger.LogExceptionAsync( exception );
             }
         }
 

@@ -16,18 +16,28 @@ namespace KOTORModSync.Core.FileSystemPathing
     public class InsensitivePath : FileSystemInfo
     {
         [CanBeNull] private FileSystemInfo _fileSystemInfo { get; set; }
-        private bool? _isFile { get; }
-        public bool? IsFile => _isFile ??
-            _fileSystemInfo is FileInfo
-                ? true
-                : _fileSystemInfo is DirectoryInfo
-                    ? false
-                    : (bool?)null;
+        private bool _isFile { get; }
+        public bool IsFile => _isFile;
         public List<FileSystemInfo> Duplicates { get; private set; } = new List<FileSystemInfo>();
         public List<FileSystemInfo> FindDuplicates() => PathHelper.FindCaseInsensitiveDuplicates( FullName, includeSubFolders: true, isFile: IsFile ).ToList();
         public override string Name => _fileSystemInfo?.Name ?? Path.GetFileName( OriginalPath );
         public override string FullName => _fileSystemInfo?.FullName ?? OriginalPath;
-        public override bool Exists => _fileSystemInfo?.Exists ?? false;
+        public override bool Exists
+        {
+            get
+            {
+                if ( IsFile && File.Exists( FullName ) )
+                    return true;
+                if ( !IsFile && Directory.Exists( FullName ) )
+                    return true;
+
+                if ( MainConfig.CaseInsensitivePathing )
+                    Refresh();
+
+                return _fileSystemInfo?.Exists ?? false;
+            }
+        }
+
         public static InsensitivePath Empty { get; } = new InsensitivePath();
         private InsensitivePath() { }
         public override void Delete()
@@ -37,39 +47,46 @@ namespace KOTORModSync.Core.FileSystemPathing
         }
         public override string ToString() => FullName;
 
-        public InsensitivePath( string inputPath, bool? isFile = null )
+        public InsensitivePath( string inputPath, bool isFile )
         {
             if ( string.IsNullOrWhiteSpace( inputPath ) )
-                throw new ArgumentException( "Input path cannot be null or empty or whitespace.", nameof( inputPath ) );
+                throw new ArgumentException( message: "Input path cannot be null or empty or whitespace.", nameof( inputPath ) );
 
             string formattedPath = PathHelper.FixPathFormatting( inputPath );
             OriginalPath = formattedPath;
             _isFile = isFile;
+            _fileSystemInfo = _isFile
+                ? (FileSystemInfo)new FileInfo( formattedPath )
+                : new DirectoryInfo( formattedPath );
+
             Refresh();
         }
         
         public new void Refresh()
         {
-            if ( IsFile == true && File.Exists( _fileSystemInfo?.FullName ) )
-            {
-                // ReSharper disable once PossibleNullReferenceException
-                // can't be null otherwise File.Exists would fail?
-                _fileSystemInfo.Refresh();
+            if ( _fileSystemInfo is null )
+                throw new InvalidOperationException("_fileSystemInfo cannot be null");
+
+            _fileSystemInfo.Refresh();
+
+            if ( _fileSystemInfo.Exists )
                 return;
-            }
-
-            if ( IsFile == false && Directory.Exists( _fileSystemInfo?.FullName ) )
-            {
-                _fileSystemInfo.Refresh();
+            if ( !MainConfig.CaseInsensitivePathing )
                 return;
+
+            ( string fileSystemItemPath, bool? isFile ) = PathHelper.GetCaseSensitivePath( OriginalPath );
+
+            switch ( isFile )
+            {
+                case true:
+                    _fileSystemInfo = new FileInfo(fileSystemItemPath);
+                    break;
+                case false:
+                    _fileSystemInfo = new DirectoryInfo(fileSystemItemPath);
+                    break;
+                default:
+                    return;
             }
-
-            (string fileSystemItemPath, bool? isFile) = PathHelper.GetCaseSensitivePath( OriginalPath );
-
-            if ( isFile == true )
-                _fileSystemInfo = new FileInfo( fileSystemItemPath );
-            else if ( isFile == false )
-                _fileSystemInfo = new DirectoryInfo( fileSystemItemPath );
         }
 
         public override bool Equals(object obj) => obj is InsensitivePath other && Equals( other );
@@ -84,14 +101,16 @@ namespace KOTORModSync.Core.FileSystemPathing
         public override int GetHashCode() => _fileSystemInfo?.GetHashCode() ?? 0;
         
         public static bool operator !=(InsensitivePath left, InsensitivePath right) => !(left == right);
-        public static bool operator ==(InsensitivePath left, InsensitivePath right) =>
-            ReferenceEquals( left, right )
-            || (
-                !( left is null )
-                && !( right is null )
-                && left.Equals( right )
-            );
-
+        public static bool operator ==(InsensitivePath left, InsensitivePath right)
+        {
+            string path1 = left?.ToString().ToLowerInvariant();
+            string path2 = right?.ToString().ToLowerInvariant();
+            if ( !( path1 is null ) )
+                path1 = PathHelper.FixPathFormatting( path1 );
+            if ( !( path2 is null ) )
+                path2 = PathHelper.FixPathFormatting( path2 );
+            return ReferenceEquals(path1, path2);
+        }
 
         //public static implicit operator string( InsensitivePath insensitivePath ) => insensitivePath._fileSystemInfo?.FullName;
         public static implicit operator FileInfo( InsensitivePath insensitivePath ) => insensitivePath._fileSystemInfo as FileInfo;

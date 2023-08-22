@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using JetBrains.Annotations;
+using KOTORModSync.Core.FileSystemPathing;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using SevenZip;
@@ -127,7 +128,7 @@ namespace KOTORModSync.Core.Utility
 
             try
             {
-                foreach ( FileInfo file in directory.EnumerateFiles(
+                foreach ( FileInfo file in directory.EnumerateFilesSafely(
                         searchPattern: "*.*",
                         SearchOption.TopDirectoryOnly
                     ) )
@@ -164,7 +165,7 @@ namespace KOTORModSync.Core.Utility
                     ( root["Contents"] as List<object> )?.Add( fileInfo );
                 }
 
-                /*foreach (var subdirectory in directory.EnumerateDirectories())
+                /*foreach (DirectoryInfo subdirectory in directory.EnumerateDirectoriesSafely())
                 {
                     var subdirectoryInfo = new Dictionary<string, object>
                     {

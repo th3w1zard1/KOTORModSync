@@ -295,7 +295,7 @@ namespace KOTORModSync.Core
                                     extractFolderName,
                                     reader.Entry.Key
                                 );
-                                var destinationDirectory = new InsensitivePath(Path.GetDirectoryName( destinationItemPath ));
+                                var destinationDirectory = new InsensitivePath(Path.GetDirectoryName( destinationItemPath ), isFile:false);
 
                                 if ( !Directory.Exists( destinationDirectory.FullName ) && destinationDirectory.IsFile != true )
                                 {
@@ -357,7 +357,7 @@ namespace KOTORModSync.Core
                             using (FileStream stream = File.OpenRead(thisFile.FullName))
                             {
                                 // ReSharper disable once PossibleNullReferenceException
-                                var destinationDirectory = new InsensitivePath(Path.Combine( argDestinationPath?.FullName ?? thisFile.Directory.FullName, Path.GetFileNameWithoutExtension(thisFile.Name) ));
+                                var destinationDirectory = new InsensitivePath(Path.Combine( argDestinationPath?.FullName ?? thisFile.Directory.FullName, Path.GetFileNameWithoutExtension(thisFile.Name) ), isFile: false);
                                 if ( !destinationDirectory.Exists || destinationDirectory.IsFile != true )
                                 {
                                     _ = Logger.LogAsync( $"Create directory '{destinationDirectory}'" );
@@ -406,15 +406,15 @@ namespace KOTORModSync.Core
             if ( compatibleExtensions.IsNullOrEmptyCollection() )
                 compatibleExtensions = Game.TextureOverridePriorityList;
 
-            string[] files = Directory.GetFiles( directoryPath.FullName );
+            FileInfo[] files = directoryPath.GetFilesSafely();
             Dictionary<string, int> fileNameCounts = caseInsensitive
                 ? new Dictionary<string, int>( StringComparer.OrdinalIgnoreCase )
                 : new Dictionary<string, int>();
 
-            foreach ( string filePath in files )
+            foreach ( FileInfo fileInfo in files )
             {
-                string fileNameWithoutExtension = Path.GetFileNameWithoutExtension( filePath );
-                string thisExtension = Path.GetExtension( filePath );
+                string fileNameWithoutExtension = Path.GetFileNameWithoutExtension( fileInfo.Name );
+                string thisExtension = fileInfo.Extension;
 
                 bool compatibleExtensionFound = caseInsensitive
                     // ReSharper disable once AssignNullToNotNullAttribute
@@ -432,14 +432,14 @@ namespace KOTORModSync.Core
                 }
             }
 
-            foreach ( string filePath in files )
+            foreach ( FileInfo filePath in files )
             {
                 if ( !ShouldDeleteFile( filePath ) )
                     continue;
 
                 try
                 {
-                    File.Delete( filePath );
+                    filePath.Delete();
                     Logger.Log( $"Deleted file: '{filePath}'" );
                 }
                 catch ( Exception ex )
@@ -448,11 +448,11 @@ namespace KOTORModSync.Core
                 }
             }
 
-            bool ShouldDeleteFile( string filePath )
+            bool ShouldDeleteFile( FileSystemInfo fileSystemInfoItem )
             {
-                string fileName = Path.GetFileName( filePath );
-                string fileNameWithoutExtension = Path.GetFileNameWithoutExtension( filePath );
-                string fileExtensionFromFile = Path.GetExtension( filePath );
+                string fileName = fileSystemInfoItem.Name;
+                string fileNameWithoutExtension = Path.GetFileNameWithoutExtension( fileName );
+                string fileExtensionFromFile = fileSystemInfoItem.Extension;
 
                 if ( string.IsNullOrEmpty( fileNameWithoutExtension ) )
                 {

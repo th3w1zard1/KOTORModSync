@@ -874,7 +874,7 @@ namespace KOTORModSync
                     this,
                     "Duplicate file/folder search finished." + Environment.NewLine
                     + $" Found {fileSystemInfos.Count} files/folders that have duplicates in your install dir." + Environment.NewLine
-                    + " Would you like to delete all duplicates except the ones most recently modified?"
+                    + " Delete all duplicates except the ones most recently modified?"
                 );
                 if ( answer != true )
                     return;

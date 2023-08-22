@@ -13,24 +13,6 @@ namespace KOTORModSync.Tests
     [TestFixture]
     public class TomlFileTests
     {
-        [SetUp]
-        public void SetUp()
-        {
-            // Create a temporary file for testing
-            _filePath = Path.GetTempFileName();
-
-            // Write example TOMLIN content to the file
-            File.WriteAllText( _filePath, _exampleToml );
-        }
-
-        [TearDown]
-        public void TearDown()
-        {
-            // Delete the temporary file
-            Debug.Assert( _filePath != null, nameof( _filePath ) + " != null" );
-            File.Delete( _filePath );
-        }
-
         private string _filePath = string.Empty;
 
         // ReSharper disable once ConvertToConstant.Local
@@ -79,11 +61,30 @@ namespace KOTORModSync.Tests
             action = ""run""
             path = ""%temp%\\mod_files\\TSLPatcher.exe""";
 
+        
+        [SetUp]
+        public void SetUp()
+        {
+            // Create a temporary file for testing
+            _filePath = Path.GetTempFileName();
+
+            // Write example TOMLIN content to the file
+            File.WriteAllText( _filePath, _exampleToml );
+        }
+
+        [TearDown]
+        public void TearDown()
+        {
+            // Delete the temporary file
+            Assert.That( _filePath, Is.Not.Null, nameof( _filePath ) + " != null" );
+            File.Delete( _filePath );
+        }
+
         [Test]
         public void SaveAndLoadTOMLFile_MatchingComponents()
         {
             // Read the original TOMLIN file contents
-            Debug.Assert( _filePath != null, nameof( _filePath ) + " is null" );
+            Assert.That( _filePath, Is.Not.Null, nameof( _filePath ) + " is null" );
             string tomlContents = File.ReadAllText( _filePath );
 
             // Fix whitespace issues
@@ -143,7 +144,7 @@ namespace KOTORModSync.Tests
             List<Component> originalComponents = Component.ReadComponentsFromFile( _filePath );
 
             // Modify the TOML file contents
-            Debug.Assert( _filePath != null, nameof( _filePath ) + " != null" );
+            Assert.That( _filePath, Is.Not.Null, nameof( _filePath ) + " != null" );
             string tomlContents = File.ReadAllText( _filePath );
 
             // Convert field names and values to mixed case
@@ -174,7 +175,7 @@ namespace KOTORModSync.Tests
             List<Component> originalComponents = Component.ReadComponentsFromFile( _filePath );
 
             // Modify the TOMLIN file contents
-            Debug.Assert( _filePath != null, nameof( _filePath ) + " != null" );
+            Assert.That(_filePath, Is.Not.Null, nameof(_filePath) + " != null");
             string tomlContents = File.ReadAllText( _filePath );
 
             // Add mixed line endings and extra whitespaces
@@ -249,6 +250,7 @@ namespace KOTORModSync.Tests
         public void SaveAndLoadTOMLFile_EmptyComponentsList()
         {
             // Arrange
+            // ReSharper disable once CollectionNeverUpdated.Local
             List<Component> originalComponents = new();
             // Act
             Component.OutputConfigFile( originalComponents, _filePath );

@@ -38,6 +38,8 @@ namespace KOTORModSync.Core
             attemptFixes = true;
             defaultInstall = true;
             noAdmin = false;
+            if ( Environment.OSVersion.Platform != PlatformID.Win32NT )
+                caseInsensitivePathing = true;
         }
 
         [Description( "Only components with the selected compatibility level will be installed" )]
@@ -72,6 +74,9 @@ namespace KOTORModSync.Core
 
         public static bool NoAdmin { get; private set; }
         public bool noAdmin { get => NoAdmin; set => NoAdmin = value; }
+
+        public static bool CaseInsensitivePathing { get; private set; }
+        public bool caseInsensitivePathing { get => CaseInsensitivePathing; set => CaseInsensitivePathing = value; }
 
         public static bool DebugLogging { get; private set; }
         public bool debugLogging { [UsedImplicitly] get => DebugLogging; set => DebugLogging = value; }

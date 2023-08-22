@@ -414,7 +414,7 @@ namespace KOTORModSync.Core
             }
 
             string tomlinString = stringBuilder.ToString();
-            File.WriteAllText( new InsensitivePath(filePath).FullName, tomlinString );
+            File.WriteAllText( new InsensitivePath(filePath, isFile: true).FullName, tomlinString );
         }
 
         [NotNull]
@@ -811,7 +811,7 @@ namespace KOTORModSync.Core
             try
             {
                 // Read the contents of the file into a string
-                string tomlString = File.ReadAllText( new InsensitivePath(filePath).FullName )
+                string tomlString = File.ReadAllText( new InsensitivePath(filePath, isFile: true).FullName )
                     // the code expects instructions to always be defined. When it's not, code errors and prevents a save.
                     // make the user experience better by just removing the empty instructions key.
                     .Replace( oldValue: "Instructions = []", string.Empty )
@@ -955,7 +955,7 @@ namespace KOTORModSync.Core
 
                 // Get the original check-sums before making any modifications
                 /*await Logger.LogAsync( "Checking file hashes of the install location for mismatch..." );
-                var preinstallChecksums = MainConfig.DestinationPath.GetFiles( "*.*", SearchOption.AllDirectories )
+                var preinstallChecksums = MainConfig.DestinationPath.GetFilesSafely( "*.*", SearchOption.AllDirectories )
                     .ToDictionary( file => file, file => FileChecksumValidator.CalculateSha1Async( file ).Result );
 
                 if ( instruction.OriginalChecksums is null )
@@ -1110,7 +1110,7 @@ namespace KOTORModSync.Core
                 {
                     _ = Logger.LogAsync($"Component '{this.Name}' instruction #{instructionIndex} '{instruction.Action}' ran, saving the new checksums as expected.");
                     var newChecksums = new Dictionary<FileInfo, System.Security.Cryptography.SHA1>();
-                    foreach (FileInfo file in MainConfig.DestinationPath.GetFiles("*.*", SearchOption.AllDirectories))
+                    foreach (FileInfo file in MainConfig.DestinationPath.GetFilesSafely("*.*", SearchOption.AllDirectories))
                     {
                         System.Security.Cryptography.SHA1 sha1 = await FileChecksumValidator.CalculateSha1Async(file);
                         newChecksums[file] = sha1;

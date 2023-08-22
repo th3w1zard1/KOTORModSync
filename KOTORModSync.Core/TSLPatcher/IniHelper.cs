@@ -8,6 +8,7 @@ using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using JetBrains.Annotations;
+using KOTORModSync.Core.FileSystemPathing;
 using KOTORModSync.Core.Utility;
 using SharpCompress.Archives;
 
@@ -21,7 +22,7 @@ namespace KOTORModSync.Core.TSLPatcher
             if ( directory == null )
                 throw new ArgumentNullException( nameof( directory ) );
 
-            FileInfo[] iniFiles = directory.GetFiles( searchPattern: "*.ini", SearchOption.AllDirectories );
+            FileInfo[] iniFiles = directory.GetFilesSafely( searchPattern: "*.ini", SearchOption.AllDirectories );
             if ( iniFiles.Length == 0 )
                 throw new InvalidOperationException( "No .ini files found!" );
 
@@ -52,7 +53,7 @@ namespace KOTORModSync.Core.TSLPatcher
             if ( directory == null )
                 throw new ArgumentNullException( nameof( directory ) );
 
-            FileInfo[] iniFiles = directory.GetFiles( searchPattern: "*.ini", SearchOption.AllDirectories );
+            FileInfo[] iniFiles = directory.GetFilesSafely( searchPattern: "*.ini", SearchOption.AllDirectories );
             if ( iniFiles.Length == 0 )
                 throw new InvalidOperationException( "No .ini files found!" );
 

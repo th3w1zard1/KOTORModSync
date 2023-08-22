@@ -9,6 +9,7 @@ using System.IO;
 using System.Linq;
 using JetBrains.Annotations;
 using KOTORModSync.Core;
+using KOTORModSync.Core.FileSystemPathing;
 using KOTORModSync.Core.Utility;
 
 namespace KOTORModSync.ConsoleApp
@@ -77,12 +78,11 @@ namespace KOTORModSync.ConsoleApp
                                 break;
                             }
 
-                            string[] modFiles = Directory.GetFiles(
-                                    modDownloads.FullName,
+                            FileInfo[] modFiles = modDownloads.GetFilesSafely(
                                     searchPattern: "*.*",
                                     SearchOption.TopDirectoryOnly
                                 )
-                                .Where( static file => ArchiveHelper.IsArchive( file ) )
+                                .Where( static file => ArchiveHelper.IsArchive( file.FullName ) )
                                 .ToArray();
 
                             if ( modFiles.Length == 0 )
@@ -96,9 +96,9 @@ namespace KOTORModSync.ConsoleApp
                             Console.WriteLine(
                                 $"Found {modFiles.Length} mod files in directory '{modDownloads.FullName}':"
                             );
-                            foreach ( string modFile in modFiles )
+                            foreach ( FileInfo modFile in modFiles )
                             {
-                                Console.WriteLine( $"  {Path.GetFileName( modFile )}" );
+                                Console.WriteLine( $"  {modFile.Name}" );
                             }
 
                             Console.WriteLine(

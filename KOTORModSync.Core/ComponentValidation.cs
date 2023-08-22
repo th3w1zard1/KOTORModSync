@@ -387,9 +387,10 @@ namespace KOTORModSync.Core
                     default:
                         
                         if ( !string.IsNullOrEmpty( instruction.Destination ) )
-                        {
-                            instruction.Destination = new InsensitivePath(Utility.Utility.ReplaceCustomVariables( instruction.Destination )).FullName;
-                        }
+                            instruction.Destination = new InsensitivePath(
+                                Utility.Utility.ReplaceCustomVariables( instruction.Destination ),
+                                isFile: false
+                            ).FullName;
 
                         if ( string.IsNullOrWhiteSpace( instruction.Destination )
                             || !PathValidator.IsValidPath(instruction.Destination)

@@ -190,7 +190,7 @@ namespace KOTORModSync.Core.FileSystemPathing
             string currentPath = Path.GetPathRoot(formattedPath);
             if (!string.IsNullOrEmpty(currentPath) && !Path.IsPathRooted(parts[0]))
                 parts = new[] { currentPath }.Concat( parts ).ToArray();
-            
+            // append directory separator to drive roots
             if (parts[0].EndsWith(":"))
                 parts[0] += Path.DirectorySeparatorChar;
 
@@ -204,23 +204,28 @@ namespace KOTORModSync.Core.FileSystemPathing
                 if (Environment.OSVersion.Platform != PlatformID.Win32NT && Directory.Exists(previousCurrentPath))
                 {
                     int maxMatchingCharacters = -1;
-                    string closestMatch = formattedPath;
-                    foreach (FileSystemInfo folderOrFileInfo in new DirectoryInfo(previousCurrentPath).EnumerateFileSystemInfos())
+                    string closestMatch = parts[i];
+
+                    foreach (
+                        FileSystemInfo folderOrFileInfo
+                        in new DirectoryInfo( previousCurrentPath )
+                        .EnumerateFileSystemInfosSafely( searchPattern: "*", SearchOption.TopDirectoryOnly )
+                    )
                     {
-                        if (!folderOrFileInfo.Exists)
-                            continue;
-                        int matchingCharacters = GetMatchingCharactersCount(folderOrFileInfo.Name, parts[i]);
-                        if (matchingCharacters <= maxMatchingCharacters)
+                        if (folderOrFileInfo is null || !folderOrFileInfo.Exists)
                             continue;
 
-                        closestMatch = folderOrFileInfo.FullName;
-                        maxMatchingCharacters = matchingCharacters;
-                        if (i == parts.Length)
-                            isFile = folderOrFileInfo is FileInfo;
+                        int matchingCharacters = GetMatchingCharactersCount(folderOrFileInfo.Name, parts[i]);
+                        if ( matchingCharacters > maxMatchingCharacters )
+                        {
+                            maxMatchingCharacters = matchingCharacters;
+                            closestMatch = folderOrFileInfo.Name;
+                            if ( i == parts.Length )
+                                isFile = folderOrFileInfo is FileInfo;
+                        }
                     }
 
-                    if (!closestMatch.Equals(formattedPath, StringComparison.Ordinal))
-                        parts[i] = closestMatch;
+                    parts[i] = closestMatch;
                 }
                 // resolve case-sensitive pathing. largestExistingPathPartsIndex determines the largest index of the existing path parts.
                 else if (!File.Exists(currentPath)
@@ -360,17 +365,19 @@ namespace KOTORModSync.Core.FileSystemPathing
                         if ( !(thisDuplicateFolder is DirectoryInfo dirInfo) )
                             throw new NullReferenceException(nameof( dirInfo ));
 
-                        IEnumerable<FileInfo> checkFiles = dirInfo.EnumerateFiles(
+                        IEnumerable<FileInfo> checkFiles = dirInfo.EnumerateFilesSafely(
                             searchPattern: "*",
                             includeSubFolders
                                 ? SearchOption.AllDirectories
                                 : SearchOption.TopDirectoryOnly
                         );
 
-                        // wildcard match them all with WildcardPatchMatch and add to result
-                        result.AddRange(checkFiles.Where(thisFile => WildcardPathMatch(thisFile.FullName, formattedPath))
-                            .Select(thisFile => thisFile.FullName));
-
+                        result.AddRange(
+                            from thisFile in checkFiles
+                            where thisFile != null
+                                && WildcardPathMatch( thisFile.FullName, formattedPath )
+                            select thisFile.FullName
+                        );
                     }
                 }
                 catch ( Exception ex )
@@ -542,7 +549,7 @@ namespace KOTORModSync.Core.FileSystemPathing
             // build duplicate files/folders list
             var fileList = new Dictionary<string, List<FileSystemInfo>>( StringComparer.OrdinalIgnoreCase );
             var folderList = new Dictionary<string, List<FileSystemInfo>>( StringComparer.OrdinalIgnoreCase );
-            foreach ( FileInfo file in dirInfo.GetFiles() )
+            foreach ( FileInfo file in dirInfo.GetFilesSafely() )
             {
                 if ( !file.Exists )
                     continue;
@@ -574,7 +581,7 @@ namespace KOTORModSync.Core.FileSystemPathing
             if ( isFile == true )
                 yield break;
 
-            foreach ( DirectoryInfo subDirectory in dirInfo.GetDirectories() )
+            foreach ( DirectoryInfo subDirectory in dirInfo.EnumerateDirectoriesSafely() )
             {
                 if ( !subDirectory.Exists )
                     continue;

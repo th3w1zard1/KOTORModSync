@@ -207,24 +207,19 @@ namespace KOTORModSync
                             _ = Console.ReadKey();
                             break;
 
-                        case "7": break;
-
-                        case "8": break;
-
                         default:
-                            Console.WriteLine( "Invalid command" );
+                            Console.WriteLine();
+                            Console.WriteLine( "Development Console:" );
+                            Console.WriteLine( "1. Choose Directories" );
+                            Console.WriteLine( "2. Validate Mod Downloads" );
+                            Console.WriteLine( "3. Install Mod Build" );
+                            Console.WriteLine( "4. (dev) Generate file/folder hierarchy trees from compressed files." );
+                            Console.WriteLine( "5. Generate SHA1 checksums of a KOTOR installation." );
+                            Console.WriteLine( "6: Deserialize Reddit source into TOML" );
+                            Console.Write( $"Enter a command:{Environment.NewLine}" );
                             _ = Console.ReadKey();
                             break;
                     }
-                    
-                    Console.WriteLine( "Development Console:" );
-                    Console.WriteLine( "1. Choose Directories" );
-                    Console.WriteLine( "2. Validate Mod Downloads" );
-                    Console.WriteLine( "3. Install Mod Build" );
-                    Console.WriteLine( "4. (dev) generate mod directory trees from compressed files." );
-                    Console.WriteLine( "5. Generate SHA1 checksums of a KOTOR installation." );
-                    Console.WriteLine( "6: Deserialize Reddit source into TOML" );
-                    Console.Write( $"Enter a command:{Environment.NewLine}" );
                 }
             }
             catch ( Exception exception )

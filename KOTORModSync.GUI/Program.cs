@@ -1,7 +1,6 @@
 ﻿using Avalonia;
 using Avalonia.ReactiveUI;
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -14,8 +13,6 @@ namespace KOTORModSync
 {
     internal static class Program
     {
-        private static ConcurrentQueue<string> commands = new ConcurrentQueue<string>();
-
         // Initialization code. Don't use any Avalonia, third-party APIs or any
         // SynchronizationContext-reliant code before AppMain is called: things aren't initialized
         // yet and stuff might break.
@@ -36,16 +33,6 @@ namespace KOTORModSync
 
                 while ( true )
                 {
-                    //Console.Clear();
-                    Console.WriteLine( "Development Console:" );
-                    Console.WriteLine( "1. Choose Directories" );
-                    Console.WriteLine( "2. Validate Mod Downloads" );
-                    Console.WriteLine( "3. Install Mod Build" );
-                    Console.WriteLine( "4. (dev) generate mod directory trees from compressed files." );
-                    Console.WriteLine( "5. Generate SHA1 checksums of a KOTOR installation." );
-                    Console.WriteLine( "6: Deserialize Reddit source into TOML" );
-                    Console.Write( $"Enter a command:{Environment.NewLine}" );
-
                     string input = Console.ReadLine();
                     char key;
 
@@ -229,6 +216,15 @@ namespace KOTORModSync
                             _ = Console.ReadKey();
                             break;
                     }
+                    
+                    Console.WriteLine( "Development Console:" );
+                    Console.WriteLine( "1. Choose Directories" );
+                    Console.WriteLine( "2. Validate Mod Downloads" );
+                    Console.WriteLine( "3. Install Mod Build" );
+                    Console.WriteLine( "4. (dev) generate mod directory trees from compressed files." );
+                    Console.WriteLine( "5. Generate SHA1 checksums of a KOTOR installation." );
+                    Console.WriteLine( "6: Deserialize Reddit source into TOML" );
+                    Console.Write( $"Enter a command:{Environment.NewLine}" );
                 }
             }
             catch ( Exception exception )

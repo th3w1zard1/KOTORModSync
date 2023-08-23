@@ -1334,7 +1334,7 @@ namespace KOTORModSync
 
                     var progressWindow = new ProgressWindow
                     {
-                        ProgressBar = { Value = 0 }
+                        ProgressBar = { Value = 0 },
                     };
                     progressWindow.Closed += ProgressWindowClosed;
                     progressWindow.Show();

@@ -30,6 +30,7 @@ namespace KOTORModSync
                 {
                     Value = (double)progress,
                 },
+                Topmost=true,
             };
 
             if ( !( parentWindow is null ) )

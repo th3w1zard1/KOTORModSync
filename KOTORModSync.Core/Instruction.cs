@@ -914,6 +914,13 @@ namespace KOTORModSync.Core
                 {
                     try
                     {
+                        // TODO: add a config option to which installer to use for tslpatcher action.
+                        DirectoryInfo tslPatcherDirectory = File.Exists( sourcePath )
+                            ? new FileInfo( sourcePath ).Directory // It's a file, get the parent folder.
+                            : new DirectoryInfo( sourcePath );     // It's a folder, create a DirectoryInfo instance
+                        IniHelper.ReplacePlaintextLog( tslPatcherDirectory );
+                        IniHelper.ReplaceLookupGameFolder( tslPatcherDirectory );
+
                         ( int childExitCode, string output, string error )
                             = await PlatformAgnosticMethods.ExecuteProcessAsync(
                                 sourcePath,

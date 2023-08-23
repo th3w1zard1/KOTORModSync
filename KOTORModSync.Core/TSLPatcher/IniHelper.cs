@@ -39,7 +39,7 @@ namespace KOTORModSync.Core.TSLPatcher
                     continue;
 
                 Logger.Log( $"Preventing tslpatcher's automatic game lookups '{file.Name}'" );
-                Logger.Log( $"change 'LookupGameFolder' from 1 to 0 in '{file.Name}'" );
+                Logger.LogVerbose( $"change 'LookupGameFolder' from 1 to 0 in '{file.Name}'" );
                 fileContents = Regex.Replace( fileContents, pattern, replacement: "LookupGameFolder=0" );
 
                 // Write the modified file contents back to the file
@@ -73,6 +73,7 @@ namespace KOTORModSync.Core.TSLPatcher
                     continue;
 
                 Logger.Log( $"Redirecting TSLPatcher logging from '{file.Name}' to 'installlog.txt'" );
+                Logger.LogVerbose( $"change 'PlaintextLog' from 0 to 1 in '{file.Name}'" );
                 fileContents = Regex.Replace( fileContents, pattern, replacement: "PlaintextLog=1" );
 
                 // Write the modified file contents back to the file

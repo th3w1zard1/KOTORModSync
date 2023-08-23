@@ -42,7 +42,11 @@ namespace KOTORModSync.Core
 
 
         [NotNull]
-        private static async Task LogInternalAsync([CanBeNull] string internalMessage, bool fileOnly = false)
+        private static async Task LogInternalAsync(
+            [CanBeNull] string internalMessage,
+            bool fileOnly = false,
+            ConsoleColor? color = null
+        )
         {
             internalMessage = internalMessage ?? string.Empty;
 
@@ -50,15 +54,25 @@ namespace KOTORModSync.Core
             try
             {
                 string logMessage = $"[{DateTime.Now}] {internalMessage}";
-                if (!fileOnly)
-                    await Console.Out.WriteLineAsync(logMessage);
+                
+                if ( !fileOnly )
+                {
+                    string consoleMessage = $"[{DateTime.Now:HH:mm:ss}] {internalMessage}";
+                    // Set color if specified.
+                    if (color.HasValue)
+                        Console.ForegroundColor = color.Value;
+
+                    await Console.Out.WriteLineAsync(consoleMessage);
+
+                    // Reset the color before continuing.
+                    if (color.HasValue)
+                        Console.ResetColor();
+                }
 
                 string formattedDate = DateTime.Now.ToString("yyyy-MM-dd");
-                var cancellationTokenSource = new CancellationTokenSource(TimeSpan.FromMinutes(2));
-                CancellationToken token = cancellationTokenSource.Token;
+                CancellationToken token = new CancellationTokenSource(delay: TimeSpan.FromMinutes(2)).Token;
 
                 bool fileWritten = false;
-
                 while (!fileWritten)
                 {
                     try
@@ -102,47 +116,35 @@ namespace KOTORModSync.Core
         public static Task LogAsync( [CanBeNull] string message ) => LogInternalAsync( message );
 
         public static void LogVerbose( [CanBeNull] string message ) =>
-            Log( $"[Verbose] {message}", !MainConfig.DebugLogging );
+            _ = LogInternalAsync( $"[Verbose] {message}", !MainConfig.DebugLogging, color: ConsoleColor.DarkGray );
 
         [NotNull]
         public static Task LogVerboseAsync( [CanBeNull] string message ) =>
-            LogInternalAsync( $"[Verbose] {message}", !MainConfig.DebugLogging );
+            LogInternalAsync( $"[Verbose] {message}", !MainConfig.DebugLogging, color: ConsoleColor.DarkGray );
 
         // ReSharper disable once UnusedMember.Global
-        public static void LogWarning( [NotNull] string message ) => Log( $"[Warning] {message}" );
+        public static void LogWarning( [NotNull] string message ) => _ = LogInternalAsync( $"[Warning] {message}", color: ConsoleColor.Yellow );
 
         [NotNull]
         public static Task LogWarningAsync( [NotNull] string message ) =>
-            LogInternalAsync( $"[Warning] {message}" );
+            LogInternalAsync( $"[Warning] {message}", color: ConsoleColor.Yellow );
 
-        public static void LogError( [CanBeNull] string message ) => Log( $"[Error] {message}" );
+        public static void LogError( [CanBeNull] string message ) => _ = LogInternalAsync($"[Error] {message}", color: ConsoleColor.Red);
 
         [NotNull]
         public static Task LogErrorAsync( [CanBeNull] string message ) =>
-            LogInternalAsync( $"[Error] {message}" );
+            LogInternalAsync( $"[Error] {message}", color: ConsoleColor.Red);
+        
+        public static void LogException( [CanBeNull] Exception ex, [CanBeNull] string customMessage = null ) => _ = LogExceptionAsync( ex, customMessage );
 
         [NotNull]
-        public static async Task LogExceptionAsync( [CanBeNull] Exception ex ) =>
-            await Task.Run( () => LogException( ex ) );
-
-        [NotNull]
-        public static async Task LogExceptionAsync( [CanBeNull] Exception ex, [CanBeNull] string customMessage ) =>
-            await Task.Run( () => LogException( ex, customMessage ) );
-
-        public static void LogException( [CanBeNull] Exception exception, [CanBeNull] string customMessage )
-        {
-            exception = exception ?? new ApplicationException();
-
-            LogException( exception );
-            LogError( customMessage );
-        }
-
-        public static void LogException( [CanBeNull] Exception ex )
+        public static async Task LogExceptionAsync( [CanBeNull] Exception ex, [CanBeNull] string customMessage = null )
         {
             ex = ex ?? new ApplicationException();
-
-            Log( $"Exception: {ex.GetType()?.Name} - {ex.Message}" );
-            Log( $"Stack trace: {ex.StackTrace}" );
+            
+            await LogErrorAsync( customMessage );
+            await LogInternalAsync( $"Exception: {ex.GetType()?.Name} - {ex.Message}", color: ConsoleColor.Red );
+            await LogInternalAsync( $"Stack trace:{Environment.NewLine}{ex.StackTrace}", color: ConsoleColor.Magenta );
 
             ExceptionLogged.Invoke( ex ); // Raise the ExceptionLogged event
         }

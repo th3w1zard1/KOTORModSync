@@ -474,7 +474,8 @@ namespace KOTORModSync.Core.FileSystemPathing
             );
 
             // Fix trailing slashes
-            formattedPath = formattedPath.TrimEnd( Path.DirectorySeparatorChar );
+            if ( formattedPath.Length > 1 )
+                formattedPath = formattedPath.TrimEnd( Path.DirectorySeparatorChar );
 
             return formattedPath;
         }

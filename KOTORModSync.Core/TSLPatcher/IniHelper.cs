@@ -91,7 +91,7 @@ namespace KOTORModSync.Core.TSLPatcher
             {
                 if (archive != null && thisStream != null)
                 {
-                    return TraverseDirectories(archive.Entries, "");
+                    return TraverseDirectories(archive.Entries, currentDirectory: "");
                 }
             }
 
@@ -135,10 +135,8 @@ namespace KOTORModSync.Core.TSLPatcher
                     IEnumerable<IArchiveEntry> subDirectoryEntries = archiveEntries.Where(
                         e =>
                             e != null
-                            && (
-                                e.Key.StartsWith( entry.Key + "/" )
-                                || e.Key.StartsWith( entry.Key + "\\" )
-                            )
+                            && ( e.Key.StartsWith( entry.Key + "/" )
+                                || e.Key.StartsWith( entry.Key + "\\" ) )
                     );
                     Dictionary<string, Dictionary<string, string>> result = TraverseDirectories(subDirectoryEntries, entry.Key);
                     if (result != null)
@@ -151,9 +149,8 @@ namespace KOTORModSync.Core.TSLPatcher
 
                     if ( string.Equals( directoryName, currentDirectory, StringComparison.OrdinalIgnoreCase )
                         && string.Equals( fileName, "namespaces.ini", StringComparison.OrdinalIgnoreCase )
-                        && currentDirectory.Split(
-                                new[] { '/', '\\' }, StringSplitOptions.RemoveEmptyEntries
-                            ).Any( dir => dir.Equals( "tslpatchdata", StringComparison.OrdinalIgnoreCase ) )
+                        && currentDirectory.Split( new[] { '/', '\\' }, StringSplitOptions.RemoveEmptyEntries )
+                            .Any( dir => dir.Equals( "tslpatchdata", StringComparison.OrdinalIgnoreCase ) )
                         )
                     {
                         using ( var reader = new StreamReader( entry.OpenEntryStream() ) )
@@ -183,7 +180,7 @@ namespace KOTORModSync.Core.TSLPatcher
                 // Checks if the line is a section header
                 if (line.StartsWith("[") && line.EndsWith("]"))
                 {
-                    string sectionName = line.Substring(1, line.Length - 2);
+                    string sectionName = line.Substring(startIndex: 1, line.Length - 2);
                     currentSection = new Dictionary<string, string>();
                     sections[sectionName] = currentSection;
                 }
@@ -202,7 +199,5 @@ namespace KOTORModSync.Core.TSLPatcher
 
             return sections;
         }
-
-
     }
 }

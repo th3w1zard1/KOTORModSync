@@ -358,7 +358,7 @@ namespace KOTORModSync.Core
                 throw new ArgumentException( "[TomlError] Expected a TOML table for component data." );
 
             Name = GetRequiredValue<string>( componentDict, key: "Name" );
-            _ = Logger.LogAsync( $"{Environment.NewLine}== Deserialize next component '{Name}' ==" );
+            _ = Logger.LogAsync( $" == Deserialize next component '{Name}' ==" );
             Guid = GetRequiredValue<Guid>( componentDict, key: "Guid" );
             Description = GetValueOrDefault<string>( componentDict, key: "Description" ) ?? string.Empty;
             Directions = GetValueOrDefault<string>( componentDict, key: "Directions" ) ?? string.Empty;
@@ -530,7 +530,7 @@ namespace KOTORModSync.Core
                 {
                     instruction.Action = action;
                     _ = Logger.LogAsync(
-                        $"{Environment.NewLine} -- Deserialize instruction #{index + 1} action '{action}'"
+                        $" -- Deserialize instruction #{index + 1} action '{action}'"
                     );
                 }
                 else
@@ -582,12 +582,12 @@ namespace KOTORModSync.Core
 
                 var option = new Option();
                 _ = Logger.LogAsync(
-                    $"{Environment.NewLine}-- Deserialize option #{index + 1}"
+                    $"-- Deserialize option #{index + 1}"
                 );
 
                 option.Name = GetRequiredValue<string>( optionsDict, key: "Name" );
                 option.Description = GetValueOrDefault<string>( optionsDict, key: "Description" ) ?? string.Empty;
-                _ = Logger.LogAsync( $"{Environment.NewLine}== Deserialize next option '{Name}' ==" );
+                _ = Logger.LogAsync( $" == Deserialize next option '{Name}' ==" );
                 option.Guid = GetRequiredValue<Guid>( optionsDict, key: "Guid" );
                 option.Restrictions
                     = GetValueOrDefault<List<Guid>>( optionsDict, key: "Restrictions" ) ?? new List<Guid>();

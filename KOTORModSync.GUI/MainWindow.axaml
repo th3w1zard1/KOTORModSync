@@ -47,18 +47,18 @@
             <TextBox Grid.Row="0" Margin="0,0,0,2" HorizontalAlignment="Stretch" 
                      Name="SearchBox" ToolTip.Tip="Search for a mod by name" Text="{Binding SearchText}" />
             <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Disabled" >
-                <TreeView x:Name="LeftTreeView"/>
+                <TreeView x:Name="LeftTreeView" />
             </ScrollViewer>
             <Grid Grid.Row="2" Grid.Column="0" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Margin="3,1"
                   RowDefinitions="Auto,Auto,Auto,Auto" ColumnDefinitions="*,*">
                 <Button Grid.Row="0" Grid.Column="0" HorizontalContentAlignment="Center" HorizontalAlignment="Stretch" VerticalContentAlignment="Center"
-                        Content="Add Mod" Click="AddComponentButton_Click"/>
+                        Content="Add Mod" Click="AddComponentButton_Click" />
                 <Button Grid.Row="0" Grid.Column="1" HorizontalContentAlignment="Center" HorizontalAlignment="Stretch" VerticalContentAlignment="Center" 
-                        Content="Del Mod" Click="RemoveComponentButton_Click"/>
+                        Content="Del Mod" Click="RemoveComponentButton_Click" />
                 <Button Grid.Row="1" Grid.Column="0" HorizontalContentAlignment="Center" HorizontalAlignment="Stretch" VerticalContentAlignment="Center"
-                        Content="▲  Up  ▲" Click="MoveUpButton_Click"/>
+                        Content="▲  Up  ▲" Click="MoveUpButton_Click" />
                 <Button Grid.Row="1" Grid.Column="1" HorizontalContentAlignment="Center" HorizontalAlignment="Stretch" VerticalContentAlignment="Center" 
-                        Content="▼ Down ▼" Click="MoveDownButton_Click"/>
+                        Content="▼ Down ▼" Click="MoveDownButton_Click" />
                 <Button Grid.Row="2" Grid.Column="0" HorizontalContentAlignment="Center" HorizontalAlignment="Stretch"
                         Content="Save Config" Click="SaveModFile_Click" />
                 <Button Grid.Row="2" Grid.Column="1" HorizontalContentAlignment="Center" HorizontalAlignment="Stretch"
@@ -91,7 +91,8 @@
                             <TextBlock Text="Directions:" FontWeight="Bold" Margin="0,10,0,0" />
                             <TextBlock Text="{Binding Directions}" Margin="10,0,0,0" TextWrapping="Wrap" />
 
-                            <TextBlock Text="Mod Download Links:" FontWeight="DemiBold" Margin="0, 10, 0, 0" />
+                            <TextBlock Text="Mod Download Links:" FontWeight="DemiBold" Margin="0, 10, 0, 0"
+                                       ToolTip.Tip="Click a link to open it in your browser." />
                             <ItemsRepeater ItemsSource="{Binding ModLink}">
                                 <ItemsRepeater.ItemTemplate>
                                     <DataTemplate>
@@ -130,9 +131,9 @@
                                                               IsChecked="{Binding IsSelected, Mode=TwoWay}"
                                                               Checked="OnCheckBoxOnChecked" Unchecked="OnCheckBoxOnUnchecked"
                                                               Tag="{Binding}"
-                                                              Content="{Binding Name}"/>
+                                                              Content="{Binding Name}" />
                                                 </DockPanel>
-                                                <TextBlock Text="{Binding Description}"/>
+                                                <TextBlock Text="{Binding Description}" />
                                                 <ItemsRepeater
                                                     x:Name="optionsInstructionsRepeater"
                                                     ItemsSource="{Binding Instructions}">
@@ -180,7 +181,7 @@
                                        Margin="0,10"
                                        IsVisible="{Binding ElementName=instructionsSummaryRepeater,
                                             Path=ItemsSource,
-                                            Converter={StaticResource ListToVisibilityConverter}}"/>
+                                            Converter={StaticResource ListToVisibilityConverter}}" />
                             <ItemsRepeater
                                 x:Name="instructionsSummaryRepeater"
                                 ItemsSource="{Binding Instructions}">
@@ -240,7 +241,7 @@
                                              AcceptsTab="True" AcceptsReturn="True"
                                              Text="{Binding Description}" />
 
-                                    <TextBlock Text="Directions:" ToolTip.Tip="You do not need to follow these directions, this installer will automatically handle the instructions."/>
+                                    <TextBlock Text="Directions:" ToolTip.Tip="You do not need to follow these directions, this installer will automatically handle the instructions." />
                                     <TextBox Margin="5,0"
                                              Focusable="True" HorizontalAlignment="Stretch" TextWrapping="Wrap"
                                              AcceptsTab="True" AcceptsReturn="True"
@@ -262,34 +263,30 @@
                                         Focusable="True" HorizontalAlignment="Stretch"
                                         Text="{Binding Tier}" />
 
-                                    <TextBlock Text="Mod Website:" ToolTip.Tip="Download the mod here."/>
+                                    <TextBlock Text="Mod Website:" ToolTip.Tip="Download the mod here." />
                                     <TextBox
                                         Focusable="True" HorizontalAlignment="Stretch" AcceptsReturn="True"
                                         Text="{Binding ModLink, Converter={StaticResource ListToStringConverter}}" />
 
                                     <TextBlock Text="Dependencies:"
-                                               Margin="0, 15, 0, 5" ToolTip.Tip="This mod will not be installed if any of these dependencies are NOT SELECTED for install."/>
+                                               Margin="0, 15, 0, 5" ToolTip.Tip="This mod will not be installed if any of these dependencies are NOT SELECTED for install." />
                                     <control:DependencyControl
-                                        ThisGuidList="{Binding Dependencies}"
-                                        ThisComponentList="{Binding RelativeSource={RelativeSource AncestorType={x:Type local:MainWindow}}, Path=ComponentsList}" />
+                                        ThisGuidList="{Binding Dependencies}" />
 
                                     <TextBlock Text="Restrictions:"
-                                               Margin="0, 15, 0, 5" ToolTip.Tip="This mod will not be installed if any of these restrictions are SELECTED for install."/>
+                                               Margin="0, 15, 0, 5" ToolTip.Tip="This mod will not be installed if any of these restrictions are SELECTED for install." />
                                     <control:DependencyControl
-                                        ThisGuidList="{Binding Restrictions}"
-                                        ThisComponentList="{Binding RelativeSource={RelativeSource AncestorType={x:Type local:MainWindow}}, Path=ComponentsList}" />
+                                        ThisGuidList="{Binding Restrictions}" />
 
                                     <TextBlock Text="InstallBefore:"
                                                Margin="0, 15, 0, 5" />
                                     <control:DependencyControl
-                                        ThisGuidList="{Binding InstallBefore}"
-                                        ThisComponentList="{Binding RelativeSource={RelativeSource AncestorType={x:Type local:MainWindow}}, Path=ComponentsList}" />
+                                        ThisGuidList="{Binding InstallBefore}" />
 
                                     <TextBlock Text="InstallAfter:"
                                                Margin="0, 15, 0, 5" />
                                     <control:DependencyControl
-                                        ThisGuidList="{Binding InstallAfter}"
-                                        ThisComponentList="{Binding RelativeSource={RelativeSource AncestorType={x:Type local:MainWindow}}, Path=ComponentsList}" />
+                                        ThisGuidList="{Binding InstallAfter}" />
                                 </StackPanel>
                             </Expander>
                             <Expander Header="Instructions" IsExpanded="False">
@@ -360,16 +357,14 @@
                                                                     Tag="{Binding ElementName=DestinationTextBox}" />
 
                                                             <TextBlock Grid.Row="8" Grid.Column="0"
-                                                                       Text="Dependencies:" ToolTip.Tip="This instruction will NOT run if ANY of these dependency mods are NOT SELECTED for install."/>
+                                                                       Text="Dependencies:" ToolTip.Tip="This instruction will NOT run if ANY of these dependency mods are NOT SELECTED for install." />
                                                             <control:DependencyControl Grid.Row="9" Grid.Column="0"
-                                                                ThisGuidList="{Binding Dependencies}"
-                                                                ThisComponentList="{Binding RelativeSource={RelativeSource AncestorType={x:Type local:MainWindow}}, Path=ComponentsList}" />
+                                                                ThisGuidList="{Binding Dependencies}" />
 
                                                             <TextBlock Grid.Row="10" Grid.Column="0"
-                                                                       Text="Restrictions:" ToolTip.Tip="This instruction will NOT run if ANY of these restricted mods are SELECTED for install."/>
+                                                                       Text="Restrictions:" ToolTip.Tip="This instruction will NOT run if ANY of these restricted mods are SELECTED for install." />
                                                             <control:DependencyControl Grid.Row="11" Grid.Column="0"
-                                                                ThisGuidList="{Binding Restrictions}"
-                                                                ThisComponentList="{Binding RelativeSource={RelativeSource AncestorType={x:Type local:MainWindow}}, Path=ComponentsList}" />
+                                                                ThisGuidList="{Binding Restrictions}" />
 
                                                             <TextBlock Grid.Row="12" Grid.Column="0"
                                                                        Text="Overwrite:" ToolTip.Tip="Should we overwrite if already exists in the install directory?" />
@@ -422,7 +417,7 @@
                                                                 <TextBlock
                                                                     Text="{Binding
                                                                         Converter={StaticResource IndexConverter},
-                                                                        ConverterParameter={Binding Instructions, ElementName=instructionsRepeater}}"/>
+                                                                        ConverterParameter={Binding Instructions, ElementName=instructionsRepeater}}" />
                                                                 <TextBlock Text="Name:"
                                                                            VerticalAlignment="Center"
                                                                            Margin="0,0,20,0" />
@@ -452,17 +447,15 @@
                                                                 Focusable="True" />
 
                                                             <TextBlock Grid.Row="4" Grid.Column="0"
-                                                                       Text="Dependencies:" ToolTip.Tip="This option will not be installed if ANY of these dependency mods are NOT SELECTED for install."/>
+                                                                       Text="Dependencies:" ToolTip.Tip="This option will not be installed if ANY of these dependency mods are NOT SELECTED for install." />
                                                             <control:DependencyControl Grid.Row="5" Grid.Column="0"
-                                                                ThisGuidList="{Binding Dependencies}"
-                                                                ThisComponentList="{Binding RelativeSource={RelativeSource AncestorType={x:Type local:MainWindow}}, Path=ComponentsList}" />
+                                                                ThisGuidList="{Binding Dependencies}" />
 
                                                             <TextBlock Grid.Row="6" Grid.Column="0"
                                                                        Text="Restrictions:" ToolTip.Tip="This option will not be installed if ANY of these restricted mods are SELECTED for install." />
                                                             <control:DependencyControl Grid.Row="7"
                                                                 Grid.Column="0"
-                                                                ThisGuidList="{Binding Restrictions}"
-                                                                ThisComponentList="{Binding RelativeSource={RelativeSource AncestorType={x:Type local:MainWindow}}, Path=ComponentsList}" />
+                                                                ThisGuidList="{Binding Restrictions}" />
                                                             <Expander Grid.Row="8" Grid.Column="0" Grid.ColumnSpan="2"
                                                                       Header="Instructions" IsExpanded="False">
                                                                 <StackPanel>
@@ -533,26 +526,24 @@
 
 
                                                                                             <TextBlock Grid.Row="8" Grid.Column="0"
-                                                                                                       Text="Dependencies:" ToolTip.Tip="This instruction will NOT run if ANY of these dependency mods are NOT SELECTED for install."/>
+                                                                                                       Text="Dependencies:" ToolTip.Tip="This instruction will NOT run if ANY of these dependency mods are NOT SELECTED for install." />
                                                                                             <control:DependencyControl Grid.Row="9" Grid.Column="0"
-                                                                                                ThisGuidList="{Binding Dependencies}"
-                                                                                                ThisComponentList="{Binding RelativeSource={RelativeSource AncestorType={x:Type local:MainWindow}}, Path=ComponentsList}" />
+                                                                                                ThisGuidList="{Binding Dependencies}" />
 
                                                                                             <TextBlock Grid.Row="10" Grid.Column="0" 
                                                                                                        Text="Restrictions:" ToolTip.Tip="This instruction will NOT run if ANY of these restricted mods are SELECTED for install." />
                                                                                             <control:DependencyControl Grid.Row="11"
                                                                                                 Grid.Column="0"
-                                                                                                ThisGuidList="{Binding Restrictions}"
-                                                                                                ThisComponentList="{Binding RelativeSource={RelativeSource AncestorType={x:Type local:MainWindow}}, Path=ComponentsList}" />
+                                                                                                ThisGuidList="{Binding Restrictions}" />
 
                                                                                             <TextBlock Grid.Row="12" Grid.Column="0"
-                                                                                                       Text="Overwrite:" ToolTip.Tip="Should we overwrite if already exists in the install directory?"/>
+                                                                                                       Text="Overwrite:" ToolTip.Tip="Should we overwrite if already exists in the install directory?" />
                                                                                             <TextBox Grid.Row="13" Grid.Column="0"
                                                                                                      Focusable="True"
                                                                                                      Text="{Binding Overwrite}" />
 
                                                                                             <TextBlock Grid.Row="14" Grid.Column="0"
-                                                                                                       Text="Arguments:" ToolTip.Tip="For 'execute' action, any command-line arguments to send. For 'DelDuplicate', the extension to delete when duplicates are found."/>
+                                                                                                       Text="Arguments:" ToolTip.Tip="For 'execute' action, any command-line arguments to send. For 'DelDuplicate', the extension to delete when duplicates are found." />
                                                                                             <TextBlock Grid.Row="14" Grid.Column="1"
                                                                                                 Text="Namespace Ini Option:" />
                                                                                             <TextBox Grid.Row="15" Grid.Column="0"
@@ -601,7 +592,7 @@
                             <Button Content="Generate GUID" Click="GenerateGuidButton_Click"
                                 ToolTip.Tip="A GUID is used to ensure uniqueness of items.
 							            Do not replace existing guids unless you know what you're doing,
-								        else anything that relies on the pre-existing GUIDs will have their references broken."/>
+								        else anything that relies on the pre-existing GUIDs will have their references broken." />
                             <TextBox x:Name="GuidGeneratedTextBox" Focusable="True" HorizontalContentAlignment="Left" />
                         </DockPanel>
                                 <TextBox x:Name="RawEditTextBox" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="400" />
@@ -613,21 +604,21 @@
         <StackPanel Grid.Row="1" Grid.Column="2">
             <Grid RowDefinitions="*,*,*,*,*,*,*,*">
                 <Button Grid.Row="0" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
-                        Content="Load Installation File" Click="LoadInstallFile_Click" ToolTip.Tip="Load a TOMLIN instruction file from disk."/>
+                        Content="Load Installation File" Click="LoadInstallFile_Click" ToolTip.Tip="Load a TOMLIN instruction file from disk." />
                 <Button Grid.Row="1"  HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
-                        Content="Generate Docs from Config" Click="DocsButton_Click" ToolTip.Tip="Create documentation for this config. Useful if you need human-readable instructions in text form."/>
+                        Content="Generate Docs from Config" Click="DocsButton_Click" ToolTip.Tip="Create documentation for this config. Useful if you need human-readable instructions in text form." />
                 <Button Grid.Row="2" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
-                        Content="Set Directories" Click="SetDirectories_Click" ToolTip.Tip="Set your KOTOR install directory, and the folder where your mods are downloaded."/>
+                        Content="Set Directories" Click="SetDirectories_Click" ToolTip.Tip="Set your KOTOR install directory, and the folder where your mods are downloaded." />
                 <Button Grid.Row="3" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
-                        Content="Validate Config" Click="ValidateButton_Click" ToolTip.Tip="Validates all mods in the config to ensure instructions can logically execute."/>
+                        Content="Validate Config" Click="ValidateButton_Click" ToolTip.Tip="Validates all mods in the config to ensure instructions can logically execute." />
                 <Button Grid.Row="4" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
-                        Content="Deserialize Markdown File" Click="LoadMarkdown_Click" ToolTip.Tip="Attempts to create and load an instructions file from a Reddit post's source."/>
+                        Content="Deserialize Markdown File" Click="LoadMarkdown_Click" ToolTip.Tip="Attempts to create and load an instructions file from a Reddit post's source." />
                 <Button Grid.Row="5" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
-                        Content="Install All" Click="StartInstall_Click" ToolTip.Tip="Starts a full install of all selected mods."/>
+                        Content="Install All" Click="StartInstall_Click" ToolTip.Tip="Starts a full install of all selected mods." />
                 <Button Grid.Row="6" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
-                        Content="Open Output Window" Click="OpenOutputWindow_Click"/>
+                        Content="Open Output Window" Click="OpenOutputWindow_Click" />
                 <Button Grid.Row="7" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
-                        Content="Fix Duplicate Files/Folders" Click="ResolveDuplicateFilesAndFolders"/>
+                        Content="Fix Duplicate Files/Folders" Click="ResolveDuplicateFilesAndFolders" />
             </Grid>
 
             <StackPanel x:Name="MainConfigStackPanel" DataContext="{Binding MainConfigInstance}">
@@ -636,14 +627,14 @@
                 <CheckBox Content="Don't ask for Admin" IsChecked="{Binding noAdmin}"
                           ToolTip.Tip="Do not prompt for admin on any instruction (NOT RECOMMENDED). If you're having problems, it's recommended you run KOTORModSync as admin instead. Does nothing on Linux" />
                 <CheckBox Content="Mock case-insensitive filesystem" IsChecked="{Binding caseInsensitivePathing}"
-                          ToolTip.Tip="(Linux/Mac only) Attempt to perform case-insensitive file/folder lookups. Somewhat slow, especially on HDDs."/>
+                          ToolTip.Tip="(Linux/Mac only) Attempt to perform case-insensitive file/folder lookups. Somewhat slow, especially on HDDs." />
                 <TextBlock Text="Patcher Option:"
                            ToolTip.Tip="Mods are packaged with 'TSLPatcher' by default. Use 'PyKotorCLI' to reduce tedious clicking through tslpatcher windows" />
                 <ComboBox HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
                           ItemsSource="{Binding AllAvailablePatchers}"
                           SelectedItem="{Binding patcherOptionString}"
                           IsTabStop="True" />
-                <TextBlock Text="Compatibility Enforcement Level:" ToolTip.Tip="Determines which mods will be skipped." IsVisible="False"/>
+                <TextBlock Text="Compatibility Enforcement Level:" ToolTip.Tip="Determines which mods will be skipped." IsVisible="False" />
                 <ComboBox HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" IsVisible="False"
                           ItemsSource="{Binding AllCompatibilityLevels}"
                           SelectedItem="{Binding currentCompatibilityString}"

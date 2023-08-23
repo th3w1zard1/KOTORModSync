@@ -89,6 +89,12 @@ namespace KOTORModSync.Tests
         // will always fail on windows
         public void FindCaseInsensitiveDuplicates_FindsFileDuplicates_CaseInsensitive()
         {
+            if ( Environment.OSVersion.Platform == PlatformID.Win32NT )
+            {
+                Console.WriteLine("Test is not possible on Windows.");
+                return;
+            }
+
             // Arrange
             var file1 = new FileInfo(Path.Combine(_tempDirectory.FullName, "file1.txt"));
             file1.Create().Close();
@@ -152,10 +158,16 @@ namespace KOTORModSync.Tests
         [Test]
         public void TestGetClosestMatchingEntry()
         {
+            if ( Environment.OSVersion.Platform == PlatformID.Win32NT )
+            {
+                Console.WriteLine("Test is not possible on Windows.");
+                return;
+            }
+
             string file1 = Path.Combine( s_testDirectory, "file.txt" );
             string file2 = Path.Combine( s_testDirectory, "FILE.TXT" );
-            File.WriteAllText( file1, "Test content" );
-            File.WriteAllText( file2, "Test content" );
+            File.WriteAllText( file1, contents: "Test content" );
+            File.WriteAllText( file2, contents: "Test content" );
             
             Assert.That( PathHelper.GetCaseSensitivePath( Path.Combine( Path.GetDirectoryName(file1)!, Path.GetFileName(file1).ToUpperInvariant()) ).Item1, Is.EqualTo( file2 ) );
             Assert.That( PathHelper.GetCaseSensitivePath( file1.ToUpperInvariant() ).Item1, Is.EqualTo( file2 ) );
@@ -164,8 +176,14 @@ namespace KOTORModSync.Tests
         [Test]
         public void TestDuplicatesWithFileInfo()
         {
-            File.WriteAllText(Path.Combine(s_testDirectory, "file.txt"), "Test content");
-            File.WriteAllText(Path.Combine(s_testDirectory, "File.txt"), "Test content");
+            if ( Environment.OSVersion.Platform == PlatformID.Win32NT )
+            {
+                Console.WriteLine("Test is not possible on Windows.");
+                return;
+            }
+
+            File.WriteAllText(Path.Combine(s_testDirectory, "file.txt"), contents: "Test content");
+            File.WriteAllText(Path.Combine(s_testDirectory, "File.txt"), contents: "Test content");
             
             var fileInfo = new FileInfo(Path.Combine(s_testDirectory, "file.txt"));
             List<FileSystemInfo> result = PathHelper.FindCaseInsensitiveDuplicates(fileInfo).ToList();
@@ -181,8 +199,20 @@ namespace KOTORModSync.Tests
         [Test]
         public void TestDuplicatesWithDirectoryNameString()
         {
-            File.WriteAllText(Path.Combine(s_testDirectory, "file.txt"), "Test content");
-            File.WriteAllText(Path.Combine(s_testDirectory, "File.txt"), "Test content");
+            if ( Environment.OSVersion.Platform == PlatformID.Win32NT )
+            {
+                Console.WriteLine("Test is not possible on Windows.");
+                return;
+            }
+
+            if ( Environment.OSVersion.Platform == PlatformID.Win32NT )
+            {
+                Console.WriteLine("Test is not possible on Windows.");
+                return;
+            }
+
+            File.WriteAllText(Path.Combine(s_testDirectory, "file.txt"), contents: "Test content");
+            File.WriteAllText(Path.Combine(s_testDirectory, "File.txt"), contents: "Test content");
 
             List<FileSystemInfo> result = PathHelper.FindCaseInsensitiveDuplicates(s_testDirectory).ToList();
             var failureMessage = new StringBuilder();
@@ -197,6 +227,12 @@ namespace KOTORModSync.Tests
         [Test]
         public void TestDuplicateDirectories()
         {
+            if ( Environment.OSVersion.Platform == PlatformID.Win32NT )
+            {
+                Console.WriteLine("Test is not possible on Windows.");
+                return;
+            }
+
             _ = Directory.CreateDirectory( Path.Combine( s_testDirectory, "subdir" ) );
             _ = Directory.CreateDirectory( Path.Combine( s_testDirectory, "SubDir" ) );
             
@@ -214,13 +250,19 @@ namespace KOTORModSync.Tests
         [Test]
         public void TestDuplicatesWithDifferentCasingFilesInNestedDirectories()
         {
+            if ( Environment.OSVersion.Platform == PlatformID.Win32NT )
+            {
+                Console.WriteLine("Test is not possible on Windows.");
+                return;
+            }
+
             string subDirectory = Path.Combine(s_testDirectory, "SubDirectory");
             _ = Directory.CreateDirectory( subDirectory );
             
-            File.WriteAllText(Path.Combine(s_testDirectory, "file.txt"), "Test content");
-            File.WriteAllText(Path.Combine(s_testDirectory, "file.TXT"), "Test content");
-            File.WriteAllText(Path.Combine(subDirectory, "FILE.txt"), "Test content");
-            File.WriteAllText(Path.Combine(subDirectory, "file.tXT"), "Test content");
+            File.WriteAllText(Path.Combine(s_testDirectory, "file.txt"), contents: "Test content");
+            File.WriteAllText(Path.Combine(s_testDirectory, "file.TXT"), contents: "Test content");
+            File.WriteAllText(Path.Combine(subDirectory, "FILE.txt"), contents: "Test content");
+            File.WriteAllText(Path.Combine(subDirectory, "file.tXT"), contents: "Test content");
             
             var dirInfo = new DirectoryInfo(s_testDirectory);
             List<FileSystemInfo> result = PathHelper.FindCaseInsensitiveDuplicates(dirInfo, includeSubFolders: true).ToList();
@@ -236,14 +278,20 @@ namespace KOTORModSync.Tests
         [Test]
         public void TestDuplicateNestedDirectories()
         {
+            if ( Environment.OSVersion.Platform == PlatformID.Win32NT )
+            {
+                Console.WriteLine("Test is not possible on Windows.");
+                return;
+            }
+
             string subDir1 = Path.Combine(s_testDirectory, "SubDir");
             string subDir2 = Path.Combine(s_testDirectory, "subdir");
 
             _ = Directory.CreateDirectory( subDir1 );
             _ = Directory.CreateDirectory( subDir2 );
             
-            File.WriteAllText(Path.Combine(subDir1, "file.txt"), "Test content");
-            File.WriteAllText(Path.Combine(subDir2, "file.txt"), "Test content");
+            File.WriteAllText(Path.Combine(subDir1, "file.txt"), contents: "Test content");
+            File.WriteAllText(Path.Combine(subDir2, "file.txt"), contents: "Test content");
             
             var dirInfo = new DirectoryInfo(s_testDirectory);
             List<FileSystemInfo> result = PathHelper.FindCaseInsensitiveDuplicates(dirInfo, includeSubFolders: true).ToList();

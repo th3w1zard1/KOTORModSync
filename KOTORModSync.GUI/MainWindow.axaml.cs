@@ -79,33 +79,17 @@ namespace KOTORModSync
 
                 PropertyChanged += SearchText_PropertyChanged;
 
-                //DisableQuickEdit(); // Fixes an annoying problem where selecting the console window causes the app to hang.
+                // Fixes an annoying problem where selecting the console window causes the app to hang.
+                // Selection is only possible through ctrl + m or right click -> mark, which still causes the same hang but is less accidental at least.
+                if ( Environment.OSVersion.Platform == PlatformID.Win32NT )
+                    ConsoleConfig.DisableQuickEdit();
             }
             catch ( Exception e )
             {
-                Logger.LogException( e, "A fatal error has occurred loading the main window" );
+                Logger.LogException( e, customMessage: "A fatal error has occurred loading the main window" );
                 throw;
             }
         }
-        
-        /*const uint ENABLE_QUICK_EDIT = 0x0040;
-
-        [DllImport("kernel32.dll", SetLastError = true)]
-        private static extern IntPtr GetConsoleWindow();
-
-        [DllImport("kernel32.dll", SetLastError = true)]
-        private static extern bool GetConsoleMode(IntPtr hConsoleHandle, out uint lpMode);
-
-        [DllImport("kernel32.dll", SetLastError = true)]
-        private static extern bool SetConsoleMode(IntPtr hConsoleHandle, uint dwMode);
-        
-        public static void DisableQuickEdit()
-        {
-            IntPtr consoleHandle = GetConsoleWindow();
-            _ = GetConsoleMode( consoleHandle, out uint consoleMode );
-            consoleMode &= ~ENABLE_QUICK_EDIT;
-            _ = SetConsoleMode( consoleHandle, consoleMode );
-        }*/
 
         public void InitializeControls()
         {
@@ -2153,6 +2137,7 @@ namespace KOTORModSync
                 VerticalContentAlignment = VerticalAlignment.Center,
                 VerticalAlignment = VerticalAlignment.Center,
                 Tag = component,
+                [ToolTip.TipProperty] = "If selected, this mod will be installed.",
             };
             var binding = new Binding( "IsSelected" )
             {

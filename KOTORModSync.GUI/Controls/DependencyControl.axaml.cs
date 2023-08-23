@@ -40,17 +40,10 @@ namespace KOTORModSync.Controls
             set => SetValue( ThisGuidListProperty, value );
         }
 
-        [NotNull]
-        public static readonly StyledProperty<List<Component>> ThisComponentListProperty
-            = AvaloniaProperty.Register<DependencyControl, List<Component>>( nameof( ThisComponentList ) );
-
-        [NotNull]
-        public List<Component> ThisComponentList
-        {
-            get => GetValue( ThisComponentListProperty )
-                ?? throw new NullReferenceException( "Could not retrieve property 'ThisComponentListProperty'" );
-            set => SetValue( ThisComponentListProperty, value );
-        }
+        [NotNull][UsedImplicitly]
+#pragma warning disable CA1822
+        public List<Component> ThisComponentList => MainWindow.ComponentsList;
+#pragma warning restore CA1822
 
         // ReSharper disable once UnusedParameter.Local
         private void AddToList_Click( [NotNull] object sender, [NotNull] RoutedEventArgs e )
@@ -74,7 +67,7 @@ namespace KOTORModSync.Controls
                 var convertedItems = new Converters.GuidListToComponentNames().Convert(
                     new object[]
                     {
-                        ThisGuidList, ThisComponentList,
+                        ThisGuidList, MainWindow.ComponentsList,
                     },
                     ThisGuidList.GetType(),
                     parameter: null,
@@ -115,7 +108,7 @@ namespace KOTORModSync.Controls
                 var convertedItems = new Converters.GuidListToComponentNames().Convert(
                     new object[]
                     {
-                        ThisGuidList, ThisComponentList,
+                        ThisGuidList, MainWindow.ComponentsList,
                     },
                     ThisGuidList.GetType(),
                     parameter: null,

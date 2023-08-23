@@ -3,26 +3,21 @@
 // See LICENSE.txt file in the project root for full license information.
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 using Avalonia.Controls;
-using Avalonia.Controls.Shapes;
 using Avalonia.Threading;
 using KOTORModSync.Core;
+using KOTORModSync.Core.FileSystemPathing;
 using Path = System.IO.Path;
 
 namespace KOTORModSync
 {
-    public class OutputViewModel : INotifyPropertyChanged
+    public sealed class OutputViewModel : INotifyPropertyChanged
     {
-        public Queue<string> _logBuilder = new Queue<string>();
+        public readonly Queue<string> _logBuilder = new Queue<string>();
         public string LogText { get; set; } = string.Empty;
 
         public void AppendLog(string message)
@@ -39,7 +34,8 @@ namespace KOTORModSync
 
         // used for ui
         public event PropertyChangedEventHandler PropertyChanged;
-        protected virtual void OnPropertyChanged(string propertyName)
+
+        private void OnPropertyChanged(string propertyName)
         {
             LogText = string.Join( Environment.NewLine, _logBuilder );
             PropertyChanged?.Invoke( this, new PropertyChangedEventArgs( propertyName ) );
@@ -47,7 +43,7 @@ namespace KOTORModSync
     }
     public partial class OutputWindow : Window
     {
-        public OutputViewModel _viewModel;
+        public readonly OutputViewModel _viewModel;
         private readonly int _maxLinesShown = 150;
 
         public OutputWindow()
@@ -70,20 +66,20 @@ namespace KOTORModSync
 
             string logfileName = $"{Logger.LogFileName}{DateTime.Now:yyyy-MM-dd}";
             string executingDirectory = Core.Utility.Utility.GetExecutingAssemblyDirectory();
-            string filePath = Path.Combine(executingDirectory, logfileName + ".txt");
-            if (File.Exists(filePath))
+            var logFilePath = new InsensitivePath(Path.Combine(executingDirectory, logfileName + ".txt"), isFile:true);
+            if ( !logFilePath.Exists )
+                return;
+
+            string[] lines = File.ReadAllLines(logFilePath.FullName);
+            int startIndex = Math.Max(0, lines.Length - _maxLinesShown);
+            foreach (string line in lines.Skip(startIndex))
             {
-                string[] lines = File.ReadAllLines(filePath);
-                int startIndex = Math.Max(0, lines.Length - _maxLinesShown);
-                foreach (string line in lines.Skip(startIndex))
-                {
-                    AppendLog( line );
-                }
-                LogScrollViewer.ScrollToEnd();
+                AppendLog( line );
             }
+            LogScrollViewer.ScrollToEnd();
         }
 
-        private object _logLock = new object();
+        private readonly object _logLock = new object();
         private void AppendLog(string message)
         {
             try
@@ -101,8 +97,9 @@ namespace KOTORModSync
                 // Scroll to the end of the content
                 _ = Dispatcher.UIThread.InvokeAsync( () => LogScrollViewer.ScrollToEnd() );
             }
-            catch ( Exception )
+            catch ( Exception ex)
             {
+                Console.WriteLine($"An error occurred appending the log to the output window: '{ex.Message}'");
             }
         }
     }

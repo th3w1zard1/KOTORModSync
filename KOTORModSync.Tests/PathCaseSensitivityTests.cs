@@ -2,9 +2,8 @@
 // Licensed under the GNU General Public License v3.0 (GPLv3).
 // See LICENSE.txt file in the project root for full license information.
 
-using System.Diagnostics;
 using System.Text;
-using KOTORModSync.Core.Utility;
+using KOTORModSync.Core.FileSystemPathing;
 
 namespace KOTORModSync.Tests
 {
@@ -24,11 +23,167 @@ namespace KOTORModSync.Tests
         [TearDown]
         public static void CleanUpTestDirectory() => Directory.Delete(s_testDirectory, recursive: true);
 
+        private DirectoryInfo _tempDirectory = null!;
+        private DirectoryInfo _subDirectory = null!;
+
+        [SetUp]
+        public void Setup()
+        {
+            _tempDirectory = new DirectoryInfo(Path.Combine(Path.GetTempPath(), "UnitTestTempDir"));
+            _tempDirectory.Create();
+            _subDirectory = new DirectoryInfo(Path.Combine(_tempDirectory.FullName, "SubDir"));
+            _subDirectory.Create();
+        }
+
+        [TearDown]
+        public void TearDown()
+        {
+            _subDirectory.Delete(true);
+            _tempDirectory.Delete(true);
+        }
+
+        [Test]
+        public void FindCaseInsensitiveDuplicates_ThrowsArgumentNullException_WhenDirectoryIsNull()
+        {
+            DirectoryInfo? directory = null;
+            // ReSharper disable once ReturnValueOfPureMethodIsNotUsed
+            _ = Assert.Throws<ArgumentNullException>( () => PathHelper.FindCaseInsensitiveDuplicates( directory! )?.ToList() );
+        }
+
+
+        [Test]
+        public void FindCaseInsensitiveDuplicates_ReturnsEmptyList_WhenDirectoryIsEmpty()
+        {
+            List<FileSystemInfo> result = PathHelper.FindCaseInsensitiveDuplicates(_tempDirectory).ToList();
+            var failureMessage = new StringBuilder();
+            foreach (FileSystemInfo item in result)
+            {
+                failureMessage.AppendLine(item.FullName);
+            }
+
+            Assert.That( result, Is.Empty, $"Expected 0 items, but found {result.Count}. Output: {failureMessage}");
+        }
+
+        [Test]
+        public void FindCaseInsensitiveDuplicates_ReturnsEmptyList_WhenNoDuplicatesExist()
+        {
+            // Arrange
+            var file1 = new FileInfo(Path.Combine(_tempDirectory.FullName, "file1.txt"));
+            file1.Create().Close();
+            var file2 = new FileInfo(Path.Combine(_tempDirectory.FullName, "file2.txt"));
+            file2.Create().Close();
+
+            // Act
+            List<FileSystemInfo> result = PathHelper.FindCaseInsensitiveDuplicates(_tempDirectory).ToList();
+            var failureMessage = new StringBuilder();
+            foreach (FileSystemInfo item in result)
+            {
+                failureMessage.AppendLine(item.FullName);
+            }
+
+            // Assert
+            Assert.That( result, Is.Empty, $"Expected 0 items, but found {result.Count}. Output: {failureMessage}");
+        }
+
+        [Test]
+        // will always fail on windows
+        public void FindCaseInsensitiveDuplicates_FindsFileDuplicates_CaseInsensitive()
+        {
+            if ( Environment.OSVersion.Platform == PlatformID.Win32NT )
+            {
+                Console.WriteLine("Test is not possible on Windows.");
+                return;
+            }
+
+            // Arrange
+            var file1 = new FileInfo(Path.Combine(_tempDirectory.FullName, "file1.txt"));
+            file1.Create().Close();
+            var file2 = new FileInfo(Path.Combine(_tempDirectory.FullName, "FILE1.txt"));
+            file2.Create().Close();
+
+            // Act
+            List<FileSystemInfo> result = PathHelper.FindCaseInsensitiveDuplicates(_tempDirectory).ToList();
+            var failureMessage = new StringBuilder();
+            foreach (FileSystemInfo item in result)
+            {
+                failureMessage.AppendLine(item.FullName);
+            }
+
+            // Assert
+            Assert.That( result.ToList(), Has.Count.EqualTo( 2 ), $"Expected 2 items, but found {result.Count}. Output: {failureMessage}");
+        }
+
+        [Test]
+        public void FindCaseInsensitiveDuplicates_IgnoresNonDuplicates()
+        {
+            // Arrange
+            var file1 = new FileInfo(Path.Combine(_tempDirectory.FullName, "file1.txt"));
+            file1.Create().Close();
+            var file2 = new FileInfo(Path.Combine(_subDirectory.FullName, "file2.txt"));
+            file2.Create().Close();
+
+            // Act
+            List<FileSystemInfo> result = PathHelper.FindCaseInsensitiveDuplicates(_tempDirectory).ToList();
+            var failureMessage = new StringBuilder();
+            foreach (FileSystemInfo item in result)
+            {
+                failureMessage.AppendLine(item.FullName);
+            }
+
+            // Assert
+            Assert.That( result, Is.Empty, $"Expected 0 items, but found {result.Count}. Output: {failureMessage}");
+        }
+
+        [Test]
+        public void FindCaseInsensitiveDuplicates_IgnoresExtensions()
+        {
+            // Arrange
+            var file1 = new FileInfo(Path.Combine(_tempDirectory.FullName, "file1.txt"));
+            file1.Create().Close();
+            var file2 = new FileInfo(Path.Combine(_subDirectory.FullName, "FILE1.png"));
+            file2.Create().Close();
+
+            // Act
+            List<FileSystemInfo> result = PathHelper.FindCaseInsensitiveDuplicates(_tempDirectory).ToList();
+            var failureMessage = new StringBuilder();
+            foreach (FileSystemInfo item in result)
+            {
+                failureMessage.AppendLine(item.FullName);
+            }
+
+            // Assert
+            Assert.That( result, Is.Empty, $"Expected 0 items, but found {result.Count}. Output: {failureMessage}");
+        }
+
+        [Test]
+        public void TestGetClosestMatchingEntry()
+        {
+            if ( Environment.OSVersion.Platform == PlatformID.Win32NT )
+            {
+                Console.WriteLine("Test is not possible on Windows.");
+                return;
+            }
+
+            string file1 = Path.Combine( s_testDirectory, "file.txt" );
+            string file2 = Path.Combine( s_testDirectory, "FILE.TXT" );
+            File.WriteAllText( file1, contents: "Test content" );
+            File.WriteAllText( file2, contents: "Test content" );
+            
+            Assert.That( PathHelper.GetCaseSensitivePath( Path.Combine( Path.GetDirectoryName(file1)!, Path.GetFileName(file1).ToUpperInvariant()) ).Item1, Is.EqualTo( file2 ) );
+            Assert.That( PathHelper.GetCaseSensitivePath( file1.ToUpperInvariant() ).Item1, Is.EqualTo( file2 ) );
+        }
+
         [Test]
         public void TestDuplicatesWithFileInfo()
         {
-            File.WriteAllText(Path.Combine(s_testDirectory, "file.txt"), "Test content");
-            File.WriteAllText(Path.Combine(s_testDirectory, "File.txt"), "Test content");
+            if ( Environment.OSVersion.Platform == PlatformID.Win32NT )
+            {
+                Console.WriteLine("Test is not possible on Windows.");
+                return;
+            }
+
+            File.WriteAllText(Path.Combine(s_testDirectory, "file.txt"), contents: "Test content");
+            File.WriteAllText(Path.Combine(s_testDirectory, "File.txt"), contents: "Test content");
             
             var fileInfo = new FileInfo(Path.Combine(s_testDirectory, "file.txt"));
             List<FileSystemInfo> result = PathHelper.FindCaseInsensitiveDuplicates(fileInfo).ToList();
@@ -38,14 +193,26 @@ namespace KOTORModSync.Tests
                 failureMessage.AppendLine(item.FullName);
             }
             
-            Assert.That( result, Has.Count.EqualTo( 2 ), $"Expected 2 items, but found {result?.Count}. Output: {failureMessage}");
+            Assert.That( result, Has.Count.EqualTo( 2 ), $"Expected 2 items, but found {result.Count}. Output: {failureMessage}");
         }
 
         [Test]
         public void TestDuplicatesWithDirectoryNameString()
         {
-            File.WriteAllText(Path.Combine(s_testDirectory, "file.txt"), "Test content");
-            File.WriteAllText(Path.Combine(s_testDirectory, "File.txt"), "Test content");
+            if ( Environment.OSVersion.Platform == PlatformID.Win32NT )
+            {
+                Console.WriteLine("Test is not possible on Windows.");
+                return;
+            }
+
+            if ( Environment.OSVersion.Platform == PlatformID.Win32NT )
+            {
+                Console.WriteLine("Test is not possible on Windows.");
+                return;
+            }
+
+            File.WriteAllText(Path.Combine(s_testDirectory, "file.txt"), contents: "Test content");
+            File.WriteAllText(Path.Combine(s_testDirectory, "File.txt"), contents: "Test content");
 
             List<FileSystemInfo> result = PathHelper.FindCaseInsensitiveDuplicates(s_testDirectory).ToList();
             var failureMessage = new StringBuilder();
@@ -54,12 +221,18 @@ namespace KOTORModSync.Tests
                 failureMessage.AppendLine(item.FullName);
             }
             
-            Assert.That( result, Has.Count.EqualTo( 2 ), $"Expected 2 items, but found {result?.Count}. Output: {failureMessage}");
+            Assert.That( result, Has.Count.EqualTo( 2 ), $"Expected 2 items, but found {result.Count}. Output: {failureMessage}");
         }
 
         [Test]
         public void TestDuplicateDirectories()
         {
+            if ( Environment.OSVersion.Platform == PlatformID.Win32NT )
+            {
+                Console.WriteLine("Test is not possible on Windows.");
+                return;
+            }
+
             _ = Directory.CreateDirectory( Path.Combine( s_testDirectory, "subdir" ) );
             _ = Directory.CreateDirectory( Path.Combine( s_testDirectory, "SubDir" ) );
             
@@ -71,19 +244,25 @@ namespace KOTORModSync.Tests
                 failureMessage.AppendLine(item.FullName);
             }
             
-            Assert.That( result, Has.Count.EqualTo( 2 ), $"Expected 2 items, but found {result?.Count}. Output: {failureMessage}");
+            Assert.That( result, Has.Count.EqualTo( 2 ), $"Expected 2 items, but found {result.Count}. Output: {failureMessage}");
         }
 
         [Test]
         public void TestDuplicatesWithDifferentCasingFilesInNestedDirectories()
         {
+            if ( Environment.OSVersion.Platform == PlatformID.Win32NT )
+            {
+                Console.WriteLine("Test is not possible on Windows.");
+                return;
+            }
+
             string subDirectory = Path.Combine(s_testDirectory, "SubDirectory");
             _ = Directory.CreateDirectory( subDirectory );
             
-            File.WriteAllText(Path.Combine(s_testDirectory, "file.txt"), "Test content");
-            File.WriteAllText(Path.Combine(s_testDirectory, "file.TXT"), "Test content");
-            File.WriteAllText(Path.Combine(subDirectory, "FILE.txt"), "Test content");
-            File.WriteAllText(Path.Combine(subDirectory, "file.tXT"), "Test content");
+            File.WriteAllText(Path.Combine(s_testDirectory, "file.txt"), contents: "Test content");
+            File.WriteAllText(Path.Combine(s_testDirectory, "file.TXT"), contents: "Test content");
+            File.WriteAllText(Path.Combine(subDirectory, "FILE.txt"), contents: "Test content");
+            File.WriteAllText(Path.Combine(subDirectory, "file.tXT"), contents: "Test content");
             
             var dirInfo = new DirectoryInfo(s_testDirectory);
             List<FileSystemInfo> result = PathHelper.FindCaseInsensitiveDuplicates(dirInfo, includeSubFolders: true).ToList();
@@ -93,20 +272,26 @@ namespace KOTORModSync.Tests
                 failureMessage.AppendLine(item.FullName);
             }
 
-            Assert.That( result, Has.Count.EqualTo(4), $"Expected 4 items, but found {result?.Count}. Output: {failureMessage}");
+            Assert.That( result, Has.Count.EqualTo(4), $"Expected 4 items, but found {result.Count}. Output: {failureMessage}");
         }
 
         [Test]
         public void TestDuplicateNestedDirectories()
         {
+            if ( Environment.OSVersion.Platform == PlatformID.Win32NT )
+            {
+                Console.WriteLine("Test is not possible on Windows.");
+                return;
+            }
+
             string subDir1 = Path.Combine(s_testDirectory, "SubDir");
             string subDir2 = Path.Combine(s_testDirectory, "subdir");
 
             _ = Directory.CreateDirectory( subDir1 );
             _ = Directory.CreateDirectory( subDir2 );
             
-            File.WriteAllText(Path.Combine(subDir1, "file.txt"), "Test content");
-            File.WriteAllText(Path.Combine(subDir2, "file.txt"), "Test content");
+            File.WriteAllText(Path.Combine(subDir1, "file.txt"), contents: "Test content");
+            File.WriteAllText(Path.Combine(subDir2, "file.txt"), contents: "Test content");
             
             var dirInfo = new DirectoryInfo(s_testDirectory);
             List<FileSystemInfo> result = PathHelper.FindCaseInsensitiveDuplicates(dirInfo, includeSubFolders: true).ToList();
@@ -116,13 +301,14 @@ namespace KOTORModSync.Tests
                 failureMessage.AppendLine(item.FullName);
             }
             
-            Assert.That( result, Has.Count.EqualTo( 2 ), $"Expected 2 items, but found {result?.Count}. Output: {failureMessage}");
+            Assert.That( result, Has.Count.EqualTo( 2 ), $"Expected 2 items, but found {result.Count}. Output: {failureMessage}");
         }
         
         [Test]
         public void TestInvalidPath()
         {
-            ArgumentException? ex = Assert.Throws<ArgumentException>(
+            Assert.Throws<ArgumentException>(
+                // ReSharper disable once ReturnValueOfPureMethodIsNotUsed
                 () => PathHelper.FindCaseInsensitiveDuplicates( "Invalid>Path" )?.ToList()
             );
         }
@@ -135,7 +321,7 @@ namespace KOTORModSync.Tests
             File.Create(testFilePath).Close();
 
             // Act
-            string? result = PathHelper.GetCaseSensitivePath(testFilePath);
+            string? result = PathHelper.GetCaseSensitivePath(testFilePath, isFile:true).Item1;
 
             // Assert
             Assert.That( result, Is.EqualTo( testFilePath ) );
@@ -149,10 +335,10 @@ namespace KOTORModSync.Tests
             _ = Directory.CreateDirectory( testDirPath );
 
             // Act
-            string? result = PathHelper.GetCaseSensitivePath(testDirPath);
+            DirectoryInfo? result = PathHelper.GetCaseSensitivePath(new DirectoryInfo(testDirPath));
 
             // Assert
-            Assert.That( result, Is.EqualTo( testDirPath ) );
+            Assert.That( result.FullName, Is.EqualTo( testDirPath ) );
         }
 
         [Test]
@@ -170,14 +356,17 @@ namespace KOTORModSync.Tests
         }
 
         [Test]
-        public void GetCaseSensitivePath_InvalidCharactersInPath_ThrowsArgumentException()
+        public void GetCaseSensitivePath_InvalidCharactersInPath_ReturnsOriginalPath()
         {
             // Arrange
-            string invalidPath = Path.Combine(s_testDirectory, "invalid>path");
+            string fileName = "invalid>path";
+            string invalidPath = Path.Combine(s_testDirectory, fileName);
             string upperCasePath = invalidPath.ToUpperInvariant();
 
             // Act & Assert
-            _ = Assert.Throws<ArgumentException>( () => PathHelper.GetCaseSensitivePath( upperCasePath ) );
+            (string, bool?) result = PathHelper.GetCaseSensitivePath( upperCasePath );
+            Assert.That( result.Item1, Is.EqualTo(Path.Combine( s_testDirectory, fileName.ToUpperInvariant() )) );
+            Assert.That( result.Item2, Is.Null );
         }
 
         [Test]
@@ -190,7 +379,7 @@ namespace KOTORModSync.Tests
             string upperCasePath = relativePath.ToUpperInvariant();
 
             // Act
-            string? result = PathHelper.GetCaseSensitivePath(upperCasePath);
+            string? result = PathHelper.GetCaseSensitivePath(upperCasePath).Item1;
 
             // Assert
             Assert.That( result, Is.EqualTo( testFilePath ) );
@@ -207,7 +396,7 @@ namespace KOTORModSync.Tests
             string upperCasePath = testFilePath.ToUpperInvariant();
 
             // Act
-            string? result = PathHelper.GetCaseSensitivePath( upperCasePath );
+            string? result = PathHelper.GetCaseSensitivePath( upperCasePath, isFile:true ).Item1;
 
             // Assert
             Assert.That( result, Is.EqualTo( testFilePath ) );
@@ -222,7 +411,7 @@ namespace KOTORModSync.Tests
             string upperCasePath = nonExistentFilePath.ToUpperInvariant();
 
             // Act
-            string? result = PathHelper.GetCaseSensitivePath(upperCasePath);
+            string? result = PathHelper.GetCaseSensitivePath(upperCasePath).Item1;
 
             // Assert
             Assert.That( result, Is.EqualTo( Path.Combine(s_testDirectory, nonExistentFileName.ToUpperInvariant()) ) );
@@ -237,7 +426,7 @@ namespace KOTORModSync.Tests
             string upperCasePath = nonExistentFilePath.ToUpperInvariant();
 
             // Act
-            string? result = PathHelper.GetCaseSensitivePath(upperCasePath);
+            string? result = PathHelper.GetCaseSensitivePath(upperCasePath, isFile:true).Item1;
 
             // Assert
             Assert.That(result, Is.EqualTo(Path.Combine( s_testDirectory, nonExistentRelFilePath.ToUpperInvariant() )));
@@ -252,7 +441,7 @@ namespace KOTORModSync.Tests
             string upperCasePath = nonExistentDirPath.ToUpperInvariant();
 
             // Act
-            string? result = PathHelper.GetCaseSensitivePath(upperCasePath);
+            string? result = PathHelper.GetCaseSensitivePath(upperCasePath).Item1;
 
             // Assert
             Assert.That( result, Is.EqualTo( Path.Combine(s_testDirectory, nonExistentRelPath.ToUpperInvariant()) ) );

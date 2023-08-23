@@ -38,7 +38,7 @@ namespace KOTORModSync.Tests
                 }
 
                 Logger.Log( "Standard output from the timed-out process:" );
-                ( int exitCode, string output, string error ) = PlatformAgnosticMethods.TryExecuteCommand( "echo" );
+                ( int _, string output, string _ ) = PlatformAgnosticMethods.TryExecuteCommand( "echo" );
                 Logger.Log( output );
             }
             finally

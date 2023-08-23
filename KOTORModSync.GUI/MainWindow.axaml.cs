@@ -28,10 +28,10 @@ using Avalonia.Markup.Xaml.Styling;
 using Avalonia.Media;
 using Avalonia.Themes.Fluent;
 using Avalonia.Threading;
-using Avalonia.VisualTree;
 using JetBrains.Annotations;
 using KOTORModSync.CallbackDialogs;
 using KOTORModSync.Core;
+using KOTORModSync.Core.FileSystemPathing;
 using KOTORModSync.Core.Utility;
 using Component = KOTORModSync.Core.Component;
 using NotNullAttribute = JetBrains.Annotations.NotNullAttribute;
@@ -40,7 +40,7 @@ using NotNullAttribute = JetBrains.Annotations.NotNullAttribute;
 
 namespace KOTORModSync
 {
-    [SuppressMessage( "ReSharper", "UnusedParameter.Local" )]
+    [SuppressMessage( category: "ReSharper", checkId: "UnusedParameter.Local" )]
     internal sealed partial class MainWindow : Window
     {
         public static List<Component> ComponentsList => MainConfig.AllComponents;
@@ -78,10 +78,15 @@ namespace KOTORModSync
                 );
 
                 PropertyChanged += SearchText_PropertyChanged;
+
+                // Fixes an annoying problem where selecting the console window causes the app to hang.
+                // Selection is only possible through ctrl + m or right click -> mark, which still causes the same hang but is less accidental at least.
+                if ( Environment.OSVersion.Platform == PlatformID.Win32NT )
+                    ConsoleConfig.DisableQuickEdit();
             }
             catch ( Exception e )
             {
-                Logger.LogException( e, "A fatal error has occurred loading the main window" );
+                Logger.LogException( e, customMessage: "A fatal error has occurred loading the main window" );
                 throw;
             }
         }
@@ -157,7 +162,8 @@ namespace KOTORModSync
             // Get the root item of the TreeView
             var rootItem = (TreeViewItem)LeftTreeView.ContainerFromIndex(0);
 
-            FilterControlListItems( rootItem, SearchText );
+            if ( !( rootItem is null ) && !( SearchText is null ) )
+                FilterControlListItems( rootItem, SearchText );
         }
 
         public static void FilterControlListItems( [NotNull] object item, [NotNull] string searchText )
@@ -201,7 +207,7 @@ namespace KOTORModSync
         }
 
         // test the options dialog for use with the 'Options' IDictionary<string, object>.
-        public async void Testwindow()
+        public async void TestWindow()
         {
             // Create an instance of OptionsDialogCallback
             var optionsDialogCallback = new OptionsDialogCallback( this );
@@ -234,7 +240,7 @@ namespace KOTORModSync
             if ( !( control is ILogical visual ) )
                 throw new ArgumentNullException( nameof( control ) );
 
-            if ( control is ComboBox _ )
+            if ( control is ComboBox )
             {
                 control.Tapped -= ComboBox_Opened;
                 control.PointerCaptureLost -= ComboBox_Opened;
@@ -580,6 +586,9 @@ namespace KOTORModSync
                 if ( !PathValidator.IsValidPath( filePath ) )
                     return;
 
+                if ( filePath is null )
+                    throw new NullReferenceException(nameof( filePath ));
+
                 var thisFile = new FileInfo( filePath );
 
                 // Verify the file type
@@ -824,6 +833,77 @@ namespace KOTORModSync
             }
         }
 
+        private async void ResolveDuplicateFilesAndFolders( [NotNull] object sender, [NotNull] RoutedEventArgs e )
+        {
+            try
+            {
+                bool? answer = await ConfirmationDialog.ShowConfirmationDialog(
+                    this,
+                    "This button will resolve all case-sensitive duplicate files/folders in your install directory and your mod download directory."
+                    + Environment.NewLine
+                    + " WARNING: This method may take a while and cannot be stopped until it finishes. Really continue?"
+                );
+                if ( answer != true )
+                    return;
+
+                await Logger.LogAsync( "Finding duplicate case-insensitive folders/files in the install destination..." );
+                IEnumerable<FileSystemInfo> duplicates = PathHelper.FindCaseInsensitiveDuplicates( MainConfig.DestinationPath.FullName );
+                var fileSystemInfos = duplicates.ToList();
+                foreach ( FileSystemInfo duplicate in fileSystemInfos )
+                {
+                    await Logger.LogWarningAsync( duplicate?.FullName + " is duplicated on the storage drive." );
+                }
+
+                answer = await ConfirmationDialog.ShowConfirmationDialog(
+                    this,
+                    "Duplicate file/folder search finished." + Environment.NewLine
+                    + $" Found {fileSystemInfos.Count} files/folders that have duplicates in your install dir." + Environment.NewLine
+                    + " Delete all duplicates except the ones most recently modified?"
+                );
+                if ( answer != true )
+                    return;
+
+                IEnumerable<IGrouping<string, FileSystemInfo>> groupedDuplicates = fileSystemInfos.GroupBy(fs => fs.Name.ToLowerInvariant());
+
+                foreach (IGrouping<string, FileSystemInfo> group in groupedDuplicates)
+                {
+                    var orderedDuplicates = group.OrderByDescending(fs => fs.LastWriteTime).ToList();
+                    if ( orderedDuplicates.Count <= 1 )
+                        continue;
+
+                    for (int i = 1; i < orderedDuplicates.Count; i++)
+                    {
+                        try
+                        {
+                            switch ( orderedDuplicates[i] )
+                            {
+                                case FileInfo fileInfo:
+                                    fileInfo.Delete();
+                                    break;
+                                case DirectoryInfo directoryInfo:
+                                    directoryInfo.Delete(true); // recursive delete
+                                    break;
+                                default:
+                                    Logger.Log( orderedDuplicates[i].FullName + " does not exist somehow?" );
+                                    continue;
+                            }
+
+                            await Logger.LogAsync($"Deleted {orderedDuplicates[i].FullName}");
+                        }
+                        catch (Exception deletionException)
+                        {
+                            await Logger.LogExceptionAsync(deletionException, $"Failed to delete {orderedDuplicates[i].FullName}");
+                        }
+                    }
+                }
+
+            }
+            catch ( Exception exception )
+            {
+                await Logger.LogExceptionAsync( exception );
+            }
+        }
+
         private async Task<(bool success, string informationMessage)> PreinstallValidation()
         {
             try
@@ -845,7 +925,8 @@ namespace KOTORModSync
 
                 await Logger.LogAsync( "Finding duplicate case-insensitive folders/files in the install destination..." );
                 IEnumerable<FileSystemInfo> duplicates = PathHelper.FindCaseInsensitiveDuplicates( MainConfig.DestinationPath.FullName );
-                foreach ( FileSystemInfo duplicate in duplicates )
+                var fileSystemInfos = duplicates.ToList();
+                foreach ( FileSystemInfo duplicate in fileSystemInfos )
                 {
                     await Logger.LogErrorAsync( duplicate?.FullName + " has a duplicate, please resolve before attempting an install." );
                 }
@@ -958,7 +1039,7 @@ namespace KOTORModSync
                 }
 
 
-                if ( duplicates.Any() )
+                if ( fileSystemInfos.Any() )
                 {
                     informationMessage =
                         "You have duplicate files/folders in your installation directory in a case-insensitive environment."
@@ -968,10 +1049,8 @@ namespace KOTORModSync
                 if ( !informationMessage.Equals( string.Empty ) )
                     return ( false, informationMessage );
 
-                return (
-                    true,
-                    "No issues found. If you encounter any problems during the installation, please contact the developer."
-                );
+                return ( true,
+                    "No issues found. If you encounter any problems during the installation, please contact the developer." );
 
             }
             catch ( Exception e )
@@ -986,7 +1065,7 @@ namespace KOTORModSync
         {
             try
             {
-                ( bool success, string informationMessage ) = await PreinstallValidation();
+                ( bool _, string informationMessage ) = await PreinstallValidation();
                 await InformationDialog.ShowInformationDialog( this, informationMessage );
             }
             catch ( Exception ex )
@@ -1001,10 +1080,12 @@ namespace KOTORModSync
             // Create a new default component with a new GUID
             try
             {
-                var newComponent = new Component();
+                var newComponent = new Component
+                {
+                    Guid = Guid.NewGuid(),
+                    Name = "new mod_" + Path.GetFileNameWithoutExtension( Path.GetRandomFileName() ),
+                };
 
-                newComponent.Guid = Guid.NewGuid();
-                newComponent.Name = "new mod_" + Path.GetFileNameWithoutExtension( Path.GetRandomFileName() );
                 // Add the new component to the collection
                 MainConfigInstance.allComponents.Add( newComponent );
 
@@ -1310,7 +1391,7 @@ namespace KOTORModSync
 
                         await Logger.LogAsync( $"Start Install of '{component.Name}'..." );
                         exitCode = await component.InstallAsync( MainConfig.AllComponents );
-                        await Logger.LogAsync( $"Install of '{component.Name ?? string.Empty}' finished with exit code {exitCode.ToString() ?? string.Empty}" );
+                        await Logger.LogAsync( $"Install of '{component.Name}' finished with exit code {exitCode}" );
 
                         if ( exitCode != 0 )
                         {
@@ -1765,7 +1846,7 @@ namespace KOTORModSync
                 int index = MainConfig.AllComponents.IndexOf( CurrentComponent );
                 if ( index == -1 )
                 {
-                    string componentName = string.IsNullOrWhiteSpace( newComponent?.Name )
+                    string componentName = string.IsNullOrWhiteSpace( newComponent.Name )
                         ? "."
                         : $" '{newComponent.Name}'.";
                     output = $"Could not find the index of component{componentName}"
@@ -1993,7 +2074,7 @@ namespace KOTORModSync
                 {
                     DockPanel headerPanel = (DockPanel)rootItem.Header
                         ?? throw new InvalidCastException( "Your TreeView isn't supported: header must be wrapped by top-level DockPanel" );
-                    CheckBox checkBox = headerPanel.Children?.OfType<CheckBox>()
+                    CheckBox checkBox = headerPanel.Children.OfType<CheckBox>()
                         .FirstOrDefault();
 
                     if ( checkBox != null && !suppressErrors )
@@ -2056,6 +2137,7 @@ namespace KOTORModSync
                 VerticalContentAlignment = VerticalAlignment.Center,
                 VerticalAlignment = VerticalAlignment.Center,
                 Tag = component,
+                [ToolTip.TipProperty] = "If selected, this mod will be installed.",
             };
             var binding = new Binding( "IsSelected" )
             {
@@ -2323,6 +2405,9 @@ namespace KOTORModSync
                 // Expand the tree. Too lazy to figure out the proper way.
                 IEnumerator treeEnumerator = LeftTreeView.Items.GetEnumerator();
                 _ = treeEnumerator.MoveNext();
+                if ( treeEnumerator.Current is null )
+                    throw new NullReferenceException("treeEnumerator.Current");
+
                 LeftTreeView.ExpandSubTree( (TreeViewItem)treeEnumerator.Current );
 
                 if ( componentsList.Count > 0 || TabControl is null )
@@ -2448,6 +2533,9 @@ namespace KOTORModSync
 
                 var thisInstruction = (Instruction)( (Button)sender ).Tag;
                 int index = CurrentComponent.Instructions.IndexOf( thisInstruction );
+
+                if ( thisInstruction is null )
+                    throw new NullReferenceException($"Could not get instruction instance from button's tag: {((Button)sender).Content}");
 
                 CurrentComponent.MoveInstructionToIndex( thisInstruction, index + 1 );
                 LoadComponentDetails( CurrentComponent );
@@ -2648,6 +2736,9 @@ namespace KOTORModSync
 
                 var thisOption = (Option)( (Button)sender ).Tag;
                 int index = CurrentComponent.Options.IndexOf( thisOption );
+                
+                if ( thisOption is null )
+                    throw new NullReferenceException($"Could not get option instance from button's tag: {((Button)sender).Content}");
 
                 CurrentComponent.MoveOptionToIndex( thisOption, index - 1 );
                 LoadComponentDetails( CurrentComponent );
@@ -2671,6 +2762,9 @@ namespace KOTORModSync
 
                 var thisOption = (Option)( (Button)sender ).Tag;
                 int index = CurrentComponent.Options.IndexOf( thisOption );
+                
+                if ( thisOption is null )
+                    throw new NullReferenceException($"Could not get option instance from button's tag: {((Button)sender).Content}");
 
                 CurrentComponent.MoveOptionToIndex( thisOption, index + 1 );
                 LoadComponentDetails( CurrentComponent );

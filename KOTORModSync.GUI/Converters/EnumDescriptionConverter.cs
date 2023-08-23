@@ -61,6 +61,6 @@ namespace KOTORModSync.Converters
             [NotNull] Type targetType,
             [CanBeNull] object parameter,
             [NotNull] CultureInfo culture
-        ) => value.ToString();
+        ) => value?.ToString();
     }
 }

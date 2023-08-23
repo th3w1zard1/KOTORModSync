@@ -32,7 +32,8 @@ namespace KOTORModSync
                 },
             };
 
-            _ = await progressWindow.ShowDialog<bool?>( parentWindow );
+            if ( !( parentWindow is null ) )
+                _ = await progressWindow.ShowDialog<bool?>( parentWindow );
         }
     }
 }

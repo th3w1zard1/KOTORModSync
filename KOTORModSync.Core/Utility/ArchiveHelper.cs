@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using JetBrains.Annotations;
+using KOTORModSync.Core.FileSystemPathing;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using SevenZip;
@@ -71,9 +72,9 @@ namespace KOTORModSync.Core.Utility
         public static void ExtractWith7Zip(FileStream stream, string destinationDirectory)
         {
             string exeDir = Utility.GetExecutingAssemblyDirectory();
-            string sevenzDllPath = Path.Combine( exeDir, "Resources", "7z.dll" );
+            string sevenZDllPath = Path.Combine( exeDir, "Resources", "7z.dll" );
 
-            SevenZipBase.SetLibraryPath(sevenzDllPath); // Path to 7z.dll
+            SevenZipBase.SetLibraryPath(sevenZDllPath); // Path to 7z.dll
             var extractor = new SevenZipExtractor( stream );
             extractor.ExtractArchive(destinationDirectory);
         }
@@ -127,7 +128,7 @@ namespace KOTORModSync.Core.Utility
 
             try
             {
-                foreach ( FileInfo file in directory.EnumerateFiles(
+                foreach ( FileInfo file in directory.EnumerateFilesSafely(
                         searchPattern: "*.*",
                         SearchOption.TopDirectoryOnly
                     ) )
@@ -161,10 +162,10 @@ namespace KOTORModSync.Core.Utility
 
                     fileInfo["Contents"] = archiveRoot["Contents"];
 
-                    ( root["Contents"] as List<object> ).Add( fileInfo );
+                    ( root["Contents"] as List<object> )?.Add( fileInfo );
                 }
 
-                /*foreach (var subdirectory in directory.EnumerateDirectories())
+                /*foreach (DirectoryInfo subdirectory in directory.EnumerateDirectoriesSafely())
                 {
                     var subdirectoryInfo = new Dictionary<string, object>
                     {
@@ -246,7 +247,6 @@ namespace KOTORModSync.Core.Utility
                         $"Unexpected data type for directory contents: '{currentDirectory["Contents"]?.GetType()}'"
                     );
 
-                string name1 = name;
                 object existingChild = existingDirectory.Find(
                     c => c is Dictionary<string, object> dict
                         && dict.ContainsKey( "Name" )

@@ -3,8 +3,6 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.5.33627.172
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "KOTORModSync.ConsoleApp", "KOTORModSync.Console\KOTORModSync.ConsoleApp.csproj", "{7DF4D851-E74F-4DC6-8542-34A4E81FF2A1}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "KOTORModSync.Core", "KOTORModSync.Core\KOTORModSync.Core.csproj", "{33369F03-7C1D-4D53-A82B-FB82EF06BCEB}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{9F65FCCE-2210-4FAA-9D60-362FCD21A8BE}"
@@ -26,14 +24,6 @@ Global
 		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{7DF4D851-E74F-4DC6-8542-34A4E81FF2A1}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{7DF4D851-E74F-4DC6-8542-34A4E81FF2A1}.Debug|x64.Build.0 = Debug|Any CPU
-		{7DF4D851-E74F-4DC6-8542-34A4E81FF2A1}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{7DF4D851-E74F-4DC6-8542-34A4E81FF2A1}.Debug|x86.Build.0 = Debug|Any CPU
-		{7DF4D851-E74F-4DC6-8542-34A4E81FF2A1}.Release|x64.ActiveCfg = Release|Any CPU
-		{7DF4D851-E74F-4DC6-8542-34A4E81FF2A1}.Release|x64.Build.0 = Release|Any CPU
-		{7DF4D851-E74F-4DC6-8542-34A4E81FF2A1}.Release|x86.ActiveCfg = Release|Any CPU
-		{7DF4D851-E74F-4DC6-8542-34A4E81FF2A1}.Release|x86.Build.0 = Release|Any CPU
 		{33369F03-7C1D-4D53-A82B-FB82EF06BCEB}.Debug|x64.ActiveCfg = Debug|Any CPU
 		{33369F03-7C1D-4D53-A82B-FB82EF06BCEB}.Debug|x64.Build.0 = Debug|Any CPU
 		{33369F03-7C1D-4D53-A82B-FB82EF06BCEB}.Debug|x86.ActiveCfg = Debug|Any CPU

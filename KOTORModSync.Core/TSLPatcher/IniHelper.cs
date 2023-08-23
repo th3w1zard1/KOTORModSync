@@ -8,6 +8,7 @@ using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using JetBrains.Annotations;
+using KOTORModSync.Core.FileSystemPathing;
 using KOTORModSync.Core.Utility;
 using SharpCompress.Archives;
 
@@ -21,7 +22,7 @@ namespace KOTORModSync.Core.TSLPatcher
             if ( directory == null )
                 throw new ArgumentNullException( nameof( directory ) );
 
-            FileInfo[] iniFiles = directory.GetFiles( searchPattern: "*.ini", SearchOption.AllDirectories );
+            FileInfo[] iniFiles = directory.GetFilesSafely( searchPattern: "*.ini", SearchOption.AllDirectories );
             if ( iniFiles.Length == 0 )
                 throw new InvalidOperationException( "No .ini files found!" );
 
@@ -37,8 +38,8 @@ namespace KOTORModSync.Core.TSLPatcher
                 if ( !Regex.IsMatch( fileContents, pattern ) )
                     continue;
 
-                Logger.Log( $"Preventing tslpatcher automatic game lookups '{file.Name}'" );
-                Logger.LogVerbose( $"change 'LookupGameFolder' from 1 to 0 in '{file.Name}'" );
+                Logger.Log( $"Preventing tslpatcher's automatic game lookups '{file.Name}'" );
+                Logger.Log( $"change 'LookupGameFolder' from 1 to 0 in '{file.Name}'" );
                 fileContents = Regex.Replace( fileContents, pattern, replacement: "LookupGameFolder=0" );
 
                 // Write the modified file contents back to the file
@@ -52,7 +53,7 @@ namespace KOTORModSync.Core.TSLPatcher
             if ( directory == null )
                 throw new ArgumentNullException( nameof( directory ) );
 
-            FileInfo[] iniFiles = directory.GetFiles( searchPattern: "*.ini", SearchOption.AllDirectories );
+            FileInfo[] iniFiles = directory.GetFilesSafely( searchPattern: "*.ini", SearchOption.AllDirectories );
             if ( iniFiles.Length == 0 )
                 throw new InvalidOperationException( "No .ini files found!" );
 
@@ -72,7 +73,6 @@ namespace KOTORModSync.Core.TSLPatcher
                     continue;
 
                 Logger.Log( $"Redirecting TSLPatcher logging from '{file.Name}' to 'installlog.txt'" );
-                Logger.LogVerbose( $"change 'PlaintextLog' from 0 to 1 in '{file.Name}'" );
                 fileContents = Regex.Replace( fileContents, pattern, replacement: "PlaintextLog=1" );
 
                 // Write the modified file contents back to the file
@@ -90,7 +90,7 @@ namespace KOTORModSync.Core.TSLPatcher
             {
                 if (archive != null && thisStream != null)
                 {
-                    return TraverseDirectories(archive.Entries, "");
+                    return TraverseDirectories(archive.Entries, currentDirectory: "");
                 }
             }
 
@@ -134,10 +134,8 @@ namespace KOTORModSync.Core.TSLPatcher
                     IEnumerable<IArchiveEntry> subDirectoryEntries = archiveEntries.Where(
                         e =>
                             e != null
-                            && (
-                                e.Key.StartsWith( entry.Key + "/" )
-                                || e.Key.StartsWith( entry.Key + "\\" )
-                            )
+                            && ( e.Key.StartsWith( entry.Key + "/" )
+                                || e.Key.StartsWith( entry.Key + "\\" ) )
                     );
                     Dictionary<string, Dictionary<string, string>> result = TraverseDirectories(subDirectoryEntries, entry.Key);
                     if (result != null)
@@ -145,18 +143,18 @@ namespace KOTORModSync.Core.TSLPatcher
                 }
                 else
                 {
-                    string directoryName = Path.GetDirectoryName( entry.Key.Replace('\\', '/') );
-                    string fileName = Path.GetFileName(entry.Key);
+                    string directoryName = Path.GetDirectoryName( entry?.Key.Replace(oldChar: '\\', newChar: '/') );
+                    string fileName = Path.GetFileName(entry?.Key);
 
-                    if (string.Equals(directoryName, currentDirectory, StringComparison.OrdinalIgnoreCase) &&
-                        string.Equals(fileName, "namespaces.ini", StringComparison.OrdinalIgnoreCase) &&
-                        currentDirectory.Split(new[] { '/', '\\' },
-                                StringSplitOptions.RemoveEmptyEntries
-                        ).Any(dir => dir.Equals("tslpatchdata", StringComparison.OrdinalIgnoreCase)))
+                    if ( string.Equals( directoryName, currentDirectory, StringComparison.OrdinalIgnoreCase )
+                        && string.Equals( fileName, "namespaces.ini", StringComparison.OrdinalIgnoreCase )
+                        && currentDirectory.Split( new[] { '/', '\\' }, StringSplitOptions.RemoveEmptyEntries )
+                            .Any( dir => dir.Equals( "tslpatchdata", StringComparison.OrdinalIgnoreCase ) )
+                        )
                     {
-                        using (var reader = new StreamReader(entry.OpenEntryStream()))
+                        using ( var reader = new StreamReader( entry.OpenEntryStream() ) )
                         {
-                            return ParseNamespacesIni(reader);
+                            return ParseNamespacesIni( reader );
                         }
                     }
                 }
@@ -181,7 +179,7 @@ namespace KOTORModSync.Core.TSLPatcher
                 // Checks if the line is a section header
                 if (line.StartsWith("[") && line.EndsWith("]"))
                 {
-                    string sectionName = line.Substring(1, line.Length - 2);
+                    string sectionName = line.Substring(startIndex: 1, line.Length - 2);
                     currentSection = new Dictionary<string, string>();
                     sections[sectionName] = currentSection;
                 }
@@ -200,7 +198,5 @@ namespace KOTORModSync.Core.TSLPatcher
 
             return sections;
         }
-
-
     }
 }

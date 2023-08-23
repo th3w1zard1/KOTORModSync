@@ -30,6 +30,7 @@ namespace KOTORModSync.Core.Utility
 
         public interface IOptionsDialogCallback
         {
+            // ReSharper disable once UnusedMemberInSuper.Global
             Task<string> ShowOptionsDialog( List<string> options );
         }
     }

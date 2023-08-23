@@ -4,6 +4,7 @@
 
 using System.IO;
 using JetBrains.Annotations;
+// ReSharper disable UnusedType.Global
 
 namespace KOTORModSync.Core.Data
 {

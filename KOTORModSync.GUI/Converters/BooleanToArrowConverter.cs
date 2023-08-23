@@ -13,9 +13,9 @@ namespace KOTORModSync.Converters
     {
         public object Convert(
             [CanBeNull] object value,
-            [CanBeNull] Type targetType,
+            [NotNull] Type targetType,
             [CanBeNull] object parameter,
-            [CanBeNull] CultureInfo culture
+            [NotNull] CultureInfo culture
         ) =>
             value is bool isExpanded && targetType == typeof( string )
                 ? isExpanded
@@ -24,10 +24,10 @@ namespace KOTORModSync.Converters
                 : (object)string.Empty;
 
         public object ConvertBack(
-            object value,
-            Type targetType,
-            object parameter,
-            CultureInfo culture
+            [CanBeNull] object value,
+            [NotNull] Type targetType,
+            [CanBeNull] object parameter,
+            [NotNull] CultureInfo culture
         ) =>
             throw new NotSupportedException();
     }

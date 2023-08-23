@@ -2,6 +2,7 @@
 // Licensed under the GNU General Public License v3.0 (GPLv3).
 // See LICENSE.txt file in the project root for full license information.
 
+// ReSharper disable NotAccessedField.Global
 namespace KOTORModSync.Core.Data
 {
     // ReSharper disable once InconsistentNaming

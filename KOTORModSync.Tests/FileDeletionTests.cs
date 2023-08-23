@@ -5,6 +5,7 @@
 // ReSharper disable RedundantUsingDirective
 
 using KOTORModSync.Core;
+using KOTORModSync.Core.FileSystemPathing;
 
 // ReSharper disable ConvertToConstant.Local
 #pragma warning disable U2U1000, CS8618, RCS1118 // Mark local variable as const.
@@ -39,7 +40,7 @@ namespace KOTORModSync.Tests
             string fileExtension = ".txt";
 
             // Act
-            new Instruction().DeleteDuplicateFile( new DirectoryInfo( directory ), fileExtension );
+            new Instruction().DeleteDuplicateFile( new DirectoryInfo(directory), fileExtension );
 
             // Assert
             Assert.Multiple(
@@ -67,7 +68,7 @@ namespace KOTORModSync.Tests
             string fileExtension = ".txt";
 
             // Act
-            new Instruction().DeleteDuplicateFile( new DirectoryInfo( directory ), fileExtension );
+            new Instruction().DeleteDuplicateFile( new DirectoryInfo(directory), fileExtension );
 
             // Assert
             Assert.Multiple(

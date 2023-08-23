@@ -51,6 +51,9 @@ namespace KOTORModSync
 
         private void OnOpened( [CanBeNull] object sender, [CanBeNull] EventArgs e )
         {
+            if ( OptionsList is null )
+                throw new NullReferenceException(nameof( OptionsList ));
+
             foreach ( string option in OptionsList )
             {
                 var radioButton = new RadioButton
@@ -84,6 +87,9 @@ namespace KOTORModSync
 
             // Center the window on the screen
             Screen screen = Screens.ScreenFromVisual( this );
+            if ( screen is null )
+                throw new NullReferenceException(nameof( screen ));
+
             double screenWidth = screen.Bounds.Width;
             double screenHeight = screen.Bounds.Height;
             double left = ( screenWidth - contentWidth ) / 2;
@@ -118,9 +124,13 @@ namespace KOTORModSync
 
                     optionsDialog.OptionSelected += ( sender, option ) => _ = tcs.TrySetResult( option );
 
-                    await optionsDialog.ShowDialog( parentWindow );
+                    if ( !( parentWindow is null ) )
+                        await optionsDialog.ShowDialog( parentWindow );
                 }
             );
+
+            if ( tcs is null )
+                throw new NullReferenceException(nameof( tcs ));
 
             return await tcs.Task;
         }

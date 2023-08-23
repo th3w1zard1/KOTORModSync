@@ -7,6 +7,7 @@ using System.Collections.Generic;
 
 namespace KOTORModSync.Core.Utility
 {
+    // ReSharper disable once InconsistentNaming
     public static class IEnumerableExtensions
     {
         // Extension method to check if an IEnumerable is null or has no contents

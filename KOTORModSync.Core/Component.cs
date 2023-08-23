@@ -15,6 +15,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
+using KOTORModSync.Core.FileSystemPathing;
 using KOTORModSync.Core.Utility;
 using Microsoft.CSharp.RuntimeBinder;
 using SharpCompress;
@@ -209,13 +210,11 @@ namespace KOTORModSync.Core
             {
                 if (_options != value)
                 {
-                    if (_options != null)
-                        _options.CollectionChanged -= CollectionChanged;
+                    _options.CollectionChanged -= CollectionChanged;
 
                     _options = value;
 
-                    if (_options != null)
-                        _options.CollectionChanged += CollectionChanged;
+                    _options.CollectionChanged += CollectionChanged;
 
                     OnPropertyChanged();
                 }
@@ -256,12 +255,12 @@ namespace KOTORModSync.Core
         }
 
         [NotNull]
-        private DirectoryInfo _tempPath;
-
-        [NotNull]
         public string SerializeComponent()
         {
             var serializedComponentDict = (Dictionary<string, object>)Serializer.SerializeObject( this );
+            if ( serializedComponentDict is null )
+                throw new NullReferenceException(nameof( serializedComponentDict ));
+
             CollectionUtils.RemoveEmptyCollections( serializedComponentDict );
             StringBuilder tomlString = FixSerializedTomlDict( serializedComponentDict );
 
@@ -358,10 +357,8 @@ namespace KOTORModSync.Core
             if ( !( componentDict is TomlTable ) )
                 throw new ArgumentException( "[TomlError] Expected a TOML table for component data." );
 
-            _tempPath = new DirectoryInfo( Path.GetTempPath() );
-
             Name = GetRequiredValue<string>( componentDict, key: "Name" );
-            _ = Logger.LogAsync( $"{Environment.NewLine}== Deserialize next component '{Name}' ==" );
+            _ = Logger.LogAsync( $" == Deserialize next component '{Name}' ==" );
             Guid = GetRequiredValue<Guid>( componentDict, key: "Guid" );
             Description = GetValueOrDefault<string>( componentDict, key: "Description" ) ?? string.Empty;
             Directions = GetValueOrDefault<string>( componentDict, key: "Directions" ) ?? string.Empty;
@@ -417,7 +414,7 @@ namespace KOTORModSync.Core
             }
 
             string tomlinString = stringBuilder.ToString();
-            File.WriteAllText( filePath, tomlinString );
+            File.WriteAllText( new InsensitivePath(filePath, isFile: true).FullName, tomlinString );
         }
 
         [NotNull]
@@ -517,6 +514,7 @@ namespace KOTORModSync.Core
 
             var instructions = new ObservableCollection<Instruction>();
 
+            // ReSharper disable once PossibleNullReferenceException
             for ( int index = 0; index < instructionsSerializedList.Count; index++ )
             {
                 Dictionary<string, object> instructionDict =
@@ -532,7 +530,7 @@ namespace KOTORModSync.Core
                 {
                     instruction.Action = action;
                     _ = Logger.LogAsync(
-                        $"{Environment.NewLine} -- Deserialize instruction #{index + 1} action '{action}'"
+                        $" -- Deserialize instruction #{index + 1} action '{action}'"
                     );
                 }
                 else
@@ -572,6 +570,7 @@ namespace KOTORModSync.Core
 
             var options = new ObservableCollection<Option>();
 
+            // ReSharper disable once PossibleNullReferenceException
             for ( int index = 0; index < optionsSerializedList.Count; index++ )
             {
                 var optionsDict = (IDictionary<string, object>)optionsSerializedList[index];
@@ -583,12 +582,12 @@ namespace KOTORModSync.Core
 
                 var option = new Option();
                 _ = Logger.LogAsync(
-                    $"{Environment.NewLine}-- Deserialize option #{index + 1}"
+                    $"-- Deserialize option #{index + 1}"
                 );
 
                 option.Name = GetRequiredValue<string>( optionsDict, key: "Name" );
-                option.Description = GetValueOrDefault<string>( optionsDict, key: "Description" );
-                _ = Logger.LogAsync( $"{Environment.NewLine}== Deserialize next option '{Name}' ==" );
+                option.Description = GetValueOrDefault<string>( optionsDict, key: "Description" ) ?? string.Empty;
+                _ = Logger.LogAsync( $" == Deserialize next option '{Name}' ==" );
                 option.Guid = GetRequiredValue<Guid>( optionsDict, key: "Guid" );
                 option.Restrictions
                     = GetValueOrDefault<List<Guid>>( optionsDict, key: "Restrictions" ) ?? new List<Guid>();
@@ -681,7 +680,7 @@ namespace KOTORModSync.Core
                         }
 
                         if ( targetType == typeof( string ) )
-                            return (T)(object)valueStr;
+                            return (T)(valueStr as object);
 
                         break;
                 }
@@ -812,7 +811,7 @@ namespace KOTORModSync.Core
             try
             {
                 // Read the contents of the file into a string
-                string tomlString = File.ReadAllText( filePath )
+                string tomlString = File.ReadAllText( new InsensitivePath(filePath, isFile: true).FullName )
                     // the code expects instructions to always be defined. When it's not, code errors and prevents a save.
                     // make the user experience better by just removing the empty instructions key.
                     .Replace( oldValue: "Instructions = []", string.Empty )
@@ -956,7 +955,7 @@ namespace KOTORModSync.Core
 
                 // Get the original check-sums before making any modifications
                 /*await Logger.LogAsync( "Checking file hashes of the install location for mismatch..." );
-                var preinstallChecksums = MainConfig.DestinationPath.GetFiles( "*.*", SearchOption.AllDirectories )
+                var preinstallChecksums = MainConfig.DestinationPath.GetFilesSafely( "*.*", SearchOption.AllDirectories )
                     .ToDictionary( file => file, file => FileChecksumValidator.CalculateSha1Async( file ).Result );
 
                 if ( instruction.OriginalChecksums is null )
@@ -1111,7 +1110,7 @@ namespace KOTORModSync.Core
                 {
                     _ = Logger.LogAsync($"Component '{this.Name}' instruction #{instructionIndex} '{instruction.Action}' ran, saving the new checksums as expected.");
                     var newChecksums = new Dictionary<FileInfo, System.Security.Cryptography.SHA1>();
-                    foreach (FileInfo file in MainConfig.DestinationPath.GetFiles("*.*", SearchOption.AllDirectories))
+                    foreach (FileInfo file in MainConfig.DestinationPath.GetFilesSafely("*.*", SearchOption.AllDirectories))
                     {
                         System.Security.Cryptography.SHA1 sha1 = await FileChecksumValidator.CalculateSha1Async(file);
                         newChecksums[file] = sha1;

@@ -4,10 +4,10 @@
 
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using JetBrains.Annotations;
+using KOTORModSync.Core.FileSystemPathing;
 using KOTORModSync.Core.Utility;
 using SharpCompress.Archives;
 using SharpCompress.Archives.Rar;
@@ -50,10 +50,10 @@ namespace KOTORModSync.Core
             // Ensure all the 'Destination' keys are valid for their respective action.
             && ParseDestinationWithAction();
 
-        private void AddError( [CanBeNull] string message, [CanBeNull] Instruction instruction ) =>
+        private void AddError( [CanBeNull] string message, [NotNull] Instruction instruction ) =>
             _validationResults.Add( new ValidationResult( this, instruction, message, isError: true ) );
 
-        private void AddWarning( [CanBeNull] string message, [CanBeNull] Instruction instruction ) =>
+        private void AddWarning( [CanBeNull] string message, [NotNull] Instruction instruction ) =>
             _validationResults.Add( new ValidationResult( this, instruction, message, isError: false ) );
 
         [NotNull]
@@ -125,28 +125,23 @@ namespace KOTORModSync.Core
                     if ( thisOption is null )
                         continue;
 
-                    foreach ( Instruction optionInstruction in thisOption.Instructions )
-                    {
-                        instructions.Add( optionInstruction );
-                    }
+                    instructions.AddRange( thisOption.Instructions );
                 }
 
                 foreach ( Instruction instruction in instructions )
                 {
-                    if ( instruction.Action is Instruction.ActionType.Unset )
+                    switch ( instruction.Action )
                     {
-                        AddError( "Action cannot be null", instruction );
-                        success = false;
-                        continue;
+                        case Instruction.ActionType.Unset:
+                            AddError( "Action cannot be null", instruction );
+                            success = false;
+                            continue;
+                        // we already checked if the archive exists in GetAllArchivesFromInstructions.
+                        case Instruction.ActionType.Extract:
+                        // 'choose' action uses Source as list of guids to options.
+                        case Instruction.ActionType.Choose:
+                            continue;
                     }
-
-                    // we already checked if the archive exists in GetAllArchivesFromInstructions.
-                    if ( instruction.Action == Instruction.ActionType.Extract )
-                        continue;
-
-                    // 'choose' action uses Source as list of guids to options.
-                    if ( instruction.Action == Instruction.ActionType.Choose )
-                        continue;
 
                     // ReSharper disable once ConditionIsAlwaysTrueOrFalse
                     if ( instruction.Source is null )
@@ -290,7 +285,7 @@ namespace KOTORModSync.Core
                         continue;
                     }
 
-                    if ( !Component.ShouldRunInstruction( instruction, _componentsList ) )
+                    if ( !(_componentsList is null) && !Component.ShouldRunInstruction( instruction, _componentsList ) )
                     {
                         continue;
                     }
@@ -390,23 +385,23 @@ namespace KOTORModSync.Core
 
                         break;
                     default:
-
-                        string destinationPath = string.Empty;
+                        
                         if ( !string.IsNullOrEmpty( instruction.Destination ) )
-                        {
-                            destinationPath = Utility.Utility.ReplaceCustomVariables( instruction.Destination );
-                        }
+                            instruction.Destination = new InsensitivePath(
+                                Utility.Utility.ReplaceCustomVariables( instruction.Destination ),
+                                isFile: false
+                            ).FullName;
 
-                        if ( string.IsNullOrWhiteSpace( destinationPath )
-                            || destinationPath.Any( c => Path.GetInvalidPathChars().Contains( c ) )
-                            || !Directory.Exists( destinationPath ) )
+                        if ( string.IsNullOrWhiteSpace( instruction.Destination )
+                            || !PathValidator.IsValidPath(instruction.Destination)
+                            || !Directory.Exists( instruction.Destination ) )
                         {
                             success = false;
-                            AddError( "Destination cannot be found!" + $" Got '{destinationPath}'", instruction );
-                            if ( PathValidator.IsValidPath(destinationPath) && MainConfig.AttemptFixes )
+                            AddError( "Destination cannot be found!" + $" Got '{instruction.Destination}'", instruction );
+                            if ( PathValidator.IsValidPath(instruction.Destination) && MainConfig.AttemptFixes )
                             {
                                 Logger.Log( "Fixing the above error automatically..." );
-                                Directory.CreateDirectory( destinationPath );
+                                _ = Directory.CreateDirectory( instruction.Destination );
                                 success = true;
                             }
                         }
@@ -497,6 +492,12 @@ namespace KOTORModSync.Core
             if ( hasError )
             {
                 AddError( $"Invalid source path '{sourcePath}'. Reason: {errorDescription}", instruction );
+                return ( false, archiveNameFound );
+            }
+
+            if ( _componentsList is null )
+            {
+                AddError( new NullReferenceException(nameof( _componentsList ) ).Message, instruction );
                 return ( false, archiveNameFound );
             }
 

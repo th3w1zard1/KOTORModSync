@@ -5,6 +5,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using Avalonia.Data.Converters;
 using KOTORModSync.Core;
 
@@ -24,15 +25,11 @@ namespace KOTORModSync.Converters
                 if ( !( values[0] is List<Guid> guids ) || !( values[1] is List<Component> componentsList ) )
                     return null;
 
-                var selectedComponentNames = new List<string>();
-                foreach ( Guid cGuid in guids )
-                {
-                    Component foundComponent = Component.FindComponentFromGuid( cGuid, componentsList );
-                    if ( !( foundComponent is null ) )
-                        selectedComponentNames.Add( foundComponent.Name );
-                    else
-                        selectedComponentNames.Add( cGuid.ToString() );
-                }
+                var selectedComponentNames = ( from cGuid in guids
+                    let foundComponent = Component.FindComponentFromGuid( cGuid, componentsList )
+                    select !( foundComponent is null )
+                        ? foundComponent.Name
+                        : cGuid.ToString() ).ToList();
 
                 if ( selectedComponentNames.Count == 0 )
                     selectedComponentNames.Add( "None" );

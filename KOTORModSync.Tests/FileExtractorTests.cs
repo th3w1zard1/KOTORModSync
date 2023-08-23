@@ -42,7 +42,6 @@ namespace KOTORModSync.Tests
         public async Task ExtractFileAsync_ValidArchive_Success()
         {
             // Arrange
-            var fileExtractor = new FileExtractor();
             string archivePath = CreateTemporaryArchive( "validArchive.zip" );
             _sourcePaths = new List<string>
             {
@@ -68,7 +67,6 @@ namespace KOTORModSync.Tests
         public async Task ExtractFileAsync_InvalidArchive_Failure()
         {
             // Arrange
-            var fileExtractor = new FileExtractor();
             string archivePath = CreateTemporaryArchive( "invalidArchive.zip" );
             _sourcePaths = new List<string>
             {
@@ -95,11 +93,13 @@ namespace KOTORModSync.Tests
         public async Task ExtractFileAsync_SelfExtractingExe_Success()
         {
             // Arrange
-            var fileExtractor = new FileExtractor();
             //string archivePath = CreateTemporarySelfExtractingExe( "selfExtracting.exe" );
             //_sourcePaths = new List<string> { archivePath };
 
             // Act
+            if ( _sourcePaths is null )
+                throw new NullReferenceException(nameof( _sourcePaths ));
+
             Instruction.ActionExitCode extractionResult
                 = await new Instruction().ExtractFileAsync( _destinationPath, _sourcePaths );
 
@@ -118,7 +118,6 @@ namespace KOTORModSync.Tests
         public async Task ExtractFileAsync_PermissionDenied_SkipsFile()
         {
             // Arrange
-            var fileExtractor = new FileExtractor();
             string archivePath = CreateTemporaryArchive( "archiveWithPermissionDenied.zip" );
             _sourcePaths = new List<string>
             {

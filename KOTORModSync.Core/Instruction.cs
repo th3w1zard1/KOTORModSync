@@ -9,11 +9,13 @@ using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Runtime.InteropServices.ComTypes;
 using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
 using KOTORModSync.Core.Data;
+using KOTORModSync.Core.FileSystemPathing;
 using KOTORModSync.Core.TSLPatcher;
 using KOTORModSync.Core.Utility;
 using Newtonsoft.Json;
@@ -193,25 +195,21 @@ namespace KOTORModSync.Core
             if ( string.IsNullOrWhiteSpace( destinationPath ) )
                 return;
 
-            DirectoryInfo thisDestination = PathValidator.IsValidPath( destinationPath )
-                ? new DirectoryInfo( destinationPath )
-                : throw new InvalidDataException( destinationPath + " is not a valid path!" );
-
-            if ( !thisDestination.Exists )
+            DirectoryInfo thisDestination = PathHelper.TryGetValidDirectoryInfo( destinationPath );
+            if ( !thisDestination?.Exists == true )
             {
-                string caseSensitiveDestination = PathHelper.GetCaseSensitivePath( thisDestination.FullName );
-                if ( !noValidate && caseSensitiveDestination is null )
+                thisDestination = PathHelper.GetCaseSensitivePath( thisDestination );
+                if ( !noValidate && thisDestination is null )
                     throw new DirectoryNotFoundException( "Could not find the 'Destination' path!" );
 
-                if ( caseSensitiveDestination is null )
+                if ( thisDestination is null )
                     return;
-
-                thisDestination = new DirectoryInfo( caseSensitiveDestination );
             }
 
             RealDestinationPath = thisDestination;
         }
 
+        // ReSharper disable once AssignNullToNotNullAttribute
         public async Task<ActionExitCode> ExtractFileAsync(DirectoryInfo argDestinationPath = null, [NotNull][ItemNotNull] List<string> argSourcePaths = null)
         {
             try
@@ -230,11 +228,12 @@ namespace KOTORModSync.Core
                     {
                         cancellationToken.ThrowIfCancellationRequested();
                         var thisFile = new FileInfo( sourcePath );
+                        string sourceRelDirPath = PathHelper.GetRelativePath( MainConfig.SourcePath.FullName, sourcePath );
                         argDestinationPath = argDestinationPath
                             ?? thisFile.Directory
                             ?? throw new ArgumentNullException( nameof( argDestinationPath ) );
 
-                        _ = Logger.LogAsync( $"File path: '{thisFile.FullName}'" );
+                        _ = Logger.LogAsync( $"Using archive path: '{sourceRelDirPath}'" );
 
                         if ( !ArchiveHelper.IsArchive( thisFile ) )
                         {
@@ -245,6 +244,7 @@ namespace KOTORModSync.Core
                             return;
                         }
 
+                        // (attempt to) handle self-extracting executable archives (7zip)
                         if ( thisFile.Extension.Equals( ".exe", StringComparison.OrdinalIgnoreCase ) )
                         {
                             (int, string, string) result = await PlatformAgnosticMethods.ExecuteProcessAsync(
@@ -258,7 +258,7 @@ namespace KOTORModSync.Core
 
                             exitCode = ActionExitCode.InvalidSelfExtractingExecutable;
                             throw new InvalidOperationException(
-                                $"'{thisFile.Name}' is not a self-extracting executable as previously assumed. Cannot extract."
+                                $"'{sourceRelDirPath}' is not a self-extracting executable as previously assumed. Cannot extract."
                             );
                         }
 
@@ -282,7 +282,7 @@ namespace KOTORModSync.Core
                             if ( archive is null )
                             {
                                 exitCode = ActionExitCode.ArchiveParseError;
-                                throw new InvalidOperationException( $"Unable to parse archive '{sourcePath}'" );
+                                throw new InvalidOperationException( $"Unable to parse archive '{sourceRelDirPath}'" );
                             }
 
                             IReader reader = archive.ExtractAllEntries();
@@ -297,21 +297,22 @@ namespace KOTORModSync.Core
                                     extractFolderName,
                                     reader.Entry.Key
                                 );
-                                string destinationDirectory = Path.GetDirectoryName( destinationItemPath );
+                                var destinationDirectory = new InsensitivePath(Path.GetDirectoryName( destinationItemPath ), isFile:false);
+                                string destinationRelDirPath = PathHelper.GetRelativePath( MainConfig.SourcePath.FullName, destinationDirectory.FullName );
 
-                                if ( destinationDirectory != null && !Directory.Exists( destinationDirectory ) )
+                                if ( !Directory.Exists( destinationDirectory.FullName ) && destinationDirectory.IsFile != true )
                                 {
-                                    _ = Logger.LogAsync( $"Create directory '{destinationDirectory}'" );
-                                    _ = Directory.CreateDirectory( destinationDirectory );
+                                    _ = Logger.LogAsync( $"Create directory '{destinationRelDirPath}'" );
+                                    _ = Directory.CreateDirectory( destinationDirectory.FullName );
                                 }
 
-                                _ = Logger.LogAsync( $"Extract '{reader.Entry.Key}' to '{argDestinationPath.FullName}'" );
+                                _ = Logger.LogAsync( $"Extract '{reader.Entry.Key}' to '{destinationRelDirPath}'" );
 
                                 try
                                 {
                                     await Task.Run(
                                         () => reader.WriteEntryToDirectory(
-                                            destinationDirectory ?? throw new InvalidOperationException(),
+                                            destinationDirectory.FullName,
                                             ArchiveHelper.DefaultExtractionOptions
                                         ),
                                         cancellationToken
@@ -358,13 +359,22 @@ namespace KOTORModSync.Core
                             var thisFile = new FileInfo(sourcePath);
                             using (FileStream stream = File.OpenRead(thisFile.FullName))
                             {
-                                string destinationDirectory = Path.Combine( argDestinationPath?.FullName ?? thisFile.Directory.FullName, Path.GetFileNameWithoutExtension(thisFile.Name) );
-                                if ( !Directory.Exists( destinationDirectory ) )
+                                // ReSharper disable once PossibleNullReferenceException
+                                var destinationDirectory = new InsensitivePath(
+                                    Path.Combine(
+                                        argDestinationPath?.FullName ?? thisFile.Directory.FullName,
+                                        Path.GetFileNameWithoutExtension( thisFile.Name )
+                                    ),
+                                    isFile: false
+                                );
+                                
+                                string destinationRelDirPath = PathHelper.GetRelativePath( MainConfig.SourcePath.FullName, destinationDirectory.FullName );
+                                if ( !destinationDirectory.Exists || destinationDirectory.IsFile != true )
                                 {
-                                    _ = Logger.LogAsync( $"Create directory '{destinationDirectory}'" );
-                                    _ = Directory.CreateDirectory( destinationDirectory );
+                                    _ = Logger.LogAsync( $"Create directory '{destinationRelDirPath}'" );
+                                    _ = Directory.CreateDirectory( destinationDirectory.FullName );
                                 }
-                                ArchiveHelper.ExtractWith7Zip(stream, destinationDirectory);
+                                ArchiveHelper.ExtractWith7Zip(stream, destinationDirectory.FullName);
                             }
                             return Task.CompletedTask;
                         }).ToList();
@@ -407,15 +417,15 @@ namespace KOTORModSync.Core
             if ( compatibleExtensions.IsNullOrEmptyCollection() )
                 compatibleExtensions = Game.TextureOverridePriorityList;
 
-            string[] files = Directory.GetFiles( directoryPath.FullName );
+            FileInfo[] files = directoryPath.GetFilesSafely();
             Dictionary<string, int> fileNameCounts = caseInsensitive
                 ? new Dictionary<string, int>( StringComparer.OrdinalIgnoreCase )
                 : new Dictionary<string, int>();
 
-            foreach ( string filePath in files )
+            foreach ( FileInfo fileInfo in files )
             {
-                string fileNameWithoutExtension = Path.GetFileNameWithoutExtension( filePath );
-                string thisExtension = Path.GetExtension( filePath );
+                string fileNameWithoutExtension = Path.GetFileNameWithoutExtension( fileInfo.Name );
+                string thisExtension = fileInfo.Extension;
 
                 bool compatibleExtensionFound = caseInsensitive
                     // ReSharper disable once AssignNullToNotNullAttribute
@@ -433,15 +443,16 @@ namespace KOTORModSync.Core
                 }
             }
 
-            foreach ( string filePath in files )
+            foreach ( FileInfo thisFile in files )
             {
-                if ( !ShouldDeleteFile( filePath ) )
+                if ( !ShouldDeleteFile( thisFile ) )
                     continue;
 
                 try
                 {
-                    File.Delete( filePath );
-                    Logger.Log( $"Deleted file: '{filePath}'" );
+                    thisFile.Delete();
+                    Logger.Log( $"Deleted file: '{thisFile}'" );
+                    Logger.LogVerbose( $"Leaving alone '{fileNameCounts[Path.GetFileNameWithoutExtension( thisFile.Name )]-1}' files with the same name of '{Path.GetFileNameWithoutExtension( thisFile.Name )}'." );
                 }
                 catch ( Exception ex )
                 {
@@ -449,11 +460,11 @@ namespace KOTORModSync.Core
                 }
             }
 
-            bool ShouldDeleteFile( string filePath )
+            bool ShouldDeleteFile( FileSystemInfo fileSystemInfoItem )
             {
-                string fileName = Path.GetFileName( filePath );
-                string fileNameWithoutExtension = Path.GetFileNameWithoutExtension( filePath );
-                string fileExtensionFromFile = Path.GetExtension( filePath );
+                string fileName = fileSystemInfoItem.Name;
+                string fileNameWithoutExtension = Path.GetFileNameWithoutExtension( fileName );
+                string fileExtensionFromFile = fileSystemInfoItem.Extension;
 
                 if ( string.IsNullOrEmpty( fileNameWithoutExtension ) )
                 {
@@ -468,7 +479,7 @@ namespace KOTORModSync.Core
                 else if ( fileNameCounts[fileNameWithoutExtension] <= 1 )
                 {
                     Logger.LogVerbose(
-                        $"Conditional 3: '{fileNameWithoutExtension}' is the only file with this name."
+                        $"Conditional 3: '{fileName}' is the only file with this name."
                     );
                 }
                 else if ( !string.Equals( fileExtensionFromFile, fileExtension, StringComparison.OrdinalIgnoreCase ) )
@@ -502,14 +513,16 @@ namespace KOTORModSync.Core
 
             try
             {
+                // ReSharper disable once PossibleNullReferenceException
                 foreach ( string thisFilePath in sourcePaths )
                 {
-                    var thisFile = new FileInfo( PathHelper.GetCaseSensitivePath( thisFilePath ) );
+                    string sourceRelDirPath = PathHelper.GetRelativePath( MainConfig.SourcePath.FullName, thisFilePath );
+                    var thisFile = new InsensitivePath( thisFilePath, isFile:true );
 
-                    if ( !Path.IsPathRooted( thisFilePath ) || !thisFile.Exists )
+                    if ( !Path.IsPathRooted( thisFile.FullName ) || !thisFile.Exists )
                     {
                         var ex = new ArgumentNullException(
-                            $"Invalid wildcards or file does not exist: '{thisFilePath}'"
+                            $"Invalid wildcards or file does not exist: '{sourceRelDirPath}'"
                         );
                         Logger.LogException( ex );
                         return ActionExitCode.FileNotFoundPost;
@@ -518,8 +531,8 @@ namespace KOTORModSync.Core
                     // Delete the file synchronously
                     try
                     {
-                        File.Delete( thisFilePath );
-                        Logger.Log( $"Deleting '{thisFilePath}'..." );
+                        thisFile.Delete();
+                        Logger.Log( $"Deleting '{sourceRelDirPath}'..." );
                     }
                     catch ( Exception ex )
                     {
@@ -550,13 +563,15 @@ namespace KOTORModSync.Core
             try
             {
                 ActionExitCode exitCode = ActionExitCode.Success;
-                foreach ( string sourcePath in Source.ConvertAll( Utility.Utility.ReplaceCustomVariables ) )
+                // ReSharper disable once PossibleNullReferenceException
+                foreach ( string sourcePath in sourcePaths )
                 {
-                    // Check if the source file already exists
                     string fileName = Path.GetFileName( sourcePath );
+                    string sourceRelDirPath = PathHelper.GetRelativePath( MainConfig.SourcePath.FullName, sourcePath );
+                    // Check if the source file already exists
                     if ( !File.Exists( sourcePath ) )
                     {
-                        Logger.Log( $"'{fileName}' does not exist!" );
+                        Logger.Log( $"'{sourceRelDirPath}' does not exist!" );
                         exitCode = ActionExitCode.FileNotFoundPost;
                         continue;
                     }
@@ -566,28 +581,28 @@ namespace KOTORModSync.Core
                         Path.GetDirectoryName( sourcePath ) ?? string.Empty,
                         Destination
                     );
+                    string destinationRelDirPath = PathHelper.GetRelativePath( MainConfig.DestinationPath.FullName, destinationFilePath );
                     if ( File.Exists( destinationFilePath ) )
                     {
                         if ( !Overwrite )
                         {
                             exitCode = ActionExitCode.RenameTargetAlreadyExists;
                             Logger.Log(
-                                $"Skipping file '{sourcePath}'"
-                                + $" ( A file with the name '{Path.GetFileName( destinationFilePath )}'"
-                                + " already exists )"
+                                $"File '{fileName}' already exists in {Path.GetDirectoryName( destinationRelDirPath )},"
+                                + $" skipping file. Reason: Overwrite set to False )"
                             );
 
                             continue;
                         }
 
-                        Logger.Log( $"Replacing pre-existing '{destinationFilePath}'" );
+                        Logger.Log( $"Removing pre-existing file '{destinationRelDirPath}' Reason: Overwrite set to True" );
                         File.Delete( destinationFilePath );
                     }
 
                     // Move the file
                     try
                     {
-                        Logger.Log( $"Rename '{fileName}' to '{destinationFilePath}'" );
+                        Logger.Log( $"Rename '{sourceRelDirPath}' to '{destinationRelDirPath}'" );
                         File.Move( sourcePath, destinationFilePath );
                     }
                     catch ( IOException ex )
@@ -623,37 +638,42 @@ namespace KOTORModSync.Core
                 destinationPath = RealDestinationPath;
             if (destinationPath?.Exists != true)
                 throw new ArgumentNullException(nameof(destinationPath));
-
-            int initialCount = 4;
-            int maxCount = Environment.ProcessorCount * 4;
+            
+            int initialCount = MainConfig.UseMultiThreadedIO ? 8 : 1;
+            int maxCount = MainConfig.UseMultiThreadedIO ? 16 : 1;
             var semaphore = new SemaphoreSlim(initialCount, maxCount);
 
-            async Task MoveIndividualFileAsync(string sourcePath)
+            async Task CopyIndividualFileAsync(string sourcePath)
             {
                 await semaphore.WaitAsync(); // Wait for a semaphore slot
-
                 try
                 {
+                    string sourceRelDirPath = PathHelper.GetRelativePath( MainConfig.SourcePath.FullName, sourcePath );
                     string fileName = Path.GetFileName(sourcePath);
-                    string destinationFilePath = Path.Combine(destinationPath.FullName, fileName);
+                    string destinationFilePath = MainConfig.CaseInsensitivePathing
+                        ? PathHelper.GetCaseSensitivePath(Path.Combine(destinationPath.FullName, fileName), isFile: true).Item1
+                        : Path.Combine( destinationPath.FullName, fileName );
+                    string destinationRelDirPath = PathHelper.GetRelativePath( MainConfig.DestinationPath.FullName, destinationFilePath );
 
                     // Check if the destination file already exists
                     if (File.Exists(destinationFilePath))
                     {
                         if (!Overwrite)
                         {
-                            Logger.Log(
-                                $"File already exists, skipping file '{Path.GetFileName(destinationFilePath)}' ( Overwrite set to False )"
+                            await Logger.LogWarningAsync(
+                                $"File '{fileName}' already exists in {Path.GetDirectoryName( destinationRelDirPath )},"
+                                + " skipping file. Reason: Overwrite set to False )"
                             );
 
                             return;
                         }
 
-                        Logger.Log($"File already exists, deleting pre-existing file '{destinationFilePath}'");
+                        await Logger.LogAsync($"File '{fileName}' already exists in {Path.GetDirectoryName( destinationRelDirPath )},"
+                            + $" deleting pre-existing file '{destinationRelDirPath}' Reason: Overwrite set to True");
                         File.Delete(destinationFilePath);
                     }
 
-                    Logger.Log($"Copy '{Path.GetFileName(sourcePath)}' to '{destinationFilePath}'");
+                    await Logger.LogAsync($"Copy '{sourceRelDirPath}' to '{destinationRelDirPath}'");
                     File.Copy(sourcePath, destinationFilePath);
                 }
                 catch (Exception ex)
@@ -663,11 +683,14 @@ namespace KOTORModSync.Core
                 }
                 finally
                 {
-                    semaphore.Release(); // Release the semaphore slot
+                    _ = semaphore.Release(); // Release the semaphore slot
                 }
             }
 
-            var tasks = sourcePaths.Select(MoveIndividualFileAsync).ToList();
+            if ( sourcePaths is null )
+                throw new NullReferenceException(nameof( sourcePaths ));
+
+            var tasks = sourcePaths.Select(CopyIndividualFileAsync).ToList();
 
             try
             {
@@ -681,6 +704,7 @@ namespace KOTORModSync.Core
         }
 
         public async Task<ActionExitCode> MoveFileAsync(
+            // ReSharper disable once AssignNullToNotNullAttribute
             [ItemNotNull][NotNull] List<string> sourcePaths = null,
             DirectoryInfo destinationPath = null
         )
@@ -694,9 +718,9 @@ namespace KOTORModSync.Core
                 destinationPath = RealDestinationPath;
             if (destinationPath?.Exists != true)
                 throw new ArgumentNullException(nameof(destinationPath));
-
-            int initialCount = 4;
-            int maxCount = Environment.ProcessorCount * 4;
+            
+            int initialCount = MainConfig.UseMultiThreadedIO ? 8 : 1;
+            int maxCount = MainConfig.UseMultiThreadedIO ? 16 : 1;
             var semaphore = new SemaphoreSlim(initialCount, maxCount);
 
             async Task MoveIndividualFileAsync(string sourcePath)
@@ -705,26 +729,32 @@ namespace KOTORModSync.Core
 
                 try
                 {
+                    string sourceRelDirPath = PathHelper.GetRelativePath( MainConfig.SourcePath.FullName, sourcePath );
                     string fileName = Path.GetFileName(sourcePath);
-                    string destinationFilePath = Path.Combine(destinationPath.FullName, fileName);
+                    string destinationFilePath = MainConfig.CaseInsensitivePathing
+                        ? PathHelper.GetCaseSensitivePath(Path.Combine(destinationPath.FullName, fileName), isFile: true).Item1
+                        : Path.Combine( destinationPath.FullName, fileName );
+                    string destinationRelDirPath = PathHelper.GetRelativePath( MainConfig.DestinationPath.FullName, destinationFilePath );
 
                     // Check if the destination file already exists
                     if (File.Exists(destinationFilePath))
                     {
                         if (!Overwrite)
                         {
-                            Logger.Log(
-                                $"File already exists, skipping file '{Path.GetFileName(destinationFilePath)}' ( Overwrite set to False )"
+                            await Logger.LogWarningAsync(
+                                $"File '{fileName}' already exists in {Path.GetDirectoryName( destinationRelDirPath )},"
+                                + " skipping file. Reason: Overwrite set to False )"
                             );
 
                             return;
                         }
-
-                        Logger.Log($"File already exists, deleting pre-existing file '{destinationFilePath}'");
+                        
+                        await Logger.LogAsync($"File '{fileName}' already exists in {Path.GetDirectoryName( destinationRelDirPath )},"
+                            + $" deleting pre-existing file '{destinationRelDirPath}' Reason: Overwrite set to True");
                         File.Delete(destinationFilePath);
                     }
 
-                    Logger.Log($"Move '{Path.GetFileName(sourcePath)}' to '{destinationFilePath}'");
+                    await Logger.LogAsync($"Move '{sourceRelDirPath}' to '{destinationRelDirPath}'");
                     File.Move(sourcePath, destinationFilePath);
                 }
                 catch (Exception ex)
@@ -734,9 +764,12 @@ namespace KOTORModSync.Core
                 }
                 finally
                 {
-                    semaphore.Release(); // Release the semaphore slot
+                    _ = semaphore.Release(); // Release the semaphore slot
                 }
             }
+
+            if ( sourcePaths is null )
+                throw new NullReferenceException(nameof( sourcePaths ));
 
             var tasks = sourcePaths.Select(MoveIndividualFileAsync).ToList();
 
@@ -753,14 +786,13 @@ namespace KOTORModSync.Core
 
 
         // todo: define exit codes here.
-        // ReSharper disable once InconsistentNaming
         public async Task<ActionExitCode> ExecuteTSLPatcherAsync()
         {
             try
             {
                 foreach ( string t in RealSourcePaths )
                 {
-                    DirectoryInfo tslPatcherDirectory = Path.HasExtension( t )
+                    DirectoryInfo tslPatcherDirectory = File.Exists( t )
                         ? new FileInfo( t ).Directory // It's a file, get the parent folder.
                         : new DirectoryInfo( t );     // It's a folder, create a DirectoryInfo instance
 
@@ -775,17 +807,15 @@ namespace KOTORModSync.Core
                     string fullInstallLogFile = Path.Combine( tslPatcherDirectory.FullName, path2: "installlog.rtf" );
                     if ( File.Exists( fullInstallLogFile ) )
                     {
-                        if ( File.Exists( fullInstallLogFile ) )
-                            File.Delete( fullInstallLogFile );
+                        File.Delete( fullInstallLogFile );
                     }
-
                     //PlaintextLog=1
                     fullInstallLogFile = Path.Combine( tslPatcherDirectory.FullName, path2: "installlog.txt" );
                     if ( File.Exists( fullInstallLogFile ) )
                         File.Delete( fullInstallLogFile );
-
-                    await Logger.LogAsync( " - Pre-installing TSLPatcher LookUpGameFolder hooks..." );
+                    
                     IniHelper.ReplacePlaintextLog( tslPatcherDirectory );
+                    await Logger.LogVerboseAsync( " - Pre-installing TSLPatcher LookUpGameFolder hooks..." );
                     IniHelper.ReplaceLookupGameFolder( tslPatcherDirectory );
 
                     string args = $@"""{MainConfig.DestinationPath}""" // arg1 = swkotor directory
@@ -826,10 +856,9 @@ namespace KOTORModSync.Core
 
                     await Logger.LogAsync( "Starting TSLPatcher instructions..." );
                     if ( MainConfig.PatcherOption != MainConfig.AvailablePatchers.TSLPatcher )
-                    {
-                        await Logger.LogVerboseAsync( $"Using CLI to run command: '{tslPatcherCliPath} {args}'" );
-                    }
+                        await Logger.LogAsync( $"Using CLI to run command: '{tslPatcherCliPath} {args}'" );
 
+                    // ReSharper disable twice UnusedVariable
                     ( int exitCode, string output, string error ) = await PlatformAgnosticMethods.ExecuteProcessAsync(
                         tslPatcherCliPath.FullName,
                         args,
@@ -950,7 +979,10 @@ namespace KOTORModSync.Core
 
                 string installLogContent = File.ReadAllText( fullInstallLogFile );
 
-                return installLogContent.Split( Environment.NewLine.ToCharArray() ).Where( thisLine => thisLine.Contains( "Error: " ) || thisLine.Contains( "[Error]" ) ).ToList();
+                return installLogContent
+                    .Split( Environment.NewLine.ToCharArray() )
+                    .Where( thisLine => thisLine.Contains( "Error: " ) || thisLine.Contains( "[Error]" ) )
+                    .ToList();
             }
 
             Logger.LogVerbose( "No errors found in TSLPatcher installation log file" );
@@ -999,20 +1031,6 @@ namespace KOTORModSync.Core
 
         private void OnPropertyChanged( [CallerMemberName][CanBeNull] string propertyName = null ) =>
             PropertyChanged?.Invoke( this, new PropertyChangedEventArgs( propertyName ) );
-
-        private bool SetField<T>(
-            [CanBeNull] ref T field,
-            [CanBeNull] T value,
-            [CallerMemberName] string propertyName = null
-        )
-        {
-            if ( EqualityComparer<T>.Default.Equals( field, value ) )
-                return false;
-
-            field = value;
-            OnPropertyChanged( propertyName );
-            return true;
-        }
 
         [NotNull]
         [ItemNotNull]

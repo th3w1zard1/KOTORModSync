@@ -21,7 +21,7 @@ namespace KOTORModSync.Converters
                 if ( !( value is Instruction dataContextInstruction ) )
                     return null;
 
-                Component parentComponent = dataContextInstruction?.GetParentComponent();
+                Component parentComponent = dataContextInstruction.GetParentComponent();
                 if ( parentComponent is null )
                     return null;
 

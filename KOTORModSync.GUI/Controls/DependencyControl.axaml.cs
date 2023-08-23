@@ -4,7 +4,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Globalization;
 using Avalonia;
 using Avalonia.Collections;
@@ -29,34 +28,6 @@ namespace KOTORModSync.Controls
                 mainWindow.FindComboBoxesInWindow( mainWindow );
         }
 
-        public event EventHandler<PropertyChangedEventArgs> PropertyChanged2;
-        private string _searchText;
-
-        public string SearchText
-        {
-            get => _searchText;
-            set
-            {
-                if ( _searchText == value )
-                    return; // prevent recursion problems
-
-                _searchText = value;
-                PropertyChanged2?.Invoke( this, new PropertyChangedEventArgs( nameof( SearchText ) ) );
-            }
-        }
-
-        private void SearchText_PropertyChanged( object sender, PropertyChangedEventArgs e )
-        {
-            if ( e.PropertyName != nameof( SearchText ) )
-                return;
-
-            if ( !( VisualRoot is MainWindow mainWindow ) )
-                throw new NullReferenceException( "Could not get main window instance" );
-
-            string searchText = SearchText;
-            MainWindow.FilterControlListItems( DependenciesListBox, searchText );
-        }
-
         [NotNull]
         public static readonly StyledProperty<List<Guid>> ThisGuidListProperty
             = AvaloniaProperty.Register<DependencyControl, List<Guid>>( nameof( ThisGuidList ) );
@@ -69,18 +40,12 @@ namespace KOTORModSync.Controls
             set => SetValue( ThisGuidListProperty, value );
         }
 
-        [NotNull]
-        public static readonly StyledProperty<List<Component>> ThisComponentListProperty
-            = AvaloniaProperty.Register<DependencyControl, List<Component>>( nameof( ThisComponentList ) );
+        [NotNull][UsedImplicitly]
+#pragma warning disable CA1822
+        public List<Component> ThisComponentList => MainWindow.ComponentsList;
+#pragma warning restore CA1822
 
-        [NotNull]
-        public List<Component> ThisComponentList
-        {
-            get => GetValue( ThisComponentListProperty )
-                ?? throw new NullReferenceException( "Could not retrieve property 'ThisComponentListProperty'" );
-            set => SetValue( ThisComponentListProperty, value );
-        }
-
+        // ReSharper disable once UnusedParameter.Local
         private void AddToList_Click( [NotNull] object sender, [NotNull] RoutedEventArgs e )
         {
             try
@@ -102,7 +67,7 @@ namespace KOTORModSync.Controls
                 var convertedItems = new Converters.GuidListToComponentNames().Convert(
                     new object[]
                     {
-                        ThisGuidList, ThisComponentList,
+                        ThisGuidList, MainWindow.ComponentsList,
                     },
                     ThisGuidList.GetType(),
                     parameter: null,
@@ -125,6 +90,7 @@ namespace KOTORModSync.Controls
             }
         }
 
+        // ReSharper disable once UnusedParameter.Local
         private void RemoveFromList_Click( [NotNull] object sender, [NotNull] RoutedEventArgs e )
         {
             try
@@ -142,7 +108,7 @@ namespace KOTORModSync.Controls
                 var convertedItems = new Converters.GuidListToComponentNames().Convert(
                     new object[]
                     {
-                        ThisGuidList, ThisComponentList,
+                        ThisGuidList, MainWindow.ComponentsList,
                     },
                     ThisGuidList.GetType(),
                     parameter: null,
@@ -162,6 +128,7 @@ namespace KOTORModSync.Controls
             }
         }
 
+        // ReSharper disable twice UnusedParameter.Local
         private void DependenciesComboBox_SelectionChanged( object sender, SelectionChangedEventArgs e )
         {
             try

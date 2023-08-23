@@ -28,6 +28,7 @@ dotnet_style_prefer_compound_assignment = true:suggestion
 csharp_new_line_before_else = false
 csharp_new_line_before_open_brace = accessors,anonymous_methods,anonymous_types,control_blocks,events,indexers,lambdas,local_functions,methods,object_collection_array_initalizers,properties,types
 csharp_preferred_modifier_order = public, internal, protected, private, static, abstract, async, extern, new, override, readonly, sealed, unsafe, virtual, volatile, file, required:suggestion
+csharp_space_between_method_call_parameter_list_parentheses = false
 csharp_style_expression_bodied_accessors = true:suggestion
 csharp_style_expression_bodied_constructors = true:suggestion
 csharp_style_expression_bodied_methods = true:suggestion
@@ -52,8 +53,11 @@ resharper_accessor_owner_body = accessors_with_expression_body
 resharper_arguments_literal = named
 resharper_arguments_string_literal = named
 resharper_braces_for_while = required
+resharper_csharp_empty_block_style = together_same_line
+resharper_csharp_wrap_chained_method_calls = wrap_if_long
 resharper_for_built_in_types = use_var_when_evident
 resharper_indent_nested_lock_stmt = true
+resharper_indent_statement_pars = inside
 resharper_outdent_statement_labels = true
 resharper_place_accessorholder_attribute_on_same_line = false
 resharper_place_simple_accessorholder_on_single_line = true
@@ -61,6 +65,7 @@ resharper_prefer_separate_deconstructed_variables_declaration = true
 resharper_static_members_qualify_with = current_type
 resharper_trailing_comma_in_multiline_lists = true
 resharper_use_heuristics_for_body_style = true
+resharper_wrap_chained_method_calls = wrap_if_long
 
 # ReSharper inspection severities
 resharper_arguments_style_literal_highlighting = suggestion

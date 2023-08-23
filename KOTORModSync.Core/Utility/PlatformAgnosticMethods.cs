@@ -34,7 +34,13 @@ namespace KOTORModSync.Core.Utility
                 Parallel.Invoke( () => maxParallelism = Math.Max( val1: 1, maxParallelism / 2 ) );
             }
 
-            var maxDiskSpeedTask = Task.Run( () => GetMaxDiskSpeed( Path.GetPathRoot( thisDir.FullName ) ) );
+            var maxDiskSpeedTask = Task.Run( () =>
+            {
+                if ( thisDir is null )
+                    throw new NullReferenceException(nameof( thisDir ));
+
+                return GetMaxDiskSpeed( Path.GetPathRoot( thisDir.FullName ) );
+            } );
             double maxDiskSpeed = await maxDiskSpeedTask;
 
             const double diskSpeedThreshold = 100.0; // MB/sec threshold
@@ -65,6 +71,10 @@ namespace KOTORModSync.Core.Utility
             if ( result.ExitCode == 0 )
                 return ParseAvailableMemory( result.Output, command );
 
+            result = TryExecuteCommand( "grep MemAvailable /proc/meminfo | awk '{print $2*1024}'\r\n" );
+            if ( long.TryParse(result.Output.TrimEnd( Environment.NewLine.ToCharArray() ), out long longValue) )
+                return longValue;
+
             result = TryExecuteCommand( "free -b" );
             command = "free";
 
@@ -91,7 +101,12 @@ namespace KOTORModSync.Core.Utility
             }
 
             if ( string.IsNullOrWhiteSpace( command ) )
-                throw new ArgumentException( message: "Value cannot be null or whitespace.", nameof( command ) );
+            {
+                throw new ArgumentException(
+                    message: "Value cannot be null or whitespace.",
+                    nameof( command )
+                );
+            }
 
             string pattern = string.Empty;
             switch ( command.ToLowerInvariant() )
@@ -195,7 +210,7 @@ namespace KOTORModSync.Core.Utility
                     );
                 }
 
-                Task<(int, string, string)> result = ExecuteProcessAsync( command, arguments, 60000, true );
+                Task<(int, string, string)> result = ExecuteProcessAsync( command, arguments, timeout: 60000, noAdmin: true );
                 result.Wait();
                 string output = result.Result.Item2;
 
@@ -355,15 +370,12 @@ namespace KOTORModSync.Core.Utility
         public static async Task<(int, string, string)> ExecuteProcessAsync(
             [CanBeNull] string programFile,
             string cmdlineArgs = "",
-            int timeout = 0,
+            long timeout = 0,
             bool noAdmin = false
         )
         {
             if ( programFile is null )
                 throw new ArgumentNullException( nameof( programFile ) );
-
-            if ( timeout == 0 )
-                timeout = 3600000; // todo: set timeout as user configurable
 
             List<ProcessStartInfo> processStartInfosWithFallbacks = GetProcessStartInfos( programFile, cmdlineArgs );
 
@@ -374,13 +386,17 @@ namespace KOTORModSync.Core.Utility
                 ProcessStartInfo startInfo = processStartInfosWithFallbacks[index];
                 try
                 {
-                    using ( var cancellationTokenSource = new CancellationTokenSource( timeout ) )
+                    TimeSpan? thisTimeout = timeout != 0
+                        ? TimeSpan.FromMilliseconds(timeout)
+                        : (TimeSpan?)null;
+                    CancellationTokenSource cancellationTokenSource = thisTimeout.HasValue
+                        ? new CancellationTokenSource(thisTimeout.Value)
+                        : new CancellationTokenSource();
+                    using ( cancellationTokenSource )
                     using ( var process = new Process() )
                     {
                         if ( noAdmin && !startInfo.UseShellExecute )
-                        {
                             startInfo.EnvironmentVariables["__COMPAT_LAYER"] = "RunAsInvoker";
-                        }
 
                         process.StartInfo = startInfo;
 
@@ -411,8 +427,8 @@ namespace KOTORModSync.Core.Utility
                         var output = new StringBuilder();
                         var error = new StringBuilder();
 
-                        using ( var outputWaitHandle = new AutoResetEvent( false ) )
-                        using ( var errorWaitHandle = new AutoResetEvent( false ) )
+                        using ( var outputWaitHandle = new AutoResetEvent( initialState: false ) )
+                        using ( var errorWaitHandle = new AutoResetEvent( initialState: false ) )
                         {
                             process.OutputDataReceived += ( sender, e ) =>
                             {
@@ -429,7 +445,7 @@ namespace KOTORModSync.Core.Utility
                                 }
                                 catch ( Exception exception )
                                 {
-                                    _ = Logger.LogExceptionAsync( exception, "Exception while gathering the output from executed program" );
+                                    _ = Logger.LogExceptionAsync( exception, $"Exception while gathering the output from {programFile}" );
                                 }
                             };
                             process.ErrorDataReceived += ( sender, e ) =>
@@ -447,7 +463,7 @@ namespace KOTORModSync.Core.Utility
                                 }
                                 catch ( Exception exception )
                                 {
-                                    _ = Logger.LogExceptionAsync( exception, "Exception while gathering the error output from executed program" );
+                                    _ = Logger.LogExceptionAsync( exception, $"Exception while gathering the error output from {programFile}" );
                                 }
                             };
 
@@ -485,7 +501,7 @@ namespace KOTORModSync.Core.Utility
                 }
                 catch ( Win32Exception localException )
                 {
-                    await Logger.LogVerboseAsync( $"Exception occurred for startInfo: '{startInfo}'" );
+                    await Logger.LogVerboseAsync( $"Exception occurred for startInfo: '{startInfo}', attempting to use different parameters" );
                     if ( !noAdmin && isAdmin == true )
                     {
                         startInfo.Verb = "runas";
@@ -503,7 +519,7 @@ namespace KOTORModSync.Core.Utility
                 {
                     await Logger.LogAsync( $"An unplanned error has occurred trying to run '{programFile}'" );
                     await Logger.LogExceptionAsync( startinfoException );
-                    return ( -6, string.Empty, string.Empty );
+                    return ( -2, string.Empty, string.Empty );
                 }
             }
 

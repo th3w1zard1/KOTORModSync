@@ -452,6 +452,7 @@ namespace KOTORModSync.Core
                 {
                     thisFile.Delete();
                     Logger.Log( $"Deleted file: '{thisFile}'" );
+                    Logger.LogVerbose( $"Leaving alone '{fileNameCounts[Path.GetFileNameWithoutExtension( thisFile.Name )]-1}' files with the same name of '{Path.GetFileNameWithoutExtension( thisFile.Name )}'." );
                 }
                 catch ( Exception ex )
                 {

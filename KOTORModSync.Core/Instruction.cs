@@ -479,7 +479,7 @@ namespace KOTORModSync.Core
                 else if ( fileNameCounts[fileNameWithoutExtension] <= 1 )
                 {
                     Logger.LogVerbose(
-                        $"Conditional 3: '{fileNameWithoutExtension}' is the only file with this name."
+                        $"Conditional 3: '{fileName}' is the only file with this name."
                     );
                 }
                 else if ( !string.Equals( fileExtensionFromFile, fileExtension, StringComparison.OrdinalIgnoreCase ) )

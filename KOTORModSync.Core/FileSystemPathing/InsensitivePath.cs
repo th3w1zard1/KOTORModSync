@@ -40,11 +40,7 @@ namespace KOTORModSync.Core.FileSystemPathing
 
         public static InsensitivePath Empty { get; } = new InsensitivePath();
         private InsensitivePath() { }
-        public override void Delete()
-        {
-            if ( Directory.Exists( Path.GetDirectoryName(FullName) ) )
-                _fileSystemInfo?.Delete();
-        }
+        public override void Delete() => _fileSystemInfo?.Delete();
         public override string ToString() => FullName;
 
         public InsensitivePath( string inputPath, bool isFile )

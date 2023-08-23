@@ -90,18 +90,25 @@ namespace KOTORModSync.Core
 
         public static void DisableQuickEdit()
         {
-            IntPtr consoleHandle = GetStdHandle( -10 ); // STD_INPUT_HANDLE
-            if ( !GetConsoleMode( consoleHandle, out uint consoleMode ) )
+            try
             {
-                Logger.LogError( "Could not get current console mode." );
-                return;
+                IntPtr consoleHandle = GetStdHandle( -10 ); // STD_INPUT_HANDLE
+                if ( !GetConsoleMode( consoleHandle, out uint consoleMode ) )
+                {
+                    Logger.LogError( "Could not get current console mode." );
+                    return;
+                }
+
+                consoleMode &= ~ENABLE_QUICK_EDIT;
+
+                if ( !SetConsoleMode( consoleHandle, consoleMode ) )
+                {
+                    Logger.LogError( "Could not set console mode on console handle" );
+                }
             }
-
-            consoleMode &= ~ENABLE_QUICK_EDIT;
-
-            if ( !SetConsoleMode( consoleHandle, consoleMode ) )
+            catch ( Exception e )
             {
-                Logger.LogError( "Could not set console mode on console handle" );
+                Logger.LogException( e );
             }
         }
     }

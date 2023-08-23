@@ -120,14 +120,127 @@ namespace KOTORModSync.Core.FileSystemPathing
             }
         }
 
-        [DllImport( "kernel32.dll", SetLastError = true, CharSet = CharSet.Auto )]
+        public static string GetRelativePath(string relativeTo, string path) => GetRelativePath(relativeTo, path, StringComparison.OrdinalIgnoreCase);
+
+        private static string GetRelativePath(string relativeTo, string path, StringComparison comparisonType)
+        {
+            if (string.IsNullOrEmpty(relativeTo))
+                throw new ArgumentException("Path cannot be empty", nameof(relativeTo));
+            if (string.IsNullOrEmpty(path))
+                throw new ArgumentException("Path cannot be empty", nameof(path));
+
+            relativeTo = Path.GetFullPath(FixPathFormatting(relativeTo));
+            path = Path.GetFullPath(FixPathFormatting(path));
+
+            if (!AreRootsEqual(relativeTo, path, comparisonType))
+                return path;
+
+            int commonLength = GetCommonPathLength(
+                relativeTo,
+                path,
+                ignoreCase: comparisonType == StringComparison.OrdinalIgnoreCase
+            );
+
+            if (commonLength == 0)
+                return path;
+
+            bool pathEndsInSeparator = path.EndsWith(Path.DirectorySeparatorChar.ToString());
+            int pathLength = path.Length;
+            if (pathEndsInSeparator)
+                pathLength--;
+
+            if (relativeTo.Length == pathLength && commonLength >= relativeTo.Length) return ".";
+
+            var sb = new StringBuilder(Math.Max(relativeTo.Length, path.Length));
+
+            if (commonLength < relativeTo.Length)
+            {
+                sb.Append("..");
+
+                for (int i = commonLength + 1; i < relativeTo.Length; i++)
+                {
+                    if (relativeTo[i] == Path.DirectorySeparatorChar)
+                    {
+                        sb.Append(Path.DirectorySeparatorChar);
+                        sb.Append("..");
+                    }
+                }
+            }
+            else if (path[commonLength] == Path.DirectorySeparatorChar)
+            {
+                commonLength++;
+            }
+
+            int differenceLength = pathLength - commonLength;
+            if (pathEndsInSeparator)
+                differenceLength++;
+
+            if (differenceLength > 0)
+            {
+                if (sb.Length > 0)
+                {
+                    sb.Append(Path.DirectorySeparatorChar);
+                }
+
+                sb.Append(path.Substring(commonLength, differenceLength));
+            }
+
+            return sb.ToString();
+        }
+
+        private static bool AreRootsEqual(string first, string second, StringComparison comparisonType)
+        {
+            int firstRootLength = Path.GetPathRoot(first).Length;
+            int secondRootLength = Path.GetPathRoot(second).Length;
+
+            return firstRootLength == secondRootLength
+                   && 0 == string.Compare(
+                        strA: first,
+                        indexA: 0,
+                        strB: second,
+                        indexB: 0,
+                        firstRootLength,
+                        comparisonType
+                   );
+        }
+
+        private static int GetCommonPathLength(string first, string second, bool ignoreCase)
+        {
+            int commonChars = Math.Min(first.Length, second.Length);
+
+            int commonLength = 0;
+            for (int i = 0; i < commonChars; i++)
+            {
+                if ( first[i] != Path.DirectorySeparatorChar && second[i] != Path.DirectorySeparatorChar )
+                    continue;
+
+                if ( 0 != string.Compare(
+                    strA: first,
+                    indexA: 0,
+                    strB: second,
+                    indexB: 0,
+                    length: i + 1,
+                    comparisonType: ignoreCase
+                        ? StringComparison.OrdinalIgnoreCase
+                        : StringComparison.Ordinal) )
+                {
+                    return commonLength;
+                }
+
+                commonLength = i + 1;
+            }
+
+            return commonLength;
+        }
+
+        [DllImport( "kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode )]
         private static extern uint GetFinalPathNameByHandle( IntPtr hFile, StringBuilder lpszFilePath, uint cchFilePath, uint dwFlags );
 
         [DllImport( "kernel32.dll", SetLastError = true, CharSet = CharSet.Auto )]
         [return: MarshalAs( UnmanagedType.Bool )]
         private static extern bool CloseHandle( IntPtr hObject );
 
-        [DllImport( "kernel32.dll", SetLastError = true, CharSet = CharSet.Auto )]
+        [DllImport( "kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode )]
         private static extern IntPtr CreateFile(
             string lpFileName,
             uint dwDesiredAccess,
@@ -142,16 +255,9 @@ namespace KOTORModSync.Core.FileSystemPathing
         {
             switch ( fileSystemInfoItem )
             {
-                case DirectoryInfo dirInfo:
-                    {
-                        return GetCaseSensitivePath( dirInfo );
-                    }
-                case FileInfo fileInfo:
-                    {
-                        return GetCaseSensitivePath( fileInfo );
-                    }
-                default:
-                    return null;
+                case DirectoryInfo dirInfo: return GetCaseSensitivePath( dirInfo );
+                case FileInfo fileInfo: return GetCaseSensitivePath( fileInfo );
+                default: return null;
             }
         }
         
@@ -172,7 +278,7 @@ namespace KOTORModSync.Core.FileSystemPathing
             if (string.IsNullOrWhiteSpace(path))
                 throw new ArgumentException($"'{nameof(path)}' cannot be null or whitespace.", nameof(path));
 
-            string formattedPath = FixPathFormatting(Path.GetFullPath(path));
+            string formattedPath = Path.GetFullPath(FixPathFormatting(path));
 
             // quick lookup
             bool fileExists = File.Exists(formattedPath);

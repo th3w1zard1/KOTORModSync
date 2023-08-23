@@ -131,7 +131,8 @@
                                                               IsChecked="{Binding IsSelected, Mode=TwoWay}"
                                                               Checked="OnCheckBoxOnChecked" Unchecked="OnCheckBoxOnUnchecked"
                                                               Tag="{Binding}"
-                                                              Content="{Binding Name}" />
+                                                              Content="{Binding Name}"
+                                                              ToolTip.Tip = "If selected, this option will be installed." />
                                                 </DockPanel>
                                                 <TextBlock Text="{Binding Description}" />
                                                 <ItemsRepeater
@@ -628,16 +629,13 @@
                           ToolTip.Tip="Do not prompt for admin on any instruction (NOT RECOMMENDED). If you're having problems, it's recommended you run KOTORModSync as admin instead. Does nothing on Linux" />
                 <CheckBox Content="Mock case-insensitive filesystem" IsChecked="{Binding caseInsensitivePathing}"
                           ToolTip.Tip="(Linux/Mac only) Attempt to perform case-insensitive file/folder lookups. Somewhat slow, especially on HDDs." />
+                <CheckBox Content="Use multiple threads for IO operations" IsChecked="{Binding useMultiThreadedIO}"
+                          ToolTip.Tip="Whether to concurrently perform IO operations, or queue them one by one. Recommend this Unchecked if your mod dir or kotor dir is on a HDD." />
                 <TextBlock Text="Patcher Option:"
                            ToolTip.Tip="Mods are packaged with 'TSLPatcher' by default. Use 'PyKotorCLI' to reduce tedious clicking through tslpatcher windows" />
                 <ComboBox HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
                           ItemsSource="{Binding AllAvailablePatchers}"
                           SelectedItem="{Binding patcherOptionString}"
-                          IsTabStop="True" />
-                <TextBlock Text="Compatibility Enforcement Level:" ToolTip.Tip="Determines which mods will be skipped." IsVisible="False" />
-                <ComboBox HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" IsVisible="False"
-                          ItemsSource="{Binding AllCompatibilityLevels}"
-                          SelectedItem="{Binding currentCompatibilityString}"
                           IsTabStop="True" />
                 <TextBlock Text="Theme:" />
                 <ComboBox x:Name="StyleComboBox" SelectedIndex="2" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"

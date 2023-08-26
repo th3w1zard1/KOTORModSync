@@ -61,7 +61,7 @@ namespace KOTORModSync.Core.FileSystemPathing
         public new void Refresh()
         {
             if ( _fileSystemInfo is null )
-                throw new InvalidOperationException("_fileSystemInfo cannot be null");
+                throw new NullReferenceException("_fileSystemInfo cannot be null");
 
             _fileSystemInfo.Refresh();
 
@@ -87,18 +87,6 @@ namespace KOTORModSync.Core.FileSystemPathing
 
         // ReSharper disable once NonReadonlyMemberInGetHashCode - TODO:
         public override int GetHashCode() => _fileSystemInfo?.GetHashCode() ?? 0;
-        
-        public static bool operator !=(InsensitivePath left, InsensitivePath right) => !(left == right);
-        public static bool operator ==(InsensitivePath left, InsensitivePath right)
-        {
-            string path1 = left?.ToString().ToLowerInvariant();
-            string path2 = right?.ToString().ToLowerInvariant();
-            if ( !( path1 is null ) )
-                path1 = PathHelper.FixPathFormatting( path1 );
-            if ( !( path2 is null ) )
-                path2 = PathHelper.FixPathFormatting( path2 );
-            return ReferenceEquals(path1, path2);
-        }
 
         //public static implicit operator string( InsensitivePath insensitivePath ) => insensitivePath._fileSystemInfo?.FullName;
         public static implicit operator FileInfo( InsensitivePath insensitivePath ) => insensitivePath._fileSystemInfo as FileInfo;

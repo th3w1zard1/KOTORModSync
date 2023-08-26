@@ -53,7 +53,7 @@ namespace KOTORModSync.Core.FileSystemPathing
             _isFile = isFile;
             _fileSystemInfo = _isFile
                 ? (FileSystemInfo)new FileInfo( formattedPath )
-                : new DirectoryInfo( formattedPath );
+                : (FileSystemInfo)new DirectoryInfo( formattedPath );
 
             Refresh();
         }
@@ -83,14 +83,6 @@ namespace KOTORModSync.Core.FileSystemPathing
                 default:
                     return;
             }
-        }
-
-        public override bool Equals(object obj) => obj is InsensitivePath other && Equals( other );
-        public bool Equals(InsensitivePath other)
-        {
-            return other is null
-                ? _fileSystemInfo is null
-                : ReferenceEquals( this, other ) || ( _fileSystemInfo is null && other._fileSystemInfo is null );
         }
 
         // ReSharper disable once NonReadonlyMemberInGetHashCode - TODO:

@@ -15,6 +15,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
+using KOTORModSync.Core.FileSystemPathing;
 
 namespace KOTORModSync.Core.Utility
 {
@@ -162,7 +163,7 @@ namespace KOTORModSync.Core.Utility
             return isSupported;
         }
 
-        [CanBeNull]
+        [NotNull]
         public static string GetShellExecutable()
         {
             string[] shellExecutables =
@@ -175,8 +176,7 @@ namespace KOTORModSync.Core.Utility
             {
                 if ( File.Exists( executable ) )
                     return executable;
-
-                // ReSharper disable once AssignNullToNotNullAttribute
+                
                 string fullExecutablePath = Path.Combine( Environment.SystemDirectory, executable );
                 if ( File.Exists( fullExecutablePath ) )
                     return fullExecutablePath;
@@ -221,7 +221,7 @@ namespace KOTORModSync.Core.Utility
             catch ( Exception e )
             {
                 Logger.LogException( e );
-                throw;
+                return 0;
             }
         }
 
@@ -293,6 +293,49 @@ namespace KOTORModSync.Core.Utility
                     // Failed to execute the 'sudo' command
                     return null;
                 }
+            }
+        }
+
+        public static async Task MakeExecutableAsync( [NotNull] string filePath)
+        {
+            // For Linux/macOS: Using chmod for setting execute permissions for the current user.
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux) || RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+            {
+                if ( filePath is null )
+                    throw new ArgumentNullException( nameof( filePath ) );
+                if ( !PathValidator.IsValidPath(filePath) )
+                    throw new ArgumentException( $"{filePath} is not a valid path to a file" );
+
+                var fileInfo = new InsensitivePath( filePath, isFile: true );
+                if (!fileInfo.Exists)
+                    throw new FileNotFoundException($"The file {filePath} does not exist.");
+                await Task.Run(() => 
+                {
+                    var startInfo = new ProcessStartInfo
+                    {
+                        FileName = "chmod",
+                        Arguments = $"u+x \"{filePath}\"",
+                        RedirectStandardOutput = true,
+                        RedirectStandardError = true,
+                        UseShellExecute = false,
+                        CreateNoWindow = true,
+                    };
+
+                    using (Process process = Process.Start(startInfo))
+                    {
+                        if (process == null)
+                            throw new InvalidOperationException( "Failed to start chmod process." );
+
+                        process.WaitForExit();
+                
+                        if (process.ExitCode != 0)
+                        {
+                            throw new InvalidOperationException(
+                                $"chmod failed with exit code {process.ExitCode}: {process.StandardError.ReadToEnd()}"
+                            );
+                        }
+                    }
+                });
             }
         }
 
@@ -436,7 +479,15 @@ namespace KOTORModSync.Core.Utility
                                 {
                                     if ( e?.Data is null )
                                     {
-                                        _ = outputWaitHandle.Set();
+                                        try
+                                        {
+                                            // ReSharper disable once AccessToDisposedClosure, already caught by ObjectDisposedException
+                                            _ = outputWaitHandle.Set();
+                                        }
+                                        catch ( ObjectDisposedException )
+                                        {
+                                            Logger.LogVerbose( "outputWaitHandle is already disposed, nothing to set." );
+                                        }
                                         return;
                                     }
 
@@ -445,7 +496,7 @@ namespace KOTORModSync.Core.Utility
                                 }
                                 catch ( Exception exception )
                                 {
-                                    _ = Logger.LogExceptionAsync( exception, $"Exception while gathering the output from {programFile}" );
+                                    _ = Logger.LogExceptionAsync( exception, $"Exception while gathering the output from '{programFile}'" );
                                 }
                             };
                             process.ErrorDataReceived += ( sender, e ) =>
@@ -454,7 +505,15 @@ namespace KOTORModSync.Core.Utility
                                 {
                                     if ( e?.Data is null )
                                     {
-                                        _ = errorWaitHandle.Set();
+                                        try
+                                        {
+                                            // ReSharper disable once AccessToDisposedClosure, already caught by ObjectDisposedException
+                                            _ = errorWaitHandle.Set();
+                                        }
+                                        catch ( ObjectDisposedException )
+                                        {
+                                            Logger.LogVerbose( "errorWaitHandle is already disposed, nothing to set." );
+                                        }
                                         return;
                                     }
 
@@ -463,7 +522,7 @@ namespace KOTORModSync.Core.Utility
                                 }
                                 catch ( Exception exception )
                                 {
-                                    _ = Logger.LogExceptionAsync( exception, $"Exception while gathering the error output from {programFile}" );
+                                    _ = Logger.LogExceptionAsync( exception, $"Exception while gathering the error output from '{programFile}'" );
                                 }
                             };
 
@@ -486,8 +545,8 @@ namespace KOTORModSync.Core.Utility
                                     }
                                     catch ( Exception exception )
                                     {
-                                        Logger.LogException( exception, "Exception while running the executed program" );
-                                        return default; // todo: exit codes for timeout and unhandled etc.
+                                        Logger.LogException( exception, "Exception while running the process." );
+                                        return ( -3, null, null ); // unhandled internal exception
                                     }
                                 },
                                 cancellationTokenSource.Token

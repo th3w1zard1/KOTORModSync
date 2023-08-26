@@ -916,6 +916,29 @@ namespace KOTORModSync
                 {
                     return ( false, "Please set your directories first" );
                 }
+                
+                string pykotorcliPath = Path.Combine(
+                    Utility.GetExecutingAssemblyDirectory(),
+                    "Resources",
+                    "pykotorcli"
+                );
+                await Logger.LogAsync( "Ensuring the pykotorcli binary is executable..." );
+                bool pykotorIsExecutable = true;
+                try
+                {
+                    await PlatformAgnosticMethods.MakeExecutableAsync( pykotorcliPath );
+
+                }
+                catch ( Exception e )
+                {
+                    await Logger.LogExceptionAsync( e );
+                    pykotorIsExecutable = false;
+                }
+
+                bool pykotorTestExecute = false;
+                (int, string, string) result = await PlatformAgnosticMethods.ExecuteProcessAsync( pykotorcliPath );
+                if ( result.Item1 == 1 ) // should return syntax error code since we passed no arguments
+                    pykotorTestExecute = true;
 
                 if ( MainConfig.AllComponents.IsNullOrEmptyCollection() )
                 {
@@ -1010,6 +1033,20 @@ namespace KOTORModSync
                     await Logger.LogErrorAsync( informationMessage );
                 }
 
+                if ( !pykotorIsExecutable )
+                {
+                    informationMessage =
+                        "The PyKotorCLI binary does not seem to be executable, please see the logs in the output window for more information.";
+                    await Logger.LogErrorAsync( informationMessage );
+                }
+
+                if ( !pykotorTestExecute )
+                {
+                    informationMessage =
+                        "The pykotorcli test execution did not pass, this may mean the binary is corrupted or has unresolved dependency problems.";
+                    await Logger.LogErrorAsync( informationMessage );
+                }
+
                 if ( !isInstallDirectoryWritable )
                 {
                     informationMessage = "The Install directory is not writable!"
@@ -1038,20 +1075,18 @@ namespace KOTORModSync
                     await Logger.LogErrorAsync( informationMessage );
                 }
 
-
+                // ReSharper disable once InvertIf
                 if ( fileSystemInfos.Any() )
                 {
                     informationMessage =
                         "You have duplicate files/folders in your installation directory in a case-insensitive environment."
                         + "Please resolve these before continuing. Check the output window for the specific files to resolve.";
+                    await Logger.LogErrorAsync( informationMessage );
                 }
 
-                if ( !informationMessage.Equals( string.Empty ) )
-                    return ( false, informationMessage );
-
-                return ( true,
-                    "No issues found. If you encounter any problems during the installation, please contact the developer." );
-
+                return !informationMessage.Equals( string.Empty )
+                    ? ((bool success, string informationMessage))( false, informationMessage )
+                    : ((bool success, string informationMessage))( true, "No issues found. If you encounter any problems during the installation, please contact the developer." );
             }
             catch ( Exception e )
             {

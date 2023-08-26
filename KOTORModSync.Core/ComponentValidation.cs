@@ -355,7 +355,7 @@ namespace KOTORModSync.Core
 
                         success = false;
                         AddError(
-                            "'Destination' key cannot be used with this action." + $" Got '{instruction.Destination}'",
+                            $"'Destination' key cannot be used with this action. Got '{instruction.Destination}'",
                             instruction
                         );
 
@@ -384,25 +384,45 @@ namespace KOTORModSync.Core
                         }
 
                         break;
+                    // don't validate arduous execute/run actions.
+                    case Instruction.ActionType.Run:
+                    case Instruction.ActionType.Execute:
+                        break;
+                    case Instruction.ActionType.Move:
+                    case Instruction.ActionType.Copy:
+                    case Instruction.ActionType.DelDuplicate:
+                    case Instruction.ActionType.HoloPatcher:
                     default:
-                        
+                        string destinationPath = null;
                         if ( !string.IsNullOrEmpty( instruction.Destination ) )
-                            instruction.Destination = new InsensitivePath(
+                        {
+                            destinationPath = new InsensitivePath(
                                 Utility.Utility.ReplaceCustomVariables( instruction.Destination ),
                                 isFile: false
                             ).FullName;
+                        }
 
-                        if ( string.IsNullOrWhiteSpace( instruction.Destination )
-                            || !PathValidator.IsValidPath(instruction.Destination)
-                            || !Directory.Exists( instruction.Destination ) )
+                        if ( string.IsNullOrWhiteSpace( destinationPath )
+                            || !PathValidator.IsValidPath( destinationPath )
+                            || !Directory.Exists( destinationPath ) )
                         {
                             success = false;
-                            AddError( "Destination cannot be found!" + $" Got '{instruction.Destination}'", instruction );
-                            if ( PathValidator.IsValidPath(instruction.Destination) && MainConfig.AttemptFixes )
+                            AddError( $"Destination cannot be found! Got '{destinationPath}'", instruction );
+                            if ( MainConfig.AttemptFixes && PathValidator.IsValidPath(destinationPath) )
                             {
                                 Logger.Log( "Fixing the above error automatically..." );
-                                _ = Directory.CreateDirectory( instruction.Destination );
-                                success = true;
+                                try
+                                {
+                                    // ReSharper disable once AssignNullToNotNullAttribute
+                                    _ = Directory.CreateDirectory( destinationPath );
+                                    success = true;
+                                }
+                                catch ( Exception e )
+                                {
+                                    Logger.LogException( e );
+                                    AddError( e.Message, instruction );
+                                    success = false;
+                                }
                             }
                         }
 

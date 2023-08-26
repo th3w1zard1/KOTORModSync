@@ -38,8 +38,7 @@ namespace KOTORModSync.Core
             attemptFixes = true;
             defaultInstall = true;
             noAdmin = false;
-            if ( Environment.OSVersion.Platform != PlatformID.Win32NT )
-                caseInsensitivePathing = true;
+            caseInsensitivePathing = true;
         }
 
         [Description( "Only components with the selected compatibility level will be installed" )]
@@ -73,7 +72,11 @@ namespace KOTORModSync.Core
             .Select(patcher => patcher.ToString());
 
         public static bool NoAdmin { get; private set; }
-        public bool noAdmin { get => NoAdmin; set => NoAdmin = value; }
+        public bool noAdmin
+        {
+	        get => NoAdmin;
+	        set => NoAdmin = value && Environment.OSVersion.Platform == PlatformID.Win32NT;
+        }
 
         public static bool UseMultiThreadedIO { get; private set; }
         public bool useMultiThreadedIO { get => UseMultiThreadedIO; set => UseMultiThreadedIO = value; }

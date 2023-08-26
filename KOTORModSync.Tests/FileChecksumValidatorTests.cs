@@ -37,14 +37,13 @@ namespace KOTORModSync.Tests
             for ( int i = 1; i <= 5; i++ )
             {
                 string filePath = Path.Combine( _testDirectory, $"TestFile{i}.txt" );
-                await File.WriteAllTextAsync( filePath, contents: "test content" );
+                await File.WriteAllTextAsync( filePath, contents: $"test content{i}" );
                 expectedChecksums.Add( new FileInfo( filePath ), SHA1.Create() );
             }
 
-            foreach ( KeyValuePair<FileInfo, SHA1> expectedChecksum in expectedChecksums )
+            foreach ( FileInfo? fileInfo in expectedChecksums.Keys )
             {
-                FileInfo fileInfo = expectedChecksum.Key;
-                SHA1 sha1 = await FileChecksumValidator.CalculateSha1Async( fileInfo );
+	            SHA1 sha1 = await FileChecksumValidator.CalculateSha1Async( fileInfo );
                 Assert.That( sha1.Hash, Is.Not.Null );
                 actualChecksums[fileInfo] = sha1;
             }
@@ -76,8 +75,7 @@ namespace KOTORModSync.Tests
             }
 
             // Calculate the SHA1 hash for the test files
-            foreach ( FileInfo? fileInfo in
-                expectedChecksums.Select( static expectedChecksum => expectedChecksum.Key ) )
+            foreach ( FileInfo? fileInfo in expectedChecksums.Keys )
             {
                 SHA1 sha1 = await FileChecksumValidator.CalculateSha1Async( fileInfo );
                 actualChecksums[fileInfo] = sha1;

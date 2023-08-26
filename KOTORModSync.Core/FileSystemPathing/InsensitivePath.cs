@@ -15,13 +15,12 @@ namespace KOTORModSync.Core.FileSystemPathing
     [SuppressMessage(category: "ReSharper", checkId: "UnusedMember.Global")]
     public class InsensitivePath : FileSystemInfo
     {
-        [CanBeNull] private FileSystemInfo _fileSystemInfo { get; set; }
+        [NotNull] private FileSystemInfo _fileSystemInfo { get; set; }
         private bool _isFile { get; }
         public bool IsFile => _isFile;
-        public List<FileSystemInfo> Duplicates { get; private set; } = new List<FileSystemInfo>();
         public List<FileSystemInfo> FindDuplicates() => PathHelper.FindCaseInsensitiveDuplicates( FullName, includeSubFolders: true, isFile: IsFile ).ToList();
-        public override string Name => _fileSystemInfo?.Name ?? Path.GetFileName( OriginalPath );
-        public override string FullName => _fileSystemInfo?.FullName ?? OriginalPath;
+        public override string Name => _fileSystemInfo.Name;
+        public override string FullName => _fileSystemInfo.FullName;
         public override bool Exists
         {
             get
@@ -34,20 +33,20 @@ namespace KOTORModSync.Core.FileSystemPathing
                 if ( MainConfig.CaseInsensitivePathing )
                     Refresh();
 
-                return _fileSystemInfo?.Exists ?? false;
+                return _fileSystemInfo.Exists;
             }
         }
+        public override void Delete()
+        {
+            _fileSystemInfo.Delete();
+            FindDuplicates()?.ToList().ForEach(duplicate => duplicate?.Delete());
+        }
 
-        public static InsensitivePath Empty { get; } = new InsensitivePath();
-        private InsensitivePath() { }
-        public override void Delete() => _fileSystemInfo?.Delete();
         public override string ToString() => FullName;
-
+        
+        public InsensitivePath( FileSystemInfo fileSystemInfo ) => _fileSystemInfo = fileSystemInfo;
         public InsensitivePath( string inputPath, bool isFile )
         {
-            if ( string.IsNullOrWhiteSpace( inputPath ) )
-                throw new ArgumentException( message: "Input path cannot be null or empty or whitespace.", nameof( inputPath ) );
-
             string formattedPath = PathHelper.FixPathFormatting( inputPath );
             OriginalPath = formattedPath;
             _isFile = isFile;
@@ -57,7 +56,7 @@ namespace KOTORModSync.Core.FileSystemPathing
 
             Refresh();
         }
-        
+
         public new void Refresh()
         {
             if ( _fileSystemInfo is null )
@@ -83,10 +82,9 @@ namespace KOTORModSync.Core.FileSystemPathing
                 default:
                     return;
             }
-        }
 
-        // ReSharper disable once NonReadonlyMemberInGetHashCode - TODO:
-        public override int GetHashCode() => _fileSystemInfo?.GetHashCode() ?? 0;
+            _fileSystemInfo.Refresh();
+        }
 
         //public static implicit operator string( InsensitivePath insensitivePath ) => insensitivePath._fileSystemInfo?.FullName;
         public static implicit operator FileInfo( InsensitivePath insensitivePath ) => insensitivePath._fileSystemInfo as FileInfo;

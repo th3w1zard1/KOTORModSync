@@ -918,10 +918,12 @@ namespace KOTORModSync
                 }
                 
                 string pykotorcliPath = Path.Combine(
-                    Utility.GetExecutingAssemblyDirectory(),
-                    "Resources",
-                    "pykotorcli"
-                );
+	                Utility.GetExecutingAssemblyDirectory(),
+	                "Resources",
+	                Environment.OSVersion.Platform == PlatformID.Win32NT
+		                ? "pykotorcli.exe"
+		                : "pykotorcli"
+	            );
                 await Logger.LogAsync( "Ensuring the pykotorcli binary is executable..." );
                 bool pykotorIsExecutable = true;
                 try

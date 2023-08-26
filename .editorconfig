@@ -54,6 +54,7 @@ resharper_arguments_literal = named
 resharper_arguments_string_literal = named
 resharper_braces_for_while = required
 resharper_csharp_empty_block_style = together_same_line
+resharper_csharp_indent_style = tab
 resharper_csharp_wrap_chained_method_calls = wrap_if_long
 resharper_for_built_in_types = use_var_when_evident
 resharper_indent_nested_lock_stmt = true
@@ -260,8 +261,8 @@ csharp_style_prefer_tuple_swap = true:suggestion
 csharp_style_implicit_object_creation_when_type_is_apparent = true:suggestion
 csharp_style_prefer_local_over_anonymous_function = true:suggestion
 csharp_style_prefer_null_check_over_type_check = true:suggestion
-indent_style = space
-indent_size = 4
+indent_style = tab
+indent_size = tab
 tab_width = 4
 
 # C++ Files

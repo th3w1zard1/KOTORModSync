@@ -79,7 +79,11 @@ namespace KOTORModSync.Core
         public bool useMultiThreadedIO { get => UseMultiThreadedIO; set => UseMultiThreadedIO = value; }
 
         public static bool CaseInsensitivePathing { get; private set; }
-        public bool caseInsensitivePathing { get => CaseInsensitivePathing; set => CaseInsensitivePathing = value; }
+        public bool caseInsensitivePathing
+        {
+	        get => CaseInsensitivePathing;
+	        set => CaseInsensitivePathing = value && Environment.OSVersion.Platform != PlatformID.Win32NT;
+        }
 
         public static bool DebugLogging { get; private set; }
         public bool debugLogging { [UsedImplicitly] get => DebugLogging; set => DebugLogging = value; }

@@ -462,28 +462,50 @@ namespace KOTORModSync.Core.FileSystemPathing
                     if ( !Directory.Exists( currentDir ) )
                         continue;
 
-                    var insensitiveCurrentDirPath = new InsensitivePath( currentDir, isFile:false );
-                    List<FileSystemInfo> duplicatesAndOriginal = insensitiveCurrentDirPath.FindDuplicates();
-                    duplicatesAndOriginal.Add( (DirectoryInfo)insensitiveCurrentDirPath );
-                    foreach ( FileSystemInfo thisDuplicateFolder in duplicatesAndOriginal )
+                    var currentDirInfo = new DirectoryInfo( currentDir );
+					
+                    IEnumerable<FileInfo> checkFiles = currentDirInfo.EnumerateFilesSafely(
+	                    searchPattern: "*",
+	                    includeSubFolders
+		                    ? SearchOption.AllDirectories
+		                    : SearchOption.TopDirectoryOnly
+                    );
+
+                    result.AddRange(
+	                    from thisFile in checkFiles
+	                    where thisFile != null
+		                    && WildcardPathMatch( thisFile.FullName, formattedPath )
+	                    select thisFile.FullName
+                    );
+
+                    if ( MainConfig.CaseInsensitivePathing )
                     {
-                        // Get all files in the parent directory.
-                        if ( !(thisDuplicateFolder is DirectoryInfo dirInfo) )
-                            throw new NullReferenceException(nameof( dirInfo ));
+	                    IEnumerable<FileSystemInfo> duplicates = FindCaseInsensitiveDuplicates(
+		                    currentDir,
+		                    includeSubFolders: true,
+		                    isFile: false
+	                    );
 
-                        IEnumerable<FileInfo> checkFiles = dirInfo.EnumerateFilesSafely(
-                            searchPattern: "*",
-                            includeSubFolders
-                                ? SearchOption.AllDirectories
-                                : SearchOption.TopDirectoryOnly
-                        );
+	                    foreach ( FileSystemInfo thisDuplicateFolder in duplicates )
+	                    {
+		                    // Get all files in the parent directory.
+		                    if ( !(thisDuplicateFolder is DirectoryInfo dirInfo) )
+			                    throw new NullReferenceException(nameof( dirInfo ));
 
-                        result.AddRange(
-                            from thisFile in checkFiles
-                            where thisFile != null
-                                && WildcardPathMatch( thisFile.FullName, formattedPath )
-                            select thisFile.FullName
-                        );
+		                    checkFiles = dirInfo.EnumerateFilesSafely(
+			                    searchPattern: "*",
+			                    includeSubFolders
+				                    ? SearchOption.AllDirectories
+				                    : SearchOption.TopDirectoryOnly
+		                    );
+
+		                    result.AddRange(
+			                    from thisFile in checkFiles
+			                    where thisFile != null
+				                    && WildcardPathMatch( thisFile.FullName, formattedPath )
+			                    select thisFile.FullName
+		                    );
+	                    }
                     }
                 }
                 catch ( Exception ex )

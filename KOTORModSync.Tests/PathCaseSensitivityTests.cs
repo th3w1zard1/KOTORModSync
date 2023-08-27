@@ -7,444 +7,420 @@ using KOTORModSync.Core.FileSystemPathing;
 
 namespace KOTORModSync.Tests
 {
-    internal class PathCaseSensitivityTests
-    {
+	internal class PathCaseSensitivityTests
+	{
 #pragma warning disable CS8618
-        private static string s_testDirectory;
+		private static string s_testDirectory;
 #pragma warning restore CS8618
 
-        [SetUp]
-        public static void InitializeTestDirectory()
-        {
-            s_testDirectory = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
-            _ = Directory.CreateDirectory( s_testDirectory );
-        }
+		[SetUp]
+		public static void InitializeTestDirectory()
+		{
+			s_testDirectory = Path.Combine( Path.GetTempPath(), Guid.NewGuid().ToString() );
+			_ = Directory.CreateDirectory( s_testDirectory );
+		}
 
-        [TearDown]
-        public static void CleanUpTestDirectory() => Directory.Delete(s_testDirectory, recursive: true);
+		[TearDown]
+		public static void CleanUpTestDirectory() => Directory.Delete( s_testDirectory, recursive: true );
 
-        private DirectoryInfo _tempDirectory = null!;
-        private DirectoryInfo _subDirectory = null!;
+		private DirectoryInfo _tempDirectory = null!;
+		private DirectoryInfo _subDirectory = null!;
 
-        [SetUp]
-        public void Setup()
-        {
-            _tempDirectory = new DirectoryInfo(Path.Combine(Path.GetTempPath(), "UnitTestTempDir"));
-            _tempDirectory.Create();
-            _subDirectory = new DirectoryInfo(Path.Combine(_tempDirectory.FullName, "SubDir"));
-            _subDirectory.Create();
-        }
+		[SetUp]
+		public void Setup()
+		{
+			_tempDirectory = new DirectoryInfo( Path.Combine( Path.GetTempPath(), "UnitTestTempDir" ) );
+			_tempDirectory.Create();
+			_subDirectory = new DirectoryInfo( Path.Combine( _tempDirectory.FullName, "SubDir" ) );
+			_subDirectory.Create();
+		}
 
-        [TearDown]
-        public void TearDown()
-        {
-            _subDirectory.Delete(true);
-            _tempDirectory.Delete(true);
-        }
+		[TearDown]
+		public void TearDown()
+		{
+			_subDirectory.Delete( true );
+			_tempDirectory.Delete( true );
+		}
 
-        [Test]
-        public void FindCaseInsensitiveDuplicates_ThrowsArgumentNullException_WhenDirectoryIsNull()
-        {
-            DirectoryInfo? directory = null;
-            // ReSharper disable once ReturnValueOfPureMethodIsNotUsed
-            _ = Assert.Throws<ArgumentNullException>( () => PathHelper.FindCaseInsensitiveDuplicates( directory! )?.ToList() );
-        }
+		[Test]
+		public void FindCaseInsensitiveDuplicates_ThrowsArgumentNullException_WhenDirectoryIsNull()
+		{
+			DirectoryInfo? directory = null;
+			// ReSharper disable once ReturnValueOfPureMethodIsNotUsed
+			_ = Assert.Throws<ArgumentNullException>( () => PathHelper.FindCaseInsensitiveDuplicates( directory! )?.ToList() );
+		}
 
 
-        [Test]
-        public void FindCaseInsensitiveDuplicates_ReturnsEmptyList_WhenDirectoryIsEmpty()
-        {
-            List<FileSystemInfo> result = PathHelper.FindCaseInsensitiveDuplicates(_tempDirectory).ToList();
-            var failureMessage = new StringBuilder();
-            foreach (FileSystemInfo item in result)
-            {
-                failureMessage.AppendLine(item.FullName);
-            }
+		[Test]
+		public void FindCaseInsensitiveDuplicates_ReturnsEmptyList_WhenDirectoryIsEmpty()
+		{
+			List<FileSystemInfo> result = PathHelper.FindCaseInsensitiveDuplicates( _tempDirectory ).ToList();
 
-            Assert.That( result, Is.Empty, $"Expected 0 items, but found {result.Count}. Output: {failureMessage}");
-        }
+			var failureMessage = new StringBuilder();
+			failureMessage.AppendLine(string.Join(Environment.NewLine, result.Select(item => item.FullName)));
 
-        [Test]
-        public void FindCaseInsensitiveDuplicates_ReturnsEmptyList_WhenNoDuplicatesExist()
-        {
-            // Arrange
-            var file1 = new FileInfo(Path.Combine(_tempDirectory.FullName, "file1.txt"));
-            file1.Create().Close();
-            var file2 = new FileInfo(Path.Combine(_tempDirectory.FullName, "file2.txt"));
-            file2.Create().Close();
+			Assert.That( result, Is.Empty, $"Expected 0 items, but found {result.Count}. Output: {failureMessage}" );
+		}
 
-            // Act
-            List<FileSystemInfo> result = PathHelper.FindCaseInsensitiveDuplicates(_tempDirectory).ToList();
-            var failureMessage = new StringBuilder();
-            foreach (FileSystemInfo item in result)
-            {
-                failureMessage.AppendLine(item.FullName);
-            }
+		[Test]
+		public void FindCaseInsensitiveDuplicates_ReturnsEmptyList_WhenNoDuplicatesExist()
+		{
+			// Arrange
+			var file1 = new FileInfo( Path.Combine( _tempDirectory.FullName, "file1.txt" ) );
+			file1.Create().Close();
+			var file2 = new FileInfo( Path.Combine( _tempDirectory.FullName, "file2.txt" ) );
+			file2.Create().Close();
 
-            // Assert
-            Assert.That( result, Is.Empty, $"Expected 0 items, but found {result.Count}. Output: {failureMessage}");
-        }
+			// Act
+			List<FileSystemInfo> result = PathHelper.FindCaseInsensitiveDuplicates( _tempDirectory ).ToList();
 
-        [Test]
-        // will always fail on windows
-        public void FindCaseInsensitiveDuplicates_FindsFileDuplicates_CaseInsensitive()
-        {
-            if ( Environment.OSVersion.Platform == PlatformID.Win32NT )
-            {
-                Console.WriteLine("Test is not possible on Windows.");
-                return;
-            }
+			var failureMessage = new StringBuilder();
+			failureMessage.AppendLine(string.Join(Environment.NewLine, result.Select(item => item.FullName)));
 
-            // Arrange
-            var file1 = new FileInfo(Path.Combine(_tempDirectory.FullName, "file1.txt"));
-            file1.Create().Close();
-            var file2 = new FileInfo(Path.Combine(_tempDirectory.FullName, "FILE1.txt"));
-            file2.Create().Close();
+			// Assert
+			Assert.That( result, Is.Empty, $"Expected 0 items, but found {result.Count}. Output: {failureMessage}" );
+		}
 
-            // Act
-            List<FileSystemInfo> result = PathHelper.FindCaseInsensitiveDuplicates(_tempDirectory).ToList();
-            var failureMessage = new StringBuilder();
-            foreach (FileSystemInfo item in result)
-            {
-                failureMessage.AppendLine(item.FullName);
-            }
+		[Test]
+		// will always fail on windows
+		public void FindCaseInsensitiveDuplicates_FindsFileDuplicates_CaseInsensitive()
+		{
+			if ( Environment.OSVersion.Platform == PlatformID.Win32NT )
+			{
+				Console.WriteLine( "Test is not possible on Windows." );
+				return;
+			}
 
-            // Assert
-            Assert.That( result.ToList(), Has.Count.EqualTo( 2 ), $"Expected 2 items, but found {result.Count}. Output: {failureMessage}");
-        }
+			// Arrange
+			var file1 = new FileInfo( Path.Combine( _tempDirectory.FullName, "file1.txt" ) );
+			file1.Create().Close();
+			var file2 = new FileInfo( Path.Combine( _tempDirectory.FullName, "FILE1.txt" ) );
+			file2.Create().Close();
 
-        [Test]
-        public void FindCaseInsensitiveDuplicates_IgnoresNonDuplicates()
-        {
-            // Arrange
-            var file1 = new FileInfo(Path.Combine(_tempDirectory.FullName, "file1.txt"));
-            file1.Create().Close();
-            var file2 = new FileInfo(Path.Combine(_subDirectory.FullName, "file2.txt"));
-            file2.Create().Close();
+			// Act
+			List<FileSystemInfo> result = PathHelper.FindCaseInsensitiveDuplicates( _tempDirectory ).ToList();
 
-            // Act
-            List<FileSystemInfo> result = PathHelper.FindCaseInsensitiveDuplicates(_tempDirectory).ToList();
-            var failureMessage = new StringBuilder();
-            foreach (FileSystemInfo item in result)
-            {
-                failureMessage.AppendLine(item.FullName);
-            }
+			var failureMessage = new StringBuilder();
+			failureMessage.AppendLine(string.Join(Environment.NewLine, result.Select(item => item.FullName)));
 
-            // Assert
-            Assert.That( result, Is.Empty, $"Expected 0 items, but found {result.Count}. Output: {failureMessage}");
-        }
+			// Assert
+			Assert.That( result.ToList(), Has.Count.EqualTo( 2 ), $"Expected 2 items, but found {result.Count}. Output: {failureMessage}" );
+		}
 
-        [Test]
-        public void FindCaseInsensitiveDuplicates_IgnoresExtensions()
-        {
-            // Arrange
-            var file1 = new FileInfo(Path.Combine(_tempDirectory.FullName, "file1.txt"));
-            file1.Create().Close();
-            var file2 = new FileInfo(Path.Combine(_subDirectory.FullName, "FILE1.png"));
-            file2.Create().Close();
+		[Test]
+		public void FindCaseInsensitiveDuplicates_IgnoresNonDuplicates()
+		{
+			// Arrange
+			var file1 = new FileInfo( Path.Combine( _tempDirectory.FullName, "file1.txt" ) );
+			file1.Create().Close();
+			var file2 = new FileInfo( Path.Combine( _subDirectory.FullName, "file2.txt" ) );
+			file2.Create().Close();
 
-            // Act
-            List<FileSystemInfo> result = PathHelper.FindCaseInsensitiveDuplicates(_tempDirectory).ToList();
-            var failureMessage = new StringBuilder();
-            foreach (FileSystemInfo item in result)
-            {
-                failureMessage.AppendLine(item.FullName);
-            }
+			// Act
+			List<FileSystemInfo> result = PathHelper.FindCaseInsensitiveDuplicates( _tempDirectory ).ToList();
 
-            // Assert
-            Assert.That( result, Is.Empty, $"Expected 0 items, but found {result.Count}. Output: {failureMessage}");
-        }
+			var failureMessage = new StringBuilder();
+			failureMessage.AppendLine(string.Join(Environment.NewLine, result.Select(item => item.FullName)));
 
-        [Test]
-        public void TestGetClosestMatchingEntry()
-        {
-            if ( Environment.OSVersion.Platform == PlatformID.Win32NT )
-            {
-                Console.WriteLine("Test is not possible on Windows.");
-                return;
-            }
+			// Assert
+			Assert.That( result, Is.Empty, $"Expected 0 items, but found {result.Count}. Output: {failureMessage}" );
+		}
 
-            string file1 = Path.Combine( s_testDirectory, "file.txt" );
-            string file2 = Path.Combine( s_testDirectory, "FILE.TXT" );
-            File.WriteAllText( file1, contents: "Test content" );
-            File.WriteAllText( file2, contents: "Test content" );
-            
-            Assert.That( PathHelper.GetCaseSensitivePath( Path.Combine( Path.GetDirectoryName(file1)!, Path.GetFileName(file1).ToUpperInvariant()) ).Item1, Is.EqualTo( file2 ) );
-            Assert.That( PathHelper.GetCaseSensitivePath( file1.ToUpperInvariant() ).Item1, Is.EqualTo( file2 ) );
-        }
+		[Test]
+		public void FindCaseInsensitiveDuplicates_IgnoresExtensions()
+		{
+			// Arrange
+			var file1 = new FileInfo( Path.Combine( _tempDirectory.FullName, "file1.txt" ) );
+			file1.Create().Close();
+			var file2 = new FileInfo( Path.Combine( _subDirectory.FullName, "FILE1.png" ) );
+			file2.Create().Close();
 
-        [Test]
-        public void TestDuplicatesWithFileInfo()
-        {
-            if ( Environment.OSVersion.Platform == PlatformID.Win32NT )
-            {
-                Console.WriteLine("Test is not possible on Windows.");
-                return;
-            }
+			// Act
+			List<FileSystemInfo> result = PathHelper.FindCaseInsensitiveDuplicates( _tempDirectory ).ToList();
 
-            File.WriteAllText(Path.Combine(s_testDirectory, "file.txt"), contents: "Test content");
-            File.WriteAllText(Path.Combine(s_testDirectory, "File.txt"), contents: "Test content");
-            
-            var fileInfo = new FileInfo(Path.Combine(s_testDirectory, "file.txt"));
-            List<FileSystemInfo> result = PathHelper.FindCaseInsensitiveDuplicates(fileInfo).ToList();
-            var failureMessage = new StringBuilder();
-            foreach (FileSystemInfo item in result)
-            {
-                failureMessage.AppendLine(item.FullName);
-            }
-            
-            Assert.That( result, Has.Count.EqualTo( 2 ), $"Expected 2 items, but found {result.Count}. Output: {failureMessage}");
-        }
+			var failureMessage = new StringBuilder();
+			failureMessage.AppendLine( string.Join( Environment.NewLine, result.Select( item => item.FullName ) ) );
 
-        [Test]
-        public void TestDuplicatesWithDirectoryNameString()
-        {
-            if ( Environment.OSVersion.Platform == PlatformID.Win32NT )
-            {
-                Console.WriteLine("Test is not possible on Windows.");
-                return;
-            }
+			// Assert
+			Assert.That( result, Is.Empty, $"Expected 0 items, but found {result.Count}. Output: {failureMessage}" );
+		}
 
-            if ( Environment.OSVersion.Platform == PlatformID.Win32NT )
-            {
-                Console.WriteLine("Test is not possible on Windows.");
-                return;
-            }
+		[Test]
+		public void TestGetClosestMatchingEntry()
+		{
+			if ( Environment.OSVersion.Platform == PlatformID.Win32NT )
+			{
+				Console.WriteLine( "Test is not possible on Windows." );
+				return;
+			}
 
-            File.WriteAllText(Path.Combine(s_testDirectory, "file.txt"), contents: "Test content");
-            File.WriteAllText(Path.Combine(s_testDirectory, "File.txt"), contents: "Test content");
+			string file1 = Path.Combine( s_testDirectory, "file.txt" );
+			string file2 = Path.Combine( s_testDirectory, "FILE.TXT" );
+			File.WriteAllText( file1, contents: "Test content" );
+			File.WriteAllText( file2, contents: "Test content" );
+			Assert.Multiple( () =>
+			{
+				Assert.That( PathHelper.GetCaseSensitivePath( Path.Combine( Path.GetDirectoryName( file1 )!, Path.GetFileName( file1 ).ToUpperInvariant() ) ).Item1, Is.EqualTo( file2 ) );
+				Assert.That( PathHelper.GetCaseSensitivePath( file1.ToUpperInvariant() ).Item1, Is.EqualTo( file2 ) );
+			} );
+		}
 
-            List<FileSystemInfo> result = PathHelper.FindCaseInsensitiveDuplicates(s_testDirectory).ToList();
-            var failureMessage = new StringBuilder();
-            foreach (FileSystemInfo item in result)
-            {
-                failureMessage.AppendLine(item.FullName);
-            }
-            
-            Assert.That( result, Has.Count.EqualTo( 2 ), $"Expected 2 items, but found {result.Count}. Output: {failureMessage}");
-        }
+		[Test]
+		public void TestDuplicatesWithFileInfo()
+		{
+			if ( Environment.OSVersion.Platform == PlatformID.Win32NT )
+			{
+				Console.WriteLine( "Test is not possible on Windows." );
+				return;
+			}
 
-        [Test]
-        public void TestDuplicateDirectories()
-        {
-            if ( Environment.OSVersion.Platform == PlatformID.Win32NT )
-            {
-                Console.WriteLine("Test is not possible on Windows.");
-                return;
-            }
+			File.WriteAllText( Path.Combine( s_testDirectory, "file.txt" ), contents: "Test content" );
+			File.WriteAllText( Path.Combine( s_testDirectory, "File.txt" ), contents: "Test content" );
 
-            _ = Directory.CreateDirectory( Path.Combine( s_testDirectory, "subdir" ) );
-            _ = Directory.CreateDirectory( Path.Combine( s_testDirectory, "SubDir" ) );
-            
-            var dirInfo = new DirectoryInfo(s_testDirectory);
-            List<FileSystemInfo> result = PathHelper.FindCaseInsensitiveDuplicates(dirInfo).ToList();
-            var failureMessage = new StringBuilder();
-            foreach (FileSystemInfo item in result)
-            {
-                failureMessage.AppendLine(item.FullName);
-            }
-            
-            Assert.That( result, Has.Count.EqualTo( 2 ), $"Expected 2 items, but found {result.Count}. Output: {failureMessage}");
-        }
+			var fileInfo = new FileInfo( Path.Combine( s_testDirectory, "file.txt" ) );
+			List<FileSystemInfo> result = PathHelper.FindCaseInsensitiveDuplicates( fileInfo ).ToList();
 
-        [Test]
-        public void TestDuplicatesWithDifferentCasingFilesInNestedDirectories()
-        {
-            if ( Environment.OSVersion.Platform == PlatformID.Win32NT )
-            {
-                Console.WriteLine("Test is not possible on Windows.");
-                return;
-            }
+			var failureMessage = new StringBuilder();
+			failureMessage.AppendLine( string.Join( Environment.NewLine, result.Select( item => item.FullName ) ) );
 
-            string subDirectory = Path.Combine(s_testDirectory, "SubDirectory");
-            _ = Directory.CreateDirectory( subDirectory );
-            
-            File.WriteAllText(Path.Combine(s_testDirectory, "file.txt"), contents: "Test content");
-            File.WriteAllText(Path.Combine(s_testDirectory, "file.TXT"), contents: "Test content");
-            File.WriteAllText(Path.Combine(subDirectory, "FILE.txt"), contents: "Test content");
-            File.WriteAllText(Path.Combine(subDirectory, "file.tXT"), contents: "Test content");
-            
-            var dirInfo = new DirectoryInfo(s_testDirectory);
-            List<FileSystemInfo> result = PathHelper.FindCaseInsensitiveDuplicates(dirInfo, includeSubFolders: true).ToList();
-            var failureMessage = new StringBuilder();
-            foreach (FileSystemInfo item in result)
-            {
-                failureMessage.AppendLine(item.FullName);
-            }
+			Assert.That( result, Has.Count.EqualTo( 2 ), $"Expected 2 items, but found {result.Count}. Output: {failureMessage}" );
+		}
 
-            Assert.That( result, Has.Count.EqualTo(4), $"Expected 4 items, but found {result.Count}. Output: {failureMessage}");
-        }
+		[Test]
+		public void TestDuplicatesWithDirectoryNameString()
+		{
+			if ( Environment.OSVersion.Platform == PlatformID.Win32NT )
+			{
+				Console.WriteLine( "Test is not possible on Windows." );
+				return;
+			}
 
-        [Test]
-        public void TestDuplicateNestedDirectories()
-        {
-            if ( Environment.OSVersion.Platform == PlatformID.Win32NT )
-            {
-                Console.WriteLine("Test is not possible on Windows.");
-                return;
-            }
+			File.WriteAllText( Path.Combine( s_testDirectory, "file.txt" ), contents: "Test content" );
+			File.WriteAllText( Path.Combine( s_testDirectory, "File.txt" ), contents: "Test content" );
 
-            string subDir1 = Path.Combine(s_testDirectory, "SubDir");
-            string subDir2 = Path.Combine(s_testDirectory, "subdir");
+			List<FileSystemInfo> result = PathHelper.FindCaseInsensitiveDuplicates( s_testDirectory ).ToList();
 
-            _ = Directory.CreateDirectory( subDir1 );
-            _ = Directory.CreateDirectory( subDir2 );
-            
-            File.WriteAllText(Path.Combine(subDir1, "file.txt"), contents: "Test content");
-            File.WriteAllText(Path.Combine(subDir2, "file.txt"), contents: "Test content");
-            
-            var dirInfo = new DirectoryInfo(s_testDirectory);
-            List<FileSystemInfo> result = PathHelper.FindCaseInsensitiveDuplicates(dirInfo, includeSubFolders: true).ToList();
-            var failureMessage = new StringBuilder();
-            foreach (FileSystemInfo item in result)
-            {
-                failureMessage.AppendLine(item.FullName);
-            }
-            
-            Assert.That( result, Has.Count.EqualTo( 2 ), $"Expected 2 items, but found {result.Count}. Output: {failureMessage}");
-        }
-        
-        [Test]
-        public void TestInvalidPath()
-        {
-            Assert.Throws<ArgumentException>(
-                // ReSharper disable once ReturnValueOfPureMethodIsNotUsed
-                () => PathHelper.FindCaseInsensitiveDuplicates( "Invalid>Path" )?.ToList()
-            );
-        }
+			var failureMessage = new StringBuilder();
+			failureMessage.AppendLine( string.Join( Environment.NewLine, result.Select( item => item.FullName ) ) );
 
-        [Test]
-        public void GetCaseSensitivePath_ValidFile_ReturnsSamePath()
-        {
-            // Arrange
-            string testFilePath = Path.Combine(s_testDirectory, "test.txt");
-            File.Create(testFilePath).Close();
+			Assert.That( result, Has.Count.EqualTo( 2 ), $"Expected 2 items, but found {result.Count}. Output: {failureMessage}" );
+		}
 
-            // Act
-            string? result = PathHelper.GetCaseSensitivePath(testFilePath, isFile:true).Item1;
+		[Test]
+		public void TestDuplicateDirectories()
+		{
+			if ( Environment.OSVersion.Platform == PlatformID.Win32NT )
+			{
+				Console.WriteLine( "Test is not possible on Windows." );
+				return;
+			}
 
-            // Assert
-            Assert.That( result, Is.EqualTo( testFilePath ) );
-        }
+			_ = Directory.CreateDirectory( Path.Combine( s_testDirectory, "subdir" ) );
+			_ = Directory.CreateDirectory( Path.Combine( s_testDirectory, "SubDir" ) );
 
-        [Test]
-        public void GetCaseSensitivePath_ValidDirectory_ReturnsSamePath()
-        {
-            // Arrange
-            string testDirPath = Path.Combine(s_testDirectory, "testDir");
-            _ = Directory.CreateDirectory( testDirPath );
+			var dirInfo = new DirectoryInfo( s_testDirectory );
+			List<FileSystemInfo> result = PathHelper.FindCaseInsensitiveDuplicates( dirInfo ).ToList();
 
-            // Act
-            DirectoryInfo? result = PathHelper.GetCaseSensitivePath(new DirectoryInfo(testDirPath));
+			var failureMessage = new StringBuilder();
+			failureMessage.AppendLine( string.Join( Environment.NewLine, result.Select( item => item.FullName ) ) );
 
-            // Assert
-            Assert.That( result.FullName, Is.EqualTo( testDirPath ) );
-        }
+			Assert.That( result, Has.Count.EqualTo( 2 ), $"Expected 2 items, but found {result.Count}. Output: {failureMessage}" );
+		}
 
-        [Test]
-        public void GetCaseSensitivePath_NullOrWhiteSpacePath_ThrowsArgumentException()
-        {
-            // Arrange
-            string? nullPath = null;
-            string emptyPath = string.Empty;
-            const string whiteSpacePath = "   ";
+		[Test]
+		public void TestDuplicatesWithDifferentCasingFilesInNestedDirectories()
+		{
+			if ( Environment.OSVersion.Platform == PlatformID.Win32NT )
+			{
+				Console.WriteLine( "Test is not possible on Windows." );
+				return;
+			}
 
-            // Act & Assert
-            _ = Assert.Throws<ArgumentException>( () => PathHelper.GetCaseSensitivePath( nullPath ) );
-            _ = Assert.Throws<ArgumentException>( () => PathHelper.GetCaseSensitivePath( emptyPath ) );
-            _ = Assert.Throws<ArgumentException>( () => PathHelper.GetCaseSensitivePath( whiteSpacePath ) );
-        }
+			string subDirectory = Path.Combine( s_testDirectory, "SubDirectory" );
+			_ = Directory.CreateDirectory( subDirectory );
 
-        [Test]
-        public void GetCaseSensitivePath_InvalidCharactersInPath_ReturnsOriginalPath()
-        {
-            // Arrange
-            string fileName = "invalid>path";
-            string invalidPath = Path.Combine(s_testDirectory, fileName);
-            string upperCasePath = invalidPath.ToUpperInvariant();
+			File.WriteAllText( Path.Combine( s_testDirectory, "file.txt" ), contents: "Test content" );
+			File.WriteAllText( Path.Combine( s_testDirectory, "file.TXT" ), contents: "Test content" );
+			File.WriteAllText( Path.Combine( subDirectory, "FILE.txt" ), contents: "Test content" );
+			File.WriteAllText( Path.Combine( subDirectory, "file.tXT" ), contents: "Test content" );
 
-            // Act & Assert
-            (string, bool?) result = PathHelper.GetCaseSensitivePath( upperCasePath );
-            Assert.That( result.Item1, Is.EqualTo(Path.Combine( s_testDirectory, fileName.ToUpperInvariant() )) );
-            Assert.That( result.Item2, Is.Null );
-        }
+			var dirInfo = new DirectoryInfo( s_testDirectory );
+			List<FileSystemInfo> result = PathHelper.FindCaseInsensitiveDuplicates( dirInfo, includeSubFolders: true ).ToList();
 
-        [Test]
-        public void GetCaseSensitivePath_RelativePath_ReturnsAbsolutePath()
-        {
-            // Arrange
-            string testFilePath = Path.Combine(s_testDirectory, "test.txt");
-            File.Create(testFilePath).Close();
-            string relativePath = Path.GetRelativePath(Directory.GetCurrentDirectory(), testFilePath);
-            string upperCasePath = relativePath.ToUpperInvariant();
+			var failureMessage = new StringBuilder();
+			failureMessage.AppendLine( string.Join( Environment.NewLine, result.Select( item => item.FullName ) ) );
 
-            // Act
-            string? result = PathHelper.GetCaseSensitivePath(upperCasePath).Item1;
+			Assert.That( result, Has.Count.EqualTo( 4 ), $"Expected 4 items, but found {result.Count}. Output: {failureMessage}" );
+		}
 
-            // Assert
-            Assert.That( result, Is.EqualTo( testFilePath ) );
-        }
+		[Test]
+		public void TestDuplicateNestedDirectories()
+		{
+			if ( Environment.OSVersion.Platform == PlatformID.Win32NT )
+			{
+				Console.WriteLine( "Test is not possible on Windows." );
+				return;
+			}
 
-        
+			string subDir1 = Path.Combine( s_testDirectory, "SubDir" );
+			string subDir2 = Path.Combine( s_testDirectory, "subdir" );
 
-        [Test]
-        public void GetCaseSensitivePath_EntirePathCaseIncorrect_ReturnsCorrectPath()
-        {
-            // Arrange
-            string testFilePath = Path.Combine(s_testDirectory, "test.txt");
-            File.Create(testFilePath).Close();
-            string upperCasePath = testFilePath.ToUpperInvariant();
+			_ = Directory.CreateDirectory( subDir1 );
+			_ = Directory.CreateDirectory( subDir2 );
 
-            // Act
-            string? result = PathHelper.GetCaseSensitivePath( upperCasePath, isFile:true ).Item1;
+			File.WriteAllText( Path.Combine( subDir1, "file.txt" ), contents: "Test content" );
+			File.WriteAllText( Path.Combine( subDir2, "file.txt" ), contents: "Test content" );
 
-            // Assert
-            Assert.That( result, Is.EqualTo( testFilePath ) );
-        }
+			var dirInfo = new DirectoryInfo( s_testDirectory );
+			List<FileSystemInfo> result = PathHelper.FindCaseInsensitiveDuplicates( dirInfo, includeSubFolders: true ).ToList();
 
-        [Test]
-        public void GetCaseSensitivePath_NonExistentFile_ReturnsCaseSensitivePath()
-        {
-            // Arrange
-            string nonExistentFileName = "non_existent_file.txt";
-            string nonExistentFilePath = Path.Combine(s_testDirectory, nonExistentFileName);
-            string upperCasePath = nonExistentFilePath.ToUpperInvariant();
+			var failureMessage = new StringBuilder();
+			failureMessage.AppendLine( string.Join( Environment.NewLine, result.Select( item => item.FullName ) ) );
 
-            // Act
-            string? result = PathHelper.GetCaseSensitivePath(upperCasePath).Item1;
+			Assert.That( result, Has.Count.EqualTo( 2 ), $"Expected 2 items, but found {result.Count}. Output: {failureMessage}" );
+		}
 
-            // Assert
-            Assert.That( result, Is.EqualTo( Path.Combine(s_testDirectory, nonExistentFileName.ToUpperInvariant()) ) );
-        }
+		[Test]
+		public void TestInvalidPath()
+		{
+			Assert.Throws<ArgumentException>(
+				// ReSharper disable once ReturnValueOfPureMethodIsNotUsed
+				() => PathHelper.FindCaseInsensitiveDuplicates( "Invalid>Path" )?.ToList()
+			);
+		}
 
-        [Test]
-        public void GetCaseSensitivePath_NonExistentDirAndChildFile_ReturnsCaseSensitivePath()
-        {
-            // Arrange
-            string nonExistentRelFilePath = Path.Combine( "non_existent_dir", "non_existent_file.txt" );
-            string nonExistentFilePath = Path.Combine(s_testDirectory, nonExistentRelFilePath);
-            string upperCasePath = nonExistentFilePath.ToUpperInvariant();
+		[Test]
+		public void GetCaseSensitivePath_ValidFile_ReturnsSamePath()
+		{
+			// Arrange
+			string testFilePath = Path.Combine( s_testDirectory, "test.txt" );
+			File.Create( testFilePath ).Close();
 
-            // Act
-            string? result = PathHelper.GetCaseSensitivePath(upperCasePath, isFile:true).Item1;
+			// Act
+			string? result = PathHelper.GetCaseSensitivePath( testFilePath, isFile: true ).Item1;
 
-            // Assert
-            Assert.That(result, Is.EqualTo(Path.Combine( s_testDirectory, nonExistentRelFilePath.ToUpperInvariant() )));
-        }
+			// Assert
+			Assert.That( result, Is.EqualTo( testFilePath ) );
+		}
 
-        [Test]
-        public void GetCaseSensitivePath_NonExistentDirectory_ReturnsCaseSensitivePath()
-        {
-            // Arrange
-            string nonExistentRelPath = Path.Combine( "non_existent_dir", "non_existent_child_dir" );
-            string nonExistentDirPath = Path.Combine(s_testDirectory, nonExistentRelPath);
-            string upperCasePath = nonExistentDirPath.ToUpperInvariant();
+		[Test]
+		public void GetCaseSensitivePath_ValidDirectory_ReturnsSamePath()
+		{
+			// Arrange
+			string testDirPath = Path.Combine( s_testDirectory, "testDir" );
+			_ = Directory.CreateDirectory( testDirPath );
 
-            // Act
-            string? result = PathHelper.GetCaseSensitivePath(upperCasePath).Item1;
+			// Act
+			DirectoryInfo? result = PathHelper.GetCaseSensitivePath( new DirectoryInfo( testDirPath ) );
 
-            // Assert
-            Assert.That( result, Is.EqualTo( Path.Combine(s_testDirectory, nonExistentRelPath.ToUpperInvariant()) ) );
-        }
-    }
+			// Assert
+			Assert.That( result.FullName, Is.EqualTo( testDirPath ) );
+		}
+
+		[Test]
+		public void GetCaseSensitivePath_NullOrWhiteSpacePath_ThrowsArgumentException()
+		{
+			// Arrange
+			string? nullPath = null;
+			string emptyPath = string.Empty;
+			const string whiteSpacePath = "   ";
+
+			// Act & Assert
+			_ = Assert.Throws<ArgumentException>( () => PathHelper.GetCaseSensitivePath( nullPath ) );
+			_ = Assert.Throws<ArgumentException>( () => PathHelper.GetCaseSensitivePath( emptyPath ) );
+			_ = Assert.Throws<ArgumentException>( () => PathHelper.GetCaseSensitivePath( whiteSpacePath ) );
+		}
+
+		[Test]
+		public void GetCaseSensitivePath_InvalidCharactersInPath_ReturnsOriginalPath()
+		{
+			// Arrange
+			string fileName = "invalid>path";
+			string invalidPath = Path.Combine( s_testDirectory, fileName );
+			string upperCasePath = invalidPath.ToUpperInvariant();
+
+			// Act & Assert
+			(string, bool?) result = PathHelper.GetCaseSensitivePath( upperCasePath );
+			Assert.That( result.Item1, Is.EqualTo( Path.Combine( s_testDirectory, fileName.ToUpperInvariant() ) ) );
+			Assert.That( result.Item2, Is.Null );
+		}
+
+		[Test]
+		public void GetCaseSensitivePath_RelativePath_ReturnsAbsolutePath()
+		{
+			// Arrange
+			string testFilePath = Path.Combine( s_testDirectory, "test.txt" );
+			File.Create( testFilePath ).Close();
+			string relativePath = Path.GetRelativePath( Directory.GetCurrentDirectory(), testFilePath );
+			string upperCasePath = relativePath.ToUpperInvariant();
+
+			// Act
+			string? result = PathHelper.GetCaseSensitivePath( upperCasePath ).Item1;
+
+			// Assert
+			Assert.That( result, Is.EqualTo( testFilePath ) );
+		}
+
+
+
+		[Test]
+		public void GetCaseSensitivePath_EntirePathCaseIncorrect_ReturnsCorrectPath()
+		{
+			// Arrange
+			string testFilePath = Path.Combine( s_testDirectory, "test.txt" );
+			File.Create( testFilePath ).Close();
+			string upperCasePath = testFilePath.ToUpperInvariant();
+
+			// Act
+			string? result = PathHelper.GetCaseSensitivePath( upperCasePath, isFile: true ).Item1;
+
+			// Assert
+			Assert.That( result, Is.EqualTo( testFilePath ) );
+		}
+
+		[Test]
+		public void GetCaseSensitivePath_NonExistentFile_ReturnsCaseSensitivePath()
+		{
+			// Arrange
+			string nonExistentFileName = "non_existent_file.txt";
+			string nonExistentFilePath = Path.Combine( s_testDirectory, nonExistentFileName );
+			string upperCasePath = nonExistentFilePath.ToUpperInvariant();
+
+			// Act
+			string? result = PathHelper.GetCaseSensitivePath( upperCasePath ).Item1;
+
+			// Assert
+			Assert.That( result, Is.EqualTo( Path.Combine( s_testDirectory, nonExistentFileName.ToUpperInvariant() ) ) );
+		}
+
+		[Test]
+		public void GetCaseSensitivePath_NonExistentDirAndChildFile_ReturnsCaseSensitivePath()
+		{
+			// Arrange
+			string nonExistentRelFilePath = Path.Combine( "non_existent_dir", "non_existent_file.txt" );
+			string nonExistentFilePath = Path.Combine( s_testDirectory, nonExistentRelFilePath );
+			string upperCasePath = nonExistentFilePath.ToUpperInvariant();
+
+			// Act
+			string? result = PathHelper.GetCaseSensitivePath( upperCasePath, isFile: true ).Item1;
+
+			// Assert
+			Assert.That( result, Is.EqualTo( Path.Combine( s_testDirectory, nonExistentRelFilePath.ToUpperInvariant() ) ) );
+		}
+
+		[Test]
+		public void GetCaseSensitivePath_NonExistentDirectory_ReturnsCaseSensitivePath()
+		{
+			// Arrange
+			string nonExistentRelPath = Path.Combine( "non_existent_dir", "non_existent_child_dir" );
+			string nonExistentDirPath = Path.Combine( s_testDirectory, nonExistentRelPath );
+			string upperCasePath = nonExistentDirPath.ToUpperInvariant();
+
+			// Act
+			string? result = PathHelper.GetCaseSensitivePath( upperCasePath ).Item1;
+
+			// Assert
+			Assert.That( result, Is.EqualTo( Path.Combine( s_testDirectory, nonExistentRelPath.ToUpperInvariant() ) ) );
+		}
+	}
 }

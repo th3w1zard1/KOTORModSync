@@ -54,6 +54,7 @@ namespace KOTORModSync.Tests
             object? serialized = Serializer.SerializeObject( list );
 
             Assert.That( serialized, Is.InstanceOf<IList<object>>() );
+            // ReSharper disable once AssignNullToNotNullAttribute
             CollectionAssert.AllItemsAreInstancesOfType( (IEnumerable<object>)serialized, typeof( string ) );
         }
 
@@ -176,7 +177,7 @@ namespace KOTORModSync.Tests
             recursionDepth--;
         }
 
-        private static void VerifyUniqueSerialization( object serialized, HashSet<object> serializedObjects )
+        private static void VerifyUniqueSerialization( object serialized, ISet<object> serializedObjects )
         {
             if ( serialized is not Dictionary<string, object> serializedDict )
             {

@@ -208,16 +208,14 @@ namespace KOTORModSync.Core
             get => _options;
             set
             {
-                if (_options != value)
-                {
-                    _options.CollectionChanged -= CollectionChanged;
+	            if ( _options == value )
+		            return;
 
-                    _options = value;
+	            _options.CollectionChanged -= CollectionChanged;
+	            _options = value;
+	            _options.CollectionChanged += CollectionChanged;
 
-                    _options.CollectionChanged += CollectionChanged;
-
-                    OnPropertyChanged();
-                }
+	            OnPropertyChanged();
             }
         }
 
@@ -387,8 +385,12 @@ namespace KOTORModSync.Core
 
             IsSelected = GetValueOrDefault<bool>( componentDict, key: "IsSelected" );
 
-            Instructions =
-                DeserializeInstructions( GetValueOrDefault<IList<object>>( componentDict, key: "Instructions" ) );
+            Instructions = DeserializeInstructions(
+	            GetValueOrDefault<IList<object>>(
+		            componentDict,
+		            key: "Instructions"
+		        )
+	        );
             Instructions.ForEach( instruction => instruction?.SetParentComponent( this ) );
             Options = DeserializeOptions( GetValueOrDefault<IList<object>>( componentDict, key: "Options" ) );
 
@@ -550,8 +552,10 @@ namespace KOTORModSync.Core
                     = GetValueOrDefault<List<Guid>>( instructionDict, key: "Dependencies" ) ?? new List<Guid>();
                 instruction.Source = GetValueOrDefault<List<string>>( instructionDict, key: "Source" )
                     ?? new List<string>();
-                instruction.Destination =
-                    GetValueOrDefault<string>( instructionDict, key: "Destination" ) ?? string.Empty;
+                instruction.Destination = GetValueOrDefault<string>(
+	                instructionDict,
+	                key: "Destination"
+	            ) ?? string.Empty;
                 instructions.Add( instruction );
             }
 
@@ -596,7 +600,11 @@ namespace KOTORModSync.Core
                 option.Dependencies
                     = GetValueOrDefault<List<Guid>>( optionsDict, key: "Dependencies" ) ?? new List<Guid>();
                 option.Instructions = DeserializeInstructions(
-                    GetValueOrDefault<IList<object>>( optionsDict, key: "Instructions" ) );
+	                GetValueOrDefault<IList<object>>(
+		                optionsDict,
+		                key: "Instructions"
+	                )
+                );
                 option.IsSelected = GetValueOrDefault<bool>( optionsDict, key: "IsSelected" );
                 options.Add( option );
             }
@@ -712,11 +720,11 @@ namespace KOTORModSync.Core
                                     out Guid guidItem )
                                 )
                             {
-                                addMethod?.Invoke( list, new[] { (object)guidItem } );
+								addMethod?.Invoke( list, new[] { (object)guidItem } );
                             }
                             else
                             {
-                                addMethod?.Invoke( list, new[] { item } );
+								addMethod?.Invoke( list, new[] { item } );
                             }
                         }
                     }

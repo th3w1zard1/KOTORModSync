@@ -809,9 +809,7 @@ namespace KOTORModSync.Core
                     //PlaintextLog=0
                     string fullInstallLogFile = Path.Combine( tslPatcherDirectory.FullName, path2: "installlog.rtf" );
                     if ( File.Exists( fullInstallLogFile ) )
-                    {
-                        File.Delete( fullInstallLogFile );
-                    }
+	                    File.Delete( fullInstallLogFile );
                     //PlaintextLog=1
                     fullInstallLogFile = Path.Combine( tslPatcherDirectory.FullName, path2: "installlog.txt" );
                     if ( File.Exists( fullInstallLogFile ) )

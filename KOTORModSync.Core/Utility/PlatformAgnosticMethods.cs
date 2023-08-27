@@ -306,8 +306,10 @@ namespace KOTORModSync.Core.Utility
                 if ( !PathValidator.IsValidPath(filePath) )
                     throw new ArgumentException( $"{filePath} is not a valid path to a file" );
 
-                var fileInfo = new InsensitivePath( filePath, isFile: true );
-                if (!fileInfo.Exists)
+                var fileInfo = new FileInfo(filePath);
+                if ( !fileInfo.Exists && MainConfig.CaseInsensitivePathing )
+	                fileInfo = new FileInfo( PathHelper.GetCaseSensitivePath( filePath ).Item1 );
+				if ( !fileInfo.Exists )
                     throw new FileNotFoundException($"The file {filePath} does not exist.");
                 await Task.Run(() => 
                 {

@@ -297,13 +297,15 @@ namespace KOTORModSync.Core
                                     extractFolderName,
                                     reader.Entry.Key
                                 );
-                                var destinationDirectory = new InsensitivePath(Path.GetDirectoryName( destinationItemPath ), isFile:false);
-                                string destinationRelDirPath = PathHelper.GetRelativePath( MainConfig.SourcePath.FullName, destinationDirectory.FullName );
+                                string destinationDirectory = Path.GetDirectoryName( destinationItemPath );
+                                if ( MainConfig.CaseInsensitivePathing && !Directory.Exists( destinationDirectory ) )
+	                                destinationDirectory = PathHelper.GetCaseSensitivePath( destinationDirectory, isFile: false ).Item1;
+                                string destinationRelDirPath = PathHelper.GetRelativePath( MainConfig.SourcePath.FullName, destinationDirectory );
 
-                                if ( !Directory.Exists( destinationDirectory.FullName ) && destinationDirectory.IsFile != true )
+                                if ( !Directory.Exists( destinationDirectory ) )
                                 {
                                     _ = Logger.LogAsync( $"Create directory '{destinationRelDirPath}'" );
-                                    _ = Directory.CreateDirectory( destinationDirectory.FullName );
+                                    _ = Directory.CreateDirectory( destinationDirectory );
                                 }
 
                                 _ = Logger.LogAsync( $"Extract '{reader.Entry.Key}' to '{destinationRelDirPath}'" );
@@ -312,7 +314,7 @@ namespace KOTORModSync.Core
                                 {
                                     await Task.Run(
                                         () => reader.WriteEntryToDirectory(
-                                            destinationDirectory.FullName,
+                                            destinationDirectory,
                                             ArchiveHelper.DefaultExtractionOptions
                                         ),
                                         cancellationToken
@@ -360,21 +362,20 @@ namespace KOTORModSync.Core
                             using (FileStream stream = File.OpenRead(thisFile.FullName))
                             {
                                 // ReSharper disable once PossibleNullReferenceException
-                                var destinationDirectory = new InsensitivePath(
-                                    Path.Combine(
+                                string destinationDirectory = Path.Combine(
                                         argDestinationPath?.FullName ?? thisFile.Directory.FullName,
                                         Path.GetFileNameWithoutExtension( thisFile.Name )
-                                    ),
-                                    isFile: false
-                                );
+                                    );
+                                if ( MainConfig.CaseInsensitivePathing && !Directory.Exists( destinationDirectory ) )
+	                                destinationDirectory = PathHelper.GetCaseSensitivePath( destinationDirectory, isFile: false ).Item1;
                                 
-                                string destinationRelDirPath = PathHelper.GetRelativePath( MainConfig.SourcePath.FullName, destinationDirectory.FullName );
-                                if ( !destinationDirectory.Exists || destinationDirectory.IsFile != true )
+                                string destinationRelDirPath = PathHelper.GetRelativePath( MainConfig.SourcePath.FullName, destinationDirectory );
+                                if ( !Directory.Exists(destinationDirectory) )
                                 {
                                     _ = Logger.LogAsync( $"Create directory '{destinationRelDirPath}'" );
-                                    _ = Directory.CreateDirectory( destinationDirectory.FullName );
+                                    _ = Directory.CreateDirectory( destinationDirectory );
                                 }
-                                ArchiveHelper.ExtractWith7Zip(stream, destinationDirectory.FullName);
+                                ArchiveHelper.ExtractWith7Zip(stream, destinationDirectory);
                             }
                             return Task.CompletedTask;
                         }).ToList();
@@ -516,10 +517,12 @@ namespace KOTORModSync.Core
                 // ReSharper disable once PossibleNullReferenceException
                 foreach ( string thisFilePath in sourcePaths )
                 {
-                    string sourceRelDirPath = PathHelper.GetRelativePath( MainConfig.SourcePath.FullName, thisFilePath );
-                    var thisFile = new InsensitivePath( thisFilePath, isFile:true );
+	                string realFilePath = thisFilePath;
+	                if ( MainConfig.CaseInsensitivePathing && !File.Exists( realFilePath ) )
+		                realFilePath = PathHelper.GetCaseSensitivePath( realFilePath ).Item1;
+                    string sourceRelDirPath = PathHelper.GetRelativePath( MainConfig.SourcePath.FullName, realFilePath );
 
-                    if ( !Path.IsPathRooted( thisFile.FullName ) || !thisFile.Exists )
+                    if ( !Path.IsPathRooted( realFilePath ) || !File.Exists(realFilePath) )
                     {
                         var ex = new ArgumentNullException(
                             $"Invalid wildcards or file does not exist: '{sourceRelDirPath}'"
@@ -531,7 +534,7 @@ namespace KOTORModSync.Core
                     // Delete the file synchronously
                     try
                     {
-                        thisFile.Delete();
+                        File.Delete(realFilePath);
                         Logger.Log( $"Deleting '{sourceRelDirPath}'..." );
                     }
                     catch ( Exception ex )

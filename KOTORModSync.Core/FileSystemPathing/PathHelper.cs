@@ -609,12 +609,14 @@ namespace KOTORModSync.Core.FileSystemPathing
             return formattedPath;
         }
 
+        [NotNull]
         public static IEnumerable<FileSystemInfo> FindCaseInsensitiveDuplicates( DirectoryInfo dirInfo, bool includeSubFolders = true )
         {
             // ReSharper disable once AssignNullToNotNullAttribute - no point duplicating the null check
             return FindCaseInsensitiveDuplicates( dirInfo?.FullName, includeSubFolders, isFile: false );
         }
 
+        [NotNull]
         public static IEnumerable<FileSystemInfo> FindCaseInsensitiveDuplicates( FileInfo fileInfo )
         {
             // ReSharper disable once AssignNullToNotNullAttribute - no point duplicating the null check

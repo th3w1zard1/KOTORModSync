@@ -414,7 +414,9 @@ namespace KOTORModSync.Core
             }
 
             string tomlinString = stringBuilder.ToString();
-            File.WriteAllText( new InsensitivePath(filePath, isFile: true).FullName, tomlinString );
+            if ( MainConfig.CaseInsensitivePathing )
+	            filePath = PathHelper.GetCaseSensitivePath( filePath, isFile: true ).Item1;
+            File.WriteAllText( filePath, tomlinString );
         }
 
         [NotNull]
@@ -810,8 +812,10 @@ namespace KOTORModSync.Core
 
             try
             {
+	            if ( MainConfig.CaseInsensitivePathing )
+		            filePath = PathHelper.GetCaseSensitivePath( filePath, isFile: true ).Item1;
                 // Read the contents of the file into a string
-                string tomlString = File.ReadAllText( new InsensitivePath(filePath, isFile: true).FullName )
+                string tomlString = File.ReadAllText( filePath )
                     // the code expects instructions to always be defined. When it's not, code errors and prevents a save.
                     // make the user experience better by just removing the empty instructions key.
                     .Replace( oldValue: "Instructions = []", string.Empty )

@@ -66,11 +66,11 @@ namespace KOTORModSync
 
             string logfileName = $"{Logger.LogFileName}{DateTime.Now:yyyy-MM-dd}";
             string executingDirectory = Core.Utility.Utility.GetExecutingAssemblyDirectory();
-            var logFilePath = new InsensitivePath(Path.Combine(executingDirectory, logfileName + ".txt"), isFile:true);
-            if ( !logFilePath.Exists )
-                return;
+            string logFilePath = Path.Combine(executingDirectory, logfileName + ".txt");
+            if ( !File.Exists(logFilePath) && MainConfig.CaseInsensitivePathing )
+	            logFilePath = PathHelper.GetCaseSensitivePath( logFilePath ).Item1;
 
-            string[] lines = File.ReadAllLines(logFilePath.FullName);
+            string[] lines = File.ReadAllLines(logFilePath);
             int startIndex = Math.Max(0, lines.Length - _maxLinesShown);
             foreach (string line in lines.Skip(startIndex))
             {

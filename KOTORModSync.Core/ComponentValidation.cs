@@ -396,10 +396,9 @@ namespace KOTORModSync.Core
                         string destinationPath = null;
                         if ( !string.IsNullOrEmpty( instruction.Destination ) )
                         {
-                            destinationPath = new InsensitivePath(
-                                Utility.Utility.ReplaceCustomVariables( instruction.Destination ),
-                                isFile: false
-                            ).FullName;
+                            destinationPath = Utility.Utility.ReplaceCustomVariables( instruction.Destination );
+                            if ( MainConfig.CaseInsensitivePathing )
+	                            destinationPath = PathHelper.GetCaseSensitivePath( destinationPath ).Item1;
                         }
 
                         if ( string.IsNullOrWhiteSpace( destinationPath )

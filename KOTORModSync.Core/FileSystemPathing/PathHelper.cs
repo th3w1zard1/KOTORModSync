@@ -334,9 +334,10 @@ namespace KOTORModSync.Core.FileSystemPathing
                     parts[i] = closestMatch;
                 }
                 // resolve case-sensitive pathing. largestExistingPathPartsIndex determines the largest index of the existing path parts.
-                else if (!File.Exists(currentPath)
+                // todo: check if it's the last part of the path, then conditionally call directory.exists OR file.exists based on isFile.
+                else if ( !File.Exists(currentPath)
                     && !Directory.Exists(currentPath)
-                    && string.IsNullOrEmpty(caseSensitiveCurrentPath))
+                    && string.IsNullOrEmpty(caseSensitiveCurrentPath) )
                 {
                     // Get the case-sensitive path based on the existing parts we've determined.
                     largestExistingPathPartsIndex = i;
@@ -630,49 +631,61 @@ namespace KOTORModSync.Core.FileSystemPathing
             if ( !PathValidator.IsValidPath( formattedPath ) )
                 throw new ArgumentException( $"'{path}' is not a valid path string" );
 
-            // determine if path is a folder or a file.
-            DirectoryInfo dirInfo;
+            if ( Environment.OSVersion.Platform == PlatformID.Win32NT )
+	            yield break;
+
+            // determine if path is a folder or a file, and resolve case-insensitive pathing.
+            DirectoryInfo dirInfo = null;
             string fileName = Path.GetFileName( formattedPath );
-            if ( isFile == false )
+            switch ( isFile )
             {
-                dirInfo = new DirectoryInfo( formattedPath );
-                if ( !dirInfo.Exists )
-                {
-                    dirInfo = new DirectoryInfo(
-                        GetCaseSensitivePath( formattedPath ).Item1
-                    );
-                }
-            }
-            else if ( isFile == true )
-            {
-                string parentDir = Path.GetDirectoryName( formattedPath );
-                if ( string.IsNullOrEmpty(parentDir) || !( dirInfo = new DirectoryInfo( parentDir ) ).Exists )
-                {
-                    dirInfo = new DirectoryInfo(
-                        GetCaseSensitivePath( parentDir ).Item1
-                    );
-                }
-            }
-            else
-            {
-                dirInfo = new DirectoryInfo( formattedPath );
-                string caseSensitivePath = formattedPath;
-                if ( !dirInfo.Exists )
-                {
-                    caseSensitivePath = GetCaseSensitivePath( formattedPath ).Item1;
-                    dirInfo = new DirectoryInfo( caseSensitivePath );
-                }
+	            case false:
+		            {
+			            dirInfo = new DirectoryInfo( formattedPath );
+			            if ( !dirInfo.Exists )
+			            {
+				            dirInfo = new DirectoryInfo(
+					            GetCaseSensitivePath( formattedPath ).Item1
+				            );
+			            }
 
-                if ( !dirInfo.Exists )
-                {
-                    string folderPath = Path.GetDirectoryName( caseSensitivePath );
-                    isFile = true;
-                    if ( !( folderPath is null ) )
-                        dirInfo = new DirectoryInfo( folderPath );
-                }
+			            break;
+		            }
+	            case true:
+		            {
+			            string parentDir = Path.GetDirectoryName( formattedPath );
+			            if ( !string.IsNullOrEmpty(parentDir) && !( dirInfo = new DirectoryInfo( parentDir ) ).Exists )
+			            {
+				            dirInfo = new DirectoryInfo(
+					            GetCaseSensitivePath( parentDir ).Item1
+				            );
+			            }
+
+			            break;
+		            }
+	            default:
+		            {
+			            dirInfo = new DirectoryInfo( formattedPath );
+			            string caseSensitivePath = formattedPath;
+			            if ( !dirInfo.Exists )
+			            {
+				            caseSensitivePath = GetCaseSensitivePath( formattedPath ).Item1;
+				            dirInfo = new DirectoryInfo( caseSensitivePath );
+			            }
+
+			            if ( !dirInfo.Exists )
+			            {
+				            string folderPath = Path.GetDirectoryName( caseSensitivePath );
+				            isFile = true;
+				            if ( !( folderPath is null ) )
+					            dirInfo = new DirectoryInfo( folderPath );
+			            }
+
+			            break;
+		            }
             }
 
-            if ( !dirInfo.Exists )
+            if ( !dirInfo?.Exists ?? false )
                 throw new ArgumentException( $"Path item doesn't exist on disk: '{formattedPath}'" );
 
             // build duplicate files/folders list
@@ -694,9 +707,8 @@ namespace KOTORModSync.Core.FileSystemPathing
                 files.Add( file );
             }
 
-            foreach ( KeyValuePair<string, List<FileSystemInfo>> fileListEntry in fileList )
+            foreach ( List<FileSystemInfo> files in fileList.Values )
             {
-                List<FileSystemInfo> files = fileListEntry.Value;
                 if ( files.Count <= 1 )
                     continue;
 
@@ -735,9 +747,8 @@ namespace KOTORModSync.Core.FileSystemPathing
                 }
             }
 
-            foreach ( KeyValuePair<string, List<FileSystemInfo>> folderListEntry in folderList )
+            foreach ( List<FileSystemInfo> foldersInCurrentDir in folderList.Values )
             {
-                List<FileSystemInfo> foldersInCurrentDir = folderListEntry.Value;
                 if ( foldersInCurrentDir.Count <= 1 )
                     continue;
 

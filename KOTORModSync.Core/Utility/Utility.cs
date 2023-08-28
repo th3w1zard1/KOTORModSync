@@ -26,11 +26,10 @@ namespace KOTORModSync.Core.Utility
         [NotNull]
         public static string RestoreCustomVariables( [NotNull] string fullPath )
         {
-            if ( fullPath is null )
-                throw new ArgumentNullException( nameof( fullPath ) );
-
-            return fullPath.Replace( MainConfig.SourcePath?.FullName ?? string.Empty, newValue: "<<modDirectory>>" )
-                .Replace( MainConfig.DestinationPath?.FullName ?? string.Empty, newValue: "<<kotorDirectory>>" );
+	        return fullPath is null
+		        ? throw new ArgumentNullException( nameof(fullPath) )
+		        : fullPath.Replace( MainConfig.SourcePath?.FullName ?? string.Empty, newValue: "<<modDirectory>>" )
+			        .Replace( MainConfig.DestinationPath?.FullName ?? string.Empty, newValue: "<<kotorDirectory>>" );
         }
 
         [NotNull]
@@ -115,16 +114,12 @@ namespace KOTORModSync.Core.Utility
             Console.Write( "Enter the path: " );
             string thisPath = Console.ReadLine();
             if ( string.IsNullOrEmpty( thisPath ) )
-            {
-                return default;
-            }
+	            return default;
 
             thisPath = thisPath.Trim();
 
             if ( Directory.Exists( thisPath ) )
-            {
-                return new DirectoryInfo( thisPath );
-            }
+	            return new DirectoryInfo( thisPath );
 
             Console.Write( $"Directory '{thisPath}' does not exist." );
             return default;

@@ -4,6 +4,7 @@
 
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace KOTORModSync.Core.Utility
 {
@@ -19,33 +20,10 @@ namespace KOTORModSync.Core.Utility
 	    public static bool IsNullOrEmptyOrAllNull(this IEnumerable collection) => IsNullOrEmptyOrAllNullInternal(collection);
 
 
-	    // Helper method to check if an IEnumerable is null or has no contents
-	    private static bool IsNullOrEmptyCollectionInternal(IEnumerable collection)
-        {
-            if (collection == null)
-                return true;
-            if (collection is ICollection col)
-                return col.Count == 0;
+		// Helper method to check if an IEnumerable is null or has no contents
+		private static bool IsNullOrEmptyCollectionInternal( IEnumerable collection ) => collection == null || !collection.Cast<object>().Any();
 
-            return !collection.GetEnumerator().MoveNext();
-        }
-
-
-	    // Helper method to check if an IEnumerable contains only null entries
-	    private static bool IsNullOrEmptyOrAllNullInternal(IEnumerable collection)
-        {
-            if (collection == null)
-                return true;
-
-            foreach (object item in collection)
-            {
-                if (item != null)
-                {
-                    return false;
-                }
-            }
-
-            return true;
-        }
+		// Helper method to check if an IEnumerable contains only null entries
+		private static bool IsNullOrEmptyOrAllNullInternal(IEnumerable collection) => collection == null || collection.Cast<object>().All( item => item == null );
     }
 }

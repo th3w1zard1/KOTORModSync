@@ -15,6 +15,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
+using KOTORModSync.Core.Data;
 using KOTORModSync.Core.FileSystemPathing;
 using KOTORModSync.Core.Utility;
 using Microsoft.CSharp.RuntimeBinder;
@@ -63,33 +64,43 @@ namespace KOTORModSync.Core
                 "The files in the install directory do not match the expected contents provided by the instructions file"
             )]
             ValidationPostInstallMismatch,
-        }
+		}
 
-	    [NotNull] private string _author = string.Empty;
+		private Guid _guid;
+
+		[NotNull] private string _name = string.Empty;
+
+		[NotNull] private string _author = string.Empty;
 
 	    [NotNull] private string _category = string.Empty;
 
-	    [NotNull] private List<Guid> _dependencies = new List<Guid>();
+		[NotNull] private string _tier = string.Empty;
 
-	    [NotNull] private string _description = string.Empty;
+		private bool _nonEnglishFunctionality;
 
-	    [NotNull] private string _directions = string.Empty;
+		[NotNull][ItemNotNull] private List<string> _language = new List<string>();
 
-	    private Guid _guid;
+		[NotNull] private List<string> _modLink = new List<string>();
 
-	    [NotNull] private List<Guid> _installAfter = new List<Guid>();
+		[NotNull] private string _description = string.Empty;
 
-	    [NotNull] private string _installationMethod = string.Empty;
+		[NotNull] private string _installationMethod = string.Empty;
 
-	    [NotNull] private List<Guid> _installBefore = new List<Guid>();
+		[NotNull] private string _directions = string.Empty;
 
-	    [NotNull] [ItemNotNull] private ObservableCollection<Instruction> _instructions = new ObservableCollection<Instruction>();
+		[NotNull] private List<Guid> _dependencies = new List<Guid>();
+
+		[NotNull] private List<Guid> _restrictions = new List<Guid>();
+
+		[NotNull] private List<Guid> _installAfter = new List<Guid>();
+
+		[NotNull] private List<Guid> _installBefore = new List<Guid>();
+
+		[NotNull][ItemNotNull] private ObservableCollection<Instruction> _instructions = new ObservableCollection<Instruction>();
+
+		[NotNull] private ObservableCollection<Option> _options = new ObservableCollection<Option>();
 
 	    private bool _isSelected;
-
-	    [NotNull][ItemNotNull] private List<string> _language = new List<string>();
-
-	    [NotNull] private List<string> _modLink = new List<string>();
 
 	    /*
 	    public DateTime SourceLastModified { get; set; }
@@ -97,33 +108,22 @@ namespace KOTORModSync.Core
 	    protected virtual void OnPropertyChanged(string propertyName) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
 	    */
 
+		public Guid Guid
+		{
+			get => _guid;
+			set
+			{
+				_guid = value;
+				OnPropertyChanged();
+			}
+		}
 
-	    [NotNull] private string _name = string.Empty;
-
-	    private bool _nonEnglishFunctionality;
-
-	    [NotNull] private ObservableCollection<Option> _options = new ObservableCollection<Option>();
-
-	    [NotNull] private List<Guid> _restrictions = new List<Guid>();
-
-	    [NotNull] private string _tier = string.Empty;
-
-	    [NotNull] public string Name
+		[NotNull] public string Name
         {
             get => _name;
             set
             {
                 _name = value;
-                OnPropertyChanged();
-            }
-        }
-
-	    public Guid Guid
-        {
-            get => _guid;
-            set
-            {
-                _guid = value;
                 OnPropertyChanged();
             }
         }
@@ -156,9 +156,42 @@ namespace KOTORModSync.Core
                 _tier = value;
                 OnPropertyChanged();
             }
-        }
+		}
 
-	    [NotNull] public string Description
+		[NotNull]
+		[ItemNotNull]
+		public List<string> Language
+		{
+			get => _language;
+			set
+			{
+				_language = value;
+				OnPropertyChanged();
+			}
+		}
+
+		public bool NonEnglishFunctionality
+		{
+			get => _nonEnglishFunctionality;
+			set
+			{
+				_nonEnglishFunctionality = value;
+				OnPropertyChanged();
+			}
+		}
+
+		[NotNull]
+		public List<string> ModLink
+		{
+			get => _modLink;
+			set
+			{
+				_modLink = value;
+				OnPropertyChanged();
+			}
+		}
+
+		[NotNull] public string Description
         {
             get => _description;
             set
@@ -166,9 +199,20 @@ namespace KOTORModSync.Core
                 _description = value;
                 OnPropertyChanged();
             }
-        }
+		}
 
-	    [NotNull] public string Directions
+		[NotNull]
+		public string InstallationMethod
+		{
+			get => _installationMethod;
+			set
+			{
+				_installationMethod = value;
+				OnPropertyChanged();
+			}
+		}
+
+		[NotNull] public string Directions
         {
             get => _directions;
             set
@@ -218,27 +262,17 @@ namespace KOTORModSync.Core
             }
         }
 
-	    public bool NonEnglishFunctionality
-        {
-            get => _nonEnglishFunctionality;
-            set
-            {
-                _nonEnglishFunctionality = value;
-                OnPropertyChanged();
-            }
-        }
+		public bool IsSelected
+		{
+			get => _isSelected;
+			set
+			{
+				_isSelected = value;
+				OnPropertyChanged();
+			}
+		}
 
-	    [NotNull] public string InstallationMethod
-        {
-            get => _installationMethod;
-            set
-            {
-                _installationMethod = value;
-                OnPropertyChanged();
-            }
-        }
-
-	    [NotNull] [ItemNotNull] public ObservableCollection<Instruction> Instructions
+		[NotNull] [ItemNotNull] public ObservableCollection<Instruction> Instructions
         {
             get => _instructions;
             set
@@ -267,41 +301,13 @@ namespace KOTORModSync.Core
             }
         }
 
-	    [NotNull][ItemNotNull] public List<string> Language
-        {
-            get => _language;
-            set
-            {
-                _language = value;
-                OnPropertyChanged();
-            }
-        }
-
-	    [NotNull] public List<string> ModLink
-        {
-            get => _modLink;
-            set
-            {
-                _modLink = value;
-                OnPropertyChanged();
-            }
-        }
-
-	    public bool IsSelected
-        {
-            get => _isSelected;
-            set
-            {
-                _isSelected = value;
-                OnPropertyChanged();
-            }
-        }
-
-
 	    // used for the ui.
 	    public event PropertyChangedEventHandler PropertyChanged;
+		private void CollectionChanged( object sender, NotifyCollectionChangedEventArgs e ) => OnPropertyChanged();
+		private void OnPropertyChanged( [CallerMemberName][CanBeNull] string propertyName = null ) =>
+			PropertyChanged?.Invoke( this, new PropertyChangedEventArgs( propertyName ) );
 
-	    [NotNull]
+		[NotNull]
         public string SerializeComponent()
         {
             var serializedComponentDict = (Dictionary<string, object>)Serializer.SerializeObject( this );
@@ -738,7 +744,7 @@ namespace KOTORModSync.Core
                         }
 
                         if ( targetType == typeof( string ) )
-                            return (T)(valueStr as object);
+                            return (T)((object)valueStr);
 
                         break;
                 }
@@ -1030,12 +1036,12 @@ namespace KOTORModSync.Core
                         exitCode = await instruction.ExtractFileAsync();
                         break;
                     case Instruction.ActionType.Delete:
-                        instruction.SetRealPaths( true );
+                        instruction.SetRealPaths( noValidate: true );
                         exitCode = instruction.DeleteFile();
                         break;
                     case Instruction.ActionType.DelDuplicate:
-                        instruction.SetRealPaths( true );
-                        instruction.DeleteDuplicateFile(caseInsensitive: true);
+                        instruction.SetRealPaths( noValidate: true );
+                        instruction.DeleteDuplicateFile( caseInsensitive: true, compatibleExtensions: Game.TextureOverridePriorityList );
                         exitCode = Instruction.ActionExitCode.Success;
                         break;
                     case Instruction.ActionType.Copy:
@@ -1047,7 +1053,7 @@ namespace KOTORModSync.Core
                         exitCode = await instruction.MoveFileAsync();
                         break;
                     case Instruction.ActionType.Rename:
-                        instruction.SetRealPaths(true);
+                        instruction.SetRealPaths(noValidate: true);
                         exitCode = instruction.RenameFile();
                         break;
                     case Instruction.ActionType.HoloPatcher:
@@ -1057,11 +1063,11 @@ namespace KOTORModSync.Core
                         break;
                     case Instruction.ActionType.Execute:
                     case Instruction.ActionType.Run:
-                        instruction.SetRealPaths(true);
+                        instruction.SetRealPaths(noValidate: true);
                         exitCode = await instruction.ExecuteProgramAsync();
                         break;
                     case Instruction.ActionType.Choose:
-                        instruction.SetRealPaths(true);
+                        instruction.SetRealPaths(noValidate: true);
 
                         List<Option> chosenOptions = instruction.GetChosenOptions();
                         foreach ( Option thisOption in chosenOptions )
@@ -1148,6 +1154,7 @@ namespace KOTORModSync.Core
                 }*/
 
                 _ = Logger.LogAsync( $"Successfully completed instruction #{instructionIndex} '{instruction.Action}'" );
+                continue;
 
                 async Task<bool?> PromptUserInstallError( string message ) =>
                     await CallbackObjects.ConfirmCallback.ShowConfirmationDialog(
@@ -1510,11 +1517,6 @@ namespace KOTORModSync.Core
                 $"Option '{thisOption.Name}' moved from {currentIndex} to {index}"
             );
         }
-
-        private void CollectionChanged(object sender, NotifyCollectionChangedEventArgs e) => OnPropertyChanged();
-
-        private void OnPropertyChanged( [CallerMemberName][CanBeNull] string propertyName = null ) =>
-            PropertyChanged?.Invoke( this, new PropertyChangedEventArgs( propertyName ) );
 
         public class GraphNode
         {

@@ -66,17 +66,17 @@ namespace KOTORModSync.Core
 
 		private ActionType _action;
 
-		[NotNull] private string _arguments = string.Empty;
-
-		[NotNull] private List<Guid> _dependencies = new List<Guid>();
+		[NotNull][ItemNotNull] private List<string> _source = new List<string>();
 
 		[NotNull] private string _destination = string.Empty;
 
 		private bool _overwrite;
 
-		[NotNull] private List<Guid> _restrictions = new List<Guid>();
+		[NotNull] private string _arguments = string.Empty;
 
-		[NotNull][ItemNotNull] private List<string> _source = new List<string>();
+		[NotNull] private List<Guid> _dependencies = new List<Guid>();
+
+		[NotNull] private List<Guid> _restrictions = new List<Guid>();
 
 		public static IEnumerable<string> ActionTypes => Enum.GetValues( typeof( ActionType ) ).Cast<ActionType>()
 			.Select( actionType => actionType.ToString() );
@@ -119,6 +119,27 @@ namespace KOTORModSync.Core
 			}
 		}
 
+		public bool Overwrite
+		{
+			get => _overwrite;
+			set
+			{
+				_overwrite = value;
+				OnPropertyChanged();
+			}
+		}
+
+		[NotNull]
+		public string Arguments
+		{
+			get => _arguments;
+			set
+			{
+				_arguments = value;
+				OnPropertyChanged();
+			}
+		}
+
 		[NotNull] public List<Guid> Dependencies
 		{
 			get => _dependencies;
@@ -135,26 +156,6 @@ namespace KOTORModSync.Core
 			set
 			{
 				_restrictions = value;
-				OnPropertyChanged();
-			}
-		}
-
-		public bool Overwrite
-		{
-			get => _overwrite;
-			set
-			{
-				_overwrite = value;
-				OnPropertyChanged();
-			}
-		}
-
-		[NotNull] public string Arguments
-		{
-			get => _arguments;
-			set
-			{
-				_arguments = value;
 				OnPropertyChanged();
 			}
 		}
@@ -224,12 +225,83 @@ namespace KOTORModSync.Core
 			try
 			{
 				RealSourcePaths = argSourcePaths
-					?? RealSourcePaths ?? throw new ArgumentNullException( nameof( argSourcePaths ) );
+					?? RealSourcePaths
+					?? throw new ArgumentNullException( nameof( argSourcePaths ) );
 
 				var semaphore = new SemaphoreSlim( initialCount: 4, Environment.ProcessorCount * 4 );
 				ActionExitCode exitCode = ActionExitCode.Success;
 
 				var cts = new CancellationTokenSource();
+
+				var extractionTasks = RealSourcePaths
+					.Select( sourcePath => InnerExtractFileAsync( sourcePath, cts.Token ) ).ToList();
+
+				try
+				{
+					await Task.WhenAll( extractionTasks ); // Wait for all extraction tasks to complete
+
+					if ( cts.Token.IsCancellationRequested )
+					{
+						throw new OperationCanceledException();
+					}
+				}
+				catch ( OperationCanceledException )
+				{
+					// Restarting all tasks using ArchiveHelper.ExtractWith7Zip
+					try
+					{
+						Logger.Log( "Starting 7z.dll fallback extraction..." );
+						var fallbackTasks = RealSourcePaths.Select(
+							sourcePath =>
+							{
+								var thisFile = new FileInfo( sourcePath );
+								using ( FileStream stream = File.OpenRead( thisFile.FullName ) )
+								{
+									// ReSharper disable once PossibleNullReferenceException
+									string destinationDirectory = Path.Combine(
+										argDestinationPath?.FullName ?? thisFile.Directory.FullName,
+										Path.GetFileNameWithoutExtension( thisFile.Name )
+									);
+									if ( MainConfig.CaseInsensitivePathing
+										&& !Directory.Exists( destinationDirectory ) )
+									{
+										destinationDirectory = PathHelper.GetCaseSensitivePath(
+											destinationDirectory,
+											isFile: false
+										).Item1;
+									}
+
+									string destinationRelDirPath = PathHelper.GetRelativePath(
+										MainConfig.SourcePath.FullName,
+										destinationDirectory
+									);
+									if ( !Directory.Exists( destinationDirectory ) )
+									{
+										_ = Logger.LogAsync( $"Create directory '{destinationRelDirPath}'" );
+										_ = Directory.CreateDirectory( destinationDirectory );
+									}
+
+									_ = Logger.LogAsync(
+										$"Fallback extraction of '{thisFile.Name}' to '{destinationRelDirPath}'"
+									);
+									ArchiveHelper.ExtractWith7Zip( stream, destinationDirectory );
+									_ = Logger.LogAsync( $"Fallback extraction of '{thisFile.Name}' completed." );
+								}
+
+								return Task.CompletedTask;
+							}
+						).ToList();
+
+						await Task.WhenAll( fallbackTasks );
+					}
+					catch ( Exception ex )
+					{
+						await Logger.LogExceptionAsync( ex );
+						exitCode = ActionExitCode.ArchiveParseError;
+					}
+				}
+
+				return exitCode; // Extraction succeeded
 
 				async Task InnerExtractFileAsync( string sourcePath, CancellationToken cancellationToken )
 				{
@@ -244,16 +316,18 @@ namespace KOTORModSync.Core
 							sourcePath
 						);
 						argDestinationPath = argDestinationPath
-							?? thisFile.Directory ?? throw new ArgumentNullException( nameof( argDestinationPath ) );
+						                     ?? thisFile.Directory ?? throw new ArgumentNullException( nameof( argDestinationPath ) );
 
 						_ = Logger.LogAsync( $"Using archive path: '{sourceRelDirPath}'" );
 
 						if ( !ArchiveHelper.IsArchive( thisFile ) )
 						{
 							if ( !( _parentComponent is null ) )
+							{
 								_ = Logger.LogAsync(
 									$"[Error] '{_parentComponent.Name}' failed to extract file '{thisFile.Name}'. Invalid archive?"
 								);
+							}
 
 							exitCode = ActionExitCode.InvalidArchive;
 							return;
@@ -314,10 +388,13 @@ namespace KOTORModSync.Core
 								);
 								string destinationDirectory = Path.GetDirectoryName( destinationItemPath );
 								if ( MainConfig.CaseInsensitivePathing && !Directory.Exists( destinationDirectory ) )
+								{
 									destinationDirectory = PathHelper.GetCaseSensitivePath(
 										destinationDirectory,
 										isFile: false
 									).Item1;
+								}
+
 								string destinationRelDirPath = PathHelper.GetRelativePath(
 									MainConfig.SourcePath.FullName,
 									destinationDirectory
@@ -371,74 +448,6 @@ namespace KOTORModSync.Core
 						_ = semaphore.Release(); // Release the semaphore slot
 					}
 				}
-
-				var extractionTasks = RealSourcePaths
-					.Select( sourcePath => InnerExtractFileAsync( sourcePath, cts.Token ) ).ToList();
-
-				try
-				{
-					await Task.WhenAll( extractionTasks ); // Wait for all extraction tasks to complete
-
-					if ( cts.Token.IsCancellationRequested )
-					{
-						throw new OperationCanceledException();
-					}
-				}
-				catch ( OperationCanceledException )
-				{
-					// Restarting all tasks using ArchiveHelper.ExtractWith7Zip
-					try
-					{
-						Logger.Log( "Starting 7z.dll fallback extraction..." );
-						var fallbackTasks = RealSourcePaths.Select(
-							sourcePath =>
-							{
-								var thisFile = new FileInfo( sourcePath );
-								using ( FileStream stream = File.OpenRead( thisFile.FullName ) )
-								{
-									// ReSharper disable once PossibleNullReferenceException
-									string destinationDirectory = Path.Combine(
-										argDestinationPath?.FullName ?? thisFile.Directory.FullName,
-										Path.GetFileNameWithoutExtension( thisFile.Name )
-									);
-									if ( MainConfig.CaseInsensitivePathing
-										&& !Directory.Exists( destinationDirectory ) )
-										destinationDirectory = PathHelper.GetCaseSensitivePath(
-											destinationDirectory,
-											isFile: false
-										).Item1;
-
-									string destinationRelDirPath = PathHelper.GetRelativePath(
-										MainConfig.SourcePath.FullName,
-										destinationDirectory
-									);
-									if ( !Directory.Exists( destinationDirectory ) )
-									{
-										_ = Logger.LogAsync( $"Create directory '{destinationRelDirPath}'" );
-										_ = Directory.CreateDirectory( destinationDirectory );
-									}
-
-									_ = Logger.LogAsync(
-										$"Fallback extraction of '{thisFile.Name}' to '{destinationRelDirPath}'"
-									);
-									ArchiveHelper.ExtractWith7Zip( stream, destinationDirectory );
-									_ = Logger.LogAsync( $"Fallback extraction of '{thisFile.Name}' completed." );
-								}
-
-								return Task.CompletedTask;
-							}
-						).ToList();
-
-						await Task.WhenAll( fallbackTasks );
-					}
-					catch ( Exception ex )
-					{
-						await Logger.LogExceptionAsync( ex );
-						exitCode = ActionExitCode.ArchiveParseError;
-					}
-				}
-
-				return exitCode; // Extraction succeeded
 			}
 			catch ( Exception ex )
 			{
@@ -464,9 +473,6 @@ namespace KOTORModSync.Core
 			if ( string.IsNullOrEmpty( fileExtension ) )
 				fileExtension = Arguments;
 
-			if ( compatibleExtensions.IsNullOrEmptyCollection() )
-				compatibleExtensions = Game.TextureOverridePriorityList;
-
 			FileInfo[] files = directoryPath.GetFilesSafely();
 			Dictionary<string, int> fileNameCounts = caseInsensitive
 				? new Dictionary<string, int>( StringComparer.OrdinalIgnoreCase )
@@ -477,12 +483,11 @@ namespace KOTORModSync.Core
 				string fileNameWithoutExtension = Path.GetFileNameWithoutExtension( fileInfo.Name );
 				string thisExtension = fileInfo.Extension;
 
-				bool compatibleExtensionFound = caseInsensitive
-					// ReSharper disable once AssignNullToNotNullAttribute
-					// ReSharper disable once PossibleNullReferenceException
+				bool compatibleExtensionFound = compatibleExtensions == null || (
+					caseInsensitive
 					? compatibleExtensions.Any( ext => ext.Equals( thisExtension, StringComparison.OrdinalIgnoreCase ) )
-					// ReSharper disable once PossibleNullReferenceException
-					: compatibleExtensions.Contains( thisExtension );
+					: compatibleExtensions.Contains( thisExtension )
+				);
 
 				if ( compatibleExtensionFound )
 				{
@@ -512,6 +517,8 @@ namespace KOTORModSync.Core
 				}
 			}
 
+			return;
+
 			bool ShouldDeleteFile( FileSystemInfo fileSystemInfoItem )
 			{
 				string fileName = fileSystemInfoItem.Name;
@@ -524,9 +531,9 @@ namespace KOTORModSync.Core
 				}
 				else if ( !fileNameCounts.ContainsKey( fileNameWithoutExtension ) )
 				{
-					/*Logger.LogVerbose(
-					    $"Conditional 2: '{fileNameWithoutExtension}' is not present in '{fileNameCounts}' ergo not an extension included for this deletion."
-					);*/
+					Logger.LogVerbose(
+					    $"Conditional 2: '{fileNameWithoutExtension}' is not present in '{fileNameCounts}' ergo no compatible extensions found."
+					);
 				}
 				else if ( fileNameCounts[fileNameWithoutExtension] <= 1 )
 				{

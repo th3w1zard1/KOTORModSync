@@ -23,7 +23,6 @@ namespace KOTORModSync.Core.Utility
     public static class PlatformAgnosticMethods
     {
 	    // Overload for a string representation of the folder path.
-
 	    public static async Task<int> CalculateMaxDegreeOfParallelismAsync( [CanBeNull] DirectoryInfo thisDir )
         {
             int maxParallelism = Environment.ProcessorCount; // Start with the number of available processors
@@ -32,12 +31,12 @@ namespace KOTORModSync.Core.Utility
             const long memoryThreshold = 2L * 1024 * 1024 * 1024; // 2GB threshold
             if ( availableMemory < memoryThreshold )
             {
-                Parallel.Invoke( () => maxParallelism = Math.Max( val1: 1, maxParallelism / 2 ) );
+				Parallel.Invoke( () => maxParallelism = Math.Max( val1: 1, maxParallelism / 2 ) );
             }
 
             var maxDiskSpeedTask = Task.Run( () =>
             {
-                if ( thisDir is null )
+				if ( thisDir is null )
                     throw new NullReferenceException(nameof( thisDir ));
 
                 return GetMaxDiskSpeed( Path.GetPathRoot( thisDir.FullName ) );
@@ -85,13 +84,10 @@ namespace KOTORModSync.Core.Utility
             result = TryExecuteCommand( "wmic OS get FreePhysicalMemory" );
             command = "wmic";
 
-            if ( result.ExitCode == 0 )
-                return ParseAvailableMemory( result.Output, command );
+			return result.ExitCode == 0 ? ParseAvailableMemory( result.Output, command ) : 0;
+		}
 
-            return 0;
-        }
-
-	    private static long ParseAvailableMemory( [NotNull] string output, [NotNull] string command )
+		private static long ParseAvailableMemory( [NotNull] string output, [NotNull] string command )
         {
             if ( string.IsNullOrWhiteSpace( output ) )
             {
@@ -323,7 +319,7 @@ namespace KOTORModSync.Core.Utility
                         CreateNoWindow = true,
                     };
 
-                    using (Process process = Process.Start(startInfo))
+                    using ( Process process = Process.Start(startInfo) )
                     {
                         if (process == null)
                             throw new InvalidOperationException( "Failed to start chmod process." );

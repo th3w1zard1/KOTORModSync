@@ -32,9 +32,7 @@ namespace KOTORModSync.Core.Utility
 
             // not even close to a guid.
             if ( guidString.Length != 32 )
-            {
-                return Guid.Empty.ToString();
-            }
+	            return Guid.Empty.ToString();
 
             // Insert necessary dashes between the GUID sections
             guidString = Regex.Replace(
@@ -66,9 +64,7 @@ namespace KOTORModSync.Core.Utility
                 throw new ArgumentException( message: "Value cannot be null or empty.", nameof( key ) );
 
             if ( !dict.TryGetValue( key, out object pathValue ) )
-            {
-                return;
-            }
+	            return;
 
             switch ( pathValue )
             {
@@ -99,9 +95,7 @@ namespace KOTORModSync.Core.Utility
         public static void DeserializeGuidDictionary( [NotNull] IDictionary<string, object> dict, [NotNull] string key )
         {
             if ( !dict.TryGetValue( key, out object value ) )
-            {
-                return;
-            }
+	            return;
 
             switch ( value )
             {
@@ -120,9 +114,7 @@ namespace KOTORModSync.Core.Utility
                         for ( int i = 0; i < stringList.Count; i++ )
                         {
                             if ( Guid.TryParse( stringList[i], out Guid guid ) )
-                            {
-                                continue;
-                            }
+	                            continue;
 
                             // Attempt to fix common issues with GUID strings
                             string fixedGuid = FixGuidString( guid.ToString() );
@@ -139,9 +131,7 @@ namespace KOTORModSync.Core.Utility
                         for ( int i = 0; i < stringList.Count; i++ )
                         {
                             if ( Guid.TryParse( stringList[i], out Guid guid ) )
-                            {
-                                continue;
-                            }
+	                            continue;
 
                             // Attempt to fix common issues with GUID strings
                             string fixedGuid = FixGuidString( guid.ToString() );
@@ -234,7 +224,8 @@ namespace KOTORModSync.Core.Utility
         {
             var settings = new JsonSerializerSettings
             {
-                TypeNameHandling = TypeNameHandling.None, NullValueHandling = NullValueHandling.Ignore,
+                TypeNameHandling = TypeNameHandling.None,
+                NullValueHandling = NullValueHandling.Ignore,
             };
 
             string jsonString = JsonConvert.SerializeObject( obj, settings );

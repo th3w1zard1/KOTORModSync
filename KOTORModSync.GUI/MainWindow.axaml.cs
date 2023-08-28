@@ -2623,7 +2623,7 @@ namespace KOTORModSync
                 var selectedItem = (ComboBoxItem)comboBox.SelectedItem;
                 if ( !(selectedItem?.Tag is string stylePath) )
                 {
-                    await Logger.LogVerboseAsync( "stylePath cannot be rendered from tag, returning immediately" );
+                    await Logger.LogErrorAsync( "stylePath cannot be rendered from tag, returning immediately" );
                     return;
                 }
 

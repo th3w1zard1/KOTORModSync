@@ -19,153 +19,202 @@ using SharpCompress.Common;
 
 namespace KOTORModSync.Core.Utility
 {
-    public static class ArchiveHelper
-    {
-        public static readonly ExtractionOptions DefaultExtractionOptions = new ExtractionOptions
-        {
-            ExtractFullPath = false, Overwrite = true, PreserveFileTime = true,
-        };
+	public static class ArchiveHelper
+	{
+		public static readonly ExtractionOptions DefaultExtractionOptions = new ExtractionOptions
+		{
+			ExtractFullPath = false,
+			Overwrite = true,
+			PreserveFileTime = true,
+		};
 
-        public static bool IsArchive( [NotNull] string filePath ) => IsArchive(
-            new FileInfo( filePath ?? throw new ArgumentNullException( nameof( filePath ) ) )
-        );
+		public static bool IsArchive( [NotNull] string filePath ) => IsArchive(
+			new FileInfo( filePath ?? throw new ArgumentNullException( nameof( filePath ) ) )
+		);
 
-        public static bool IsArchive( [NotNull] FileInfo thisFile ) => thisFile.Extension.Equals( ".zip" )
-            || thisFile.Extension.Equals( ".7z" )
-            || thisFile.Extension.Equals( ".rar" )
-            || thisFile.Extension.Equals( ".exe" );
+		public static bool IsArchive( [NotNull] FileInfo thisFile ) => thisFile.Extension.Equals( ".zip", StringComparison.OrdinalIgnoreCase )
+			|| thisFile.Extension.Equals( ".7z", StringComparison.OrdinalIgnoreCase )
+			|| thisFile.Extension.Equals( ".rar", StringComparison.OrdinalIgnoreCase )
+			|| thisFile.Extension.Equals( ".exe", StringComparison.OrdinalIgnoreCase );
 
-        public static (IArchive, FileStream) OpenArchive(string archivePath)
-        {
-            if (archivePath == null)
-            {
-                throw new ArgumentNullException(nameof(archivePath));
-            }
+		public static (IArchive, FileStream) OpenArchive( string archivePath )
+		{
+			if ( archivePath is null || !File.Exists(archivePath) )
+			{
+				throw new ArgumentException( "Path must be a valid file on disk.", nameof( archivePath ) );
+			}
 
-            try
-            {
-                FileStream stream = File.OpenRead(archivePath);
-                IArchive archive = null;
+			try
+			{
+				FileStream stream = File.OpenRead( archivePath );
+				IArchive archive = null;
 
-                if (archivePath.EndsWith(".zip", StringComparison.OrdinalIgnoreCase))
-                {
-                    archive = ZipArchive.Open(stream);
-                }
-                else if (archivePath.EndsWith(".rar", StringComparison.OrdinalIgnoreCase))
-                {
-                    archive = RarArchive.Open(stream);
-                }
-                else if (archivePath.EndsWith(".7z", StringComparison.OrdinalIgnoreCase))
-                {
-                    archive = SevenZipArchive.Open(stream);
-                }
+				if ( archivePath.EndsWith( ".zip", StringComparison.OrdinalIgnoreCase ) )
+				{
+					archive = ZipArchive.Open( stream );
+				}
+				else if ( archivePath.EndsWith( ".rar", StringComparison.OrdinalIgnoreCase ) )
+				{
+					archive = RarArchive.Open( stream );
+				}
+				else if ( archivePath.EndsWith( ".7z", StringComparison.OrdinalIgnoreCase ) )
+				{
+					archive = SevenZipArchive.Open( stream );
+				}
 
-                return (archive, stream);
-            }
-            catch (Exception ex)
-            {
-                Logger.LogException(ex);
-                return (null, null);
-            }
-        }
+				return (archive, stream);
+			}
+			catch ( Exception ex )
+			{
+				Logger.LogException( ex );
+				return (null, null);
+			}
+		}
 
-        public static void ExtractWith7Zip(FileStream stream, string destinationDirectory)
-        {
-            string exeDir = Utility.GetExecutingAssemblyDirectory();
-            string sevenZDllPath = Path.Combine( exeDir, "Resources", "7z.dll" );
+		//todo: seems to return true on all archives?
+		public static bool IsValidArchive( [CanBeNull] string filePath )
+		{
+			if ( !File.Exists( filePath ) )
+				return false;
 
-            SevenZipBase.SetLibraryPath(sevenZDllPath); // Path to 7z.dll
-            var extractor = new SevenZipExtractor( stream );
-            extractor.ExtractArchive(destinationDirectory);
-        }
+			try
+			{
+				string exeDir = Utility.GetExecutingAssemblyDirectory();
+				string sevenZDllPath = Path.Combine( exeDir, "Resources", "7z.dll" );
+				SevenZipBase.SetLibraryPath( sevenZDllPath ); // Path to 7z.dll
+				bool valid = false;
+				using ( var extractor = new SevenZipExtractor( filePath ) )
+				{
+					// The Check() method throws an exception if the archive is invalid.
+					valid = extractor.Check();
+				}
+
+				if ( !valid )
+					valid = IsPotentialSevenZipSFX( filePath );
+				return valid;
+			}
+			catch ( Exception )
+			{
+				// Here we catch the exception if it's not a valid archive.
+				// We'll then check if it's an SFX.
+				return IsPotentialSevenZipSFX( filePath );
+			}
+		}
+
+		public static bool IsPotentialSevenZipSFX( [NotNull] string filePath )
+		{
+			// These bytes represent a typical signature for Windows executables. 
+			byte[] sfxSignature = { 0x4D, 0x5A }; // 'MZ' header
+
+			byte[] fileHeader = new byte[sfxSignature.Length];
+
+			using ( var fs = new FileStream( filePath, FileMode.Open, FileAccess.Read ) )
+			{
+				_ = fs.Read( fileHeader, offset: 0, sfxSignature.Length );
+			}
+
+			return sfxSignature.SequenceEqual( fileHeader );
+		}
 
 
-        public static void OutputModTree( [NotNull] DirectoryInfo directory, [NotNull] string outputPath )
-        {
-            if ( directory == null )
-                throw new ArgumentNullException( nameof( directory ) );
-            if ( outputPath == null )
-                throw new ArgumentNullException( nameof( outputPath ) );
+		public static void ExtractWith7Zip( FileStream stream, string destinationDirectory )
+		{
+			string exeDir = Utility.GetExecutingAssemblyDirectory();
+			string sevenZDllPath = Path.Combine( exeDir, "Resources", "7z.dll" );
 
-            Dictionary<string, object> root = GenerateArchiveTreeJson( directory );
-            try
-            {
-                string json = JsonConvert.SerializeObject(
-                    root,
-                    Formatting.Indented,
-                    new JsonSerializerSettings
-                    {
-                        ContractResolver = new CamelCasePropertyNamesContractResolver(),
-                    }
-                );
+			SevenZipBase.SetLibraryPath( sevenZDllPath ); // Path to 7z.dll
+			var extractor = new SevenZipExtractor( stream );
+			extractor.ExtractArchive( destinationDirectory );
+		}
 
-                File.WriteAllText( outputPath, json );
-            }
-            catch ( Exception ex )
-            {
-                Logger.LogException( ex, $"Error writing output file '{outputPath}': {ex.Message}" );
-            }
-        }
 
-        [CanBeNull]
-        public static Dictionary<string, object> GenerateArchiveTreeJson( [NotNull] DirectoryInfo directory )
-        {
-            if ( directory == null )
-                throw new ArgumentNullException( nameof( directory ) );
+		public static void OutputModTree( [NotNull] DirectoryInfo directory, [NotNull] string outputPath )
+		{
+			if ( directory == null )
+				throw new ArgumentNullException( nameof( directory ) );
+			if ( outputPath == null )
+				throw new ArgumentNullException( nameof( outputPath ) );
 
-            var root = new Dictionary<string, object>
-            {
-                {
-                    "Name", directory.Name
-                },
-                {
-                    "Type", "directory"
-                },
-                {
-                    "Contents", new List<object>()
-                },
-            };
+			Dictionary<string, object> root = GenerateArchiveTreeJson( directory );
+			try
+			{
+				string json = JsonConvert.SerializeObject(
+					root,
+					Formatting.Indented,
+					new JsonSerializerSettings
+					{
+						ContractResolver = new CamelCasePropertyNamesContractResolver(),
+					}
+				);
 
-            try
-            {
-                foreach ( FileInfo file in directory.EnumerateFilesSafely(
-                        searchPattern: "*.*",
-                        SearchOption.TopDirectoryOnly
-                    ) )
-                {
-                    if ( file == null || !IsArchive( file.Extension ) )
-                        continue;
+				File.WriteAllText( outputPath, json );
+			}
+			catch ( Exception ex )
+			{
+				Logger.LogException( ex, $"Error writing output file '{outputPath}': {ex.Message}" );
+			}
+		}
 
-                    var fileInfo
-                        = new Dictionary<string, object>
-                        {
-                            {
-                                "Name", file.Name
-                            },
-                            {
-                                "Type", "file"
-                            },
-                        };
-                    List<ModDirectory.ArchiveEntry> archiveEntries = TraverseArchiveEntries( file.FullName );
-                    var archiveRoot = new Dictionary<string, object>
-                    {
-                        {
-                            "Name", file.Name
-                        },
-                        {
-                            "Type", "directory"
-                        },
-                        {
-                            "Contents", archiveEntries
-                        },
-                    };
+		[CanBeNull]
+		public static Dictionary<string, object> GenerateArchiveTreeJson( [NotNull] DirectoryInfo directory )
+		{
+			if ( directory == null )
+				throw new ArgumentNullException( nameof( directory ) );
 
-                    fileInfo["Contents"] = archiveRoot["Contents"];
+			var root = new Dictionary<string, object>
+			{
+				{
+					"Name", directory.Name
+				},
+				{
+					"Type", "directory"
+				},
+				{
+					"Contents", new List<object>()
+				},
+			};
 
-                    ( root["Contents"] as List<object> )?.Add( fileInfo );
-                }
+			try
+			{
+				foreach (
+					FileInfo file in directory.EnumerateFilesSafely(
+						searchPattern: "*.*",
+						SearchOption.TopDirectoryOnly
+					)
+				)
+				{
+					if ( file == null || !IsArchive( file.Extension ) )
+						continue;
 
-                /*foreach (DirectoryInfo subdirectory in directory.EnumerateDirectoriesSafely())
+					var fileInfo = new Dictionary<string, object>
+					{
+						{
+							"Name", file.Name
+						},
+						{
+							"Type", "file"
+						},
+					};
+					List<ModDirectory.ArchiveEntry> archiveEntries = TraverseArchiveEntries( file.FullName );
+					var archiveRoot = new Dictionary<string, object>
+					{
+						{
+							"Name", file.Name
+						},
+						{
+							"Type", "directory"
+						},
+						{
+							"Contents", archiveEntries
+						},
+					};
+
+					fileInfo["Contents"] = archiveRoot["Contents"];
+
+					( root["Contents"] as List<object> )?.Add( fileInfo );
+				}
+
+				/*foreach (DirectoryInfo subdirectory in directory.EnumerateDirectoriesSafely())
                 {
                     var subdirectoryInfo = new Dictionary<string, object>
                     {
@@ -176,111 +225,112 @@ namespace KOTORModSync.Core.Utility
 
                     (root["Contents"] as List<object>).Add(subdirectoryInfo);
                 }*/
-            }
-            catch ( Exception ex )
-            {
-                Logger.Log( $"Error generating archive tree for '{directory.FullName}': {ex.Message}" );
-                return null;
-            }
+			}
+			catch ( Exception ex )
+			{
+				Logger.Log( $"Error generating archive tree for '{directory.FullName}': {ex.Message}" );
+				return null;
+			}
 
-            return root;
-        }
+			return root;
+		}
 
-        [NotNull]
-        private static List<ModDirectory.ArchiveEntry> TraverseArchiveEntries( [NotNull] string archivePath )
-        {
-            if ( archivePath == null )
-                throw new ArgumentNullException( nameof( archivePath ) );
+		[NotNull]
+		private static List<ModDirectory.ArchiveEntry> TraverseArchiveEntries( [NotNull] string archivePath )
+		{
+			if ( archivePath == null )
+				throw new ArgumentNullException( nameof( archivePath ) );
 
-            var archiveEntries = new List<ModDirectory.ArchiveEntry>();
+			var archiveEntries = new List<ModDirectory.ArchiveEntry>();
 
-            try
-            {
-                (IArchive archive, FileStream stream) = OpenArchive( archivePath );
-                if ( archive is null || stream is null )
-                {
-                    Logger.Log( $"Unsupported archive format: '{Path.GetExtension( archivePath )}'" );
-                    stream?.Dispose();
-                    return archiveEntries;
-                }
+			try
+			{
+				(IArchive archive, FileStream stream) = OpenArchive( archivePath );
+				if ( archive is null || stream is null )
+				{
+					Logger.Log( $"Unsupported archive format: '{Path.GetExtension( archivePath )}'" );
+					stream?.Dispose();
+					return archiveEntries;
+				}
 
-                archiveEntries.AddRange(
-                    from entry in archive.Entries.Where( e => !e.IsDirectory )
-                    let pathParts = entry.Key.Split(
-                        archivePath.EndsWith( value: ".rar", StringComparison.OrdinalIgnoreCase )
-                            ? '\\' // Use backslash as separator for RAR files
-                            : '/'  // Use forward slash for other archive types
-                    )
-                    select new ModDirectory.ArchiveEntry
-                    {
-                        Name = pathParts[pathParts.Length - 1], Path = entry.Key,
-                    }
-                );
+				archiveEntries.AddRange(
+					from entry in archive.Entries.Where( e => !e.IsDirectory )
+					let pathParts = entry.Key.Split(
+						archivePath.EndsWith( value: ".rar", StringComparison.OrdinalIgnoreCase )
+							? '\\' // Use backslash as separator for RAR files
+							: '/'  // Use forward slash for other archive types
+					)
+					select new ModDirectory.ArchiveEntry
+					{
+						Name = pathParts[pathParts.Length - 1],
+						Path = entry.Key,
+					}
+				);
 
-                stream.Dispose();
-            }
-            catch ( Exception ex )
-            {
-                Logger.Log( $"Error reading archive '{archivePath}': {ex.Message}" );
-            }
+				stream.Dispose();
+			}
+			catch ( Exception ex )
+			{
+				Logger.Log( $"Error reading archive '{archivePath}': {ex.Message}" );
+			}
 
-            return archiveEntries;
-        }
+			return archiveEntries;
+		}
 
-        public static void ProcessArchiveEntry(
-            [NotNull] IArchiveEntry entry,
-            [NotNull] Dictionary<string, object> currentDirectory
-        )
-        {
-            if ( entry == null )
-                throw new ArgumentNullException( nameof( entry ) );
-            if ( currentDirectory == null )
-                throw new ArgumentNullException( nameof( currentDirectory ) );
+		public static void ProcessArchiveEntry(
+			[NotNull] IArchiveEntry entry,
+			[NotNull] Dictionary<string, object> currentDirectory
+		)
+		{
+			if ( entry == null )
+				throw new ArgumentNullException( nameof( entry ) );
+			if ( currentDirectory == null )
+				throw new ArgumentNullException( nameof( currentDirectory ) );
 
-            string[] pathParts = entry.Key.Split( '/' );
-            bool isFile = !entry.IsDirectory;
+			string[] pathParts = entry.Key.Split( '/' );
+			bool isFile = !entry.IsDirectory;
 
-            foreach ( string name in pathParts )
-            {
-                List<object> existingDirectory = currentDirectory["Contents"] as List<object>
-                    ?? throw new InvalidDataException(
-                        $"Unexpected data type for directory contents: '{currentDirectory["Contents"]?.GetType()}'"
-                    );
+			foreach ( string name in pathParts )
+			{
+				List<object> existingDirectory = currentDirectory["Contents"] as List<object>
+					?? throw new InvalidDataException(
+						$"Unexpected data type for directory contents: '{currentDirectory["Contents"]?.GetType()}'"
+					);
 
-                object existingChild = existingDirectory.Find(
-                    c => c is Dictionary<string, object> dict
-                        && dict.ContainsKey( "Name" )
-                        && dict["Name"] is string directoryName
-                        && directoryName.Equals( name, StringComparison.OrdinalIgnoreCase )
-                );
+				object existingChild = existingDirectory.Find(
+					c => c is Dictionary<string, object> dict
+						&& dict.ContainsKey( "Name" )
+						&& dict["Name"] is string directoryName
+						&& directoryName.Equals( name, StringComparison.OrdinalIgnoreCase )
+				);
 
-                if ( existingChild != null )
-                {
-                    if ( isFile )
-                        ( (Dictionary<string, object>)existingChild )["Type"] = "file";
+				if ( existingChild != null )
+				{
+					if ( isFile )
+						( (Dictionary<string, object>)existingChild )["Type"] = "file";
 
-                    currentDirectory = (Dictionary<string, object>)existingChild;
-                }
-                else
-                {
-                    var child = new Dictionary<string, object>()
-                    {
-                        {
-                            "Name", name
-                        },
-                        {
-                            "Type", isFile
-                                ? "file"
-                                : "directory"
-                        },
-                        {
-                            "Contents", new List<object>()
-                        },
-                    };
-                    existingDirectory.Add( child );
-                    currentDirectory = child;
-                }
-            }
-        }
-    }
+					currentDirectory = (Dictionary<string, object>)existingChild;
+				}
+				else
+				{
+					var child = new Dictionary<string, object>()
+					{
+						{
+							"Name", name
+						},
+						{
+							"Type", isFile
+								? "file"
+								: "directory"
+						},
+						{
+							"Contents", new List<object>()
+						},
+					};
+					existingDirectory.Add( child );
+					currentDirectory = child;
+				}
+			}
+		}
+	}
 }

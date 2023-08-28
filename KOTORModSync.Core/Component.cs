@@ -656,10 +656,9 @@ namespace KOTORModSync.Core
                     string caseInsensitiveKey = dict.Keys.FirstOrDefault(
                         k => !( k is null ) && k.Equals( key, StringComparison.OrdinalIgnoreCase )
                     );
+
                     if ( !dict.TryGetValue( caseInsensitiveKey ?? string.Empty, out object val2 ) && !required )
-                    {
-                        return default;
-                    }
+	                    return default;
 
                     value = val2;
                 }
@@ -715,10 +714,7 @@ namespace KOTORModSync.Core
                         foreach ( object item in enumerableValue )
                         {
                             if ( listElementType == typeof( Guid )
-                                && Guid.TryParse(
-                                    item?.ToString(),
-                                    out Guid guidItem )
-                                )
+                                 && Guid.TryParse( item?.ToString(), out Guid guidItem ) )
                             {
 								addMethod?.Invoke( list, new[] { (object)guidItem } );
                             }

@@ -9,7 +9,6 @@ using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using System.Runtime.InteropServices.ComTypes;
 using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
@@ -335,7 +334,7 @@ namespace KOTORModSync.Core
                     }
                     catch ( Exception ex )
                     {
-                        _ = Logger.LogWarningAsync($"Falling back to 7-Zip for entire archive due to an error: {ex.Message}.");
+                        _ = Logger.LogWarningAsync($"Falling back to 7-Zip and restarting entire archive extraction due to an error: {ex.Message}.");
                         cts.Cancel();
                         throw new OperationCanceledException();
                     }
@@ -350,12 +349,18 @@ namespace KOTORModSync.Core
                 try
                 {
                     await Task.WhenAll(extractionTasks); // Wait for all extraction tasks to complete
+					
+                    if ( cts.Token.IsCancellationRequested )
+                    {
+	                    throw new OperationCanceledException();
+                    }
                 }
                 catch (OperationCanceledException)
                 {
                     // Restarting all tasks using ArchiveHelper.ExtractWith7Zip
                     try
                     {
+						Logger.Log( "Starting 7z.dll fallback extraction..." );
                         var fallbackTasks = RealSourcePaths.Select(sourcePath =>
                         {
                             var thisFile = new FileInfo(sourcePath);
@@ -375,7 +380,9 @@ namespace KOTORModSync.Core
                                     _ = Logger.LogAsync( $"Create directory '{destinationRelDirPath}'" );
                                     _ = Directory.CreateDirectory( destinationDirectory );
                                 }
+                                _ = Logger.LogAsync( $"Fallback extraction of '{thisFile.Name}' to '{destinationRelDirPath}'" );
                                 ArchiveHelper.ExtractWith7Zip(stream, destinationDirectory);
+                                _ = Logger.LogAsync( $"Fallback extraction of '{thisFile.Name}' completed." );
                             }
                             return Task.CompletedTask;
                         }).ToList();

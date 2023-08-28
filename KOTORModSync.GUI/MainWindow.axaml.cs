@@ -52,8 +52,7 @@ namespace KOTORModSync
             get => _searchText;
             set
             {
-                if ( _searchText == value )
-                    return; // prevent recursion problems
+                if ( _searchText == value ) return; // prevent recursion problems
 
                 _searchText = value;
                 PropertyChanged?.Invoke( this, new PropertyChangedEventArgs( nameof( SearchText ) ) );
@@ -79,8 +78,8 @@ namespace KOTORModSync
 
                 PropertyChanged += SearchText_PropertyChanged;
 
-                // Fixes an annoying problem where selecting the console window causes the app to hang.
-                // Selection is only possible through ctrl + m or right click -> mark, which still causes the same hang but is less accidental at least.
+                // Fixes an annoying problem on Windows where selecting in the console window causes the app to hang.
+                // Selection now is only possible through ctrl + m or right click -> mark, which still causes the same hang but is less accidental at least.
                 if ( Environment.OSVersion.Platform == PlatformID.Win32NT )
                     ConsoleConfig.DisableQuickEdit();
             }
@@ -109,17 +108,16 @@ namespace KOTORModSync
             componentListColumn.Width = new GridLength( 250 );
 
             // Column 1
-            RawEditTextBox.LostFocus
-                += RawEditTextBox_LostFocus; // Prevents RawEditTextBox from being cleared when clicking elsewhere(?)
+            RawEditTextBox.LostFocus += RawEditTextBox_LostFocus; // Prevents RawEditTextBox from being cleared when clicking elsewhere (?)
             RawEditTextBox.DataContext = new ObservableCollection<string>();
 
-            // Column 3
+            // Column 2
             configColumn.Width = new GridLength( 250 );
             MainConfigInstance = new MainConfig();
 
             MainConfigStackPanel.DataContext = MainConfigInstance;
 
-            _ = Logger.LogVerboseAsync( "Setup window move event handlers..." );
+            _ = Logger.LogVerboseAsync( "Setting up window move event handlers..." );
             // Attach event handlers
             PointerPressed += InputElement_OnPointerPressed;
             PointerMoved += InputElement_OnPointerMoved;
@@ -234,7 +232,7 @@ namespace KOTORModSync
             }
         }
 
-        // Prevents a combobox from dragging the window around.
+        // Prevents a combobox click from dragging the window around.
         private void FindComboBoxes( [CanBeNull] Control control )
         {
             if ( !( control is ILogical visual ) )
@@ -360,8 +358,7 @@ namespace KOTORModSync
         {
             try
             {
-                string[] thisFolder = await ShowFileDialog( isFolderDialog: true, filters: null );
-                return thisFolder?[0];
+                return ( await ShowFileDialog(isFolderDialog: true, filters: null) )?[0];
             }
             catch ( Exception ex )
             {

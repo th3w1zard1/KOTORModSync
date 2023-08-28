@@ -38,7 +38,7 @@ namespace KOTORModSync.Core.TSLPatcher
                 if ( !Regex.IsMatch( fileContents, pattern ) )
                     continue;
 
-                Logger.Log( $"Preventing tslpatcher's automatic game lookups '{file.Name}'" );
+                Logger.LogVerbose( $"Preventing tslpatcher's automatic game lookups '{file.Name}'" );
                 Logger.LogVerbose( $"change 'LookupGameFolder' from 1 to 0 in '{file.Name}'" );
                 fileContents = Regex.Replace( fileContents, pattern, replacement: "LookupGameFolder=0" );
 
@@ -54,7 +54,7 @@ namespace KOTORModSync.Core.TSLPatcher
                 throw new ArgumentNullException( nameof( directory ) );
 
             FileInfo[] iniFiles = directory.GetFilesSafely( searchPattern: "*.ini", SearchOption.AllDirectories );
-            if ( iniFiles.Length == 0 )
+            if ( !(iniFiles is null) && iniFiles.Length == 0 )
                 throw new InvalidOperationException( "No .ini files found!" );
 
             foreach ( FileInfo file in iniFiles )
@@ -72,7 +72,7 @@ namespace KOTORModSync.Core.TSLPatcher
                 if ( !Regex.IsMatch( fileContents, pattern, RegexOptions.IgnoreCase ) )
                     continue;
 
-                Logger.Log( $"Redirecting TSLPatcher logging from '{file.Name}' to 'installlog.txt'" );
+                Logger.LogVerbose( $"Redirecting TSLPatcher logging from '{file.Name}' to 'installlog.txt'" );
                 Logger.LogVerbose( $"change 'PlaintextLog' from 0 to 1 in '{file.Name}'" );
                 fileContents = Regex.Replace( fileContents, pattern, replacement: "PlaintextLog=1" );
 
@@ -89,9 +89,9 @@ namespace KOTORModSync.Core.TSLPatcher
             (IArchive archive, FileStream thisStream) = ArchiveHelper.OpenArchive( archivePath );
             using ( thisStream )
             {
-                if (archive != null && thisStream != null)
+                if ( !(archive is null) && !(thisStream is null) )
                 {
-                    return TraverseDirectories(archive.Entries, currentDirectory: "");
+                    return TraverseDirectories(archive.Entries, currentDirectory: string.Empty);
                 }
             }
 

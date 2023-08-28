@@ -607,32 +607,33 @@
                 <Button Grid.Row="0" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
                         Content="Load Installation File" Click="LoadInstallFile_Click" ToolTip.Tip="Load a TOMLIN instruction file from disk." />
                 <Button Grid.Row="1"  HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
-                        Content="Generate Docs from Config" Click="DocsButton_Click" ToolTip.Tip="Create documentation for this config. Useful if you need human-readable instructions in text form." />
+                        Content="Set Directories" Click="SetDirectories_Click" ToolTip.Tip="Define your KOTOR install directory, and the folder where your mods are downloaded." />
                 <Button Grid.Row="2" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
-                        Content="Set Directories" Click="SetDirectories_Click" ToolTip.Tip="Set your KOTOR install directory, and the folder where your mods are downloaded." />
+                        Content="Pre-install Validation" Click="ValidateButton_Click" ToolTip.Tip="Validates all mods on disk, and their TOML instructions, to ensure instructions can logically execute." />
                 <Button Grid.Row="3" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
-                        Content="Validate Config" Click="ValidateButton_Click" ToolTip.Tip="Validates all mods in the config to ensure instructions can logically execute." />
+                        Content="Fix Duplicate Files/Folders" Click="ResolveDuplicateFilesAndFolders"
+                        ToolTip.Tip="(Linux/Mac only) This will acquire a list of any case-insensitive duplicates in the mod directory or the kotor directory, including subfolders, and resolve them." />
                 <Button Grid.Row="4" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
-                        Content="Deserialize Markdown File" Click="LoadMarkdown_Click" ToolTip.Tip="Attempts to create and load an instructions file from a Reddit post's source." />
+                        Content="Start an Install" Click="StartInstall_Click" ToolTip.Tip="Starts a full install of all selected mods." />
                 <Button Grid.Row="5" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
-                        Content="Install All" Click="StartInstall_Click" ToolTip.Tip="Starts a full install of all selected mods." />
+                        Content="Generate Docs from TOML" Click="DocsButton_Click" ToolTip.Tip="Create documentation for all instructions in the loaded setup. Useful if you need human-readable instructions in text form." />
                 <Button Grid.Row="6" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
-                        Content="Open Output Window" Click="OpenOutputWindow_Click" />
+                        Content="Deserialize Markdown File" Click="LoadMarkdown_Click" ToolTip.Tip="Attempts to create and load an instructions file from a Reddit post's source." />
                 <Button Grid.Row="7" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
-                        Content="Fix Duplicate Files/Folders" Click="ResolveDuplicateFilesAndFolders" />
+                        Content="Open Output Window" Click="OpenOutputWindow_Click" />
             </Grid>
 
             <StackPanel x:Name="MainConfigStackPanel" DataContext="{Binding MainConfigInstance}">
                 <CheckBox Content="Verbose Logging" IsChecked="{Binding debugLogging}" />
                 <CheckBox Content="Auto-Fix Config Errors" IsChecked="{Binding attemptFixes}" />
                 <CheckBox Content="Don't ask for Admin" IsChecked="{Binding noAdmin}"
-                          ToolTip.Tip="Do not prompt for admin on any instruction (NOT RECOMMENDED). If you're having problems, it's recommended you run KOTORModSync as admin instead. Does nothing on Linux" />
+                          ToolTip.Tip="(Windows only) Do not prompt for admin on any instruction (NOT RECOMMENDED). If you're having problems, it's recommended you run KOTORModSync as admin instead." />
                 <CheckBox Content="Mock case-insensitive filesystem" IsChecked="{Binding caseInsensitivePathing}"
-                          ToolTip.Tip="(Linux/Mac only) Attempt to perform case-insensitive file/folder lookups. Somewhat slow, especially on HDDs." />
+                          ToolTip.Tip="(Linux/Mac only) Attempt to perform case-insensitive file/folder lookups for all instructions. Somewhat slow, especially on HDDs." />
                 <CheckBox Content="Use multiple threads for IO operations" IsChecked="{Binding useMultiThreadedIO}"
-                          ToolTip.Tip="Whether to concurrently perform IO operations, or queue them one by one. Recommend this Unchecked if your mod dir or kotor dir is on a HDD." />
+                          ToolTip.Tip="Whether to concurrently perform disk IO work, or queue them one by one. Recommend this Unchecked if your mod dir or kotor dir is on a HDD. Check this if both dirs are on a SSD." />
                 <TextBlock Text="Patcher Option:"
-                           ToolTip.Tip="Mods are packaged with 'TSLPatcher' by default. Use 'PyKotorCLI' to reduce tedious clicking through tslpatcher windows" />
+                           ToolTip.Tip="Mods are packaged with 'TSLPatcher.exe' by default. Use 'PyKotorCLI' to reduce tedious clicking through tslpatcher windows." />
                 <ComboBox HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
                           ItemsSource="{Binding AllAvailablePatchers}"
                           SelectedItem="{Binding patcherOptionString}"

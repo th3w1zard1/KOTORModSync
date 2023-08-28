@@ -25,10 +25,11 @@ namespace KOTORModSync.Core
     [SuppressMessage( category: "ReSharper", checkId: "MemberCanBeMadeStatic.Global" )]
     [SuppressMessage( category: "ReSharper", checkId: "InconsistentNaming" )]
     [SuppressMessage( category: "ReSharper", checkId: "MemberCanBePrivate.Global" )]
+    [SuppressMessage("ReSharper", "UnusedMember.Global")]
     public sealed class MainConfig : INotifyPropertyChanged
     {
         [NotNull]
-        public static string CurrentVersion => "0.10.0";
+        public static string CurrentVersion => "0.10.1";
 
         public MainConfig()
         {
@@ -36,7 +37,6 @@ namespace KOTORModSync.Core
             debugLogging = false;
             patcherOption = AvailablePatchers.PyKotorCLI;
             attemptFixes = true;
-            defaultInstall = true;
             noAdmin = false;
             caseInsensitivePathing = true;
         }
@@ -89,28 +89,28 @@ namespace KOTORModSync.Core
         }
 
         public static bool DebugLogging { get; private set; }
-        public bool debugLogging { [UsedImplicitly] get => DebugLogging; set => DebugLogging = value; }
+        public bool debugLogging { get => DebugLogging; set => DebugLogging = value; }
 
         public static DirectoryInfo LastOutputDirectory { get; private set; }
         [CanBeNull] public DirectoryInfo lastOutputDirectory { get => LastOutputDirectory; set => LastOutputDirectory = value; }
 
         public static bool AttemptFixes { get; private set; }
-        public bool attemptFixes { [UsedImplicitly] get => AttemptFixes; set => AttemptFixes = value; }
-
-        public static bool DefaultInstall { get; private set; }
-        public bool defaultInstall { [UsedImplicitly] get => DefaultInstall; set => DefaultInstall = value; }
+        public bool attemptFixes { get => AttemptFixes; set => AttemptFixes = value; }
+		
+        public static bool ArchiveDeepCheck { get; private set; }
+		public bool archiveDeepCheck { get => ArchiveDeepCheck; set => ArchiveDeepCheck = value; }
 
         public static AvailablePatchers PatcherOption { get; private set; }
         public AvailablePatchers patcherOption
         {
-            [UsedImplicitly] get => PatcherOption;
+            get => PatcherOption;
             set
             {
                 PatcherOption = value;
                 OnPropertyChanged();
             }
         }
-        [NotNull][UsedImplicitly] public string patcherOptionString
+        [NotNull] public string patcherOptionString
         {
             get
             {
@@ -131,14 +131,14 @@ namespace KOTORModSync.Core
         public static CompatibilityLevel CurrentCompatibilityLevel { get; private set; }
         public CompatibilityLevel currentCompatibilityLevel
         {
-            [UsedImplicitly] get => CurrentCompatibilityLevel;
+            get => CurrentCompatibilityLevel;
             set
             {
                 CurrentCompatibilityLevel = value;
                 OnPropertyChanged();
             }
         }
-        [NotNull][UsedImplicitly] public string currentCompatibilityString
+        [NotNull] public string currentCompatibilityString
         {
             get
             {
@@ -166,7 +166,7 @@ namespace KOTORModSync.Core
         [CanBeNull] public static DirectoryInfo SourcePath { get; private set; }
         [CanBeNull] public DirectoryInfo sourcePath
         {
-            [UsedImplicitly] get => SourcePath;
+            get => SourcePath;
             set
             {
                 SourcePath = value;
@@ -178,7 +178,7 @@ namespace KOTORModSync.Core
         [CanBeNull] public static DirectoryInfo DestinationPath { get; private set; }
         [CanBeNull] public DirectoryInfo destinationPath
         {
-            [UsedImplicitly] get => DestinationPath;
+            get => DestinationPath;
             set
             {
                 DestinationPath = value;

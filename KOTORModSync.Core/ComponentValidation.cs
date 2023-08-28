@@ -234,17 +234,16 @@ namespace KOTORModSync.Core
             var instructions = ComponentToValidate.Instructions.ToList();
             foreach ( Option thisOption in ComponentToValidate.Options )
             {
-                if ( thisOption is null )
+	            if ( thisOption is null )
                     continue;
 
-                foreach ( Instruction optionInstruction in thisOption.Instructions )
-                {
-                    instructions.Add( optionInstruction );
-                }
+	            instructions.AddRange( thisOption.Instructions );
             }
 
             foreach ( Instruction instruction in instructions )
             {
+	            if ( !(_componentsList is null) && !Component.ShouldRunInstruction( instruction, _componentsList ) )
+		            continue;
                 if ( instruction.Action != Instruction.ActionType.Extract )
                     continue;
 
@@ -261,33 +260,18 @@ namespace KOTORModSync.Core
                 foreach ( string realSourcePath in realPaths )
                 {
                     if ( Path.GetExtension( realSourcePath ).Equals(
-                            value: ".exe",
-                            StringComparison.OrdinalIgnoreCase
-                        ) )
+		                    value: ".exe",
+		                    StringComparison.OrdinalIgnoreCase
+	                    ) )
                     {
-                        allArchives.Add( realSourcePath );
-                        continue; // no way to verify self-extracting executables.
-                    }
-
-                    if ( !ArchiveHelper.IsArchive( realSourcePath ) )
-                    {
-                        AddWarning(
-                            $"Archive '{Path.GetFileName( realSourcePath )}'"
-                            + " is referenced in a non 'extract' action. Was this intentional?",
-                            instruction
-                        );
-                        continue;
+	                    allArchives.Add( realSourcePath );
+	                    continue; // no easy way to verify self-extracting executables ( see ArchiveHelper.IsValidArchive )
                     }
 
                     if ( File.Exists( realSourcePath ) )
                     {
-                        allArchives.Add( realSourcePath );
-                        continue;
-                    }
-
-                    if ( !(_componentsList is null) && !Component.ShouldRunInstruction( instruction, _componentsList ) )
-                    {
-                        continue;
+	                    allArchives.Add( realSourcePath );
+	                    continue;
                     }
 
                     AddError( "Missing required download:" + $" '{Path.GetFileName( realSourcePath )}'", instruction );

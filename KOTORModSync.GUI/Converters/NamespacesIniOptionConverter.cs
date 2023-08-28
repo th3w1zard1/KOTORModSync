@@ -5,15 +5,54 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using Avalonia.Data.Converters;
+using JetBrains.Annotations;
 using KOTORModSync.Core;
+using KOTORModSync.Core.FileSystemPathing;
 using KOTORModSync.Core.TSLPatcher;
+using KOTORModSync.Core.Utility;
 
 namespace KOTORModSync.Converters
 {
     public class NamespacesIniOptionConverter : IValueConverter
     {
+	    [NotNull]
+	    public List<string> GetAllArchivesFromInstructions( [NotNull] Component parentComponent )
+	    {
+		    if ( parentComponent is null )
+			    throw new ArgumentNullException( nameof( parentComponent ) );
+
+		    var allArchives = new List<string>();
+
+		    List<Instruction> instructions = parentComponent.Instructions.ToList();
+		    foreach ( Option thisOption in parentComponent.Options )
+		    {
+			    if ( thisOption is null )
+				    continue;
+
+			    instructions.AddRange( thisOption.Instructions );
+		    }
+
+		    foreach ( Instruction instruction in instructions )
+		    {
+			    if ( instruction.Action != Instruction.ActionType.Extract )
+				    continue;
+
+			    List<string> realPaths = PathHelper.EnumerateFilesWithWildcards(
+				    instruction.Source.ConvertAll( Utility.ReplaceCustomVariables ),
+				    includeSubFolders: false
+			    );
+			    if ( !realPaths?.IsNullOrEmptyCollection() ?? false )
+			    {
+				    allArchives.AddRange( realPaths.Where( File.Exists ) );
+			    }
+		    }
+
+		    return allArchives;
+	    }
+
         public object Convert( object value, Type targetType, object parameter, CultureInfo culture )
         {
             try
@@ -25,31 +64,19 @@ namespace KOTORModSync.Converters
                 if ( parentComponent is null )
                     return null;
 
-                foreach ( string archivePath in new ComponentValidation( parentComponent ).GetAllArchivesFromInstructions() )
-                {
-                    if ( archivePath is null )
-                        continue;
+                return (
+	                from archivePath in GetAllArchivesFromInstructions(parentComponent)
+	                where !string.IsNullOrEmpty(archivePath)
+	                let result = IniHelper.ReadNamespacesIniFromArchive(archivePath)
+	                where result != null && result.Any()
+	                let optionNames = result
+		                .Where(section => section.Value?.TryGetValue(key: "Name", out _) ?? false)
+		                .Select(section => section.Value["Name"])
+		                .ToList()
+	                where optionNames.Any()
+	                select optionNames
+                ).FirstOrDefault();
 
-                    Dictionary<string, Dictionary<string, string>> result = IniHelper.ReadNamespacesIniFromArchive( archivePath );
-                    if ( result is null || !result.Any() )
-                        continue;
-
-                    if ( !result.Values.Any() )
-                        continue;
-
-                    var optionNames = new List<string>();
-                    foreach (KeyValuePair<string, Dictionary<string, string>> section in result)
-                    {
-                        if (section.Value?.TryGetValue("Name", out string name) ?? false)
-                        {
-                            optionNames.Add(name);
-                        }
-                    }
-                    
-                    return optionNames;
-                }
-
-                return null;
             }
             catch (Exception ex)
             {
@@ -60,5 +87,4 @@ namespace KOTORModSync.Converters
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) => throw new NotImplementedException();
     }
-
 }

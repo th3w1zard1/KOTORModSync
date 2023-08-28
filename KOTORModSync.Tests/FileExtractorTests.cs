@@ -11,7 +11,7 @@ namespace KOTORModSync.Tests
     [Ignore( "not finished yet" )]
     public class FileExtractor
     {
-        [SetUp]
+	    [SetUp]
         public void Setup()
         {
             // Set up the initial values for destinationPath and sourcePaths

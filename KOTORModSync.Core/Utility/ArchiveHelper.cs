@@ -178,8 +178,7 @@ namespace KOTORModSync.Core.Utility
 			{
 				foreach (
 					FileInfo file in directory.EnumerateFilesSafely(
-						searchPattern: "*.*",
-						SearchOption.TopDirectoryOnly
+						searchPattern: "*.*"
 					)
 				)
 				{
@@ -313,7 +312,7 @@ namespace KOTORModSync.Core.Utility
 				}
 				else
 				{
-					var child = new Dictionary<string, object>()
+					var child = new Dictionary<string, object>
 					{
 						{
 							"Name", name

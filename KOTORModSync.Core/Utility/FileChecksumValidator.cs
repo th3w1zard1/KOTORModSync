@@ -16,11 +16,11 @@ namespace KOTORModSync.Core.Utility
 {
     public class FileChecksumValidator
     {
-        private readonly string _destinationPath;
-        private readonly Dictionary<FileInfo, SHA1> _expectedChecksums;
-        private readonly Dictionary<FileInfo, SHA1> _originalChecksums;
+	    private readonly string _destinationPath;
+	    private readonly Dictionary<FileInfo, SHA1> _expectedChecksums;
+	    private readonly Dictionary<FileInfo, SHA1> _originalChecksums;
 
-        public FileChecksumValidator(
+	    public FileChecksumValidator(
             [CanBeNull] string destinationPath,
             [CanBeNull] Dictionary<FileInfo, SHA1> expectedChecksums,
             [CanBeNull] Dictionary<FileInfo, SHA1> originalChecksums
@@ -31,7 +31,7 @@ namespace KOTORModSync.Core.Utility
             _originalChecksums = originalChecksums;
         }
 
-        [NotNull]
+	    [NotNull]
         public static string Sha1ToString( [NotNull] SHA1 sha1 ) =>
             sha1 == null
                 ? throw new ArgumentNullException( nameof( sha1 ) )

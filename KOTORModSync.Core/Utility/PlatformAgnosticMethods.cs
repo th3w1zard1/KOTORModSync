@@ -22,9 +22,9 @@ namespace KOTORModSync.Core.Utility
     [SuppressMessage( "ReSharper", "MemberCanBePrivate.Global" )]
     public static class PlatformAgnosticMethods
     {
-        // Overload for a string representation of the folder path.
+	    // Overload for a string representation of the folder path.
 
-        public static async Task<int> CalculateMaxDegreeOfParallelismAsync( [CanBeNull] DirectoryInfo thisDir )
+	    public static async Task<int> CalculateMaxDegreeOfParallelismAsync( [CanBeNull] DirectoryInfo thisDir )
         {
             int maxParallelism = Environment.ProcessorCount; // Start with the number of available processors
 
@@ -63,7 +63,7 @@ namespace KOTORModSync.Core.Utility
             return maxParallelism;
         }
 
-        public static long GetAvailableMemory()
+	    public static long GetAvailableMemory()
         {
             // Check if the required command/method exists on the current platform
             (int ExitCode, string Output, string Error) result = TryExecuteCommand( "sysctl -n hw.memsize" );
@@ -91,7 +91,7 @@ namespace KOTORModSync.Core.Utility
             return 0;
         }
 
-        private static long ParseAvailableMemory( [NotNull] string output, [NotNull] string command )
+	    private static long ParseAvailableMemory( [NotNull] string output, [NotNull] string command )
         {
             if ( string.IsNullOrWhiteSpace( output ) )
             {
@@ -129,7 +129,7 @@ namespace KOTORModSync.Core.Utility
                 : 0;
         }
 
-        public static (int ExitCode, string Output, string Error) TryExecuteCommand( [CanBeNull] string command )
+	    public static (int ExitCode, string Output, string Error) TryExecuteCommand( [CanBeNull] string command )
         {
             string shellPath = GetShellExecutable();
             if ( string.IsNullOrEmpty( shellPath ) )
@@ -153,7 +153,7 @@ namespace KOTORModSync.Core.Utility
             }
         }
 
-        private static bool IsShellExecutionSupported()
+	    private static bool IsShellExecutionSupported()
         {
             string shellExecutable = GetShellExecutable();
 
@@ -163,7 +163,7 @@ namespace KOTORModSync.Core.Utility
             return isSupported;
         }
 
-        [NotNull]
+	    [NotNull]
         public static string GetShellExecutable()
         {
             string[] shellExecutables =
@@ -339,12 +339,6 @@ namespace KOTORModSync.Core.Utility
                     }
                 });
             }
-        }
-
-        private static class Interop
-        {
-            [DllImport( dllName: "libc" )]
-            public static extern uint geteuid();
         }
 
         [NotNull]
@@ -587,6 +581,12 @@ namespace KOTORModSync.Core.Utility
             await Logger.LogAsync( "Process failed to start with all possible combinations of arguments." );
             await Logger.LogExceptionAsync( ex ?? new InvalidOperationException() );
             return ( -1, string.Empty, string.Empty );
+        }
+
+        private static class Interop
+        {
+	        [DllImport( dllName: "libc" )]
+            public static extern uint geteuid();
         }
     }
 }

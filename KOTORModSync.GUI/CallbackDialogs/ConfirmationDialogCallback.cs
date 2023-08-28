@@ -11,11 +11,11 @@ namespace KOTORModSync.CallbackDialogs
 {
     internal sealed class ConfirmationDialogCallback : CallbackObjects.IConfirmationDialogCallback
     {
-        private readonly Window _topLevelWindow;
+	    private readonly Window _topLevelWindow;
 
-        public ConfirmationDialogCallback( [CanBeNull] Window topLevelWindow ) => _topLevelWindow = topLevelWindow;
+	    public ConfirmationDialogCallback( [CanBeNull] Window topLevelWindow ) => _topLevelWindow = topLevelWindow;
 
-        public Task<bool?> ShowConfirmationDialog( [CanBeNull] string message ) =>
+	    public Task<bool?> ShowConfirmationDialog( [CanBeNull] string message ) =>
             ConfirmationDialog.ShowConfirmationDialog( _topLevelWindow, message );
     }
 }

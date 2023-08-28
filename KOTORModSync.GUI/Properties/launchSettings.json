@@ -1,12 +1,12 @@
 {
-  "profiles": {
-    "KOTORModSync": {
-      "commandName": "Project",
-      "nativeDebugging": false
-    },
-    "WSL": {
-      "commandName": "WSL2",
-      "distributionName": ""
+    "profiles": {
+        "KOTORModSync": {
+            "commandName": "Project",
+            "nativeDebugging": false
+        },
+        "WSL": {
+            "commandName": "WSL2",
+            "distributionName": ""
+        }
     }
-  }
 }

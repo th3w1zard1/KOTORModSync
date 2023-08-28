@@ -12,28 +12,28 @@ namespace KOTORModSync.Core.FileSystemPathing
 {
     public static class PathValidator
     {
-        // Characters not allowed in Windows file and directory names
-        // we don't check colon or any slashes here, because we aren't validating file/folder names, only a full path string.
-        private static readonly char[] s_invalidPathCharsWindows = {
+	    // Characters not allowed in Windows file and directory names
+	    // we don't check colon or any slashes here, because we aren't validating file/folder names, only a full path string.
+	    private static readonly char[] s_invalidPathCharsWindows = {
 	        '\0', '\a', '\b', '\t', '\n', '\v', '\f', '\r', '!', '"', '$', '%', '&', '*', '+',
 	        '<', '=', '>', '?', '@', '{', '}', '`', ',', '^',
         };
 
 
-        // Characters not allowed in Unix file and directory names
-        private static readonly char[] s_invalidPathCharsUnix = {
+	    // Characters not allowed in Unix file and directory names
+	    private static readonly char[] s_invalidPathCharsUnix = {
             '\0',
         };
 
-        // Reserved file names in Windows
-        private static readonly string[] s_reservedFileNamesWindows = {
+	    // Reserved file names in Windows
+	    private static readonly string[] s_reservedFileNamesWindows = {
             "CON", "PRN", "AUX", "NUL",
             "COM0", "COM1", "COM2", "COM3", "COM4", "COM5", "COM6", "COM7", "COM8", "COM9",
             "LPT0", "LPT1", "LPT2", "LPT3", "LPT4", "LPT5", "LPT6", "LPT7", "LPT8", "LPT9",
         };
 
-        // Checks if the path is valid on running platform, or optionally (default) enforce for all platforms.
-        public static bool IsValidPath(
+	    // Checks if the path is valid on running platform, or optionally (default) enforce for all platforms.
+	    public static bool IsValidPath(
 	        [CanBeNull] string path,
 	        bool enforceAllPlatforms = true,
 	        bool ignoreWildcards = false
@@ -93,7 +93,7 @@ namespace KOTORModSync.Core.FileSystemPathing
         }
 
 
-        public static bool HasColonOutsideOfPathRoot( [CanBeNull] string path )
+	    public static bool HasColonOutsideOfPathRoot( [CanBeNull] string path )
         {
 	        if ( string.IsNullOrWhiteSpace(path) ) return false;
 
@@ -110,7 +110,7 @@ namespace KOTORModSync.Core.FileSystemPathing
         }
 
 
-        public static bool HasRepeatedSlashes( [CanBeNull] string input )
+	    public static bool HasRepeatedSlashes( [CanBeNull] string input )
         {
 	        if ( string.IsNullOrWhiteSpace(input) ) return false;
 
@@ -122,21 +122,21 @@ namespace KOTORModSync.Core.FileSystemPathing
 	        return false;
         }
 
-		
-        public static char[] GetInvalidCharsForPlatform() =>
+
+	    public static char[] GetInvalidCharsForPlatform() =>
             Environment.OSVersion.Platform == PlatformID.Unix
                 ? s_invalidPathCharsUnix
                 : s_invalidPathCharsWindows;
 
 
-        public static bool HasMixedSlashes( [CanBeNull] string input ) => ( input?.Contains('/') ?? false ) && input.Contains('\\');
+	    public static bool HasMixedSlashes( [CanBeNull] string input ) => ( input?.Contains('/') ?? false ) && input.Contains('\\');
 
 
-        // This method checks whether any character's ascii code in the path is less than a space (ASCII code 32).
-        public static bool ContainsNonPrintableChars( [CanBeNull] string path ) => path?.Any( c => c < ' ' ) ?? false;
+	    // This method checks whether any character's ascii code in the path is less than a space (ASCII code 32).
+	    public static bool ContainsNonPrintableChars( [CanBeNull] string path ) => path?.Any( c => c < ' ' ) ?? false;
 
 
-        public static bool IsReservedFileNameWindows( [CanBeNull] string path )
+	    public static bool IsReservedFileNameWindows( [CanBeNull] string path )
         {
 	        if ( string.IsNullOrWhiteSpace(path) ) return false;
 
@@ -156,7 +156,7 @@ namespace KOTORModSync.Core.FileSystemPathing
         }
 
 
-        public static bool HasInvalidWindowsFileNameParts( [CanBeNull] string path )
+	    public static bool HasInvalidWindowsFileNameParts( [CanBeNull] string path )
         {
 	        if ( string.IsNullOrEmpty(path) ) return false;
 

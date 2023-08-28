@@ -12,7 +12,7 @@ namespace KOTORModSync.Core.Utility
 {
     public static class CollectionUtils
     {
-        public static void RemoveEmptyCollections( [NotNull] IDictionary<string, object> thisTable )
+	    public static void RemoveEmptyCollections( [NotNull] IDictionary<string, object> thisTable )
         {
             if ( thisTable is null )
                 throw new ArgumentNullException( nameof( thisTable ) );
@@ -84,7 +84,7 @@ namespace KOTORModSync.Core.Utility
             }
         }
 
-        public static void RemoveEmptyCollections( [NotNull][ItemCanBeNull] IList<object> list )
+	    public static void RemoveEmptyCollections( [NotNull][ItemCanBeNull] IList<object> list )
         {
             if ( list is null )
                 throw new ArgumentNullException( nameof( list ) );

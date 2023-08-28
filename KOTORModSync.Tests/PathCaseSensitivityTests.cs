@@ -12,6 +12,9 @@ namespace KOTORModSync.Tests
 #pragma warning disable CS8618
 		private static string s_testDirectory;
 #pragma warning restore CS8618
+		private DirectoryInfo _subDirectory = null!;
+
+		private DirectoryInfo _tempDirectory = null!;
 
 		[SetUp]
 		public static void InitializeTestDirectory()
@@ -22,9 +25,6 @@ namespace KOTORModSync.Tests
 
 		[TearDown]
 		public static void CleanUpTestDirectory() => Directory.Delete( s_testDirectory, recursive: true );
-
-		private DirectoryInfo _tempDirectory = null!;
-		private DirectoryInfo _subDirectory = null!;
 
 		[SetUp]
 		public void Setup()
@@ -360,7 +360,6 @@ namespace KOTORModSync.Tests
 			// Assert
 			Assert.That( result, Is.EqualTo( testFilePath ) );
 		}
-
 
 
 		[Test]

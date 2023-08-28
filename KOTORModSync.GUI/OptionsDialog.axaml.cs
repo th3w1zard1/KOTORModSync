@@ -17,16 +17,16 @@ namespace KOTORModSync
 {
     public partial class OptionsDialog : Window
     {
-        public static readonly AvaloniaProperty OptionsListProperty
+	    public static readonly AvaloniaProperty OptionsListProperty
             = AvaloniaProperty.Register<OptionsDialog, List<string>>( nameof( OptionsList ) );
 
-        public OptionsDialog()
+	    public OptionsDialog()
         {
             InitializeComponent();
             OkButton.Click += OKButton_Click;
         }
 
-        [CanBeNull]
+	    [CanBeNull]
         public List<string> OptionsList
         {
             get => GetValue( OptionsListProperty ) as List<string>;

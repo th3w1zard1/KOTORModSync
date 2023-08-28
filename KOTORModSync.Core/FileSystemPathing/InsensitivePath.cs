@@ -18,11 +18,30 @@ namespace KOTORModSync.Core.FileSystemPathing
 	[SuppressMessage(category: "ReSharper", checkId: "UnusedMember.Global")]
 	public sealed class InsensitivePath : DynamicObject
     {
-        [NotNull] private FileSystemInfo _fileSystemInfo { get; set; }
-        private bool _isFile { get; }
-        public bool IsFile => _isFile;
+	    public InsensitivePath( FileSystemInfo fileSystemInfo )
+        {
+	        OriginalPath = fileSystemInfo.FullName;
+	        _isFile = fileSystemInfo is FileInfo;
+	        _fileSystemInfo = fileSystemInfo;
+        }
 
-        public bool Exists
+	    public InsensitivePath( string inputPath, bool isFile )
+        {
+            string formattedPath = PathHelper.FixPathFormatting( inputPath );
+            _isFile = isFile;
+            _fileSystemInfo = _isFile
+                ? new FileInfo( formattedPath )
+                : (FileSystemInfo)new DirectoryInfo( formattedPath );
+            OriginalPath = formattedPath;
+
+            Refresh();
+        }
+
+	    [NotNull] private FileSystemInfo _fileSystemInfo { get; set; }
+	    private bool _isFile { get; }
+	    public bool IsFile => _isFile;
+
+	    public bool Exists
         {
             get
             {
@@ -38,7 +57,7 @@ namespace KOTORModSync.Core.FileSystemPathing
             }
         }
 
-        public string FullName
+	    public string FullName
         {
 	        get
 	        {
@@ -50,7 +69,8 @@ namespace KOTORModSync.Core.FileSystemPathing
 		        return _fileSystemInfo.FullName;
 	        }
         }
-        public string Name
+
+	    public string Name
         {
 	        get
 	        {
@@ -63,7 +83,9 @@ namespace KOTORModSync.Core.FileSystemPathing
 	        }
         }
 
-        public List<FileSystemInfo> FindDuplicates()
+	    private string OriginalPath { get; }
+
+	    public List<FileSystemInfo> FindDuplicates()
         {
 			return PathHelper.FindCaseInsensitiveDuplicates(
 		        _fileSystemInfo.FullName,
@@ -71,35 +93,16 @@ namespace KOTORModSync.Core.FileSystemPathing
 		        isFile: IsFile
 	        ).ToList();
         }
-        public void Delete()
+
+	    public void Delete()
         {
             _fileSystemInfo.Delete();
             FindDuplicates()?.ToList().ForEach(duplicate => duplicate?.Delete());
         }
-		private string OriginalPath { get; }
 
-        public override string ToString() => _fileSystemInfo.FullName;
-        
-        public InsensitivePath( FileSystemInfo fileSystemInfo )
-        {
-	        OriginalPath = fileSystemInfo.FullName;
-	        _isFile = fileSystemInfo is FileInfo;
-	        _fileSystemInfo = fileSystemInfo;
-        }
+	    public override string ToString() => _fileSystemInfo.FullName;
 
-        public InsensitivePath( string inputPath, bool isFile )
-        {
-            string formattedPath = PathHelper.FixPathFormatting( inputPath );
-            _isFile = isFile;
-            _fileSystemInfo = _isFile
-                ? (FileSystemInfo)new FileInfo( formattedPath )
-                : (FileSystemInfo)new DirectoryInfo( formattedPath );
-            OriginalPath = formattedPath;
-
-            Refresh();
-        }
-
-        public void Refresh()
+	    public void Refresh()
         {
             _fileSystemInfo.Refresh();
 
@@ -123,7 +126,7 @@ namespace KOTORModSync.Core.FileSystemPathing
             }
         }
 
-        public override bool TryGetMember(GetMemberBinder binder, out object result)
+	    public override bool TryGetMember(GetMemberBinder binder, out object result)
         {
 	        MemberInfo memberInfo = _fileSystemInfo.GetType().GetMember(binder.Name).FirstOrDefault();
 			
@@ -146,7 +149,7 @@ namespace KOTORModSync.Core.FileSystemPathing
 	        }
         }
 
-        public override bool Equals(object obj)
+	    public override bool Equals(object obj)
         {
 	        switch ( obj )
 	        {
@@ -161,15 +164,15 @@ namespace KOTORModSync.Core.FileSystemPathing
 	        }
         }
 
-        // ReSharper disable once NonReadonlyMemberInGetHashCode - we only reference the string, not the object, so this warning can be ignored.
-        public override int GetHashCode() => _fileSystemInfo.FullName.ToLowerInvariant().GetHashCode();
+	    // ReSharper disable once NonReadonlyMemberInGetHashCode - we only reference the string, not the object, so this warning can be ignored.
+	    public override int GetHashCode() => _fileSystemInfo.FullName.ToLowerInvariant().GetHashCode();
 
-        public static bool operator ==(InsensitivePath left, object right) => left?.Equals( right ) ?? right is null;
-        public static bool operator !=(InsensitivePath left, object right) => !(left == right);
+	    public static bool operator ==(InsensitivePath left, object right) => left?.Equals( right ) ?? right is null;
+	    public static bool operator !=(InsensitivePath left, object right) => !(left == right);
 
 
-        public static implicit operator string( InsensitivePath insensitivePath ) => insensitivePath.FullName;
-        public static implicit operator FileInfo( InsensitivePath insensitivePath ) => insensitivePath._fileSystemInfo as FileInfo;
-        public static implicit operator DirectoryInfo( InsensitivePath insensitivePath ) => insensitivePath._fileSystemInfo as DirectoryInfo;
+	    public static implicit operator string( InsensitivePath insensitivePath ) => insensitivePath.FullName;
+	    public static implicit operator FileInfo( InsensitivePath insensitivePath ) => insensitivePath._fileSystemInfo as FileInfo;
+	    public static implicit operator DirectoryInfo( InsensitivePath insensitivePath ) => insensitivePath._fileSystemInfo as DirectoryInfo;
     }
 }

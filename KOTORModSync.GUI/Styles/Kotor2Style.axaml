@@ -41,7 +41,7 @@
         <Setter Property="Foreground" Value="#33C3A2" />
     </Style>
     <Style Selector="Expander /template/ ContentPresenter">
-        <Setter Property="Background" Value="#05110D"/>
+        <Setter Property="Background" Value="#05110D" />
     </Style>
     <Style Selector="Expander:expanded /template/ Border#ExpanderContent">
         <Setter Property="Background" Value="#05110D" />
@@ -101,22 +101,22 @@
         <Setter Property="Foreground" Value="#33C3A2" />
     </Style>
     <Style Selector="CheckBox:pointerover">
-        <Setter Property="Foreground" Value="#43FFD4"/>
-        <Setter Property="BorderBrush" Value="#43FFD4"/>
+        <Setter Property="Foreground" Value="#43FFD4" />
+        <Setter Property="BorderBrush" Value="#43FFD4" />
     </Style>
     <Style Selector="CheckBox:hover">
-        <Setter Property="Foreground" Value="#43FFD4"/>
-        <Setter Property="BorderBrush" Value="#43FFD4"/>
+        <Setter Property="Foreground" Value="#43FFD4" />
+        <Setter Property="BorderBrush" Value="#43FFD4" />
     </Style>
     <Style Selector="CheckBox:checked">
-        <Setter Property="Foreground" Value="#33C3A2"/>
-        <Setter Property="BorderBrush" Value="#33C3A2"/>
+        <Setter Property="Foreground" Value="#33C3A2" />
+        <Setter Property="BorderBrush" Value="#33C3A2" />
     </Style>
     <Style Selector="CheckBox:unchecked">
-        <Setter Property="Foreground" Value="#33C3A2"/>
+        <Setter Property="Foreground" Value="#33C3A2" />
     </Style>
     <Style Selector="CheckBox:pointerover /template/ Border#PART_Border">
-        <Setter Property="Background" Value="#43FFD4"/>
+        <Setter Property="Background" Value="#43FFD4" />
     </Style>
 
     <Style Selector="TreeView">

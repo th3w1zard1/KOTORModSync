@@ -10,10 +10,10 @@ namespace KOTORModSync
 {
     public partial class ProgressWindow : Window
     {
-        public ProgressWindow() => InitializeComponent();
-        public void Dispose() => Close();
-        
-        public static async Task ShowProgressWindow(
+	    public ProgressWindow() => InitializeComponent();
+	    public void Dispose() => Close();
+
+	    public static async Task ShowProgressWindow(
             [CanBeNull] Window parentWindow,
             [CanBeNull] string message,
             decimal progress

@@ -15,7 +15,7 @@ namespace KOTORModSync.Tests
     [TestFixture]
     public class FileDeletionTests
     {
-        [OneTimeSetUp]
+	    [OneTimeSetUp]
         public void CreateTestDirectory()
         {
             _testDirectory = Path.Combine( Path.GetTempPath(), path2: "DeleteDuplicateFileTests" );

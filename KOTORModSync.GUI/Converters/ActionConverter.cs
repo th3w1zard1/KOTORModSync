@@ -12,7 +12,7 @@ namespace KOTORModSync.Converters
 {
     public class ActionConverter : IValueConverter
     {
-        public object Convert( object value, Type targetType, object parameter, CultureInfo culture )
+	    public object Convert( object value, Type targetType, object parameter, CultureInfo culture )
         {
             if ( value is null )
                 return Instruction.ActionType.Unset.ToString();
@@ -27,7 +27,7 @@ namespace KOTORModSync.Converters
             return new BindingNotification( new ArgumentException( msg ), BindingErrorType.Error );
         }
 
-        public object ConvertBack( object value, Type targetType, object parameter, CultureInfo culture )
+	    public object ConvertBack( object value, Type targetType, object parameter, CultureInfo culture )
         {
             if ( value is Instruction.ActionType actual )
                 return actual.ToString();

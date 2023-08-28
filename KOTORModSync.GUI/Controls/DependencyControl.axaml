@@ -31,7 +31,8 @@
                     Tag="{Binding ElementName=DependenciesListBox}"
                     HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" />
         </StackPanel>
-        <Grid Margin="0" RowDefinitions="Auto,Auto" ColumnDefinitions="*,*" HorizontalAlignment="Stretch" VerticalAlignment="Top">
+        <Grid Margin="0" RowDefinitions="Auto,Auto" ColumnDefinitions="*,*" HorizontalAlignment="Stretch"
+              VerticalAlignment="Top">
             <ComboBox Grid.Column="0" Grid.Row="0" HorizontalAlignment="Stretch"
                       x:Name="DependenciesComboBox"
                       SelectionChanged="DependenciesComboBox_SelectionChanged"
@@ -64,7 +65,7 @@
             <Button Grid.Column="1" Grid.Row="1"
                     Content="Add Option to List" Click="AddToList_Click"
                     Tag="{Binding ElementName=OptionsComboBox}"
-                    HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" VerticalAlignment="Top"/>
+                    HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" VerticalAlignment="Top" />
         </Grid>
     </DockPanel>
 </UserControl>

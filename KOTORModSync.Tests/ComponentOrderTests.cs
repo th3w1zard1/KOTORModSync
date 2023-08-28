@@ -9,7 +9,7 @@ namespace KOTORModSync.Tests
     [TestFixture]
     internal class ComponentOrderTests
     {
-        [Test]
+	    [Test]
         public void ConfirmComponentsInstallOrder_InstallBefore_ReturnsTrue()
         {
             // Arrange

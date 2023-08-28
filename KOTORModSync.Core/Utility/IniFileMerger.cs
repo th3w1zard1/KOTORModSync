@@ -10,7 +10,7 @@ namespace KOTORModSync.Core.Utility
 {
     public static class IniFileMerger
     {
-        [NotNull]
+	    [NotNull]
         public static IniData MergeIniFiles( [NotNull] IniData iniData1, [NotNull] IniData iniData2 )
         {
             if ( iniData1 == null )

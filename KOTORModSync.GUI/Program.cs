@@ -1,10 +1,10 @@
-﻿using Avalonia;
-using Avalonia.ReactiveUI;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
+using Avalonia;
+using Avalonia.ReactiveUI;
 using KOTORModSync.Core;
 using KOTORModSync.Core.FileSystemPathing;
 using KOTORModSync.Core.Utility;
@@ -13,10 +13,10 @@ namespace KOTORModSync
 {
     internal static class Program
     {
-        // Initialization code. Don't use any Avalonia, third-party APIs or any
-        // SynchronizationContext-reliant code before AppMain is called: things aren't initialized
-        // yet and stuff might break.
-        [STAThread]
+	    // Initialization code. Don't use any Avalonia, third-party APIs or any
+	    // SynchronizationContext-reliant code before AppMain is called: things aren't initialized
+	    // yet and stuff might break.
+	    [STAThread]
         public static void Main(string[] args)
         {
             var consoleThread = new Thread(ConsoleLoop);
@@ -57,8 +57,7 @@ namespace KOTORModSync
                             }
 
                             FileInfo[] modFiles = modDownloads.GetFilesSafely(
-                                    searchPattern: "*.*",
-                                    SearchOption.TopDirectoryOnly
+                                    searchPattern: "*.*"
                                 )
                                 .Where( file => ArchiveHelper.IsArchive( file.FullName ) )
                                 .ToArray();

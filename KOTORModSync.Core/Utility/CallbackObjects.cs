@@ -11,10 +11,10 @@ namespace KOTORModSync.Core.Utility
 {
     public static class CallbackObjects
     {
-        public static IConfirmationDialogCallback ConfirmCallback { get; private set; }
-        public static IOptionsDialogCallback OptionsCallback { get; private set; }
+	    public static IConfirmationDialogCallback ConfirmCallback { get; private set; }
+	    public static IOptionsDialogCallback OptionsCallback { get; private set; }
 
-        public static void SetCallbackObjects(
+	    public static void SetCallbackObjects(
             [NotNull] IConfirmationDialogCallback confirmDialog,
             [NotNull] IOptionsDialogCallback optionsDialog
         )
@@ -23,15 +23,15 @@ namespace KOTORModSync.Core.Utility
             OptionsCallback = optionsDialog ?? throw new ArgumentNullException( nameof( optionsDialog ) );
         }
 
-        public interface IConfirmationDialogCallback
+	    public interface IConfirmationDialogCallback
         {
-            Task<bool?> ShowConfirmationDialog( string message );
+	        Task<bool?> ShowConfirmationDialog( string message );
         }
 
-        public interface IOptionsDialogCallback
+	    public interface IOptionsDialogCallback
         {
-            // ReSharper disable once UnusedMemberInSuper.Global
-            Task<string> ShowOptionsDialog( List<string> options );
+	        // ReSharper disable once UnusedMemberInSuper.Global
+	        Task<string> ShowOptionsDialog( List<string> options );
         }
     }
 }

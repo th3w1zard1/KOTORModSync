@@ -18,21 +18,7 @@ namespace KOTORModSync.Converters
 {
     public class ListToStringConverter : IValueConverter
     {
-        [NotNull]
-        public static string RemoveSpacesExceptNewLine( [NotNull] string input )
-        {
-            if ( input is null )
-            {
-                throw new ArgumentNullException( nameof( input ) );
-            }
-
-            string pattern = $@"(?:(?!{Environment.NewLine})[^\S{Environment.NewLine}])+";
-            string result = Regex.Replace( input, pattern, replacement: "" );
-
-            return result;
-        }
-
-        public object Convert(
+	    public object Convert(
             object value,
             Type targetType,
             object parameter,
@@ -58,7 +44,7 @@ namespace KOTORModSync.Converters
             return serializedList.ToString();
         }
 
-        public object ConvertBack(
+	    public object ConvertBack(
             object value,
             Type targetType,
             object parameter,
@@ -115,6 +101,20 @@ namespace KOTORModSync.Converters
             {
                 return new BindingNotification( new FormatException( ex.Message ), BindingErrorType.Error );
             }
+        }
+
+	    [NotNull]
+        public static string RemoveSpacesExceptNewLine( [NotNull] string input )
+        {
+            if ( input is null )
+            {
+                throw new ArgumentNullException( nameof( input ) );
+            }
+
+            string pattern = $@"(?:(?!{Environment.NewLine})[^\S{Environment.NewLine}])+";
+            string result = Regex.Replace( input, pattern, replacement: "" );
+
+            return result;
         }
     }
 }

@@ -5,13 +5,14 @@
 using System.Diagnostics;
 using KOTORModSync.Core;
 using KOTORModSync.Core.Utility;
+using ThreadState = System.Threading.ThreadState;
 
 namespace KOTORModSync.Tests
 {
     [TestFixture]
     public class CommandExecutorTests
     {
-        private static void ExecuteCommand(
+	    private static void ExecuteCommand(
             string command,
             EventWaitHandle completed,
             IDictionary<string, object> sharedData
@@ -47,7 +48,7 @@ namespace KOTORModSync.Tests
             }
         }
 
-        [Test]
+	    [Test]
         [Timeout( 10000 )]
         public void TryExecuteCommand_ShouldReturnSuccessAndOutput()
         {
@@ -77,7 +78,7 @@ namespace KOTORModSync.Tests
 
                 // You can add additional actions or assertions here as needed
             }
-            else if ( thread.ThreadState != System.Threading.ThreadState.Stopped )
+            else if ( thread.ThreadState != ThreadState.Stopped )
             {
                 // The test thread is still running
                 Logger.Log( "The test thread is still running." );

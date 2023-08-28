@@ -14,12 +14,12 @@ namespace KOTORModSync
 {
     public partial class InformationDialog : Window
     {
-        public static readonly AvaloniaProperty InfoTextProperty
+	    public static readonly AvaloniaProperty InfoTextProperty
             = AvaloniaProperty.Register<InformationDialog, string>( "InfoText" );
 
-        public InformationDialog() => InitializeComponent();
+	    public InformationDialog() => InitializeComponent();
 
-        [CanBeNull]
+	    [CanBeNull]
         public string InfoText
         {
             get => GetValue( InfoTextProperty ) as string;
@@ -43,9 +43,7 @@ namespace KOTORModSync
         {
             base.OnOpened( e );
             UpdateInfoText();
-        }
-
-        // ReSharper disable twice UnusedParameter.Local
+        } // ReSharper disable twice UnusedParameter.Local
         private void OKButton_Click( [NotNull] object sender, [NotNull] RoutedEventArgs e ) => Close();
         private void UpdateInfoText() => Dispatcher.UIThread.InvokeAsync( () => InfoTextBlock.Text = InfoText );
     }

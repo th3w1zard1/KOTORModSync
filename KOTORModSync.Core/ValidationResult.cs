@@ -9,7 +9,7 @@ namespace KOTORModSync.Core
 {
     public class ValidationResult
     {
-        public ValidationResult(
+	    public ValidationResult(
             [NotNull] ComponentValidation validator,
             [NotNull] Instruction instruction,
             [CanBeNull] string message,
@@ -34,10 +34,10 @@ namespace KOTORModSync.Core
             _ = Logger.LogAsync( $"{( IsError ? "[Error]" : "[Warning]" )} {Message}" );
         }
 
-        public int InstructionIndex { get; }
-        public Instruction Instruction { get; }
-        public Component Component { get; }
-        public string Message { get; }
-        public bool IsError { get; }
+	    public int InstructionIndex { get; }
+	    public Instruction Instruction { get; }
+	    public Component Component { get; }
+	    public string Message { get; }
+	    public bool IsError { get; }
     }
 }

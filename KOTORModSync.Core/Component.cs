@@ -27,7 +27,7 @@ namespace KOTORModSync.Core
 {
     public class Component : INotifyPropertyChanged
     {
-        public enum ExecutionResult
+	    public enum ExecutionResult
         {
             [Description( "Success" )] Success,
 
@@ -38,15 +38,77 @@ namespace KOTORModSync.Core
             ComponentInstallationFailed,
         }
 
-        /*
-        public DateTime SourceLastModified { get; set; }
-        public event EventHandler<PropertyChangedEventArgs> PropertyChanged;
-        protected virtual void OnPropertyChanged(string propertyName) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-        */
+	    public enum InstallExitCode
+        {
+            [Description( "Completed Successfully" )]
+            Success,
 
-        
-        [NotNull] private string _name = string.Empty;
-        [NotNull] public string Name
+            [Description( "A dependency or restriction violation between components has occurred." )]
+            DependencyViolation,
+
+            [Description( "User cancelled the installation." )]
+            UserCancelledInstall,
+
+            [Description( "An invalid operation was attempted." )]
+            InvalidOperation,
+
+            [Description( "An unexpected exception was thrown" )]
+            UnexpectedException,
+            UnknownError,
+
+            [Description( "A tslpatcher error was thrown" )]
+            TSLPatcherError,
+
+            [Description(
+                "The files in the install directory do not match the expected contents provided by the instructions file"
+            )]
+            ValidationPostInstallMismatch,
+        }
+
+	    [NotNull] private string _author = string.Empty;
+
+	    [NotNull] private string _category = string.Empty;
+
+	    [NotNull] private List<Guid> _dependencies = new List<Guid>();
+
+	    [NotNull] private string _description = string.Empty;
+
+	    [NotNull] private string _directions = string.Empty;
+
+	    private Guid _guid;
+
+	    [NotNull] private List<Guid> _installAfter = new List<Guid>();
+
+	    [NotNull] private string _installationMethod = string.Empty;
+
+	    [NotNull] private List<Guid> _installBefore = new List<Guid>();
+
+	    [NotNull] [ItemNotNull] private ObservableCollection<Instruction> _instructions = new ObservableCollection<Instruction>();
+
+	    private bool _isSelected;
+
+	    [NotNull][ItemNotNull] private List<string> _language = new List<string>();
+
+	    [NotNull] private List<string> _modLink = new List<string>();
+
+	    /*
+	    public DateTime SourceLastModified { get; set; }
+	    public event EventHandler<PropertyChangedEventArgs> PropertyChanged;
+	    protected virtual void OnPropertyChanged(string propertyName) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+	    */
+
+
+	    [NotNull] private string _name = string.Empty;
+
+	    private bool _nonEnglishFunctionality;
+
+	    [NotNull] private ObservableCollection<Option> _options = new ObservableCollection<Option>();
+
+	    [NotNull] private List<Guid> _restrictions = new List<Guid>();
+
+	    [NotNull] private string _tier = string.Empty;
+
+	    [NotNull] public string Name
         {
             get => _name;
             set
@@ -55,9 +117,8 @@ namespace KOTORModSync.Core
                 OnPropertyChanged();
             }
         }
-        
-        private Guid _guid;
-        public Guid Guid
+
+	    public Guid Guid
         {
             get => _guid;
             set
@@ -66,9 +127,8 @@ namespace KOTORModSync.Core
                 OnPropertyChanged();
             }
         }
-        
-        [NotNull] private string _author = string.Empty;
-        [NotNull] public string Author
+
+	    [NotNull] public string Author
         {
             get => _author;
             set
@@ -77,9 +137,8 @@ namespace KOTORModSync.Core
                 OnPropertyChanged();
             }
         }
-        
-        [NotNull] private string _category = string.Empty;
-        [NotNull] public string Category
+
+	    [NotNull] public string Category
         {
             get => _category;
             set
@@ -88,9 +147,8 @@ namespace KOTORModSync.Core
                 OnPropertyChanged();
             }
         }
-        
-        [NotNull] private string _tier = string.Empty;
-        [NotNull] public string Tier
+
+	    [NotNull] public string Tier
         {
             get => _tier;
             set
@@ -99,9 +157,8 @@ namespace KOTORModSync.Core
                 OnPropertyChanged();
             }
         }
-        
-        [NotNull] private string _description = string.Empty;
-        [NotNull] public string Description
+
+	    [NotNull] public string Description
         {
             get => _description;
             set
@@ -110,9 +167,8 @@ namespace KOTORModSync.Core
                 OnPropertyChanged();
             }
         }
-        
-        [NotNull] private string _directions = string.Empty;
-        [NotNull] public string Directions
+
+	    [NotNull] public string Directions
         {
             get => _directions;
             set
@@ -121,9 +177,8 @@ namespace KOTORModSync.Core
                 OnPropertyChanged();
             }
         }
-        
-        [NotNull] private List<Guid> _dependencies = new List<Guid>();
-        [NotNull] public List<Guid> Dependencies
+
+	    [NotNull] public List<Guid> Dependencies
         {
             get => _dependencies;
             set
@@ -132,9 +187,8 @@ namespace KOTORModSync.Core
                 OnPropertyChanged();
             }
         }
-        
-        [NotNull] private List<Guid> _restrictions = new List<Guid>();
-        [NotNull] public List<Guid> Restrictions
+
+	    [NotNull] public List<Guid> Restrictions
         {
             get => _restrictions;
             set
@@ -144,8 +198,7 @@ namespace KOTORModSync.Core
             }
         }
 
-        [NotNull] private List<Guid> _installBefore = new List<Guid>();
-        [NotNull] public List<Guid> InstallBefore
+	    [NotNull] public List<Guid> InstallBefore
         {
             get => _installBefore;
             set
@@ -155,8 +208,7 @@ namespace KOTORModSync.Core
             }
         }
 
-        [NotNull] private List<Guid> _installAfter = new List<Guid>();
-        [NotNull] public List<Guid> InstallAfter
+	    [NotNull] public List<Guid> InstallAfter
         {
             get => _installAfter;
             set
@@ -166,8 +218,7 @@ namespace KOTORModSync.Core
             }
         }
 
-        private bool _nonEnglishFunctionality;
-        public bool NonEnglishFunctionality
+	    public bool NonEnglishFunctionality
         {
             get => _nonEnglishFunctionality;
             set
@@ -177,8 +228,7 @@ namespace KOTORModSync.Core
             }
         }
 
-        [NotNull] private string _installationMethod = string.Empty;
-        [NotNull] public string InstallationMethod
+	    [NotNull] public string InstallationMethod
         {
             get => _installationMethod;
             set
@@ -188,8 +238,7 @@ namespace KOTORModSync.Core
             }
         }
 
-        [NotNull] [ItemNotNull] private ObservableCollection<Instruction> _instructions = new ObservableCollection<Instruction>();
-        [NotNull] [ItemNotNull] public ObservableCollection<Instruction> Instructions
+	    [NotNull] [ItemNotNull] public ObservableCollection<Instruction> Instructions
         {
             get => _instructions;
             set
@@ -202,8 +251,7 @@ namespace KOTORModSync.Core
             }
         }
 
-        [NotNull] private ObservableCollection<Option> _options = new ObservableCollection<Option>();
-        [NotNull] public ObservableCollection<Option> Options
+	    [NotNull] public ObservableCollection<Option> Options
         {
             get => _options;
             set
@@ -219,8 +267,7 @@ namespace KOTORModSync.Core
             }
         }
 
-        [NotNull][ItemNotNull] private List<string> _language = new List<string>();
-        [NotNull][ItemNotNull] public List<string> Language
+	    [NotNull][ItemNotNull] public List<string> Language
         {
             get => _language;
             set
@@ -230,8 +277,7 @@ namespace KOTORModSync.Core
             }
         }
 
-        [NotNull] private List<string> _modLink = new List<string>();
-        [NotNull] public List<string> ModLink
+	    [NotNull] public List<string> ModLink
         {
             get => _modLink;
             set
@@ -240,9 +286,8 @@ namespace KOTORModSync.Core
                 OnPropertyChanged();
             }
         }
-        
-        private bool _isSelected;
-        public bool IsSelected
+
+	    public bool IsSelected
         {
             get => _isSelected;
             set
@@ -252,7 +297,11 @@ namespace KOTORModSync.Core
             }
         }
 
-        [NotNull]
+
+	    // used for the ui.
+	    public event PropertyChangedEventHandler PropertyChanged;
+
+	    [NotNull]
         public string SerializeComponent()
         {
             var serializedComponentDict = (Dictionary<string, object>)Serializer.SerializeObject( this );
@@ -879,33 +928,6 @@ namespace KOTORModSync.Core
             }
         }
 
-        public enum InstallExitCode
-        {
-            [Description( "Completed Successfully" )]
-            Success,
-
-            [Description( "A dependency or restriction violation between components has occurred." )]
-            DependencyViolation,
-
-            [Description( "User cancelled the installation." )]
-            UserCancelledInstall,
-
-            [Description( "An invalid operation was attempted." )]
-            InvalidOperation,
-
-            [Description( "An unexpected exception was thrown" )]
-            UnexpectedException,
-            UnknownError,
-
-            [Description( "A tslpatcher error was thrown" )]
-            TSLPatcherError,
-
-            [Description(
-                "The files in the install directory do not match the expected contents provided by the instructions file"
-            )]
-            ValidationPostInstallMismatch,
-        }
-
         public async Task<InstallExitCode> InstallAsync( [NotNull] List<Component> componentsList )
         {
             if ( componentsList is null )
@@ -1390,18 +1412,6 @@ namespace KOTORModSync.Core
             return nodeMap;
         }
 
-        public class GraphNode
-        {
-            public Component Component { get; }
-            public HashSet<GraphNode> Dependencies { get; }
-
-            public GraphNode( [CanBeNull] Component component )
-            {
-                Component = component;
-                Dependencies = new HashSet<GraphNode>();
-            }
-        }
-
         public void CreateInstruction( int index = 0 )
         {
             var instruction = new Instruction();
@@ -1501,11 +1511,21 @@ namespace KOTORModSync.Core
             );
         }
 
-
-        // used for the ui.
-        public event PropertyChangedEventHandler PropertyChanged;
         private void CollectionChanged(object sender, NotifyCollectionChangedEventArgs e) => OnPropertyChanged();
+
         private void OnPropertyChanged( [CallerMemberName][CanBeNull] string propertyName = null ) =>
             PropertyChanged?.Invoke( this, new PropertyChangedEventArgs( propertyName ) );
+
+        public class GraphNode
+        {
+	        public GraphNode( [CanBeNull] Component component )
+            {
+                Component = component;
+                Dependencies = new HashSet<GraphNode>();
+            }
+
+	        public Component Component { get; }
+	        public HashSet<GraphNode> Dependencies { get; }
+        }
     }
 }

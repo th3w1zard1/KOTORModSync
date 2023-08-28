@@ -8,40 +8,41 @@ using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using JetBrains.Annotations;
+using KOTORModSync.Core;
 
 namespace KOTORModSync
 {
-    public partial class App : Application
-    {
-        public override void Initialize() => AvaloniaXamlLoader.Load( this );
+	public class App : Application
+	{
+		public override void Initialize() => AvaloniaXamlLoader.Load( this );
 
-        public override void OnFrameworkInitializationCompleted()
-        {
-            if ( ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop )
-            {
-                try
-                {
-                    // Subscribe to the UnobservedTaskException event
-                    TaskScheduler.UnobservedTaskException += HandleUnobservedTaskException;
+		public override void OnFrameworkInitializationCompleted()
+		{
+			if ( ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop )
+			{
+				try
+				{
+					// Subscribe to the UnobservedTaskException event
+					TaskScheduler.UnobservedTaskException += HandleUnobservedTaskException;
 
-                    desktop.MainWindow = new MainWindow();
-                    Core.Logger.Log( "Started main window" );
-                }
-                catch ( Exception ex )
-                {
-                    Core.Logger.LogException( ex );
-                }
-            }
+					desktop.MainWindow = new MainWindow();
+					Logger.Log( "Started main window" );
+				}
+				catch ( Exception ex )
+				{
+					Logger.LogException( ex );
+				}
+			}
 
-            base.OnFrameworkInitializationCompleted();
-        }
+			base.OnFrameworkInitializationCompleted();
+		}
 
-        // ReSharper disable once MemberCanBeMadeStatic.Local
-        private void HandleUnobservedTaskException( [CanBeNull] object sender, UnobservedTaskExceptionEventArgs e )
-        {
-            // Log or handle the unobserved task exception here
-            Core.Logger.LogException( e.Exception );
-            e.SetObserved(); // Mark the exception as observed to prevent it from crashing the application
-        }
-    }
+		// ReSharper disable once MemberCanBeMadeStatic.Local
+		private void HandleUnobservedTaskException( [CanBeNull] object sender, UnobservedTaskExceptionEventArgs e )
+		{
+			// Log or handle the unobserved task exception here
+			Logger.LogException( e.Exception );
+			e.SetObserved(); // Mark the exception as observed to prevent it from crashing the application
+		}
+	}
 }

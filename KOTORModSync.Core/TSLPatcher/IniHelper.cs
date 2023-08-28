@@ -16,8 +16,8 @@ namespace KOTORModSync.Core.TSLPatcher
 {
     public static class IniHelper
     {
-        // Stop TSLPatcher from automatically assuming the KOTOR directory.
-        public static void ReplaceLookupGameFolder( [NotNull] DirectoryInfo directory )
+	    // Stop TSLPatcher from automatically assuming the KOTOR directory.
+	    public static void ReplaceLookupGameFolder( [NotNull] DirectoryInfo directory )
         {
             if ( directory == null )
                 throw new ArgumentNullException( nameof( directory ) );
@@ -46,9 +46,9 @@ namespace KOTORModSync.Core.TSLPatcher
                 File.WriteAllText( filePath, fileContents );
             }
         }
-        
-        // use PlaintextLog=1 for installlog.txt instead of installlog.rtf
-        public static void ReplacePlaintextLog( [NotNull] DirectoryInfo directory )
+
+	    // use PlaintextLog=1 for installlog.txt instead of installlog.rtf
+	    public static void ReplacePlaintextLog( [NotNull] DirectoryInfo directory )
         {
             if ( directory == null )
                 throw new ArgumentNullException( nameof( directory ) );
@@ -81,7 +81,7 @@ namespace KOTORModSync.Core.TSLPatcher
             }
         }
 
-        public static Dictionary<string, Dictionary<string, string>> ReadNamespacesIniFromArchive( [NotNull] string archivePath )
+	    public static Dictionary<string, Dictionary<string, string>> ReadNamespacesIniFromArchive( [NotNull] string archivePath )
         {
             if ( string.IsNullOrWhiteSpace( archivePath ) )
                 throw new ArgumentException( message: "Value cannot be null or whitespace.", nameof( archivePath ) );
@@ -98,7 +98,7 @@ namespace KOTORModSync.Core.TSLPatcher
             return null; // Folder 'tslpatchdata' or 'namespaces.ini' not found in the archive.
         }
 
-        public static Dictionary<string, Dictionary<string, string>> ReadNamespacesIniFromArchive( [NotNull] Stream archiveStream)
+	    public static Dictionary<string, Dictionary<string, string>> ReadNamespacesIniFromArchive( [NotNull] Stream archiveStream)
         {
             if ( archiveStream is null )
                 throw new ArgumentNullException( nameof( archiveStream ) );
@@ -120,7 +120,7 @@ namespace KOTORModSync.Core.TSLPatcher
             return null; // Folder 'tslpatchdata' or 'namespaces.ini' not found in the archive.
         }
 
-        private static Dictionary<string, Dictionary<string, string>> TraverseDirectories(IEnumerable<IArchiveEntry> entries, [NotNull] string currentDirectory)
+	    private static Dictionary<string, Dictionary<string, string>> TraverseDirectories(IEnumerable<IArchiveEntry> entries, [NotNull] string currentDirectory)
         {
             if ( currentDirectory is null )
                 throw new ArgumentNullException( nameof( currentDirectory ) );
@@ -164,7 +164,7 @@ namespace KOTORModSync.Core.TSLPatcher
             return null; // No matching 'tslpatchdata/namespaces.ini' found in this directory or its subdirectories
         }
 
-        public static Dictionary<string, Dictionary<string, string>> ParseNamespacesIni(StreamReader reader)
+	    public static Dictionary<string, Dictionary<string, string>> ParseNamespacesIni(StreamReader reader)
         {
             if (reader is null)
                 throw new ArgumentNullException(nameof(reader));

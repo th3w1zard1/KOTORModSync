@@ -10,27 +10,17 @@ using Avalonia.Collections;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using JetBrains.Annotations;
+using KOTORModSync.Converters;
 using KOTORModSync.Core;
-using Component = KOTORModSync.Core.Component;
 
 namespace KOTORModSync.Controls
 {
     public partial class DependencyControl : UserControl
     {
-        public DependencyControl() => InitializeComponent();
-
-        // used to fix the move window code with combo boxes.
-        protected override void OnAttachedToVisualTree( VisualTreeAttachmentEventArgs e )
-        {
-            base.OnAttachedToVisualTree( e );
-
-            if ( VisualRoot is MainWindow mainWindow )
-                mainWindow.FindComboBoxesInWindow( mainWindow );
-        }
-
-        [NotNull]
+	    [NotNull]
         public static readonly StyledProperty<List<Guid>> ThisGuidListProperty
             = AvaloniaProperty.Register<DependencyControl, List<Guid>>( nameof( ThisGuidList ) );
+        public DependencyControl() => InitializeComponent();
 
         [NotNull]
         public List<Guid> ThisGuidList
@@ -45,8 +35,17 @@ namespace KOTORModSync.Controls
         public List<Component> ThisComponentList => MainWindow.ComponentsList;
 #pragma warning restore CA1822
 
-        // ReSharper disable once UnusedParameter.Local
-        private void AddToList_Click( [NotNull] object sender, [NotNull] RoutedEventArgs e )
+	    // used to fix the move window code with combo boxes.
+	    protected override void OnAttachedToVisualTree( VisualTreeAttachmentEventArgs e )
+        {
+            base.OnAttachedToVisualTree( e );
+
+            if ( VisualRoot is MainWindow mainWindow )
+                mainWindow.FindComboBoxesInWindow( mainWindow );
+        }
+
+	    // ReSharper disable once UnusedParameter.Local
+	    private void AddToList_Click( [NotNull] object sender, [NotNull] RoutedEventArgs e )
         {
             try
             {
@@ -64,7 +63,7 @@ namespace KOTORModSync.Controls
 
                 ThisGuidList.Add( selectedComponent.Guid );
 
-                var convertedItems = new Converters.GuidListToComponentNames().Convert(
+                var convertedItems = new GuidListToComponentNames().Convert(
                     new object[]
                     {
                         ThisGuidList, MainWindow.ComponentsList,
@@ -90,8 +89,8 @@ namespace KOTORModSync.Controls
             }
         }
 
-        // ReSharper disable once UnusedParameter.Local
-        private void RemoveFromList_Click( [NotNull] object sender, [NotNull] RoutedEventArgs e )
+	    // ReSharper disable once UnusedParameter.Local
+	    private void RemoveFromList_Click( [NotNull] object sender, [NotNull] RoutedEventArgs e )
         {
             try
             {
@@ -105,7 +104,7 @@ namespace KOTORModSync.Controls
                     return; // no selection
 
                 ThisGuidList.RemoveAt( index );
-                var convertedItems = new Converters.GuidListToComponentNames().Convert(
+                var convertedItems = new GuidListToComponentNames().Convert(
                     new object[]
                     {
                         ThisGuidList, MainWindow.ComponentsList,
@@ -126,10 +125,8 @@ namespace KOTORModSync.Controls
             {
                 Logger.LogException( exception );
             }
-        }
-
-        // ReSharper disable twice UnusedParameter.Local
-        private void DependenciesComboBox_SelectionChanged( object sender, SelectionChangedEventArgs e )
+        } // ReSharper disable twice UnusedParameter.Local
+	    private void DependenciesComboBox_SelectionChanged( object sender, SelectionChangedEventArgs e )
         {
             try
             {

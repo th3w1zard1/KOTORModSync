@@ -18,6 +18,40 @@ namespace KOTORModSync.Converters
 {
     public class NamespacesIniOptionConverter : IValueConverter
     {
+	    public object Convert( object value, Type targetType, object parameter, CultureInfo culture )
+        {
+            try
+            {
+                if ( !( value is Instruction dataContextInstruction ) )
+                    return null;
+
+                Component parentComponent = dataContextInstruction.GetParentComponent();
+                if ( parentComponent is null )
+                    return null;
+
+                return (
+	                from archivePath in GetAllArchivesFromInstructions(parentComponent)
+	                where !string.IsNullOrEmpty(archivePath)
+	                let result = IniHelper.ReadNamespacesIniFromArchive(archivePath)
+	                where result != null && result.Any()
+	                let optionNames = result
+		                .Where(section => section.Value?.TryGetValue(key: "Name", out _) ?? false)
+		                .Select(section => section.Value["Name"])
+		                .ToList()
+	                where optionNames.Any()
+	                select optionNames
+                ).FirstOrDefault();
+
+            }
+            catch (Exception ex)
+            {
+                Logger.LogException( ex );
+                return null;
+            }
+        }
+
+	    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) => throw new NotImplementedException();
+
 	    [NotNull]
 	    public List<string> GetAllArchivesFromInstructions( [NotNull] Component parentComponent )
 	    {
@@ -52,39 +86,5 @@ namespace KOTORModSync.Converters
 
 		    return allArchives;
 	    }
-
-        public object Convert( object value, Type targetType, object parameter, CultureInfo culture )
-        {
-            try
-            {
-                if ( !( value is Instruction dataContextInstruction ) )
-                    return null;
-
-                Component parentComponent = dataContextInstruction.GetParentComponent();
-                if ( parentComponent is null )
-                    return null;
-
-                return (
-	                from archivePath in GetAllArchivesFromInstructions(parentComponent)
-	                where !string.IsNullOrEmpty(archivePath)
-	                let result = IniHelper.ReadNamespacesIniFromArchive(archivePath)
-	                where result != null && result.Any()
-	                let optionNames = result
-		                .Where(section => section.Value?.TryGetValue(key: "Name", out _) ?? false)
-		                .Select(section => section.Value["Name"])
-		                .ToList()
-	                where optionNames.Any()
-	                select optionNames
-                ).FirstOrDefault();
-
-            }
-            catch (Exception ex)
-            {
-                Logger.LogException( ex );
-                return null;
-            }
-        }
-
-        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) => throw new NotImplementedException();
     }
 }

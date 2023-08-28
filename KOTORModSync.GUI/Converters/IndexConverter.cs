@@ -13,7 +13,7 @@ namespace KOTORModSync.Converters
 {
     public class IndexConverter : IValueConverter
     {
-        public object Convert(
+	    public object Convert(
             object value,
             Type targetType,
             object parameter,
@@ -38,7 +38,7 @@ namespace KOTORModSync.Converters
             return index.ToString();
         }
 
-        public object ConvertBack(
+	    public object ConvertBack(
             object value,
             Type targetType,
             object parameter,

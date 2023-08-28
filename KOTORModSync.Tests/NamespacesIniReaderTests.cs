@@ -10,13 +10,13 @@ namespace KOTORModSync.Tests
     [TestFixture]
     public class NamespacesIniReaderTests
     {
-        private static Stream CreateNamespacesIniStream(string content)
+	    private static Stream CreateNamespacesIniStream(string content)
         {
             byte[] byteArray = Encoding.UTF8.GetBytes(content);
             return new MemoryStream(byteArray);
         }
 
-        [Test]
+	    [Test]
         public void ReadNamespacesIniFromArchive_WhenValidInput_ReturnsNamespaces()
         {
             // Arrange

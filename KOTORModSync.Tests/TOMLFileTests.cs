@@ -6,12 +6,31 @@ using System.Text;
 using KOTORModSync.Core;
 using KOTORModSync.Core.Utility;
 using Newtonsoft.Json;
+using Tomlyn;
 
 namespace KOTORModSync.Tests
 {
     [TestFixture]
     public class TomlFileTests
     {
+	    [SetUp]
+        public void SetUp()
+        {
+            // Create a temporary file for testing
+            _filePath = Path.GetTempFileName();
+
+            // Write example TOMLIN content to the file
+            File.WriteAllText( _filePath, _exampleToml );
+        }
+
+        [TearDown]
+        public void TearDown()
+        {
+            // Delete the temporary file
+            Assert.That( _filePath, Is.Not.Null, nameof( _filePath ) + " != null" );
+            File.Delete( _filePath );
+        }
+
         private string _filePath = string.Empty;
 
         // ReSharper disable once ConvertToConstant.Local
@@ -59,25 +78,6 @@ namespace KOTORModSync.Tests
             [[thisMod.instructions]]
             action = ""run""
             path = ""%temp%\\mod_files\\TSLPatcher.exe""";
-
-        
-        [SetUp]
-        public void SetUp()
-        {
-            // Create a temporary file for testing
-            _filePath = Path.GetTempFileName();
-
-            // Write example TOMLIN content to the file
-            File.WriteAllText( _filePath, _exampleToml );
-        }
-
-        [TearDown]
-        public void TearDown()
-        {
-            // Delete the temporary file
-            Assert.That( _filePath, Is.Not.Null, nameof( _filePath ) + " != null" );
-            File.Delete( _filePath );
-        }
 
         [Test]
         public void SaveAndLoadTOMLFile_MatchingComponents()
@@ -435,7 +435,7 @@ namespace KOTORModSync.Tests
             };
 
             Logger.Log( TomlWriter.WriteString( rootTable ) );
-            Logger.Log( Tomlyn.Toml.FromModel( rootTable ) );
+            Logger.Log( Toml.FromModel( rootTable ) );
         }
 
         private static void AssertComponentEquality( object? obj, object? another )

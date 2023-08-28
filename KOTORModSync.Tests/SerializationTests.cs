@@ -9,7 +9,7 @@ namespace KOTORModSync.Tests
     [TestFixture]
     public class SerializationTests
     {
-        [Test]
+	    [Test]
         public void TestSerializeString()
         {
             const string str = "Hello, world!";
@@ -219,14 +219,14 @@ namespace KOTORModSync.Tests
 
     public class MyClass
     {
-        public MyNestedClass? NestedInstance { get; set; }
-        public Dictionary<Guid, List<MyNestedClass>>? GuidNestedClassDict { get; set; }
+	    public MyNestedClass? NestedInstance { get; set; }
+	    public Dictionary<Guid, List<MyNestedClass>>? GuidNestedClassDict { get; set; }
     }
 
     public class MyNestedClass
     {
-        public MyNestedClass( MyClass parentInstance ) => ParentInstance = parentInstance;
+	    public MyNestedClass( MyClass parentInstance ) => ParentInstance = parentInstance;
 
-        public MyClass ParentInstance { get; set; }
+	    public MyClass ParentInstance { get; set; }
     }
 }

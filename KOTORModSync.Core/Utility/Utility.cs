@@ -13,7 +13,7 @@ namespace KOTORModSync.Core.Utility
 {
     public static class Utility
     {
-        [NotNull]
+	    [NotNull]
         public static string ReplaceCustomVariables( [NotNull] string path )
         {
             if ( path is null )

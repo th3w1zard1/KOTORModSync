@@ -11,31 +11,31 @@ using Avalonia.Controls;
 using Avalonia.Threading;
 using KOTORModSync.Core;
 using KOTORModSync.Core.FileSystemPathing;
-using Path = System.IO.Path;
+using KOTORModSync.Core.Utility;
 
 namespace KOTORModSync
 {
     public sealed class OutputViewModel : INotifyPropertyChanged
     {
-        public readonly Queue<string> _logBuilder = new Queue<string>();
-        public string LogText { get; set; } = string.Empty;
+	    public readonly Queue<string> _logBuilder = new Queue<string>();
+	    public string LogText { get; set; } = string.Empty;
 
-        public void AppendLog(string message)
+	    // used for ui
+	    public event PropertyChangedEventHandler PropertyChanged;
+
+	    public void AppendLog(string message)
         {
             _logBuilder.Enqueue(message);
             OnPropertyChanged(nameof(LogText));
         }
 
-        public void RemoveOldestLog()
+	    public void RemoveOldestLog()
         {
             _logBuilder.Dequeue();
             OnPropertyChanged(nameof(LogText));
         }
 
-        // used for ui
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        private void OnPropertyChanged(string propertyName)
+	    private void OnPropertyChanged(string propertyName)
         {
             LogText = string.Join( Environment.NewLine, _logBuilder );
             PropertyChanged?.Invoke( this, new PropertyChangedEventArgs( propertyName ) );
@@ -43,10 +43,11 @@ namespace KOTORModSync
     }
     public partial class OutputWindow : Window
     {
-        public readonly OutputViewModel _viewModel;
-        private readonly int _maxLinesShown = 150;
+	    private readonly object _logLock = new object();
+	    private readonly int _maxLinesShown = 150;
+	    public readonly OutputViewModel _viewModel;
 
-        public OutputWindow()
+	    public OutputWindow()
         {
             InitializeComponent();
             _viewModel = new OutputViewModel();
@@ -54,7 +55,7 @@ namespace KOTORModSync
             InitializeControls();
         }
 
-        private void InitializeControls()
+	    private void InitializeControls()
         {
             Logger.Logged += AppendLog;
 
@@ -65,7 +66,7 @@ namespace KOTORModSync
             };
 
             string logfileName = $"{Logger.LogFileName}{DateTime.Now:yyyy-MM-dd}";
-            string executingDirectory = Core.Utility.Utility.GetExecutingAssemblyDirectory();
+            string executingDirectory = Utility.GetExecutingAssemblyDirectory();
             string logFilePath = Path.Combine(executingDirectory, logfileName + ".txt");
             if ( !File.Exists(logFilePath) && MainConfig.CaseInsensitivePathing )
 	            logFilePath = PathHelper.GetCaseSensitivePath( logFilePath ).Item1;
@@ -79,8 +80,7 @@ namespace KOTORModSync
             LogScrollViewer.ScrollToEnd();
         }
 
-        private readonly object _logLock = new object();
-        private void AppendLog(string message)
+	    private void AppendLog(string message)
         {
             try
             {

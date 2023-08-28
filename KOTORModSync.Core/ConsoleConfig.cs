@@ -3,14 +3,48 @@
 // See LICENSE.txt file in the project root for full license information.
 
 using System;
+using System.Drawing;
 using System.Runtime.InteropServices;
 
 namespace KOTORModSync.Core
 {
     public class ConsoleConfig
     {
-        const uint ENABLE_MOUSE_INPUT = 0x0010;
-        private const uint ENABLE_QUICK_EDIT = 0x0040;
+	    private const uint ENABLE_MOUSE_INPUT = 0x0010;
+	    private const uint ENABLE_QUICK_EDIT = 0x0040;
+
+	    [DllImport( "kernel32.dll", SetLastError = true )]
+        public static extern IntPtr GetStdHandle( int nStdHandle );
+
+        [DllImport( "kernel32.dll", SetLastError = true )]
+        public static extern bool GetConsoleMode( IntPtr hConsoleHandle, out uint lpMode );
+
+        [DllImport( "kernel32.dll", SetLastError = true )]
+        public static extern bool SetConsoleMode( IntPtr hConsoleHandle, uint dwMode );
+
+        public static void DisableQuickEdit()
+        {
+            try
+            {
+                IntPtr consoleHandle = GetStdHandle( -10 ); // STD_INPUT_HANDLE
+                if ( !GetConsoleMode( consoleHandle, out uint consoleMode ) )
+                {
+                    Logger.LogError( "Could not get current console mode." );
+                    return;
+                }
+
+                consoleMode &= ~ENABLE_QUICK_EDIT;
+
+                if ( !SetConsoleMode( consoleHandle, consoleMode ) )
+                {
+                    Logger.LogError( "Could not set console mode on console handle" );
+                }
+            }
+            catch ( Exception e )
+            {
+                Logger.LogException( e );
+            }
+        }
 
         [StructLayout( LayoutKind.Sequential )]
         public struct CONSOLE_SCREEN_BUFFER_INFOEX
@@ -62,51 +96,18 @@ namespace KOTORModSync.Core
         {
             public uint ColorDWORD;
 
-            public COLORREF( System.Drawing.Color color )
+            public COLORREF( Color color )
             {
-                ColorDWORD = (uint)color.R + ( (uint)color.G << 8 ) + ( (uint)color.B << 16 );
+                ColorDWORD = color.R + ( (uint)color.G << 8 ) + ( (uint)color.B << 16 );
             }
 
-            public System.Drawing.Color GetSystemColor()
+            public Color GetSystemColor()
             {
-                return System.Drawing.Color.FromArgb(
+                return Color.FromArgb(
                     (int)( 0x000000FFU & ColorDWORD ),
                     (int)( 0x0000FF00U & ColorDWORD ) >> 8,
                     (int)( 0x00FF0000U & ColorDWORD ) >> 16
                 );
-            }
-        }
-
-        [DllImport( "kernel32.dll", SetLastError = true )]
-        public static extern IntPtr GetStdHandle( int nStdHandle );
-
-        [DllImport( "kernel32.dll", SetLastError = true )]
-        public static extern bool GetConsoleMode( IntPtr hConsoleHandle, out uint lpMode );
-
-        [DllImport( "kernel32.dll", SetLastError = true )]
-        public static extern bool SetConsoleMode( IntPtr hConsoleHandle, uint dwMode );
-
-        public static void DisableQuickEdit()
-        {
-            try
-            {
-                IntPtr consoleHandle = GetStdHandle( -10 ); // STD_INPUT_HANDLE
-                if ( !GetConsoleMode( consoleHandle, out uint consoleMode ) )
-                {
-                    Logger.LogError( "Could not get current console mode." );
-                    return;
-                }
-
-                consoleMode &= ~ENABLE_QUICK_EDIT;
-
-                if ( !SetConsoleMode( consoleHandle, consoleMode ) )
-                {
-                    Logger.LogError( "Could not set console mode on console handle" );
-                }
-            }
-            catch ( Exception e )
-            {
-                Logger.LogException( e );
             }
         }
     }

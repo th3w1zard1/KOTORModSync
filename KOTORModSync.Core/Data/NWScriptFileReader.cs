@@ -4,6 +4,7 @@
 
 using System.IO;
 using JetBrains.Annotations;
+
 // ReSharper disable UnusedType.Global
 
 namespace KOTORModSync.Core.Data
@@ -12,8 +13,8 @@ namespace KOTORModSync.Core.Data
     // ReSharper disable once UnusedMember.Global
     public static class NWScriptFileReader
     {
-        // ReSharper disable once UnusedMember.Global
-        public static void ReadHeader( [NotNull] Stream stream, out NWScriptHeader header )
+	    // ReSharper disable once UnusedMember.Global
+	    public static void ReadHeader( [NotNull] Stream stream, out NWScriptHeader header )
         {
             var reader = new BinaryReader( stream );
 

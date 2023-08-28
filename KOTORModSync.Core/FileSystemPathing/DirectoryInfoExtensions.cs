@@ -11,7 +11,7 @@ namespace KOTORModSync.Core.FileSystemPathing
 {
     public static class DirectoryInfoExtensions
     {
-        private static IEnumerable<T> SafeEnumerate<T>(
+	    private static IEnumerable<T> SafeEnumerate<T>(
             IEnumerator<T> enumerator)
         {
             while (true)
@@ -47,7 +47,7 @@ namespace KOTORModSync.Core.FileSystemPathing
             }
         }
 
-        public static IEnumerable<FileInfo> EnumerateFilesSafely(
+	    public static IEnumerable<FileInfo> EnumerateFilesSafely(
             this DirectoryInfo dirInfo,
             string searchPattern = "*",
             SearchOption searchOption = SearchOption.TopDirectoryOnly)
@@ -63,7 +63,7 @@ namespace KOTORModSync.Core.FileSystemPathing
             }
         }
 
-        public static IEnumerable<DirectoryInfo> EnumerateDirectoriesSafely(
+	    public static IEnumerable<DirectoryInfo> EnumerateDirectoriesSafely(
             this DirectoryInfo dirInfo,
             string searchPattern = "*",
             SearchOption searchOption = SearchOption.TopDirectoryOnly)
@@ -79,7 +79,7 @@ namespace KOTORModSync.Core.FileSystemPathing
             }
         }
 
-        public static IEnumerable<FileSystemInfo> EnumerateFileSystemInfosSafely(
+	    public static IEnumerable<FileSystemInfo> EnumerateFileSystemInfosSafely(
             this DirectoryInfo dirInfo,
             string searchPattern = "*",
             SearchOption searchOption = SearchOption.TopDirectoryOnly)
@@ -95,7 +95,7 @@ namespace KOTORModSync.Core.FileSystemPathing
             }
         }
 
-        public static DirectoryInfo[] GetDirectoriesSafely(
+	    public static DirectoryInfo[] GetDirectoriesSafely(
             this DirectoryInfo dirInfo,
             string searchPattern = "*",
             SearchOption searchOption = SearchOption.TopDirectoryOnly)
@@ -111,7 +111,7 @@ namespace KOTORModSync.Core.FileSystemPathing
             }
         }
 
-        public static FileInfo[] GetFilesSafely(
+	    public static FileInfo[] GetFilesSafely(
             this DirectoryInfo dirInfo,
             string searchPattern = "*",
             SearchOption searchOption = SearchOption.TopDirectoryOnly)
@@ -126,8 +126,8 @@ namespace KOTORModSync.Core.FileSystemPathing
                 return null;
             }
         }
-        
-        public static FileSystemInfo[] GetFileInfosSafely(
+
+	    public static FileSystemInfo[] GetFileInfosSafely(
             this DirectoryInfo dirInfo,
             string searchPattern = "*",
             SearchOption searchOption = SearchOption.TopDirectoryOnly)

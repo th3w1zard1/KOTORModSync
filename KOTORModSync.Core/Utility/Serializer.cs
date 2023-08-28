@@ -18,7 +18,7 @@ namespace KOTORModSync.Core.Utility
 {
     public static class Serializer
     {
-        [NotNull]
+	    [NotNull]
         public static string FixGuidString( [NotNull] string guidString )
         {
             if ( string.IsNullOrWhiteSpace( guidString ) )
@@ -108,7 +108,7 @@ namespace KOTORModSync.Core.Utility
                 case string stringValue:
                     {
                         // Convert the string to a list of strings
-                        var stringList = new List<string>()
+                        var stringList = new List<string>
                         {
                             stringValue,
                         };

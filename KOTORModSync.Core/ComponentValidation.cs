@@ -12,12 +12,13 @@ using KOTORModSync.Core.Utility;
 using SharpCompress.Archives;
 using SharpCompress.Archives.Rar;
 using SharpCompress.Archives.SevenZip;
+using SharpCompress.Archives.Zip;
 
 namespace KOTORModSync.Core
 {
     public sealed class ComponentValidation
     {
-        public enum ArchivePathCode
+	    public enum ArchivePathCode
         {
             NotAnArchive,
             PathMissingArchiveName,
@@ -28,12 +29,12 @@ namespace KOTORModSync.Core
             NoArchivesFound,
         }
 
-        [NotNull] private readonly List<ValidationResult> _validationResults = new List<ValidationResult>();
-        [NotNull] public readonly Component ComponentToValidate;
+	    [CanBeNull] private readonly List<Component> _componentsList;
 
-        [CanBeNull] private readonly List<Component> _componentsList;
+	    [NotNull] private readonly List<ValidationResult> _validationResults = new List<ValidationResult>();
+	    [NotNull] public readonly Component ComponentToValidate;
 
-        public ComponentValidation( [NotNull] Component component, [CanBeNull] List<Component> componentsList = null )
+	    public ComponentValidation( [NotNull] Component component, [CanBeNull] List<Component> componentsList = null )
         {
             ComponentToValidate = component ?? throw new ArgumentNullException( nameof( component ) );
             if ( componentsList is null )
@@ -44,19 +45,19 @@ namespace KOTORModSync.Core
             );
         }
 
-        public bool Run() =>
+	    public bool Run() =>
             // Verify all the instructions' paths line up with hierarchy of the archives
             VerifyExtractPaths()
             // Ensure all the 'Destination' keys are valid for their respective action.
             && ParseDestinationWithAction();
 
-        private void AddError( [CanBeNull] string message, [NotNull] Instruction instruction ) =>
+	    private void AddError( [CanBeNull] string message, [NotNull] Instruction instruction ) =>
             _validationResults.Add( new ValidationResult( this, instruction, message, isError: true ) );
 
-        private void AddWarning( [CanBeNull] string message, [NotNull] Instruction instruction ) =>
+	    private void AddWarning( [CanBeNull] string message, [NotNull] Instruction instruction ) =>
             _validationResults.Add( new ValidationResult( this, instruction, message, isError: false ) );
 
-        [NotNull]
+	    [NotNull]
         public List<string> GetErrors() =>
             _validationResults.Where( r => r.IsError )
                 .Select( r => r.Message )
@@ -549,7 +550,7 @@ namespace KOTORModSync.Core
 
                 if ( archivePath.EndsWith( value: ".zip", StringComparison.OrdinalIgnoreCase ) )
                 {
-                    archive = SharpCompress.Archives.Zip.ZipArchive.Open( stream );
+                    archive = ZipArchive.Open( stream );
                 }
                 else if ( archivePath.EndsWith( value: ".rar", StringComparison.OrdinalIgnoreCase ) )
                 {

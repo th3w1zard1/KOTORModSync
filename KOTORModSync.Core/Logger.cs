@@ -12,15 +12,14 @@ namespace KOTORModSync.Core
 {
     public static class Logger
     {
-        private static bool s_isInitialized;
-        private static readonly object s_initializationLock = new object();
-        private static readonly SemaphoreSlim s_semaphore = new SemaphoreSlim( 1 );
+	    public const string LogFileName = "kotormodsync_";
+	    private static bool s_isInitialized;
+	    private static readonly object s_initializationLock = new object();
+	    private static readonly SemaphoreSlim s_semaphore = new SemaphoreSlim( 1 );
+	    public static event Action<string> Logged = delegate { };
+	    public static event Action<Exception> ExceptionLogged = delegate { };
 
-        public const string LogFileName = "kotormodsync_";
-        public static event Action<string> Logged = delegate { };
-        public static event Action<Exception> ExceptionLogged = delegate { };
-
-        public static void Initialize()
+	    public static void Initialize()
         {
             if ( s_isInitialized )
             {
@@ -41,7 +40,7 @@ namespace KOTORModSync.Core
         }
 
 
-        [NotNull]
+	    [NotNull]
         private static async Task LogInternalAsync(
             [CanBeNull] string internalMessage,
             bool fileOnly = false,
@@ -109,7 +108,7 @@ namespace KOTORModSync.Core
             }
         }
 
-        
+
         public static void Log( [CanBeNull] string message, bool fileOnly = false ) => _ = LogInternalAsync( message, fileOnly );
 
         [NotNull]
@@ -134,7 +133,7 @@ namespace KOTORModSync.Core
         [NotNull]
         public static Task LogErrorAsync( [CanBeNull] string message ) =>
             LogInternalAsync( $"[Error] {message}", color: ConsoleColor.Red);
-        
+
         public static void LogException( [CanBeNull] Exception ex, [CanBeNull] string customMessage = null ) => _ = LogExceptionAsync( ex, customMessage );
 
         [NotNull]

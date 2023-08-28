@@ -99,29 +99,29 @@
     <Style Selector="CheckBox">
         <Setter Property="Foreground" Value="#3AAAFF" />
     </Style>
-    
+
     <Style Selector="ComboBox">
         <Setter Property="HorizontalAlignment" Value="Center" />
         <Setter Property="Background" Value="#031332" />
         <Setter Property="Foreground" Value="#3AAAFF" />
     </Style>
     <Style Selector="CheckBox:pointerover">
-        <Setter Property="Foreground" Value="#A8B348"/>
-        <Setter Property="BorderBrush" Value="#A8B348"/>
+        <Setter Property="Foreground" Value="#A8B348" />
+        <Setter Property="BorderBrush" Value="#A8B348" />
     </Style>
     <Style Selector="CheckBox:hover">
-        <Setter Property="Foreground" Value="#A8B348"/>
-        <Setter Property="BorderBrush" Value="#A8B348"/>
+        <Setter Property="Foreground" Value="#A8B348" />
+        <Setter Property="BorderBrush" Value="#A8B348" />
     </Style>
     <Style Selector="CheckBox:checked">
-        <Setter Property="Foreground" Value="#3AAAFF"/>
-        <Setter Property="BorderBrush" Value="#3AAAFF"/>
+        <Setter Property="Foreground" Value="#3AAAFF" />
+        <Setter Property="BorderBrush" Value="#3AAAFF" />
     </Style>
     <Style Selector="CheckBox:unchecked">
-        <Setter Property="Foreground" Value="#3AAAFF"/>
+        <Setter Property="Foreground" Value="#3AAAFF" />
     </Style>
     <Style Selector="CheckBox:pointerover /template/ Border#PART_Border">
-        <Setter Property="Background" Value="#3AAAFF"/>
+        <Setter Property="Background" Value="#3AAAFF" />
     </Style>
 
     <Style Selector="TreeView">
@@ -148,13 +148,13 @@
     <Style Selector="Window">
         <Setter Property="Background" Value="#000116" />
     </Style>
-    
+
     <Style Selector="Expander">
         <Setter Property="Background" Value="#062766" />
         <Setter Property="Foreground" Value="#3AAAFF" />
     </Style>
     <Style Selector="Expander /template/ ContentPresenter">
-        <Setter Property="Background" Value="#010116"/>
+        <Setter Property="Background" Value="#010116" />
     </Style>
     <Style Selector="Expander:expanded /template/ Border#ExpanderContent">
         <Setter Property="Background" Value="#010116" />

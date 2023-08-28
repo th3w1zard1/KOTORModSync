@@ -15,9 +15,23 @@ namespace KOTORModSync
 {
     public partial class ConfirmationDialog : Window
     {
-        public ConfirmationDialog() => InitializeComponent();
+	    private static readonly AvaloniaProperty s_confirmTextProperty
+            = AvaloniaProperty.Register<ConfirmationDialog, string>( nameof( ConfirmText ) );
 
-        [CanBeNull]
+	    private static readonly RoutedEvent<RoutedEventArgs> s_yesButtonClickedEvent
+            = RoutedEvent.Register<ConfirmationDialog, RoutedEventArgs>(
+                nameof( YesButtonClicked ),
+                RoutingStrategies.Bubble
+            );
+
+	    private static readonly RoutedEvent<RoutedEventArgs> s_noButtonClickedEvent
+            = RoutedEvent.Register<ConfirmationDialog, RoutedEventArgs>(
+                nameof( NoButtonClicked ),
+                RoutingStrategies.Bubble
+            );
+	    public ConfirmationDialog() => InitializeComponent();
+
+	    [CanBeNull]
         public string ConfirmText
         {
             get => GetValue( s_confirmTextProperty ) as string;
@@ -97,26 +111,11 @@ namespace KOTORModSync
             add => AddHandler( s_noButtonClickedEvent, value );
             remove => RemoveHandler( s_noButtonClickedEvent, value );
         }
-        
-        private static readonly AvaloniaProperty s_confirmTextProperty
-            = AvaloniaProperty.Register<ConfirmationDialog, string>( nameof( ConfirmText ) );
 
-        private static readonly RoutedEvent<RoutedEventArgs> s_yesButtonClickedEvent
-            = RoutedEvent.Register<ConfirmationDialog, RoutedEventArgs>(
-                nameof( YesButtonClicked ),
-                RoutingStrategies.Bubble
-            );
-
-        private static readonly RoutedEvent<RoutedEventArgs> s_noButtonClickedEvent
-            = RoutedEvent.Register<ConfirmationDialog, RoutedEventArgs>(
-                nameof( NoButtonClicked ),
-                RoutingStrategies.Bubble
-            );
-        private void OnOpened( [CanBeNull] object sender, [CanBeNull] EventArgs e ) => ConfirmTextBlock.Text = ConfirmText;
-
-        // ReSharper disable twice UnusedParameter.Local
+        private void OnOpened( [CanBeNull] object sender, [CanBeNull] EventArgs e ) => ConfirmTextBlock.Text = ConfirmText; // ReSharper disable twice UnusedParameter.Local
         private void YesButton_Click( [CanBeNull] object sender, [CanBeNull] RoutedEventArgs e ) =>
             RaiseEvent( new RoutedEventArgs( s_yesButtonClickedEvent ) );
+
         private void NoButton_Click( [CanBeNull] object sender, [CanBeNull] RoutedEventArgs e ) =>
             RaiseEvent( new RoutedEventArgs( s_noButtonClickedEvent ) );
     }

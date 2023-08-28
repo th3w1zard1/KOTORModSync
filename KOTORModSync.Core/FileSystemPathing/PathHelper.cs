@@ -2,8 +2,8 @@
 // Licensed under the GNU General Public License v3.0 (GPLv3).
 // See LICENSE.txt file in the project root for full license information.
 
-using System.Collections.Generic;
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
@@ -17,8 +17,8 @@ namespace KOTORModSync.Core.FileSystemPathing
 {
     public static class PathHelper
     {
-        // if it's a folder, return path as is, if it's a file get the parent dir.
-        [CanBeNull]
+	    // if it's a folder, return path as is, if it's a file get the parent dir.
+	    [CanBeNull]
         public static string GetFolderName( [CanBeNull] string filePath )
         {
             return Path.HasExtension( filePath )
@@ -250,7 +250,7 @@ namespace KOTORModSync.Core.FileSystemPathing
             uint dwFlagsAndAttributes,
             IntPtr hTemplateFile );
 
-        
+
         public static FileSystemInfo GetCaseSensitivePath(FileSystemInfo fileSystemInfoItem)
         {
             switch ( fileSystemInfoItem )
@@ -260,13 +260,13 @@ namespace KOTORModSync.Core.FileSystemPathing
                 default: return null;
             }
         }
-        
+
         public static FileInfo GetCaseSensitivePath( FileInfo file )
         {
             ( string thisFilePath, _ ) = GetCaseSensitivePath( file?.FullName, isFile: true);
             return new FileInfo( thisFilePath );
         }
-        
+
         public static DirectoryInfo GetCaseSensitivePath( DirectoryInfo file )
         {
             ( string thisFilePath, _ ) = GetCaseSensitivePath( file?.FullName, isFile: true);
@@ -315,7 +315,7 @@ namespace KOTORModSync.Core.FileSystemPathing
                     foreach (
                         FileSystemInfo folderOrFileInfo
                         in new DirectoryInfo( previousCurrentPath )
-                        .EnumerateFileSystemInfosSafely( searchPattern: "*", SearchOption.TopDirectoryOnly )
+                        .EnumerateFileSystemInfosSafely( searchPattern: "*" )
                     )
                     {
                         if (folderOrFileInfo is null || !folderOrFileInfo.Exists)

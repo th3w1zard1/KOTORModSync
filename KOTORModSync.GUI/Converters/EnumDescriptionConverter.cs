@@ -12,55 +12,55 @@ using KOTORModSync.Core;
 
 namespace KOTORModSync.Converters
 {
-    // from https://code.4noobz.net/wpf-enum-binding-with-description-in-a-combobox/
-    public class EnumDescriptionConverter : IValueConverter
-    {
-        [CanBeNull]
-        private static string GetEnumDescription( Enum enumObj )
-        {
-            FieldInfo fieldInfo = enumObj.GetType().GetField( enumObj.ToString() );
-            if ( fieldInfo is null )
-            {
-                Logger.LogException( new ArgumentNullException( nameof( enumObj ) ) );
-                return null;
-            }
+	// from https://code.4noobz.net/wpf-enum-binding-with-description-in-a-combobox/
+	public class EnumDescriptionConverter : IValueConverter
+	{
+		object IValueConverter.Convert(
+			[CanBeNull] object value,
+			[NotNull] Type targetType,
+			[CanBeNull] object parameter,
+			[NotNull] CultureInfo culture
+		)
+		{
+			var myEnum = (Enum)value;
+			string description = GetEnumDescription( myEnum );
+			return description;
+		}
 
-            object[] attribArray = fieldInfo.GetCustomAttributes( false );
+		[CanBeNull]
+		object IValueConverter.ConvertBack(
+			[CanBeNull] object value,
+			[NotNull] Type targetType,
+			[CanBeNull] object parameter,
+			[NotNull] CultureInfo culture
+		) => value?.ToString();
 
-            if ( attribArray.Length == 0 )
-                return enumObj.ToString();
+		[CanBeNull]
+		private static string GetEnumDescription( Enum enumObj )
+		{
+			FieldInfo fieldInfo = enumObj.GetType().GetField( enumObj.ToString() );
+			if ( fieldInfo is null )
+			{
+				Logger.LogException( new ArgumentNullException( nameof( enumObj ) ) );
+				return null;
+			}
 
-            DescriptionAttribute attrib = null;
+			object[] attribArray = fieldInfo.GetCustomAttributes( false );
 
-            foreach ( object att in attribArray )
-            {
-                if ( att is DescriptionAttribute attribute )
-                    attrib = attribute;
-            }
+			if ( attribArray.Length == 0 )
+				return enumObj.ToString();
 
-            return attrib != null
-                ? attrib.Description
-                : enumObj.ToString();
-        }
+			DescriptionAttribute attrib = null;
 
-        object IValueConverter.Convert(
-            [CanBeNull] object value,
-            [NotNull] Type targetType,
-            [CanBeNull] object parameter,
-            [NotNull] CultureInfo culture
-        )
-        {
-            var myEnum = (Enum)value;
-            string description = GetEnumDescription( myEnum );
-            return description;
-        }
+			foreach ( object att in attribArray )
+			{
+				if ( att is DescriptionAttribute attribute )
+					attrib = attribute;
+			}
 
-        [CanBeNull]
-        object IValueConverter.ConvertBack(
-            [CanBeNull] object value,
-            [NotNull] Type targetType,
-            [CanBeNull] object parameter,
-            [NotNull] CultureInfo culture
-        ) => value?.ToString();
-    }
+			return attrib != null
+				? attrib.Description
+				: enumObj.ToString();
+		}
+	}
 }

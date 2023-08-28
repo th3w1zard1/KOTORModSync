@@ -28,8 +28,24 @@ namespace KOTORModSync.Core
     [SuppressMessage("ReSharper", "UnusedMember.Global")]
     public sealed class MainConfig : INotifyPropertyChanged
     {
-        [NotNull]
-        public static string CurrentVersion => "0.10.1";
+	    public enum AvailablePatchers
+        {
+            [Description( "Use TSLPatcher" )]
+            TSLPatcher = 0,
+
+            [DefaultValue( true )]
+            [Description( "Use PyKotorCLI" )]
+            PyKotorCLI = 1,
+        }
+
+	    [Description( "Only components with the selected compatibility level will be installed" )]
+        public enum CompatibilityLevel
+        {
+            [Description( "Fully Compatible" )] Compatible = 0,
+            [Description( "Mostly Compatible" )] MostlyCompatible = 1,
+            [Description( "Not Tested" )] Untested = 2,
+            [Description( "INCOMPATIBLE" )] Incompatible = 3,
+        }
 
         public MainConfig()
         {
@@ -41,30 +57,15 @@ namespace KOTORModSync.Core
             caseInsensitivePathing = true;
         }
 
-        [Description( "Only components with the selected compatibility level will be installed" )]
-        public enum CompatibilityLevel
-        {
-            [Description( "Fully Compatible" )] Compatible = 0,
-            [Description( "Mostly Compatible" )] MostlyCompatible = 1,
-            [Description( "Not Tested" )] Untested = 2,
-            [Description( "INCOMPATIBLE" )] Incompatible = 3,
-        }
-        public enum AvailablePatchers
-        {
-            [Description( "Use TSLPatcher" )]
-            TSLPatcher = 0,
-
-            [DefaultValue( true )]
-            [Description( "Use PyKotorCLI" )]
-            PyKotorCLI = 1,
-        }
+        [NotNull]
+        public static string CurrentVersion => "0.10.1";
 
         [UsedImplicitly]
         [NotNull]
         public static IEnumerable<string> AllCompatibilityLevels => Enum.GetValues(typeof(CompatibilityLevel))
             .Cast<CompatibilityLevel>()
             .Select(compatibilityLvl => compatibilityLvl.ToString());
-        
+
         [UsedImplicitly]
         [NotNull]
         public static IEnumerable<string> AllAvailablePatchers => Enum.GetValues(typeof(AvailablePatchers))
@@ -72,6 +73,7 @@ namespace KOTORModSync.Core
             .Select(patcher => patcher.ToString());
 
         public static bool NoAdmin { get; private set; }
+
         public bool noAdmin
         {
 	        get => NoAdmin;
@@ -82,6 +84,7 @@ namespace KOTORModSync.Core
         public bool useMultiThreadedIO { get => UseMultiThreadedIO; set => UseMultiThreadedIO = value; }
 
         public static bool CaseInsensitivePathing { get; private set; }
+
         public bool caseInsensitivePathing
         {
 	        get => CaseInsensitivePathing;
@@ -96,11 +99,12 @@ namespace KOTORModSync.Core
 
         public static bool AttemptFixes { get; private set; }
         public bool attemptFixes { get => AttemptFixes; set => AttemptFixes = value; }
-		
+
         public static bool ArchiveDeepCheck { get; private set; }
-		public bool archiveDeepCheck { get => ArchiveDeepCheck; set => ArchiveDeepCheck = value; }
+        public bool archiveDeepCheck { get => ArchiveDeepCheck; set => ArchiveDeepCheck = value; }
 
         public static AvailablePatchers PatcherOption { get; private set; }
+
         public AvailablePatchers patcherOption
         {
             get => PatcherOption;
@@ -110,6 +114,7 @@ namespace KOTORModSync.Core
                 OnPropertyChanged();
             }
         }
+
         [NotNull] public string patcherOptionString
         {
             get
@@ -129,6 +134,7 @@ namespace KOTORModSync.Core
         }
 
         public static CompatibilityLevel CurrentCompatibilityLevel { get; private set; }
+
         public CompatibilityLevel currentCompatibilityLevel
         {
             get => CurrentCompatibilityLevel;
@@ -138,6 +144,7 @@ namespace KOTORModSync.Core
                 OnPropertyChanged();
             }
         }
+
         [NotNull] public string currentCompatibilityString
         {
             get
@@ -157,13 +164,15 @@ namespace KOTORModSync.Core
         }
 
         [NotNull][ItemNotNull] public static List<Component> AllComponents { get; set; } = new List<Component>();
+
         [NotNull][ItemNotNull] public List<Component> allComponents
         {
             get => AllComponents;
             set => AllComponents = value ?? throw new ArgumentNullException( nameof( value ) );
         }
-        
+
         [CanBeNull] public static DirectoryInfo SourcePath { get; private set; }
+
         [CanBeNull] public DirectoryInfo sourcePath
         {
             get => SourcePath;
@@ -173,9 +182,11 @@ namespace KOTORModSync.Core
                 OnPropertyChanged( nameof( sourcePathFullName ) );
             }
         }
+
         [CanBeNull] public string sourcePathFullName => SourcePath?.FullName;
-        
+
         [CanBeNull] public static DirectoryInfo DestinationPath { get; private set; }
+
         [CanBeNull] public DirectoryInfo destinationPath
         {
             get => DestinationPath;
@@ -185,10 +196,12 @@ namespace KOTORModSync.Core
                 OnPropertyChanged( nameof( destinationPathFullName ) );
             }
         }
+
         [CanBeNull] public string destinationPathFullName => DestinationPath?.FullName;
 
         // used for the ui.
         public event PropertyChangedEventHandler PropertyChanged;
+
         private void OnPropertyChanged( [CallerMemberName][CanBeNull] string propertyName = null ) =>
             PropertyChanged?.Invoke( this, new PropertyChangedEventArgs( propertyName ) );
     }

@@ -9,9 +9,9 @@ namespace KOTORModSync.Tests
     [TestFixture]
     public class WildcardEnumerationTests
     {
-        private readonly string _basePath = Path.Combine( Path.GetTempPath(), path2: "tsl mods" );
+	    private readonly string _basePath = Path.Combine( Path.GetTempPath(), path2: "tsl mods" );
 
-        [Test]
+	    [Test]
         public void EnumerateFilesWithWildcards_Should_ReturnMatchingFiles()
         {
             // Create test directories and files

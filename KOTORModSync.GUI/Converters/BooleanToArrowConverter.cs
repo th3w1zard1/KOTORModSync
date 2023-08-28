@@ -11,7 +11,7 @@ namespace KOTORModSync.Converters
 {
     public class BooleanToArrowConverter : IValueConverter
     {
-        public object Convert(
+	    public object Convert(
             [CanBeNull] object value,
             [NotNull] Type targetType,
             [CanBeNull] object parameter,
@@ -23,7 +23,7 @@ namespace KOTORModSync.Converters
                     : "▶"
                 : (object)string.Empty;
 
-        public object ConvertBack(
+	    public object ConvertBack(
             [CanBeNull] object value,
             [NotNull] Type targetType,
             [CanBeNull] object parameter,

@@ -11,7 +11,7 @@ namespace KOTORModSync.Core.Utility
 {
     public static class TomlWriter
     {
-        [NotNull]
+	    [NotNull]
         public static string WriteString( [NotNull] Dictionary<string, object> data )
         {
             if ( data.Count == 0 )

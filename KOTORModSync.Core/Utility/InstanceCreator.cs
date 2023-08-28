@@ -12,10 +12,10 @@ namespace KOTORModSync.Core.Utility
 {
     public static class InstanceCreator
     {
-        private static readonly Dictionary<Type, ConstructorInfo[]> s_cachedConstructors
+	    private static readonly Dictionary<Type, ConstructorInfo[]> s_cachedConstructors
             = new Dictionary<Type, ConstructorInfo[]>();
 
-        [CanBeNull]
+	    [CanBeNull]
         public static T CreateInstance<T>( [CanBeNull] params object[] constructorParameters )
         {
             Type type = typeof( T );

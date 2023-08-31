@@ -386,9 +386,9 @@
                                                                       SelectedItem="{Binding ActionString, Converter={StaticResource ActionConverter}}"
                                                                       Focusable="True" />
 
-                                                            <StackPanel x:Name="optionChooser" Grid.Row="4" Grid.RowSpan="2" Grid.Column="0"
+                                                            <StackPanel x:Name="optionChooser" Grid.Row="4" Grid.RowSpan="2" Grid.Column="0" ToolTip.Tip="Any mod in this list will be installed when this 'Choose' instruction runs. Potential for duplicate installs - be careful defining these!"
                                                                          IsVisible="{Binding Action, Converter={StaticResource ChooseActionVisibility}}">
-                                                                <TextBlock Text="Options:" />
+                                                                <TextBlock Text="Options:" ToolTip.Tip="Any mod in this list will be installed when this 'Choose' instruction runs. Potential for duplicate installs - be careful defining these!"/>
                                                                 <control:DependencyControl>
                                                                     <control:DependencyControl.ThisGuidList>
                                                                         <Binding Path="Source" Converter="{StaticResource GuidListConverter}"/>

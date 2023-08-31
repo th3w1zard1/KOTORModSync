@@ -26,6 +26,7 @@ using Avalonia.Layout;
 using Avalonia.LogicalTree;
 using Avalonia.Markup.Xaml.Styling;
 using Avalonia.Media;
+using Avalonia.Platform.Storage;
 using Avalonia.Themes.Fluent;
 using Avalonia.Threading;
 using JetBrains.Annotations;
@@ -336,108 +337,25 @@ namespace KOTORModSync
             WindowState = WindowState.Minimized;
 
         [ItemCanBeNull]
-        private async Task<string> OpenFile( List<FileDialogFilter> filters = null )
+        private async Task<string> SaveFile( string saveFileName = null, [CanBeNull] IReadOnlyList<FilePickerFileType> defaultExts = null )
         {
             try
             {
-                string[] result = await ShowFileDialog(
-                    isFolderDialog: false,
-                    filters
+                IStorageFile file = await StorageProvider.SaveFilePickerAsync(
+	                new FilePickerSaveOptions
+	                {
+		                DefaultExtension = "toml",
+		                FileTypeChoices = defaultExts ?? new List<FilePickerFileType>{FilePickerFileTypes.All},
+		                ShowOverwritePrompt = true,
+		                SuggestedFileName = saveFileName ?? "my_toml_instructions.toml",
+	                }
                 );
-                if ( result?.Length > 0 )
-                    return result[0]; // Retrieve the first selected file path
-            }
-            catch ( Exception ex )
-            {
-                await Logger.LogExceptionAsync( ex );
-            }
-
-            return null;
-        }
-
-
-        [ItemCanBeNull]
-        private async Task<List<string>> OpenFiles()
-        {
-            try
-            {
-                string[] filePaths = await ShowFileDialog( isFolderDialog: false, allowMultiple: true );
-                if ( filePaths is null )
+				
+                string filePath = file?.TryGetLocalPath();
+                if ( !(filePath is null) )
                 {
-                    await Logger.LogVerboseAsync( "User did not select any files." );
-                    return null;
-                }
-
-                await Logger.LogVerboseAsync( $"Selected files: [{string.Join( $",{Environment.NewLine}", filePaths )}]" );
-                return filePaths.ToList();
-            }
-            catch ( Exception ex )
-            {
-                await Logger.LogExceptionAsync( ex );
-                return null;
-            }
-        }
-
-        [ItemCanBeNull]
-        private async Task<string> OpenFolder()
-        {
-            try
-            {
-                return ( await ShowFileDialog(isFolderDialog: true, filters: null) )?[0];
-            }
-            catch ( Exception ex )
-            {
-                await Logger.LogExceptionAsync( ex );
-                return null;
-            }
-        }
-
-        [ItemCanBeNull]
-        private async Task<string> SaveFile( string saveWindowTitle = null, [CanBeNull] List<string> defaultExt = null )
-        {
-            try
-            {
-                if ( defaultExt is null )
-                {
-                    defaultExt = new List<string>
-                    {
-                        "toml", "tml",
-                    };
-                }
-
-                var dialog = new SaveFileDialog
-                {
-                    DefaultExtension = defaultExt.FirstOrDefault(),
-                    Filters =
-                    {
-                        new FileDialogFilter
-                        {
-                            Name = "All Files",
-                            Extensions = { "*" },
-                        },
-                        new FileDialogFilter
-                        {
-                            Name = "Preferred Extensions",
-                            Extensions = defaultExt,
-                        },
-                    },
-                };
-                if ( !string.IsNullOrEmpty( saveWindowTitle ) )
-                    dialog.Title = saveWindowTitle;
-
-                // Show the dialog and wait for a result.
-                if ( VisualRoot is Window parent )
-                {
-                    string filePath = await dialog.ShowAsync( parent );
-                    if ( !string.IsNullOrEmpty(filePath) )
-                    {
-                        await Logger.LogAsync( $"Selected file: {filePath}" );
-                        return filePath;
-                    }
-                }
-                else
-                {
-                    throw new InvalidOperationException( "Could not open dialog - parent window not found" );
+	                await Logger.LogAsync( $"Selected file: {filePath}" );
+	                return filePath;
                 }
             }
             catch ( Exception ex )
@@ -449,11 +367,13 @@ namespace KOTORModSync
         }
 
         [ItemCanBeNull]
+		[CanBeNull]
         private async Task<string[]> ShowFileDialog(
             bool isFolderDialog,
-            [CanBeNull] IReadOnlyCollection<FileDialogFilter> filters = null,
+            [CanBeNull] IReadOnlyList<FilePickerFileType> filters = null,
             bool allowMultiple = false,
-            string startFolder = null
+            IStorageFolder startFolder = null,
+			string windowName = null
         )
         {
             try
@@ -468,49 +388,36 @@ namespace KOTORModSync
 
                 string[] results;
                 if ( isFolderDialog )
-                {
-                    var folderDialog = new OpenFolderDialog();
-                    if ( !string.IsNullOrEmpty( startFolder ) )
-                        folderDialog.Directory = startFolder;
-
-                    results = new[]
-                    {
-                        await folderDialog.ShowAsync( parent ),
-                    };
+                { // Start async operation to open the dialog.
+	                IReadOnlyList<IStorageFolder> result = await StorageProvider.OpenFolderPickerAsync(
+		                new FolderPickerOpenOptions
+		                {
+			                Title = windowName ?? "Choose the folder",
+			                AllowMultiple = allowMultiple,
+							SuggestedStartLocation = startFolder,
+		                }
+	                );
+	                return result.Select(s => s.TryGetLocalPath()).ToArray();
                 }
                 else
                 {
-                    var fileDialog = new OpenFileDialog
-                    {
-                        AllowMultiple = allowMultiple,
-                    };
-                    if ( filters != null )
-                    {
-                        fileDialog.Filters = new List<FileDialogFilter>
-                        {
-                            new FileDialogFilter
-                            {
-                                Name = "All Files",
-                                Extensions = { "*" },
-                            },
-                        };
-                    }
-                    if ( !string.IsNullOrEmpty( startFolder ) )
-                        fileDialog.Directory = startFolder;
-
-                    results = await fileDialog.ShowAsync( parent );
+	                // Start async operation to open the dialog.
+	                IReadOnlyList<IStorageFile> result = await StorageProvider.OpenFilePickerAsync(
+		                new FilePickerOpenOptions
+		                {
+			                Title = windowName ?? "Choose the file(s)",
+			                AllowMultiple = allowMultiple,
+			                FileTypeFilter = /*filters ?? */new[] // todo: fix custom filters
+			                {
+				                FilePickerFileTypes.All,
+								FilePickerFileTypes.TextPlain,
+			                },
+		                }
+	                );
+	                string[] files = result.Select(s => s.TryGetLocalPath()).ToArray();
+	                if ( files.Length > 0 )
+		                return files; // Retrieve the first selected file path
                 }
-
-                if ( results is null || results.Length == 0 )
-                {
-                    await Logger.LogVerboseAsync( "User did not make a selection" );
-                    return default;
-                }
-
-                await Logger.LogAsync(
-                    $"Selected {( isFolderDialog ? "folder" : "file" )}: {string.Join( separator: ", ", results )}"
-                );
-                return results;
             }
             catch ( Exception ex )
             {
@@ -589,22 +496,22 @@ namespace KOTORModSync
             try
             {
                 // Extension filters for our instruction file
-                var filters = new List<FileDialogFilter>
+                var filters = new List<FilePickerFileType>
                 {
-                    new FileDialogFilter
-                    {
-                        Name = "Mod Sync File",
-                        Extensions = { "toml", "tml" },
-                    },
-                    new FileDialogFilter
-                    {
-                        Name = "All Files",
-                        Extensions = { "*" },
-                    },
+                    new FilePickerFileType("toml"),
+                    new FilePickerFileType("tml"),
                 };
 
                 // Open the file dialog to select a file
-                string filePath = await OpenFile(filters);
+                string[] result = await ShowFileDialog(
+	                windowName: "Load the TOML instruction file you've downloaded/created",
+	                isFolderDialog: false,
+	                filters: filters
+                );
+                if ( result is null || result.Length <= 0 )
+	                return;
+
+                string filePath = result[0];
                 if ( !PathValidator.IsValidPath( filePath ) )
                     return;
 
@@ -613,18 +520,11 @@ namespace KOTORModSync
 
                 var thisFile = new FileInfo( filePath );
 
-                // Verify the file type
-                string fileExtension = thisFile.Extension;
+                // Verify the file
                 const int maxInstructionSize = 524288000; // instruction file larger than 500mb is probably unsupported
-                if (
-                    !new List<string>{".toml", ".tml", ".txt"}.Contains(
-                        fileExtension,
-                        StringComparer.OrdinalIgnoreCase
-                    )
-                    ^ ( thisFile.Length > maxInstructionSize )
-                )
+                if ( thisFile.Length > maxInstructionSize )
                 {
-                    _ = Logger.LogAsync( $"Invalid extension for file '{thisFile.Name}'" );
+                    _ = Logger.LogAsync( $"Invalid instruction file selected: '{thisFile.Name}'" );
                     return;
                 }
 
@@ -652,7 +552,12 @@ namespace KOTORModSync
         {
             try
             {
-                string filePath = await OpenFile();
+	            // Open the file dialog to select a file
+	            string[] result = await ShowFileDialog(isFolderDialog: false, windowName: "Load your markdown file.");
+	            if ( result is null || result.Length <= 0 )
+		            return;
+
+	            string filePath = result[0];
                 if ( string.IsNullOrEmpty( filePath ) )
                     return; // user cancelled
 
@@ -734,8 +639,20 @@ namespace KOTORModSync
                     ?? throw new NullReferenceException( "Could not find instruction instance" );
 
                 // Open the file dialog to select a file
-                List<string> files = await OpenFiles();
-                if ( files is null || files.Count == 0 )
+
+                IStorageFolder startFolder = null;
+                if ( !(MainConfig.SourcePath is null) )
+	                startFolder = await StorageProvider.TryGetFolderFromPathAsync(MainConfig.SourcePath.FullName);
+                string[] filePaths = await ShowFileDialog( isFolderDialog: false, allowMultiple: true, startFolder: startFolder );
+                if ( filePaths is null )
+                {
+	                await Logger.LogVerboseAsync( "User did not select any files." );
+	                return;
+                }
+
+                await Logger.LogVerboseAsync( $"Selected files: [{string.Join( $",{Environment.NewLine}", filePaths )}]" );
+                var files = filePaths.ToList();
+                if ( files.Count == 0 )
                 {
                     _ = Logger.LogVerboseAsync(
                         "No files chosen in BrowseSourceFiles_Click, returning to previous values"
@@ -798,12 +715,20 @@ namespace KOTORModSync
                 Instruction thisInstruction = (Instruction)button.DataContext
                     ?? throw new NullReferenceException( "Could not find instruction instance" );
 
-                // Open the file dialog to select a file
-                string filePath = await OpenFolder();
-                if ( filePath is null )
+                IStorageFolder startFolder = null;
+                if ( !(MainConfig.DestinationPath is null) )
+	                startFolder = await StorageProvider.TryGetFolderFromPathAsync(MainConfig.DestinationPath.FullName);
+
+                // Open the folder dialog to select a folder
+                string[] result = await ShowFileDialog(isFolderDialog: true, startFolder: startFolder);
+                if ( result is null || result.Length <= 0 )
+	                return;
+
+                string folderPath = result[0];
+                if ( folderPath is null )
                 {
                     _ = Logger.LogVerboseAsync(
-                        "No file chosen in BrowseDestination_Click."
+                        "No folder chosen in BrowseDestination_Click."
                         + $" Will continue using '{thisInstruction.Destination}'"
                     );
                     return;
@@ -814,11 +739,11 @@ namespace KOTORModSync
                     _ = Logger.LogAsync(
                         "Directories not set, setting raw folder path without custom variable <<kotorDirectory>>"
                     );
-                    thisInstruction.Destination = filePath;
+                    thisInstruction.Destination = folderPath;
                     return;
                 }
 
-                thisInstruction.Destination = Utility.RestoreCustomVariables( filePath );
+                thisInstruction.Destination = Utility.RestoreCustomVariables( folderPath );
 
                 // refresh the text box
                 if ( button.Tag is TextBox destinationTextBox )
@@ -1208,35 +1133,47 @@ namespace KOTORModSync
         {
             try
             {
-                await InformationDialog.ShowInformationDialog(
-                    this,
-                    message:
-                    "Please select your KOTOR(2) directory. (e.g. \"C:\\Program Files (x86)\\Steam\\steamapps\\common\\Knights of the Old Republic II\")"
-                );
-                string chosenFolder = await OpenFolder();
-                if ( chosenFolder != null )
-                {
-                    var kotorInstallDir = new DirectoryInfo( chosenFolder );
-                    MainConfigInstance.destinationPath = kotorInstallDir;
-                }
+                IStorageFolder startFolder = null;
+                if ( !(MainConfig.DestinationPath is null) )
+	                startFolder = await StorageProvider.TryGetFolderFromPathAsync(MainConfig.DestinationPath.FullName);
 
-                await InformationDialog.ShowInformationDialog(
-                    this,
-                    message: "Please select your mod directory (where ALL your mods are downloaded)."
-                );
-                chosenFolder = await OpenFolder();
-                if ( chosenFolder is null )
+                // Open the folder dialog to select a folder
+                string[] result = await ShowFileDialog(windowName: "Select your <<kotorDirectory>> (path to the game exe)", isFolderDialog: true, startFolder: startFolder);
+                if ( result?.Length > 0 )
                 {
-                    _ = Logger.LogVerboseAsync( "User cancelled selecting folder" );
-                    return;
+	                string chosenFolder = result[0];
+	                if ( chosenFolder != null )
+	                {
+		                var kotorInstallDir = new DirectoryInfo( chosenFolder );
+		                MainConfigInstance.destinationPath = kotorInstallDir;
+	                }
                 }
+                else
+                {
+	                await Logger.LogVerboseAsync( "User cancelled selecting <<kotorDirectory>>" );
+                }
+				
+                if ( !(MainConfig.SourcePath is null) )
+	                startFolder = await StorageProvider.TryGetFolderFromPathAsync(MainConfig.SourcePath.FullName) ?? startFolder;
 
-                var modDirectory = new DirectoryInfo( chosenFolder );
-                MainConfigInstance.sourcePath = modDirectory;
+                // Open the folder dialog to select a folder
+                result = await ShowFileDialog(windowName: "Select your <<modDirectory>> where ALL your mods are downloaded.", isFolderDialog: true, startFolder: startFolder);
+                if ( result?.Length > 0 )
+                {
+	                string chosenFolder = result[0];
+	                if ( chosenFolder != null )
+	                {
+		                var modDirectory = new DirectoryInfo( chosenFolder );
+		                MainConfigInstance.sourcePath = modDirectory;
+	                }
+                }
+                else
+                {
+	                await Logger.LogVerboseAsync( "User cancelled selecting <<modDirectory>>" );
+                }
             }
             catch ( ArgumentNullException )
             {
-                await Logger.LogVerboseAsync( "User cancelled selecting folder" );
             }
             catch ( Exception ex )
             {
@@ -1527,8 +1464,8 @@ namespace KOTORModSync
             try
             {
                 string file = await SaveFile(
-                    saveWindowTitle: "Save instructions documentation to file",
-                    defaultExt: new List<string>{ "txt" }
+                    saveFileName: "mod_documentation.txt",
+					defaultExts: new List<FilePickerFileType> { FilePickerFileTypes.TextPlain }
                 );
                 if ( file is null )
                     return; // user cancelled
@@ -1975,9 +1912,16 @@ namespace KOTORModSync
         [UsedImplicitly]
         private async void SaveModFile_Click( [NotNull] object sender, [NotNull] RoutedEventArgs e )
         {
-            try
-            {
-                string filePath = await SaveFile(saveWindowTitle: "Save instructions config Tomlin");
+	        try
+	        {
+		        string filePath = await SaveFile(
+			        saveFileName: "my_toml_instructions.toml",
+			        new List<FilePickerFileType>
+			        {
+				        new FilePickerFileType("toml"),
+				        new FilePickerFileType("tml"),
+			        }
+		        );
                 if ( filePath is null )
                     return;
 

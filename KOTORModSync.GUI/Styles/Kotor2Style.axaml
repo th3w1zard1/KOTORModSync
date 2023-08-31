@@ -14,6 +14,14 @@
         <Setter Property="Margin" Value="0,5,0,2" />
     </Style>
 
+    <Style Selector="SelectableTextBlock">
+        <Setter Property="FontSize" Value="14" />
+        <Setter Property="FontWeight" Value="Normal" />
+        <Setter Property="Foreground" Value="#33C3A2" />
+        <Setter Property="TextWrapping" Value="Wrap" />
+        <Setter Property="Margin" Value="0,5,0,2" />
+    </Style>
+
     <Style Selector="Border">
         <Setter Property="BorderBrush" Value="#33C3A2" />
     </Style>

@@ -146,6 +146,7 @@ namespace KOTORModSync.Core
 
                     // ReSharper disable once ConditionIsAlwaysTrueOrFalse
                     if ( instruction.Source is null )
+	                    // ReSharper disable twice HeuristicUnreachableCode
                     {
                         AddWarning( message: "Instruction does not have a 'Source' key defined", instruction );
                         success = false;
@@ -534,15 +535,11 @@ namespace KOTORModSync.Core
                 throw new ArgumentNullException( nameof( archivePath ) );
 
             if ( !ArchiveHelper.IsArchive( archivePath ) )
-            {
-                return ArchivePathCode.NotAnArchive;
-            }
+	            return ArchivePathCode.NotAnArchive;
 
             // todo: self-extracting 7z executables
             if ( Path.GetExtension( archivePath ) == ".exe" )
-            {
-                return ArchivePathCode.FoundSuccessfully;
-            }
+	            return ArchivePathCode.FoundSuccessfully;
 
             using ( FileStream stream = File.OpenRead( archivePath ) )
             {
@@ -562,18 +559,14 @@ namespace KOTORModSync.Core
                 }
 
                 if ( archive is null )
-                {
-                    return ArchivePathCode.CouldNotOpenArchive;
-                }
+	                return ArchivePathCode.CouldNotOpenArchive;
 
                 // everything is extracted to a new directory named after the archive.
                 string archiveNameAppend = Path.GetFileNameWithoutExtension( archivePath );
 
                 // if the Source key represents the top level extraction directory, check that first.
                 if ( PathHelper.WildcardPathMatch( archiveNameAppend, relativePath ) )
-                {
-                    return ArchivePathCode.FoundSuccessfully;
-                }
+	                return ArchivePathCode.FoundSuccessfully;
 
                 var folderPaths = new HashSet<string>();
 
@@ -585,10 +578,13 @@ namespace KOTORModSync.Core
                         + entry.Key.Replace( Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar );
 
                     // Some archives loop through folders while others don't.
-                    // Check if itemInArchivePath has an extension to determine folderName.
-                    string folderName = PathHelper.GetFolderName( itemInArchivePath );
+                    string folderName = Path.GetFileName( itemInArchivePath );
+					if ( entry.IsDirectory )
+					{
+						folderName = Path.GetDirectoryName( itemInArchivePath );
+					}
 
-                    // Add the folder path to the list, after removing trailing slashes.
+					// Add the folder path to the list, after removing trailing slashes.
                     if ( !string.IsNullOrEmpty( folderName ) )
                     {
                         _ = folderPaths.Add(
@@ -598,18 +594,14 @@ namespace KOTORModSync.Core
 
                     // Check if itemInArchivePath matches relativePath using wildcard matching.
                     if ( PathHelper.WildcardPathMatch( itemInArchivePath, relativePath ) )
-                    {
-                        return ArchivePathCode.FoundSuccessfully;
-                    }
+	                    return ArchivePathCode.FoundSuccessfully;
                 }
 
                 // check if instruction.Source matches a folder.
                 foreach ( string folderPath in folderPaths )
                 {
                     if ( !( folderPath is null ) && PathHelper.WildcardPathMatch( folderPath, relativePath ) )
-                    {
-                        return ArchivePathCode.FoundSuccessfully;
-                    }
+	                    return ArchivePathCode.FoundSuccessfully;
                 }
             }
 

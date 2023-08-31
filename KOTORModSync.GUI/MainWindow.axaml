@@ -17,6 +17,9 @@
         <converters:ActionConverter x:Key="ActionConverter" />
         <converters:NamespacesIniOptionConverter x:Key="NamespacesIniOptionConverter" />
         <converters:ListToVisibilityConverter x:Key="ListToVisibilityConverter" />
+        <converters:StringToVisibilityConverter x:Key="StringToVisibilityConverter" />
+        <converters:ChooseActionVisibility x:Key="ChooseActionVisibility" />
+        <converters:GuidListConverter x:Key="GuidListConverter" />
     </Window.Resources>
 
     <Window.Styles>
@@ -84,31 +87,58 @@
                 <TabItem.Content>
                     <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
                         <StackPanel DataContext="{Binding CurrentComponent}">
-                            <TextBlock Text="Name:" FontWeight="Bold" />
-                            <TextBlock Text="{Binding Name}" Margin="10,0,0,0" />
-
-                            <TextBlock Text="Author(s):" FontWeight="Bold" Margin="0,10,0,0" />
-                            <TextBlock Text="{Binding Author}" Margin="10,0,0,0" />
-
-                            <TextBlock Text="Description:" FontWeight="Bold" Margin="0,10,0,0" />
-                            <TextBlock Text="{Binding Description}" Margin="10,0,0,0" TextWrapping="Wrap" />
-
-                            <TextBlock Text="Directions:" FontWeight="Bold" Margin="0,10,0,0" />
-                            <TextBlock Text="{Binding Directions}" Margin="10,0,0,0" TextWrapping="Wrap" />
-
-                            <TextBlock Text="Mod Download Links:" FontWeight="DemiBold" Margin="0, 10, 0, 0"
-                                       ToolTip.Tip="Click a link to open it in your browser." />
-                            <ItemsRepeater ItemsSource="{Binding ModLink}">
+                            <TextBlock Text="Download Links:" FontWeight="DemiBold" Margin="0, 0, 0, 0"
+                                       ToolTip.Tip="Click a link to open it in your browser."
+                                       IsVisible="{Binding ModLink, Converter={StaticResource ListToVisibilityConverter}}" />
+                            <ItemsRepeater ItemsSource="{Binding ModLink}"
+                                           IsVisible="{Binding ModLink, Converter={StaticResource ListToVisibilityConverter}}">
                                 <ItemsRepeater.ItemTemplate>
                                     <DataTemplate>
                                         <StackPanel>
-                                            <TextBlock Text="{Binding }"
+                                            <SelectableTextBlock Text="{Binding }"
                                                        TextDecorations="Underline" Tapped="OpenLink_Click"
-                                                       Margin="10,0,0,0" TextWrapping="Wrap" />
+                                                       Margin="10,0,0,0" TextWrapping="Wrap"
+                                                       FontSize="17"
+                                                       Cursor="Hand">
+                                                <TextBlock.ContextMenu>
+                                                    <ContextMenu>
+                                                        <MenuItem Header="Copy" Click="CopyTextToClipboard_Click"/>
+                                                    </ContextMenu>
+                                                </TextBlock.ContextMenu>
+                                            </SelectableTextBlock>
                                         </StackPanel>
                                     </DataTemplate>
                                 </ItemsRepeater.ItemTemplate>
                             </ItemsRepeater>
+                            <TextBlock Margin="0,10,0,0" Text="Name:" FontWeight="Bold"
+                                       IsVisible="{Binding Name, Converter={StaticResource StringToVisibilityConverter}}" />
+                            <TextBlock Text="{Binding Name}" Margin="10,0,0,0"
+                                       IsVisible="{Binding Name, Converter={StaticResource StringToVisibilityConverter}}" />
+
+                            <TextBlock Text="Author(s):" FontWeight="Bold" Margin="0,10,0,0"
+                                       IsVisible="{Binding Author, Converter={StaticResource StringToVisibilityConverter}}" />
+                            <TextBlock Text="{Binding Author}" Margin="10,0,0,0"
+                                       IsVisible="{Binding Author, Converter={StaticResource StringToVisibilityConverter}}" />
+
+                            <TextBlock Text="Category:" FontWeight="Bold" Margin="0,10,0,0"
+                                       IsVisible="{Binding Category, Converter={StaticResource StringToVisibilityConverter}}" />
+                            <TextBlock Text="{Binding Category}" Margin="10,0,0,0"
+                                       IsVisible="{Binding Category, Converter={StaticResource StringToVisibilityConverter}}" />
+
+                            <TextBlock Text="Tier:" FontWeight="Bold" Margin="0,10,0,0"
+                                       IsVisible="{Binding Tier, Converter={StaticResource StringToVisibilityConverter}}" />
+                            <TextBlock Text="{Binding Tier}" Margin="10,0,0,0"
+                                       IsVisible="{Binding Tier, Converter={StaticResource StringToVisibilityConverter}}" />
+
+                            <TextBlock Text="Description:" FontWeight="Bold" Margin="0,10,0,0"
+                                       IsVisible="{Binding Description, Converter={StaticResource StringToVisibilityConverter}}" />
+                            <TextBlock Text="{Binding Description}" Margin="10,0,0,0" TextWrapping="Wrap"
+                                       IsVisible="{Binding Description, Converter={StaticResource StringToVisibilityConverter}}" />
+
+                            <TextBlock Text="Directions:" FontWeight="Bold" Margin="0,10,0,0"
+                                       IsVisible="{Binding Directions, Converter={StaticResource StringToVisibilityConverter}}" />
+                            <TextBlock Text="{Binding Directions}" Margin="10,0,0,0" TextWrapping="Wrap"
+                                       IsVisible="{Binding Directions, Converter={StaticResource StringToVisibilityConverter}}" />
 
                             <TextBlock Text="Select your Options/Customizations here"
                                        FontWeight="Bold"
@@ -134,11 +164,10 @@
                                                               VerticalContentAlignment="Center"
                                                               VerticalAlignment="Center"
                                                               IsChecked="{Binding IsSelected, Mode=TwoWay}"
-                                                              Checked="OnCheckBoxOnChecked"
-                                                              Unchecked="OnCheckBoxOnUnchecked"
+                                                              IsCheckedChanged="OnCheckBoxChanged"
                                                               Tag="{Binding}"
                                                               Content="{Binding Name}"
-                                                              ToolTip.Tip="If selected, this option will be installed." />
+                                                              ToolTip.Tip="If checked, this option will be installed." />
                                                 </DockPanel>
                                                 <TextBlock Text="{Binding Description}" />
                                                 <ItemsRepeater
@@ -148,19 +177,21 @@
                                                         <DataTemplate
                                                             DataType="core:Instruction">
                                                             <Grid
-                                                                RowDefinitions="Auto,Auto"
+                                                                RowDefinitions="Auto,Auto,Auto"
                                                                 ColumnDefinitions="Auto,*">
-                                                                <TextBlock
-                                                                    Grid.Column="0"
-                                                                    Grid.Row="0"
-                                                                    Text="{Binding
-                                                                                   Converter={StaticResource IndexConverter},
-                                                                                   ConverterParameter={Binding Instructions,
-                                                                                   ElementName=instructionsRepeater}}"
-                                                                    FontWeight="Bold" />
                                                                 <DockPanel Grid.Row="0"
                                                                            Grid.RowSpan="2"
                                                                            Grid.Column="1">
+                                                                    <TextBlock IsVisible="False">
+                                                                        <TextBlock.Text>
+                                                                            <MultiBinding Converter="{StaticResource IndexConverter}">
+                                                                                <MultiBinding.Bindings>
+                                                                                    <Binding Path="$parent[ItemsRepeater].DataContext.Instructions"/>
+                                                                                    <Binding Path="."/>
+                                                                                </MultiBinding.Bindings>
+                                                                            </MultiBinding>
+                                                                        </TextBlock.Text>
+                                                                    </TextBlock>
                                                                     <TextBlock
                                                                         Text="{Binding Action}"
                                                                         Margin="10,0,0,0"
@@ -202,11 +233,17 @@
                                                 <TextBlock
                                                     Grid.Column="0"
                                                     Grid.Row="0"
-                                                    Text="{Binding
-                                                               Converter={StaticResource IndexConverter},
-                                                               ConverterParameter={Binding Instructions,
-                                                               ElementName=instructionsSummaryRepeater}}"
-                                                    FontWeight="Bold" />
+                                                    FontWeight="Bold"
+                                                    Margin="2,0,0,0">
+                                                    <TextBlock.Text>
+                                                        <MultiBinding Converter="{StaticResource IndexConverter}">
+                                                            <MultiBinding.Bindings>
+                                                                <Binding Path="$parent[ItemsRepeater].DataContext.Instructions"/>
+                                                                <Binding Path="."/>
+                                                            </MultiBinding.Bindings>
+                                                        </MultiBinding>
+                                                    </TextBlock.Text>
+                                                </TextBlock>
                                                 <DockPanel Grid.Row="0" Grid.RowSpan="2" Grid.Column="1" Margin="10">
                                                     <TextBlock
                                                         Text="{Binding Action}"
@@ -305,8 +342,20 @@
                                         <ItemsRepeater.ItemTemplate>
                                             <DataTemplate DataType="core:Instruction">
                                                 <StackPanel>
-                                                    <Button Content="New Instruction Here"
-                                                            Click="AddNewInstruction_Click" Tag="{Binding}" />
+                                                    <DockPanel>
+                                                        <TextBlock FontWeight="Bold">
+                                                            <TextBlock.Text>
+                                                                <MultiBinding Converter="{StaticResource IndexConverter}">
+                                                                    <MultiBinding.Bindings>
+                                                                        <Binding Path="$parent[ItemsRepeater].DataContext.Instructions"/>
+                                                                        <Binding Path="."/>
+                                                                    </MultiBinding.Bindings>
+                                                                </MultiBinding>
+                                                            </TextBlock.Text>
+                                                        </TextBlock>
+                                                        <Button Content="New Instruction Here"
+                                                                Click="AddNewInstruction_Click" Tag="{Binding}" />
+                                                    </DockPanel>
                                                     <Border BorderThickness="2" Margin="10">
                                                         <Grid
                                                             RowDefinitions="*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*"
@@ -316,10 +365,6 @@
                                                             <DockPanel Grid.Row="1" Grid.Column="0"
                                                                        Grid.ColumnSpan="2"
                                                                        HorizontalAlignment="Left">
-                                                                <TextBlock
-                                                                    Text="{Binding
-                                                                        Converter={StaticResource IndexConverter},
-                                                                        ConverterParameter={Binding Instructions, ElementName=instructionsRepeater}}" />
                                                                 <TextBlock Text="Action:"
                                                                            VerticalAlignment="Center"
                                                                            Margin="0,0,20,0" />
@@ -341,31 +386,46 @@
                                                                       SelectedItem="{Binding ActionString, Converter={StaticResource ActionConverter}}"
                                                                       Focusable="True" />
 
-                                                            <TextBlock Grid.Row="4" Grid.Column="0" Text="Source:" />
-                                                            <TextBox Grid.Row="5" Grid.Column="0"
-                                                                     AcceptsReturn="True" TextWrapping="Wrap"
-                                                                     HorizontalAlignment="Stretch"
-                                                                     Focusable="True"
-                                                                     x:Name="SourceTextBox"
-                                                                     Text="{Binding Source, Converter={StaticResource ListToStringConverter}}" />
+                                                            <StackPanel x:Name="optionChooser" Grid.Row="4" Grid.RowSpan="2" Grid.Column="0"
+                                                                         IsVisible="{Binding Action, Converter={StaticResource ChooseActionVisibility}}">
+                                                                <TextBlock Text="Options:" />
+                                                                <control:DependencyControl>
+                                                                    <control:DependencyControl.ThisGuidList>
+                                                                        <Binding Path="Source" Converter="{StaticResource GuidListConverter}"/>
+                                                                    </control:DependencyControl.ThisGuidList>
+                                                                </control:DependencyControl>
+                                                            </StackPanel>
+                                                            <StackPanel Grid.Row="4" Grid.RowSpan="2" Grid.Column="0"
+                                                                        IsVisible="{Binding !IsVisible, ElementName=optionChooser}">
+                                                                <TextBlock Text="Source:" />
+                                                                <TextBox AcceptsReturn="True" TextWrapping="Wrap"
+                                                                         HorizontalAlignment="Stretch"
+                                                                         Focusable="True"
+                                                                         x:Name="SourceTextBox"
+                                                                         Text="{Binding Source, Converter={StaticResource ListToStringConverter}}" />
+                                                            </StackPanel>
 
                                                             <Button Grid.Row="5" Grid.Column="1"
                                                                     HorizontalAlignment="Stretch"
                                                                     Content="Browse Files"
                                                                     Click="BrowseSourceFiles_Click"
-                                                                    Tag="{Binding ElementName=SourceTextBox}" />
+                                                                    Tag="{Binding ElementName=SourceTextBox}"
+                                                                    IsVisible="{Binding !IsVisible, ElementName=optionChooser}" />
 
                                                             <TextBlock Grid.Row="6" Grid.Column="0"
-                                                                       Text="Destination:" />
+                                                                       Text="Destination:"
+                                                                       IsVisible="{Binding !IsVisible, ElementName=optionChooser}" />
                                                             <TextBox Grid.Row="7" Grid.Column="0" Focusable="True"
                                                                      TextWrapping="Wrap"
                                                                      x:Name="DestinationTextBox"
-                                                                     Text="{Binding Destination}" />
+                                                                     Text="{Binding Destination}"
+                                                                     IsVisible="{Binding !IsVisible, ElementName=optionChooser}" />
                                                             <Button Grid.Row="7" Grid.Column="1"
                                                                     HorizontalAlignment="Stretch"
                                                                     Content="Browse Destination"
                                                                     Click="BrowseDestination_Click"
-                                                                    Tag="{Binding ElementName=DestinationTextBox}" />
+                                                                    Tag="{Binding ElementName=DestinationTextBox}"
+                                                                    IsVisible="{Binding !IsVisible, ElementName=optionChooser}" />
 
                                                             <TextBlock Grid.Row="8" Grid.Column="0"
                                                                        Text="Dependencies:"
@@ -381,25 +441,31 @@
 
                                                             <TextBlock Grid.Row="12" Grid.Column="0"
                                                                        Text="Overwrite:"
-                                                                       ToolTip.Tip="Should we overwrite if already exists in the install directory?" />
+                                                                       ToolTip.Tip="Should we overwrite if already exists in the install directory?"
+                                                                       IsVisible="{Binding !IsVisible, ElementName=optionChooser}" />
                                                             <TextBox Grid.Row="13" Grid.Column="0"
                                                                      Focusable="True"
-                                                                     Text="{Binding Overwrite}" />
+                                                                     Text="{Binding Overwrite}"
+                                                                     IsVisible="{Binding !IsVisible, ElementName=optionChooser}" />
 
                                                             <TextBlock Grid.Row="14" Grid.Column="0"
                                                                        Text="Arguments:"
-                                                                       ToolTip.Tip="For 'execute' action, any command-line arguments to send. For 'DelDuplicate', the extension to delete when duplicates are found." />
+                                                                       ToolTip.Tip="For 'execute' action, any command-line arguments to send. For 'DelDuplicate', the extension to delete when duplicates are found."
+                                                                       IsVisible="{Binding !IsVisible, ElementName=optionChooser}" />
                                                             <TextBlock Grid.Row="14" Grid.Column="1"
-                                                                       Text="Namespace Ini Option:" />
+                                                                       Text="Namespace Ini Option:"
+                                                                       IsVisible="{Binding !IsVisible, ElementName=optionChooser}" />
                                                             <TextBox Grid.Row="15" Grid.Column="0"
                                                                      Focusable="True"
-                                                                     Text="{Binding Arguments}" />
+                                                                     Text="{Binding Arguments}"
+                                                                     IsVisible="{Binding !IsVisible, ElementName=optionChooser}" />
                                                             <ComboBox
                                                                 Grid.Row="15"
                                                                 Grid.Column="1"
                                                                 HorizontalAlignment="Left"
                                                                 ItemsSource="{Binding Converter={StaticResource NamespacesIniOptionConverter}}"
-                                                                SelectionChanged="ComboBox_SelectionChanged" />
+                                                                SelectionChanged="ComboBox_SelectionChanged"
+                                                                IsVisible="{Binding !IsVisible, ElementName=optionChooser}" />
 
                                                         </Grid>
                                                     </Border>
@@ -418,8 +484,20 @@
                                         <ItemsRepeater.ItemTemplate>
                                             <DataTemplate DataType="core:Option">
                                                 <StackPanel>
-                                                    <Button Content="New Option Here"
-                                                            Click="AddNewOption_Click" Tag="{Binding}" />
+                                                    <DockPanel>
+                                                        <TextBlock FontWeight="Bold">
+                                                            <TextBlock.Text>
+                                                                <MultiBinding Converter="{StaticResource IndexConverter}">
+                                                                    <MultiBinding.Bindings>
+                                                                        <Binding Path="$parent[ItemsRepeater].DataContext.Options"/>
+                                                                        <Binding Path="."/>
+                                                                    </MultiBinding.Bindings>
+                                                                </MultiBinding>
+                                                            </TextBlock.Text>
+                                                        </TextBlock>
+                                                        <Button Content="New Option Here"
+                                                                Click="AddNewOption_Click" Tag="{Binding}" />
+                                                    </DockPanel>
                                                     <Border BorderThickness="2" Margin="10">
                                                         <Grid
                                                             RowDefinitions="*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*"
@@ -429,10 +507,6 @@
                                                             <DockPanel Grid.Row="0" Grid.Column="0"
                                                                        Grid.ColumnSpan="2"
                                                                        HorizontalAlignment="Left">
-                                                                <TextBlock
-                                                                    Text="{Binding
-                                                                        Converter={StaticResource IndexConverter},
-                                                                        ConverterParameter={Binding Instructions, ElementName=instructionsRepeater}}" />
                                                                 <TextBlock Text="Name:"
                                                                            VerticalAlignment="Center"
                                                                            Margin="0,0,20,0" />
@@ -481,10 +555,20 @@
                                                                         <ItemsRepeater.ItemTemplate>
                                                                             <DataTemplate DataType="core:Instruction">
                                                                                 <StackPanel>
-                                                                                    <Button
-                                                                                        Content="New Instruction Here"
-                                                                                        Click="AddNewInstruction_Click"
-                                                                                        Tag="{Binding}" />
+                                                                                    <DockPanel>
+                                                                                        <TextBlock FontWeight="Bold">
+                                                                                            <TextBlock.Text>
+                                                                                                <MultiBinding Converter="{StaticResource IndexConverter}">
+                                                                                                    <MultiBinding.Bindings>
+                                                                                                        <Binding Path="$parent[ItemsRepeater].DataContext.Instructions"/>
+                                                                                                        <Binding Path="."/>
+                                                                                                    </MultiBinding.Bindings>
+                                                                                                </MultiBinding>
+                                                                                            </TextBlock.Text>
+                                                                                        </TextBlock>
+                                                                                        <Button Content="New Instruction Here"
+                                                                                            Click="AddNewInstruction_Click" Tag="{Binding}" />
+                                                                                    </DockPanel>
                                                                                     <Border BorderThickness="2"
                                                                                         Margin="10">
                                                                                         <Grid
@@ -496,10 +580,6 @@
                                                                                                 Grid.Column="0"
                                                                                                 Grid.ColumnSpan="2"
                                                                                                 HorizontalAlignment="Left">
-                                                                                                <TextBlock
-                                                                                                    Text="{Binding
-                                                                                                        Converter={StaticResource IndexConverter},
-                                                                                                        ConverterParameter={Binding Instructions, ElementName=instructionsRepeater}}" />
                                                                                                 <TextBlock
                                                                                                     Text="Action:"
                                                                                                     VerticalAlignment="Center"

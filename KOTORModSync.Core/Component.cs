@@ -170,16 +170,6 @@ namespace KOTORModSync.Core
 			}
 		}
 
-		public bool NonEnglishFunctionality
-		{
-			get => _nonEnglishFunctionality;
-			set
-			{
-				_nonEnglishFunctionality = value;
-				OnPropertyChanged();
-			}
-		}
-
 		[NotNull]
 		public List<string> ModLink
 		{
@@ -409,34 +399,34 @@ namespace KOTORModSync.Core
         {
             if ( !( componentDict is TomlTable ) )
                 throw new ArgumentException( "[TomlError] Expected a TOML table for component data." );
-
+			
+            Guid = GetRequiredValue<Guid>( componentDict, key: "Guid" );
             Name = GetRequiredValue<string>( componentDict, key: "Name" );
             _ = Logger.LogAsync( $" == Deserialize next component '{Name}' ==" );
-            Guid = GetRequiredValue<Guid>( componentDict, key: "Guid" );
-            Description = GetValueOrDefault<string>( componentDict, key: "Description" ) ?? string.Empty;
-            Directions = GetValueOrDefault<string>( componentDict, key: "Directions" ) ?? string.Empty;
+            Author = GetValueOrDefault<string>( componentDict, key: "Author" ) ?? string.Empty;
             Category = GetValueOrDefault<string>( componentDict, key: "Category" ) ?? string.Empty;
             Tier = GetValueOrDefault<string>( componentDict, key: "Tier" ) ?? string.Empty;
+            Description = GetValueOrDefault<string>( componentDict, key: "Description" ) ?? string.Empty;
+            Directions = GetValueOrDefault<string>( componentDict, key: "Directions" ) ?? string.Empty;
             Language = GetValueOrDefault<List<string>>( componentDict, key: "Language" ) ?? new List<string>();
-            Author = GetValueOrDefault<string>( componentDict, key: "Author" ) ?? string.Empty;
+            ModLink = GetValueOrDefault<List<string>>( componentDict, key: "ModLink" ) ?? new List<string>();
+            if ( ModLink.IsNullOrEmptyCollection() )
+            {
+	            string modLink = GetValueOrDefault<string>( componentDict, key: "ModLink" ) ?? string.Empty;
+	            if ( string.IsNullOrEmpty( modLink ) )
+	            {
+		            Logger.LogError( "Could not deserialize key 'ModLink'" );
+	            }
+	            else
+	            {
+		            ModLink = modLink.Split( new[] { "\r\n", "\n" }, StringSplitOptions.None ).ToList();
+	            }
+            }
+
             Dependencies = GetValueOrDefault<List<Guid>>( componentDict, key: "Dependencies" ) ?? new List<Guid>();
             Restrictions = GetValueOrDefault<List<Guid>>( componentDict, key: "Restrictions" ) ?? new List<Guid>();
             InstallBefore = GetValueOrDefault<List<Guid>>( componentDict, key: "InstallBefore" ) ?? new List<Guid>();
             InstallAfter = GetValueOrDefault<List<Guid>>( componentDict, key: "InstallAfter" ) ?? new List<Guid>();
-
-            ModLink = GetValueOrDefault<List<string>>( componentDict, key: "ModLink" ) ?? new List<string>();
-            if ( ModLink.IsNullOrEmptyCollection() )
-            {
-                string modLink = GetValueOrDefault<string>( componentDict, key: "ModLink" ) ?? string.Empty;
-                if ( string.IsNullOrEmpty( modLink ) )
-                {
-                    Logger.LogError( "Could not deserialize key 'ModLink'" );
-                }
-                else
-                {
-                    ModLink = modLink.Split( new[] { "\r\n", "\n" }, StringSplitOptions.None ).ToList();
-                }
-            }
 
             IsSelected = GetValueOrDefault<bool>( componentDict, key: "IsSelected" );
 

@@ -34,6 +34,7 @@ namespace KOTORModSync
                 while ( true )
                 {
                     string input = Console.ReadLine();
+                    input = string.Empty;
                     char key;
 
                     switch ( input )
@@ -182,7 +183,7 @@ namespace KOTORModSync
                                     Console.WriteLine( $"Description: {mod.Description}" );
                                     Console.WriteLine( $"Category: {mod.Category}" );
                                     Console.WriteLine( $"Tier: {mod.Tier}" );
-                                    Console.WriteLine( $"Non-English Functionality: {mod.NonEnglishFunctionality}" );
+                                    //Console.WriteLine( $"Non-English Functionality: {mod.NonEnglishFunctionality}" );
                                     Console.WriteLine( $"Installation Method: {mod.InstallationMethod}" );
                                     Console.WriteLine( $"Installation Instructions: {mod.Directions}" );
                                     Console.WriteLine();

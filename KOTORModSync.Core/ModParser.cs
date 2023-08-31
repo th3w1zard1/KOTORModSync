@@ -30,7 +30,7 @@ namespace KOTORModSync.Core
             mod.Author = GetPropertyValue(modText, "Author");
             mod.Description = GetPropertyValue(modText, "Description");
             (mod.Category, mod.Tier) = GetCategoryAndTier(modText, "Category & Tier");
-            mod.NonEnglishFunctionality = GetBoolValue(modText);
+            //mod.NonEnglishFunctionality = GetBoolValue(modText);
             mod.InstallationMethod = GetPropertyValue(modText, "Installation Method");
             mod.Directions = GetPropertyValue(modText, "Installation Instructions");
 

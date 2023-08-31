@@ -45,6 +45,7 @@ namespace KOTORModSync.Core
 			TSLPatcherError,
 			UnknownInstruction,
 			TSLPatcherLogNotFound,
+			FallbackArchiveExtractionFailed
 		}
 
 		public enum ActionType
@@ -194,9 +195,11 @@ namespace KOTORModSync.Core
 					$"Could not find any files in the 'Source' path! Got [{string.Join( separator: ", ", Source )}]"
 				);
 			}
-
-			// ReSharper disable once AssignNullToNotNullAttribute
-			RealSourcePaths = newSourcePaths;
+			
+			// Remove duplicates
+			RealSourcePaths = MainConfig.CaseInsensitivePathing
+				? newSourcePaths.Distinct( StringComparer.OrdinalIgnoreCase ).ToList()
+				: newSourcePaths.Distinct().ToList();
 
 			string destinationPath = Utility.Utility.ReplaceCustomVariables( Destination );
 			if ( string.IsNullOrWhiteSpace( destinationPath ) )
@@ -205,7 +208,10 @@ namespace KOTORModSync.Core
 			DirectoryInfo thisDestination = PathHelper.TryGetValidDirectoryInfo( destinationPath );
 			if ( !thisDestination?.Exists == true )
 			{
-				thisDestination = PathHelper.GetCaseSensitivePath( thisDestination );
+				if ( MainConfig.CaseInsensitivePathing )
+				{
+					thisDestination = PathHelper.GetCaseSensitivePath( thisDestination );
+				}
 				if ( !noValidate && thisDestination is null )
 					throw new DirectoryNotFoundException( "Could not find the 'Destination' path!" );
 
@@ -225,45 +231,61 @@ namespace KOTORModSync.Core
 			try
 			{
 				RealSourcePaths = argSourcePaths
-					?? RealSourcePaths
-					?? throw new ArgumentNullException( nameof( argSourcePaths ) );
-
-				var semaphore = new SemaphoreSlim( initialCount: 4, Environment.ProcessorCount * 4 );
+					?? RealSourcePaths ?? throw new ArgumentNullException(nameof( argSourcePaths ));
+				
 				ActionExitCode exitCode = ActionExitCode.Success;
-
-				var cts = new CancellationTokenSource();
-
-				var extractionTasks = RealSourcePaths
-					.Select( sourcePath => InnerExtractFileAsync( sourcePath, cts.Token ) ).ToList();
-
-				try
+				int maxCount = MainConfig.UseMultiThreadedIO
+					? 16
+					: 1;
+				using ( var semaphore = new SemaphoreSlim(initialCount: 1, maxCount) )
 				{
-					await Task.WhenAll( extractionTasks ); // Wait for all extraction tasks to complete
-
-					if ( cts.Token.IsCancellationRequested )
-					{
-						throw new OperationCanceledException();
-					}
-				}
-				catch ( OperationCanceledException )
-				{
-					// Restarting all tasks using ArchiveHelper.ExtractWith7Zip
 					try
 					{
-						Logger.Log( "Starting 7z.dll fallback extraction..." );
-						var fallbackTasks = RealSourcePaths.Select(
-							sourcePath =>
+						using ( var cts = new CancellationTokenSource() )
+						{
+							try
 							{
-								var thisFile = new FileInfo( sourcePath );
-								using ( FileStream stream = File.OpenRead( thisFile.FullName ) )
+								var extractionTasks = RealSourcePaths
+									.Select(sourcePath => InnerExtractFileAsync(sourcePath, cts.Token)).ToList();
+
+								await Task.WhenAll(extractionTasks); // Wait for all extraction tasks to complete
+							}
+							catch ( IndexOutOfRangeException )
+							{
+								await Logger.LogWarningAsync(
+									$"Falling back to 7-Zip and restarting entire archive extraction due to the above error."
+								);
+								cts.Cancel();
+								cts.Token.ThrowIfCancellationRequested();
+							}
+							catch ( Exception ex )
+							{
+								await Logger.LogExceptionAsync(ex);
+								cts.Cancel();
+								if ( exitCode == ActionExitCode.Success )
+								{
+									exitCode = ActionExitCode.UnknownError;
+								}
+							}
+						}
+					}
+					catch ( OperationCanceledException )
+					{
+						// Restarting all tasks using ArchiveHelper.ExtractWith7Zip
+						try
+						{
+							await Logger.LogAsync("Starting 7z.dll fallback extraction...");
+							foreach ( string archivePath in RealSourcePaths )
+							{
+								var thisArchive = new FileInfo(archivePath);
+								using ( FileStream stream = File.OpenRead(archivePath) )
 								{
 									// ReSharper disable once PossibleNullReferenceException
 									string destinationDirectory = Path.Combine(
-										argDestinationPath?.FullName ?? thisFile.Directory.FullName,
-										Path.GetFileNameWithoutExtension( thisFile.Name )
+										argDestinationPath?.FullName ?? archivePath,
+										Path.GetFileNameWithoutExtension(thisArchive.Name)
 									);
-									if ( MainConfig.CaseInsensitivePathing
-										&& !Directory.Exists( destinationDirectory ) )
+									if ( MainConfig.CaseInsensitivePathing && !Directory.Exists(destinationDirectory) )
 									{
 										destinationDirectory = PathHelper.GetCaseSensitivePath(
 											destinationDirectory,
@@ -275,179 +297,153 @@ namespace KOTORModSync.Core
 										MainConfig.SourcePath.FullName,
 										destinationDirectory
 									);
-									if ( !Directory.Exists( destinationDirectory ) )
+									if ( !Directory.Exists(destinationDirectory) )
 									{
-										_ = Logger.LogAsync( $"Create directory '{destinationRelDirPath}'" );
-										_ = Directory.CreateDirectory( destinationDirectory );
+										_ = Logger.LogAsync($"Create directory '{destinationRelDirPath}'");
+										_ = Directory.CreateDirectory(destinationDirectory);
 									}
 
 									_ = Logger.LogAsync(
-										$"Fallback extraction of '{thisFile.Name}' to '{destinationRelDirPath}'"
+										$"Fallback extraction of '{thisArchive.Name}' to '{destinationRelDirPath}'"
 									);
-									ArchiveHelper.ExtractWith7Zip( stream, destinationDirectory );
-									_ = Logger.LogAsync( $"Fallback extraction of '{thisFile.Name}' completed." );
+									ArchiveHelper.ExtractWith7Zip(stream, destinationDirectory);
+									_ = Logger.LogAsync($"Fallback extraction of '{thisArchive.Name}' completed.");
 								}
-
-								return Task.CompletedTask;
 							}
-						).ToList();
-
-						await Task.WhenAll( fallbackTasks );
-					}
-					catch ( Exception ex )
-					{
-						await Logger.LogExceptionAsync( ex );
-						exitCode = ActionExitCode.ArchiveParseError;
-					}
-				}
-
-				return exitCode; // Extraction succeeded
-
-				async Task InnerExtractFileAsync( string sourcePath, CancellationToken cancellationToken )
-				{
-					await semaphore.WaitAsync( cancellationToken ); // Wait for a semaphore slot
-
-					try
-					{
-						cancellationToken.ThrowIfCancellationRequested();
-						var thisFile = new FileInfo( sourcePath );
-						string sourceRelDirPath = PathHelper.GetRelativePath(
-							MainConfig.SourcePath.FullName,
-							sourcePath
-						);
-						argDestinationPath = argDestinationPath
-						                     ?? thisFile.Directory ?? throw new ArgumentNullException( nameof( argDestinationPath ) );
-
-						_ = Logger.LogAsync( $"Using archive path: '{sourceRelDirPath}'" );
-
-						if ( !ArchiveHelper.IsArchive( thisFile ) )
+						}
+						catch ( Exception ex )
 						{
-							if ( !( _parentComponent is null ) )
-							{
-								_ = Logger.LogAsync(
-									$"[Error] '{_parentComponent.Name}' failed to extract file '{thisFile.Name}'. Invalid archive?"
-								);
-							}
+							await Logger.LogExceptionAsync(ex);
+							if ( exitCode == ActionExitCode.Success )
+								exitCode = ActionExitCode.FallbackArchiveExtractionFailed;
+						}
+					}
+					
+					return exitCode; // Extraction succeeded
 
-							exitCode = ActionExitCode.InvalidArchive;
+					async Task InnerExtractFileAsync(string sourcePath, CancellationToken cancellationToken)
+					{
+						if ( cancellationToken.IsCancellationRequested )
 							return;
-						}
+						await semaphore.WaitAsync(cancellationToken); // Wait for a semaphore slot
 
-						// (attempt to) handle self-extracting executable archives (7zip)
-						if ( thisFile.Extension.Equals( value: ".exe", StringComparison.OrdinalIgnoreCase ) )
+						try
 						{
-							(int, string, string) result = await PlatformAgnosticMethods.ExecuteProcessAsync(
-								thisFile.FullName,
-								$" -o\"{thisFile.DirectoryName}\" -y",
-								noAdmin: MainConfig.NoAdmin
+							var thisArchive = new FileInfo(sourcePath);
+							string sourceRelDirPath = PathHelper.GetRelativePath(
+								MainConfig.SourcePath.FullName,
+								sourcePath
 							);
+							argDestinationPath = argDestinationPath
+								?? thisArchive.Directory
+								?? throw new ArgumentNullException(nameof( argDestinationPath ));
 
-							if ( result.Item1 == 0 )
-								return;
+							_ = Logger.LogAsync($"Using archive path: '{sourceRelDirPath}'");
 
-							exitCode = ActionExitCode.InvalidSelfExtractingExecutable;
-							throw new InvalidOperationException(
-								$"'{sourceRelDirPath}' is not a self-extracting executable as previously assumed. Cannot extract."
-							);
-						}
-
-						using ( FileStream stream = File.OpenRead( thisFile.FullName ) )
-						{
-							IArchive archive = null;
-
-							switch ( thisFile.Extension.ToLowerInvariant() )
+							// (attempt to) handle self-extracting executable archives (7zip)
+							if ( thisArchive.Extension.Equals(value: ".exe", StringComparison.OrdinalIgnoreCase) )
 							{
-								case ".zip":
-									archive = ZipArchive.Open( stream );
-									break;
-								case ".rar":
-									archive = RarArchive.Open( stream );
-									break;
-								case ".7z":
-									archive = SevenZipArchive.Open( stream );
-									break;
-							}
-
-							if ( archive is null )
-							{
-								exitCode = ActionExitCode.ArchiveParseError;
-								throw new InvalidOperationException( $"Unable to parse archive '{sourceRelDirPath}'" );
-							}
-
-							IReader reader = archive.ExtractAllEntries();
-							while ( reader.MoveToNextEntry() )
-							{
-								if ( reader.Entry.IsDirectory )
-									continue;
-
-								string extractFolderName = Path.GetFileNameWithoutExtension( thisFile.Name );
-								string destinationItemPath = Path.Combine(
-									argDestinationPath.FullName,
-									extractFolderName,
-									reader.Entry.Key
-								);
-								string destinationDirectory = Path.GetDirectoryName( destinationItemPath );
-								if ( MainConfig.CaseInsensitivePathing && !Directory.Exists( destinationDirectory ) )
-								{
-									destinationDirectory = PathHelper.GetCaseSensitivePath(
-										destinationDirectory,
-										isFile: false
-									).Item1;
-								}
-
-								string destinationRelDirPath = PathHelper.GetRelativePath(
-									MainConfig.SourcePath.FullName,
-									destinationDirectory
+								(int, string, string) result = await PlatformAgnosticMethods.ExecuteProcessAsync(
+									thisArchive.FullName,
+									$" -o\"{thisArchive.DirectoryName}\" -y",
+									noAdmin: MainConfig.NoAdmin
 								);
 
-								if ( !Directory.Exists( destinationDirectory ) )
+								if ( result.Item1 == 0 )
+									return;
+
+								exitCode = ActionExitCode.InvalidSelfExtractingExecutable;
+								throw new InvalidOperationException(
+									$"'{sourceRelDirPath}' is not a self-extracting executable as previously assumed. Cannot extract."
+								);
+							}
+
+							using ( FileStream stream = File.OpenRead(thisArchive.FullName) )
+							{
+								IArchive archive;
+
+								switch ( thisArchive.Extension.ToLowerInvariant() )
 								{
-									_ = Logger.LogAsync( $"Create directory '{destinationRelDirPath}'" );
-									_ = Directory.CreateDirectory( destinationDirectory );
+									case ".zip":
+										archive = ZipArchive.Open(stream);
+										break;
+									case ".rar":
+										archive = RarArchive.Open(stream);
+										break;
+									case ".7z":
+										archive = SevenZipArchive.Open(stream);
+										break;
+									default:
+										exitCode = ActionExitCode.InvalidArchive;
+										throw new InvalidOperationException(
+											$"Unable to parse archive '{sourceRelDirPath}'"
+										);
 								}
 
-								_ = Logger.LogAsync( $"Extract '{reader.Entry.Key}' to '{destinationRelDirPath}'" );
-
-								try
+								IReader reader = archive.ExtractAllEntries();
+								while ( reader.MoveToNextEntry() )
 								{
-									await Task.Run(
-										() => reader.WriteEntryToDirectory(
+									if ( reader.Entry.IsDirectory )
+										continue;
+
+									string extractFolderName = Path.GetFileNameWithoutExtension(thisArchive.Name);
+									string destinationItemPath = Path.Combine(
+										argDestinationPath.FullName,
+										extractFolderName,
+										reader.Entry.Key
+									);
+									string destinationDirectory = Path.GetDirectoryName(destinationItemPath);
+									if ( MainConfig.CaseInsensitivePathing && !Directory.Exists(destinationDirectory) )
+									{
+										destinationDirectory = PathHelper.GetCaseSensitivePath(
 											destinationDirectory,
-											ArchiveHelper.DefaultExtractionOptions
-										),
-										cancellationToken
+											isFile: false
+										).Item1;
+									}
+
+									string destinationRelDirPath = PathHelper.GetRelativePath(
+										MainConfig.SourcePath.FullName,
+										destinationDirectory
 									);
-								}
-								catch ( UnauthorizedAccessException )
-								{
-									_ = Logger.LogWarningAsync(
-										$"Skipping file '{reader.Entry.Key}' due to lack of permissions."
-									);
-									//exitCode = ActionExitCode.UnauthorizedAccessException;
-								}
-								catch ( Exception ex )
-								{
-									_ = Logger.LogWarningAsync(
-										$"Falling back to 7-Zip for '{reader.Entry.Key}' due to an error: {ex.Message}."
-									);
-									cts.Cancel();
+
+									if ( !Directory.Exists(destinationDirectory) )
+									{
+										_ = Logger.LogAsync($"Create directory '{destinationRelDirPath}'");
+										_ = Directory.CreateDirectory(destinationDirectory);
+									}
+
+									_ = Logger.LogAsync($"Extract '{reader.Entry.Key}' to '{destinationRelDirPath}'");
+
+									try
+									{
+										await Task.Run(
+											() => reader.WriteEntryToDirectory(
+												destinationDirectory,
+												ArchiveHelper.DefaultExtractionOptions
+											),
+											cancellationToken
+										);
+									}
+									catch ( UnauthorizedAccessException )
+									{
+										_ = Logger.LogWarningAsync(
+											$"Skipping file '{reader.Entry.Key}' due to lack of permissions."
+										);
+									}
 								}
 							}
 						}
-					}
-					catch ( Exception ex )
-					{
-						_ = Logger.LogWarningAsync(
-							$"Falling back to 7-Zip and restarting entire archive extraction due to an error: {ex.Message}."
-						);
-						cts.Cancel();
-						throw new OperationCanceledException();
-					}
-					finally
-					{
-						_ = semaphore.Release(); // Release the semaphore slot
+						finally
+						{
+							_ = semaphore.Release(); // Release the semaphore slot
+						}
 					}
 				}
+			}
+			catch ( IOException ex2 )
+			{
+				await Logger.LogExceptionAsync(ex2);
+				return ActionExitCode.IOException;
 			}
 			catch ( Exception ex )
 			{
@@ -506,9 +502,9 @@ namespace KOTORModSync.Core
 				try
 				{
 					thisFile.Delete();
-					Logger.Log( $"Deleted file: '{thisFile}'" );
-					Logger.LogVerbose(
-						$"Leaving alone '{fileNameCounts[Path.GetFileNameWithoutExtension( thisFile.Name )] - 1}' files with the same name of '{Path.GetFileNameWithoutExtension( thisFile.Name )}'."
+					_ = Logger.LogAsync( $"Deleted file: '{thisFile}'" );
+					_ = Logger.LogVerboseAsync(
+						$"Leaving alone '{fileNameCounts[Path.GetFileNameWithoutExtension( thisFile.Name )] - 1}' file(s) with the same name of '{Path.GetFileNameWithoutExtension( thisFile.Name )}'."
 					);
 				}
 				catch ( Exception ex )
@@ -527,17 +523,17 @@ namespace KOTORModSync.Core
 
 				if ( string.IsNullOrEmpty( fileNameWithoutExtension ) )
 				{
-					Logger.LogVerbose( $"Conditional 1: fileNameWithoutExtension from '{fileName}' is null or empty" );
+					_ = Logger.LogWarningAsync( $"Skipping '{fileName}' Reason: fileNameWithoutExtension is null/empty somehow?" );
 				}
 				else if ( !fileNameCounts.ContainsKey( fileNameWithoutExtension ) )
 				{
-					Logger.LogVerbose(
-					    $"Conditional 2: '{fileNameWithoutExtension}' is not present in '{fileNameCounts}' ergo no compatible extensions found."
+					_ = Logger.LogVerboseAsync(
+					    $"Skipping '{fileName}' Reason: Not present in dictionary, ergo does not have a desired extension."
 					);
 				}
 				else if ( fileNameCounts[fileNameWithoutExtension] <= 1 )
 				{
-					Logger.LogVerbose( $"Conditional 3: '{fileName}' is the only file with this name." );
+					_ = Logger.LogVerboseAsync($"Skipping '{fileName}' Reason: '{fileNameWithoutExtension}' is the only file with this name.");
 				}
 				else if ( !string.Equals( fileExtensionFromFile, fileExtension, StringComparison.OrdinalIgnoreCase ) )
 				{
@@ -545,8 +541,8 @@ namespace KOTORModSync.Core
 						? " (case-insensitive)"
 						: string.Empty;
 					string message =
-						$"Conditional 4: '{fileExtensionFromFile}' is not equal to '{fileExtension}'{caseInsensitivity}";
-					Logger.LogVerbose( message );
+						$"Skipping '{fileName}' Reason: '{fileExtensionFromFile}' is not the desired extension '{fileExtension}'{caseInsensitivity}";
+					_ = Logger.LogVerboseAsync( message );
 				}
 				else
 				{
@@ -594,7 +590,7 @@ namespace KOTORModSync.Core
 					try
 					{
 						File.Delete( realFilePath );
-						Logger.Log( $"Deleting '{sourceRelDirPath}'..." );
+						_ = Logger.LogAsync($"Deleting '{sourceRelDirPath}'...");
 					}
 					catch ( Exception ex )
 					{
@@ -633,7 +629,7 @@ namespace KOTORModSync.Core
 					// Check if the source file already exists
 					if ( !File.Exists( sourcePath ) )
 					{
-						Logger.Log( $"'{sourceRelDirPath}' does not exist!" );
+						Logger.LogError( $"'{sourceRelDirPath}' does not exist!" );
 						exitCode = ActionExitCode.FileNotFoundPost;
 						continue;
 					}
@@ -652,7 +648,7 @@ namespace KOTORModSync.Core
 						if ( !Overwrite )
 						{
 							exitCode = ActionExitCode.RenameTargetAlreadyExists;
-							Logger.Log(
+							_ = Logger.LogAsync(
 								$"File '{fileName}' already exists in {Path.GetDirectoryName( destinationRelDirPath )},"
 								+ " skipping file. Reason: Overwrite set to False )"
 							);
@@ -660,7 +656,7 @@ namespace KOTORModSync.Core
 							continue;
 						}
 
-						Logger.Log(
+						_ = Logger.LogAsync(
 							$"Removing pre-existing file '{destinationRelDirPath}' Reason: Overwrite set to True"
 						);
 						File.Delete( destinationFilePath );
@@ -669,7 +665,7 @@ namespace KOTORModSync.Core
 					// Move the file
 					try
 					{
-						Logger.Log( $"Rename '{sourceRelDirPath}' to '{destinationRelDirPath}'" );
+						_ = Logger.LogAsync( $"Rename '{sourceRelDirPath}' to '{destinationRelDirPath}'" );
 						File.Move( sourcePath, destinationFilePath );
 					}
 					catch ( IOException ex )
@@ -691,9 +687,9 @@ namespace KOTORModSync.Core
 		}
 
 		public async Task<ActionExitCode> CopyFileAsync(
-			// ReSharper disable once AssignNullToNotNullAttribute
+			// ReSharper disable twice AssignNullToNotNullAttribute
 			[ItemNotNull][NotNull] List<string> sourcePaths = null,
-			DirectoryInfo destinationPath = null
+			[NotNull] DirectoryInfo destinationPath = null
 		)
 		{
 			if ( sourcePaths.IsNullOrEmptyCollection() )
@@ -705,87 +701,85 @@ namespace KOTORModSync.Core
 				destinationPath = RealDestinationPath;
 			if ( destinationPath?.Exists != true )
 				throw new ArgumentNullException( nameof( destinationPath ) );
-
-			int initialCount = MainConfig.UseMultiThreadedIO
-				? 8
-				: 1;
+			
 			int maxCount = MainConfig.UseMultiThreadedIO
 				? 16
 				: 1;
-			var semaphore = new SemaphoreSlim( initialCount, maxCount );
-
-			async Task CopyIndividualFileAsync( string sourcePath )
+			using ( var semaphore = new SemaphoreSlim(initialCount: 1, maxCount) )
 			{
-				await semaphore.WaitAsync(); // Wait for a semaphore slot
-				try
+				async Task CopyIndividualFileAsync( string sourcePath )
 				{
-					string sourceRelDirPath = PathHelper.GetRelativePath( MainConfig.SourcePath.FullName, sourcePath );
-					string fileName = Path.GetFileName( sourcePath );
-					string destinationFilePath = MainConfig.CaseInsensitivePathing
-						? PathHelper.GetCaseSensitivePath(
-							Path.Combine( destinationPath.FullName, fileName ),
-							isFile: true
-						).Item1
-						: Path.Combine( destinationPath.FullName, fileName );
-					string destinationRelDirPath = PathHelper.GetRelativePath(
-						MainConfig.DestinationPath.FullName,
-						destinationFilePath
-					);
-
-					// Check if the destination file already exists
-					if ( File.Exists( destinationFilePath ) )
+					await semaphore.WaitAsync(); // Wait for a semaphore slot
+					try
 					{
-						if ( !Overwrite )
-						{
-							await Logger.LogWarningAsync(
-								$"File '{fileName}' already exists in {Path.GetDirectoryName( destinationRelDirPath )},"
-								+ " skipping file. Reason: Overwrite set to False )"
-							);
+						string sourceRelDirPath = PathHelper.GetRelativePath( MainConfig.SourcePath.FullName, sourcePath );
+						string fileName = Path.GetFileName( sourcePath );
+						string destinationFilePath = MainConfig.CaseInsensitivePathing
+							? PathHelper.GetCaseSensitivePath(
+								Path.Combine( destinationPath.FullName, fileName ),
+								isFile: true
+							).Item1
+							: Path.Combine( destinationPath.FullName, fileName );
+						string destinationRelDirPath = PathHelper.GetRelativePath(
+							MainConfig.DestinationPath.FullName,
+							destinationFilePath
+						);
 
-							return;
+						// Check if the destination file already exists
+						if ( File.Exists( destinationFilePath ) )
+						{
+							if ( !Overwrite )
+							{
+								_ = Logger.LogWarningAsync(
+									$"File '{fileName}' already exists in {Path.GetDirectoryName( destinationRelDirPath )},"
+									+ " skipping file. Reason: Overwrite set to False )"
+								);
+
+								return;
+							}
+
+							_ = Logger.LogAsync(
+								$"File '{fileName}' already exists in {Path.GetDirectoryName( destinationRelDirPath )},"
+								+ $" deleting pre-existing file '{destinationRelDirPath}' Reason: Overwrite set to True"
+							);
+							File.Delete( destinationFilePath );
 						}
 
-						await Logger.LogAsync(
-							$"File '{fileName}' already exists in {Path.GetDirectoryName( destinationRelDirPath )},"
-							+ $" deleting pre-existing file '{destinationRelDirPath}' Reason: Overwrite set to True"
-						);
-						File.Delete( destinationFilePath );
+						_ = Logger.LogAsync( $"Copy '{sourceRelDirPath}' to '{destinationRelDirPath}'" );
+						File.Copy( sourcePath, destinationFilePath );
 					}
-
-					await Logger.LogAsync( $"Copy '{sourceRelDirPath}' to '{destinationRelDirPath}'" );
-					File.Copy( sourcePath, destinationFilePath );
+					catch ( Exception ex )
+					{
+						await Logger.LogExceptionAsync( ex );
+						throw;
+					}
+					finally
+					{
+						_ = semaphore.Release(); // Release the semaphore slot
+					}
 				}
-				catch ( Exception ex )
+
+				if ( sourcePaths is null )
+					throw new NullReferenceException( nameof( sourcePaths ) );
+
+				var tasks = sourcePaths.Select( CopyIndividualFileAsync ).ToList();
+
+				try
 				{
-					await Logger.LogExceptionAsync( ex );
-					throw;
+					await Task.WhenAll( tasks ); // Wait for all move tasks to complete
+					return ActionExitCode.Success;
 				}
-				finally
+				catch
 				{
-					_ = semaphore.Release(); // Release the semaphore slot
+					return ActionExitCode.UnknownError;
 				}
-			}
-
-			if ( sourcePaths is null )
-				throw new NullReferenceException( nameof( sourcePaths ) );
-
-			var tasks = sourcePaths.Select( CopyIndividualFileAsync ).ToList();
-
-			try
-			{
-				await Task.WhenAll( tasks ); // Wait for all move tasks to complete
-				return ActionExitCode.Success;
-			}
-			catch
-			{
-				return ActionExitCode.UnknownError;
 			}
 		}
 
 		public async Task<ActionExitCode> MoveFileAsync(
-			// ReSharper disable once AssignNullToNotNullAttribute
+			// ReSharper disable twice AssignNullToNotNullAttribute
 			[ItemNotNull][NotNull] List<string> sourcePaths = null,
-			DirectoryInfo destinationPath = null
+			[NotNull] DirectoryInfo destinationPath = null
 		)
 		{
 			if ( sourcePaths.IsNullOrEmptyCollection() )
@@ -797,81 +791,81 @@ namespace KOTORModSync.Core
 				destinationPath = RealDestinationPath;
 			if ( destinationPath?.Exists != true )
 				throw new ArgumentNullException( nameof( destinationPath ) );
-
-			int initialCount = MainConfig.UseMultiThreadedIO
-				? 8
-				: 1;
+			
 			int maxCount = MainConfig.UseMultiThreadedIO
 				? 16
 				: 1;
-			var semaphore = new SemaphoreSlim( initialCount, maxCount );
-
-			async Task MoveIndividualFileAsync( string sourcePath )
+			using ( var semaphore = new SemaphoreSlim(initialCount: 1, maxCount) )
 			{
-				await semaphore.WaitAsync(); // Wait for a semaphore slot
-
-				try
+				async Task MoveIndividualFileAsync(string sourcePath)
 				{
-					string sourceRelDirPath = PathHelper.GetRelativePath( MainConfig.SourcePath.FullName, sourcePath );
-					string fileName = Path.GetFileName( sourcePath );
-					string destinationFilePath = MainConfig.CaseInsensitivePathing
-						? PathHelper.GetCaseSensitivePath(
-							Path.Combine( destinationPath.FullName, fileName ),
-							isFile: true
-						).Item1
-						: Path.Combine( destinationPath.FullName, fileName );
-					string destinationRelDirPath = PathHelper.GetRelativePath(
-						MainConfig.DestinationPath.FullName,
-						destinationFilePath
-					);
+					await semaphore.WaitAsync(); // Wait for a semaphore slot
 
-					// Check if the destination file already exists
-					if ( File.Exists( destinationFilePath ) )
+					try
 					{
-						if ( !Overwrite )
-						{
-							await Logger.LogWarningAsync(
-								$"File '{fileName}' already exists in {Path.GetDirectoryName( destinationRelDirPath )},"
-								+ " skipping file. Reason: Overwrite set to False )"
-							);
+						string sourceRelDirPath = PathHelper.GetRelativePath(
+							MainConfig.SourcePath.FullName,
+							sourcePath
+						);
+						string fileName = Path.GetFileName(sourcePath);
+						string destinationFilePath = MainConfig.CaseInsensitivePathing
+							? PathHelper.GetCaseSensitivePath(
+								Path.Combine(destinationPath.FullName, fileName),
+								isFile: true
+							).Item1
+							: Path.Combine(destinationPath.FullName, fileName);
+						string destinationRelDirPath = PathHelper.GetRelativePath(
+							MainConfig.DestinationPath.FullName,
+							destinationFilePath
+						);
 
-							return;
+						// Check if the destination file already exists
+						if ( File.Exists(destinationFilePath) )
+						{
+							if ( !Overwrite )
+							{
+								_ = Logger.LogWarningAsync(
+									$"File '{fileName}' already exists in {Path.GetDirectoryName(destinationRelDirPath)},"
+									+ " skipping file. Reason: Overwrite set to False )"
+								);
+
+								return;
+							}
+
+							_ = Logger.LogAsync(
+								$"File '{fileName}' already exists in {Path.GetDirectoryName(destinationRelDirPath)},"
+								+ $" deleting pre-existing file '{destinationRelDirPath}' Reason: Overwrite set to True"
+							);
+							File.Delete(destinationFilePath);
 						}
 
-						await Logger.LogAsync(
-							$"File '{fileName}' already exists in {Path.GetDirectoryName( destinationRelDirPath )},"
-							+ $" deleting pre-existing file '{destinationRelDirPath}' Reason: Overwrite set to True"
-						);
-						File.Delete( destinationFilePath );
+						_ = Logger.LogAsync($"Move '{sourceRelDirPath}' to '{destinationRelDirPath}'");
+						File.Move(sourcePath, destinationFilePath);
 					}
-
-					await Logger.LogAsync( $"Move '{sourceRelDirPath}' to '{destinationRelDirPath}'" );
-					File.Move( sourcePath, destinationFilePath );
+					catch ( Exception ex )
+					{
+						await Logger.LogExceptionAsync(ex);
+						throw;
+					}
+					finally
+					{
+						_ = semaphore.Release(); // Release the semaphore slot
+					}
 				}
-				catch ( Exception ex )
+
+				if ( sourcePaths is null )
+					throw new NullReferenceException( nameof( sourcePaths ) );
+
+				var tasks = sourcePaths.Select( MoveIndividualFileAsync ).ToList();
+				try
 				{
-					await Logger.LogExceptionAsync( ex );
-					throw;
+					await Task.WhenAll( tasks ); // Wait for all move tasks to complete
+					return ActionExitCode.Success;
 				}
-				finally
+				catch
 				{
-					_ = semaphore.Release(); // Release the semaphore slot
+					return ActionExitCode.UnknownError;
 				}
-			}
-
-			if ( sourcePaths is null )
-				throw new NullReferenceException( nameof( sourcePaths ) );
-
-			var tasks = sourcePaths.Select( MoveIndividualFileAsync ).ToList();
-
-			try
-			{
-				await Task.WhenAll( tasks ); // Wait for all move tasks to complete
-				return ActionExitCode.Success;
-			}
-			catch
-			{
-				return ActionExitCode.UnknownError;
 			}
 		}
 

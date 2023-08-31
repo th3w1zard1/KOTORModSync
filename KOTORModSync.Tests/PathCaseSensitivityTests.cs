@@ -47,7 +47,7 @@ namespace KOTORModSync.Tests
 		{
 			DirectoryInfo? directory = null;
 			// ReSharper disable once ReturnValueOfPureMethodIsNotUsed
-			_ = Assert.Throws<ArgumentNullException>( () => PathHelper.FindCaseInsensitiveDuplicates( directory! )?.ToList() );
+			_ = Assert.Throws<ArgumentNullException>( () => PathHelper.FindCaseInsensitiveDuplicates( directory! ).ToList() );
 		}
 
 
@@ -283,7 +283,7 @@ namespace KOTORModSync.Tests
 		[Test]
 		public void TestInvalidPath()
 		{
-			Assert.Throws<ArgumentException>(
+			_ = Assert.Throws<ArgumentException>(
 				// ReSharper disable once ReturnValueOfPureMethodIsNotUsed
 				() => PathHelper.FindCaseInsensitiveDuplicates( "Invalid>Path" )?.ToList()
 			);
@@ -341,8 +341,11 @@ namespace KOTORModSync.Tests
 
 			// Act & Assert
 			(string, bool?) result = PathHelper.GetCaseSensitivePath( upperCasePath );
-			Assert.That( result.Item1, Is.EqualTo( Path.Combine( s_testDirectory, fileName.ToUpperInvariant() ) ) );
-			Assert.That( result.Item2, Is.Null );
+			Assert.Multiple( () =>
+			{
+				Assert.That( result.Item1, Is.EqualTo( Path.Combine( s_testDirectory, fileName.ToUpperInvariant() ) ) );
+				Assert.That( result.Item2, Is.Null );
+			} );
 		}
 
 		[Test]

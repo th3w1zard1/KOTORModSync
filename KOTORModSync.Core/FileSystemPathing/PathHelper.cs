@@ -17,15 +17,6 @@ namespace KOTORModSync.Core.FileSystemPathing
 {
     public static class PathHelper
     {
-	    // if it's a folder, return path as is, if it's a file get the parent dir.
-	    [CanBeNull]
-        public static string GetFolderName( [CanBeNull] string filePath )
-        {
-            return Path.HasExtension( filePath )
-                ? Path.GetDirectoryName( filePath )
-                : filePath;
-        }
-
         [CanBeNull]
         public static DirectoryInfo TryGetValidDirectoryInfo( [CanBeNull] string folderPath )
         {
@@ -70,12 +61,13 @@ namespace KOTORModSync.Core.FileSystemPathing
             }
         }
 
-        public static string ConvertWindowsPathToCaseSensitive( string path )
+        [NotNull]
+        public static string ConvertWindowsPathToCaseSensitive( [NotNull] string path )
         {
+	        if ( string.IsNullOrWhiteSpace( path ) )
+		        throw new ArgumentException( $"'{nameof( path )}' cannot be null or whitespace.", nameof( path ) );
             if ( Environment.OSVersion.Platform != PlatformID.Win32NT )
                 return path;
-            if ( string.IsNullOrWhiteSpace( path ) )
-                throw new ArgumentException( $"'{nameof( path )}' cannot be null or whitespace.", nameof( path ) );
             if ( !PathValidator.IsValidPath( path ) )
                 throw new ArgumentException( $"{path} is not a valid path!" );
 
@@ -120,16 +112,26 @@ namespace KOTORModSync.Core.FileSystemPathing
             }
         }
 
-        public static string GetRelativePath(string relativeTo, string path) => GetRelativePath(relativeTo, path, StringComparison.OrdinalIgnoreCase);
+        [NotNull]
+        public static string GetRelativePath([NotNull] string relativeTo, [NotNull] string path) => GetRelativePath(relativeTo, path, StringComparison.OrdinalIgnoreCase);
 
-        private static string GetRelativePath(string relativeTo, string path, StringComparison comparisonType)
+        [NotNull]
+        private static string GetRelativePath([NotNull] string relativeTo, [NotNull] string path, StringComparison comparisonType)
         {
-            if (string.IsNullOrEmpty(relativeTo))
-                throw new ArgumentException("Path cannot be empty", nameof(relativeTo));
-            if (string.IsNullOrEmpty(path))
-                throw new ArgumentException("Path cannot be empty", nameof(path));
+	        if ( string.IsNullOrWhiteSpace( relativeTo ) )
+		        throw new ArgumentException( message: "Value cannot be null or whitespace.", nameof( relativeTo ) );
+	        if ( string.IsNullOrWhiteSpace( path ) )
+		        throw new ArgumentException( message: "Value cannot be null or whitespace.", nameof( path ) );
+			if ( !Enum.IsDefined( typeof( StringComparison ), comparisonType ) )
+			{
+				throw new InvalidEnumArgumentException(
+		            nameof( comparisonType ),
+		            (int)comparisonType,
+		            typeof( StringComparison )
+	            );
+			}
 
-            relativeTo = Path.GetFullPath(FixPathFormatting(relativeTo));
+			relativeTo = Path.GetFullPath(FixPathFormatting(relativeTo));
             path = Path.GetFullPath(FixPathFormatting(path));
 
             if (!AreRootsEqual(relativeTo, path, comparisonType))
@@ -283,8 +285,8 @@ namespace KOTORModSync.Core.FileSystemPathing
             // quick lookup
             bool fileExists = File.Exists(formattedPath);
             bool folderExists = Directory.Exists(formattedPath);
-            if (fileExists && (isFile == true || !folderExists)) return (ConvertWindowsPathToCaseSensitive(formattedPath), true);
-            if (folderExists && (isFile == false || !fileExists)) return (ConvertWindowsPathToCaseSensitive(formattedPath), false);
+            if ( fileExists && (isFile == true || !folderExists) ) return (ConvertWindowsPathToCaseSensitive(formattedPath), true);
+            if ( folderExists && (isFile == false || !fileExists) ) return (ConvertWindowsPathToCaseSensitive(formattedPath), false);
 
             string[] parts = formattedPath.Split(new [] {Path.DirectorySeparatorChar}, StringSplitOptions.RemoveEmptyEntries);
 
@@ -294,10 +296,10 @@ namespace KOTORModSync.Core.FileSystemPathing
 
             // insert the root into the list (will be / on unix, and drive name (e.g. C:\\ on windows)
             string currentPath = Path.GetPathRoot(formattedPath);
-            if (!string.IsNullOrEmpty(currentPath) && !Path.IsPathRooted(parts[0]))
+            if ( !string.IsNullOrEmpty(currentPath) && !Path.IsPathRooted(parts[0]) )
                 parts = new[] { currentPath }.Concat( parts ).ToArray();
             // append directory separator to drive roots
-            if (parts[0].EndsWith(":"))
+            if ( parts[0].EndsWith(":") )
                 parts[0] += Path.DirectorySeparatorChar;
 
             int largestExistingPathPartsIndex = -1;
@@ -307,7 +309,7 @@ namespace KOTORModSync.Core.FileSystemPathing
                 // find the closest matching file/folder in the current path for unix, useful for duplicates.
                 string previousCurrentPath = Path.Combine(parts.Take(i).ToArray());
                 currentPath = Path.Combine(previousCurrentPath, parts[i]);
-                if (Environment.OSVersion.Platform != PlatformID.Win32NT && Directory.Exists(previousCurrentPath))
+                if ( Environment.OSVersion.Platform != PlatformID.Win32NT && Directory.Exists(previousCurrentPath) )
                 {
                     int maxMatchingCharacters = -1;
                     string closestMatch = parts[i];
@@ -318,7 +320,7 @@ namespace KOTORModSync.Core.FileSystemPathing
                         .EnumerateFileSystemInfosSafely( searchPattern: "*" )
                     )
                     {
-                        if (folderOrFileInfo is null || !folderOrFileInfo.Exists)
+                        if ( folderOrFileInfo is null || !folderOrFileInfo.Exists )
                             continue;
 
                         int matchingCharacters = GetMatchingCharactersCount(folderOrFileInfo.Name, parts[i]);
@@ -360,20 +362,20 @@ namespace KOTORModSync.Core.FileSystemPathing
 
         private static int GetMatchingCharactersCount(string str1, string str2)
         {
-            if (string.IsNullOrEmpty(str1))
+            if ( string.IsNullOrEmpty(str1) )
                 throw new ArgumentException("Value cannot be null or empty.", nameof(str1));
-            if (string.IsNullOrEmpty(str2))
+            if ( string.IsNullOrEmpty(str2) )
                 throw new ArgumentException("Value cannot be null or empty.", nameof(str2));
 
             int matchingCount = 0;
-            for (int i = 0; i < str1.Length && i < str2.Length; i++)
+            for ( int i = 0; i < str1.Length && i < str2.Length; i++ )
             {
                 // don't consider a match if any char in the paths are not case-insensitive matches.
-                if (char.ToLowerInvariant(str1[i]) != char.ToLowerInvariant(str2[i]))
+                if ( char.ToLowerInvariant(str1[i]) != char.ToLowerInvariant(str2[i]) )
                     return -1;
 
                 // increment matching count if case-sensitive match at this char index succeeds
-                if (str1[i] == str2[i])
+                if ( str1[i] == str2[i] )
                     matchingCount++;
             }
 
@@ -420,14 +422,14 @@ namespace KOTORModSync.Core.FileSystemPathing
         )
         {
             if ( filesAndFolders is null )
-                throw new ArgumentNullException( nameof( filesAndFolders ) );
+                throw new ArgumentNullException( nameof(filesAndFolders) );
 
             var result = new List<string>();
             var uniquePaths = new HashSet<string>( filesAndFolders );
 
             foreach ( string path in uniquePaths )
             {
-                if ( string.IsNullOrEmpty( path ) )
+                if ( string.IsNullOrEmpty(path) )
                     continue;
 
                 try
@@ -435,10 +437,10 @@ namespace KOTORModSync.Core.FileSystemPathing
                     string formattedPath = FixPathFormatting( path );
 
                     // ReSharper disable once AssignNullToNotNullAttribute
-                    if ( !ContainsWildcards( formattedPath ) )
+                    if ( !ContainsWildcards(formattedPath) )
                     {
                         // Handle non-wildcard paths
-                        if ( File.Exists( formattedPath ) )
+                        if ( File.Exists(formattedPath) )
                             result.Add( formattedPath );
 
                         continue;
@@ -449,7 +451,7 @@ namespace KOTORModSync.Core.FileSystemPathing
                     // determine the closest parent folder in hierarchy that doesn't have wildcards
                     // then wildcard match them all by hierarchy level.
                     string currentDir = formattedPath;
-                    while ( ContainsWildcards( currentDir ) )
+                    while ( ContainsWildcards(currentDir) )
                     {
                         string parentDirectory = Path.GetDirectoryName( currentDir );
 
@@ -475,7 +477,7 @@ namespace KOTORModSync.Core.FileSystemPathing
                     result.AddRange(
 	                    from thisFile in checkFiles
 	                    where thisFile != null
-		                    && WildcardPathMatch( thisFile.FullName, formattedPath )
+		                      && WildcardPathMatch( thisFile.FullName, formattedPath )
 	                    select thisFile.FullName
                     );
 
@@ -491,7 +493,7 @@ namespace KOTORModSync.Core.FileSystemPathing
 	                    {
 		                    // Get all files in the parent directory.
 		                    if ( !(thisDuplicateFolder is DirectoryInfo dirInfo) )
-			                    throw new NullReferenceException(nameof( dirInfo ));
+			                    throw new NullReferenceException( nameof(dirInfo) );
 
 		                    checkFiles = dirInfo.EnumerateFilesSafely(
 			                    searchPattern: "*",
@@ -503,7 +505,7 @@ namespace KOTORModSync.Core.FileSystemPathing
 		                    result.AddRange(
 			                    from thisFile in checkFiles
 			                    where thisFile != null
-				                    && WildcardPathMatch( thisFile.FullName, formattedPath )
+				                      && WildcardPathMatch( thisFile.FullName, formattedPath )
 			                    select thisFile.FullName
 		                    );
 	                    }
@@ -552,7 +554,7 @@ namespace KOTORModSync.Core.FileSystemPathing
                     continue;
 
                 // Check if the current level matches the pattern
-                if ( !WildcardMatch( inputLevel, patternLevel ) )
+                if ( !WildcardMatch(inputLevel, patternLevel) )
                     return false;
             }
 
@@ -584,9 +586,9 @@ namespace KOTORModSync.Core.FileSystemPathing
         public static string FixPathFormatting( [NotNull] string path )
         {
             if ( path is null )
-                throw new ArgumentNullException( nameof( path ) );
+                throw new ArgumentNullException( nameof(path) );
 
-            if ( string.IsNullOrWhiteSpace( path ) )
+            if ( string.IsNullOrWhiteSpace(path) )
                 return path;
 
             // Replace all slashes with the operating system's path separator
@@ -656,7 +658,7 @@ namespace KOTORModSync.Core.FileSystemPathing
 	            case true:
 		            {
 			            string parentDir = Path.GetDirectoryName( formattedPath );
-			            if ( !string.IsNullOrEmpty(parentDir) && !( dirInfo = new DirectoryInfo( parentDir ) ).Exists )
+			            if ( !string.IsNullOrEmpty(parentDir) && !( dirInfo = new DirectoryInfo(parentDir) ).Exists )
 			            {
 				            dirInfo = new DirectoryInfo(
 					            GetCaseSensitivePath( parentDir ).Item1
@@ -697,10 +699,10 @@ namespace KOTORModSync.Core.FileSystemPathing
             {
                 if ( !file.Exists )
                     continue;
-                if (isFile == true && !file.Name.Equals( fileName, StringComparison.OrdinalIgnoreCase ))
+                if ( isFile == true && !file.Name.Equals(fileName, StringComparison.OrdinalIgnoreCase) )
                     continue;
 
-                string filePath = file.FullName.ToLowerInvariant();
+                string filePath = file.FullName;
                 if ( !fileList.TryGetValue( filePath, out List<FileSystemInfo> files ) )
                 {
                     files = new List<FileSystemInfo>();
@@ -730,19 +732,19 @@ namespace KOTORModSync.Core.FileSystemPathing
                     continue;
 
                 if ( !folderList.TryGetValue(
-                    subDirectory.FullName.ToLowerInvariant(),
+                    subDirectory.FullName,
                     out List<FileSystemInfo> folders
                 ) )
                 {
                     folders = new List<FileSystemInfo>();
-                    folderList.Add( subDirectory.FullName.ToLowerInvariant(), folders );
+                    folderList.Add( subDirectory.FullName, folders );
                 }
 
                 folders.Add( subDirectory );
 
                 if ( includeSubFolders )
                 {
-                    foreach ( FileSystemInfo duplicate in FindCaseInsensitiveDuplicates( subDirectory ) )
+                    foreach ( FileSystemInfo duplicate in FindCaseInsensitiveDuplicates(subDirectory) )
                     {
                         yield return duplicate;
                     }

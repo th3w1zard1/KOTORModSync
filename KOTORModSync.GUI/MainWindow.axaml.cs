@@ -107,7 +107,7 @@ namespace KOTORModSync
                 if ( _searchText == value ) return; // prevent recursion problems
 
                 _searchText = value;
-                PropertyChanged?.Invoke( this, new PropertyChangedEventArgs( nameof( SearchText ) ) );
+                PropertyChanged?.Invoke( this, new PropertyChangedEventArgs( nameof(SearchText) ) );
             }
         }
 
@@ -170,14 +170,21 @@ namespace KOTORModSync
 
         private void SearchText_PropertyChanged( [NotNull] object sender, [NotNull] PropertyChangedEventArgs e )
         {
-            if ( e.PropertyName != nameof( SearchText ) )
-                return;
+	        try
+	        {
+		        if ( e.PropertyName != nameof( SearchText ) )
+			        return;
 
-            // Get the root item of the TreeView
-            var rootItem = (TreeViewItem)LeftTreeView.ContainerFromIndex(0);
+		        // Get the root item of the TreeView
+		        var rootItem = (TreeViewItem)LeftTreeView.ContainerFromIndex(0);
 
-            if ( !( rootItem is null ) && !( SearchText is null ) )
-                FilterControlListItems( rootItem, SearchText );
+		        if ( !( rootItem is null ) && !( SearchText is null ) )
+			        FilterControlListItems( rootItem, SearchText );
+	        }
+	        catch ( Exception exception )
+	        {
+		        Logger.LogException( exception );
+	        }
         }
 
         public static void FilterControlListItems( [NotNull] object item, [NotNull] string searchText )
@@ -248,7 +255,6 @@ namespace KOTORModSync
             }
         }
 
-        // Prevents a combobox click from dragging the window around.
         private void FindComboBoxes( [CanBeNull] Control control )
         {
             if ( !( control is ILogical visual ) )
@@ -274,7 +280,8 @@ namespace KOTORModSync
                 }
             }
         }
-
+		
+        // Prevents a combobox click from dragging the window around.
         public void FindComboBoxesInWindow( [NotNull] Window thisWindow )
         {
             if ( thisWindow is null )
@@ -422,7 +429,7 @@ namespace KOTORModSync
                 if ( VisualRoot is Window parent )
                 {
                     string filePath = await dialog.ShowAsync( parent );
-                    if ( !string.IsNullOrEmpty( filePath ) )
+                    if ( !string.IsNullOrEmpty(filePath) )
                     {
                         await Logger.LogAsync( $"Selected file: {filePath}" );
                         return filePath;
@@ -444,14 +451,14 @@ namespace KOTORModSync
         [ItemCanBeNull]
         private async Task<string[]> ShowFileDialog(
             bool isFolderDialog,
-            [CanBeNull] List<FileDialogFilter> filters = null,
+            [CanBeNull] IReadOnlyCollection<FileDialogFilter> filters = null,
             bool allowMultiple = false,
             string startFolder = null
         )
         {
             try
             {
-                if ( !( VisualRoot is Window parent ) )
+                if ( !(VisualRoot is Window parent) )
                 {
                     await Logger.LogErrorAsync(
                         $"Could not open {( isFolderDialog ? "folder" : "file" )} dialog - parent window not found"
@@ -728,7 +735,7 @@ namespace KOTORModSync
 
                 // Open the file dialog to select a file
                 List<string> files = await OpenFiles();
-                if ( files is null )
+                if ( files is null || files.Count == 0 )
                 {
                     _ = Logger.LogVerboseAsync(
                         "No files chosen in BrowseSourceFiles_Click, returning to previous values"
@@ -736,7 +743,7 @@ namespace KOTORModSync
                     return;
                 }
 
-                if ( files.Any( string.IsNullOrEmpty ) )
+                if ( files.IsNullOrEmptyOrAllNull() )
                 {
                     throw new ArgumentOutOfRangeException(
                         nameof( files ),
@@ -763,6 +770,7 @@ namespace KOTORModSync
                 thisInstruction.Source = files;
 
                 // refresh the text box
+                // ReSharper disable once InvertIf
                 if ( button.Tag is TextBox sourceTextBox )
                 {
                     string convertedItems = new ListToStringConverter().Convert(
@@ -1812,40 +1820,34 @@ namespace KOTORModSync
         private void RawEditTextBox_LostFocus( [NotNull] object sender, [NotNull] RoutedEventArgs e ) =>
             e.Handled = true;
 
-        private bool CurrentComponentHasChanges()
-        {
-            if ( CurrentComponent == null )
-                return false;
-
-            if ( string.IsNullOrWhiteSpace( RawEditTextBox.Text ) )
-                return false;
-
-            return RawEditTextBox.Text != CurrentComponent.SerializeComponent();
-        }
+        private bool CurrentComponentHasChanges() =>
+	        CurrentComponent != null
+	        && !string.IsNullOrWhiteSpace(RawEditTextBox.Text)
+	        && RawEditTextBox.Text != CurrentComponent.SerializeComponent();
 
         /// <summary>
-        /// Asynchronous method that determines if changes should be saved before performing an action.
-        /// This method checks if the current component has any changes and prompts the user for confirmation if necessary.
-        /// 
-        /// The method attempts to deserialize the raw config text from the "RawEditTextBox" into a new Component instance.
-        /// If the deserialization process fails due to syntax errors, it will display a confirmation dialog to the user despite the 'noPrompt' boolean,
-        /// offering to discard the changes and continue with the last attempted action. If the user chooses to discard,
-        /// the method returns true, indicating that the changes should not be saved.
-        /// 
-        /// The method then tries to find the corresponding component in the "MainConfig.AllComponents" collection.
-        /// If the index of the current component cannot be found or is out of range, the method logs an error,
-        /// displays an information dialog to the user, and returns false, indicating that the changes cannot be saved.
-        /// 
-        /// If all checks pass successfully, the method updates the properties of the component in the "MainConfig.AllComponents" collection
-        /// with the deserialized new component, sets the current component to the new one, and refreshes the tree view to reflect the changes.
-        /// 
-        /// **Note**: This method involves multiple asynchronous operations and may not complete immediately.
-        /// Any unexpected exceptions that occur during the process are caught, logged, and displayed to the user via an information dialog.
-        /// 
-        /// </summary>
-        /// <param name="noPrompt">A boolean flag indicating whether the user should be prompted to save changes. Default is false.</param>
-        /// <returns>True if the changes should be saved or if no changes are detected. False if the user chooses not to save or if an error occurs.</returns>
-        private async Task<bool> ShouldSaveChanges( bool noPrompt = false )
+		/// Asynchronous method that determines if changes should be saved before performing an action.
+		/// This method checks if the current component has any changes and prompts the user for confirmation if necessary.
+		/// 
+		/// The method attempts to deserialize the raw config text from the "RawEditTextBox" into a new Component instance.
+		/// If the deserialization process fails due to syntax errors, it will display a confirmation dialog to the user despite the 'noPrompt' boolean,
+		/// offering to discard the changes and continue with the last attempted action. If the user chooses to discard,
+		/// the method returns true, indicating that the changes should not be saved.
+		/// 
+		/// The method then tries to find the corresponding component in the "MainConfig.AllComponents" collection.
+		/// If the index of the current component cannot be found or is out of range, the method logs an error,
+		/// displays an information dialog to the user, and returns false, indicating that the changes cannot be saved.
+		/// 
+		/// If all checks pass successfully, the method updates the properties of the component in the "MainConfig.AllComponents" collection
+		/// with the deserialized new component, sets the current component to the new one, and refreshes the tree view to reflect the changes.
+		/// 
+		/// **Note**: This method involves multiple asynchronous operations and may not complete immediately.
+		/// Any unexpected exceptions that occur during the process are caught, logged, and displayed to the user via an information dialog.
+		/// 
+		/// </summary>
+		/// <param name="noPrompt">A boolean flag indicating whether the user should be prompted to save changes. Default is false.</param>
+		/// <returns>True if the changes should be saved or if no changes are detected. False if the user chooses not to save or if an error occurs.</returns>
+		private async Task<bool> ShouldSaveChanges( bool noPrompt = false )
         {
             string output;
             try
@@ -1984,7 +1986,7 @@ namespace KOTORModSync
                 if ( rootItem is null )
                     return;
 
-                Logger.LogVerbose( $"Saving TOML config to {filePath}" );
+                await Logger.LogVerboseAsync( $"Saving TOML config to {filePath}" );
 
                 using ( var writer = new StreamWriter( filePath ) )
                 {
@@ -2052,7 +2054,8 @@ namespace KOTORModSync
                 // Handling conflicts based on what's defined for THIS component
                 if ( conflicts.TryGetValue( key: "Dependency", out List<Component> dependencyConflicts ) )
                 {
-                    foreach ( Component conflictComponent in dependencyConflicts )
+	                // ReSharper disable once ForeachCanBePartlyConvertedToQueryUsingAnotherGetEnumerator
+	                foreach ( Component conflictComponent in dependencyConflicts )
                     {
                         // ReSharper disable once InvertIf
                         if ( conflictComponent?.IsSelected == false )
@@ -2065,7 +2068,8 @@ namespace KOTORModSync
 
                 if ( conflicts.TryGetValue( key: "Restriction", out List<Component> restrictionConflicts ) )
                 {
-                    foreach ( Component conflictComponent in restrictionConflicts )
+	                // ReSharper disable once ForeachCanBePartlyConvertedToQueryUsingAnotherGetEnumerator
+	                foreach ( Component conflictComponent in restrictionConflicts )
                     {
                         // ReSharper disable once InvertIf
                         if ( conflictComponent?.IsSelected == true )
@@ -2077,6 +2081,7 @@ namespace KOTORModSync
                 }
 
                 // Handling OTHER component's defined restrictions based on the change to THIS component.
+                // ReSharper disable once ForeachCanBePartlyConvertedToQueryUsingAnotherGetEnumerator
                 foreach ( Component c in MainConfig.AllComponents )
                 {
                     if ( !c.IsSelected || !c.Restrictions.Contains( component.Guid ) )
@@ -2152,25 +2157,26 @@ namespace KOTORModSync
         }
 
         // Set up the event handler for the checkbox
-        private void OnCheckBoxOnChecked( object sender, RoutedEventArgs e )
+        private void OnCheckBoxChanged(object sender, RoutedEventArgs e)
         {
-            if ( !( sender is CheckBox checkBox ) )
-                return;
-            if ( !( checkBox.Tag is Component thisComponent ) )
-                return;
+	        try
+	        {
+		        if ( !( sender is CheckBox checkBox ) )
+			        return;
+		        if ( !( checkBox.Tag is Component thisComponent ) )
+			        return;
 
-            ComponentCheckboxChecked( thisComponent, new HashSet<Component>() );
-        }
-
-
-        private void OnCheckBoxOnUnchecked( object sender, RoutedEventArgs e )
-        {
-            if ( !( sender is CheckBox checkBox ) )
-                return;
-            if ( !( checkBox.Tag is Component thisComponent ) )
-                return;
-
-            ComponentCheckboxUnchecked( thisComponent, new HashSet<Component>() );
+				if ( checkBox.IsChecked == true )
+					ComponentCheckboxChecked( thisComponent, new HashSet<Component>() );
+				else if ( checkBox.IsChecked == false )
+					ComponentCheckboxUnchecked( thisComponent, new HashSet<Component>() );
+				else
+					Logger.LogVerbose($"Could not determine new checkBox checked bool for {thisComponent.Name}");
+	        }
+	        catch ( Exception exception )
+	        {
+		        Console.WriteLine(exception);
+	        }
         }
 
         [NotNull]
@@ -2186,7 +2192,7 @@ namespace KOTORModSync
                 VerticalContentAlignment = VerticalAlignment.Center,
                 VerticalAlignment = VerticalAlignment.Center,
                 Tag = component,
-                [ToolTip.TipProperty] = "If selected, this mod will be installed.",
+                [ToolTip.TipProperty] = "If checked, this mod will be installed.",
             };
             var binding = new Binding( "IsSelected" )
             {
@@ -2194,8 +2200,7 @@ namespace KOTORModSync
                 Mode = BindingMode.TwoWay,
             };
 
-            checkBox.Checked += OnCheckBoxOnChecked;
-            checkBox.Unchecked += OnCheckBoxOnUnchecked;
+            checkBox.IsCheckedChanged += OnCheckBoxChanged;
 
             _ = checkBox.Bind( ToggleButton.IsCheckedProperty, binding );
 
@@ -2336,69 +2341,77 @@ namespace KOTORModSync
         [NotNull]
         private TreeViewItem CreateRootTreeViewItem()
         {
-            var checkBox = new CheckBox
+            var rootCheckBox = new CheckBox
             {
                 Name = "IsSelected",
             };
 
-            // Set up the event handler for the checkbox
-            bool manualSet = false;
-            checkBox.Checked += ( sender, e ) =>
-            {
-                if ( manualSet )
-                    return;
-
-                bool allChecked = true;
-                var finishedComponents = new HashSet<Component>();
-                foreach ( Component component in MainConfig.AllComponents )
-                {
-                    component.IsSelected = true;
-                    ComponentCheckboxChecked( component, finishedComponents, suppressErrors: true );
-                }
-
-                foreach ( Component component in MainConfig.AllComponents )
-                {
-                    if ( component.IsSelected )
-                        continue;
-
-                    allChecked = false;
-                    break;
-                }
-
-                if ( allChecked )
-                    return;
-
-                manualSet = true;
-                checkBox.IsChecked = null;
-                manualSet = false;
-            };
-            checkBox.Unchecked += ( sender, e ) =>
-            {
-                var finishedComponents = new HashSet<Component>();
-                foreach ( Component component in MainConfig.AllComponents )
-                {
-                    component.IsSelected = false;
-                    ComponentCheckboxUnchecked( component, finishedComponents, suppressErrors: true );
-                }
-            };
-
             var header = new DockPanel();
-            header.Children.Add( checkBox );
+            header.Children.Add( rootCheckBox );
             header.Children.Add(
-                new TextBlock
-                {
-                    Text = "Available Mods",
-                }
+	            new TextBlock
+	            {
+		            Text = "Available Mods",
+	            }
             );
             
             var binding = new Binding( path: "IsSelected" );
-            _ = checkBox.Bind( ToggleButton.IsCheckedProperty, binding );
+            _ = rootCheckBox.Bind( ToggleButton.IsCheckedProperty, binding );
 
             var rootItem = new TreeViewItem
             {
-                IsExpanded = true,
-                Header = header,
+	            IsExpanded = true,
+	            Header = header,
             };
+
+            // Set up the event handler for the checkbox
+            bool manualSet = false;
+            rootCheckBox.IsCheckedChanged += ( sender, e ) =>
+            {
+                if ( manualSet )
+                    return;
+                if ( !(sender is CheckBox localRootCheckBox) )
+	                return;
+				
+                var finishedComponents = new HashSet<Component>();
+                switch ( localRootCheckBox.IsChecked )
+                {
+	                case true:
+		                foreach ( Component component in MainConfig.AllComponents )
+		                {
+			                component.IsSelected = true;
+			                ComponentCheckboxChecked(component, finishedComponents, suppressErrors: true);
+		                }
+
+		                if ( MainConfig.AllComponents.Any(component => component.IsSelected)
+			                 && MainConfig.AllComponents.Any(component => !component.IsSelected) )
+		                {
+			                manualSet = true;
+			                localRootCheckBox.IsChecked = null;
+			                manualSet = false;
+		                }
+
+		                break;
+	                case false:
+		                foreach ( Component component in MainConfig.AllComponents )
+		                {
+			                component.IsSelected = false;
+			                ComponentCheckboxUnchecked(component, finishedComponents, suppressErrors: true);
+		                }
+
+		                if ( MainConfig.AllComponents.All(component => !component.IsSelected) )
+		                {
+			                manualSet = true;
+			                localRootCheckBox.IsChecked = false;
+			                manualSet = false;
+		                }
+
+		                break;
+                }
+
+				LeftTreeView.ExpandSubTree(rootItem);
+            };
+
             return rootItem;
         }
 
@@ -2450,13 +2463,8 @@ namespace KOTORModSync
                 // Set the root item collection as the items source of the tree view
                 LeftTreeView.ItemsSource = rootItemsCollection;
 
-                // Expand the tree. Too lazy to figure out the proper way.
-                IEnumerator treeEnumerator = LeftTreeView.Items.GetEnumerator();
-                _ = treeEnumerator.MoveNext();
-                if ( treeEnumerator.Current is null )
-                    throw new NullReferenceException("treeEnumerator.Current");
-
-                LeftTreeView.ExpandSubTree( (TreeViewItem)treeEnumerator.Current );
+                // Expand the tree.
+                LeftTreeView.ExpandSubTree(rootItem);
 
                 if ( componentsList.Count > 0 || TabControl is null )
                     return;
@@ -2810,6 +2818,18 @@ namespace KOTORModSync
 
 			public bool CanExecute( [CanBeNull] object parameter ) => _canExecute?.Invoke( parameter ) == true;
 	        public void Execute( [CanBeNull] object parameter ) => _execute( parameter );
+        }
+
+        private async void CopyTextToClipboard_Click(object sender, RoutedEventArgs e)
+        {
+	        try
+	        {
+		        await Clipboard.SetTextAsync( (string)((MenuItem)sender).DataContext );
+	        }
+	        catch ( Exception exception )
+	        {
+		        await Logger.LogExceptionAsync(exception);
+	        }
         }
     }
 }

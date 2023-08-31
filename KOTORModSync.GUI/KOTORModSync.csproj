@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   <!-- ensure this is defined, sometimes is ignored in cli -->
   <PropertyGroup>
     <SolutionDir Condition="'$(SolutionDir)'=='' or '$(SolutionDir)'=='*Undefined*'">..\</SolutionDir>
@@ -112,8 +112,8 @@
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
 
 	<!-- For Linux and macOS -->
-    <Copy Condition=" '$(RuntimeIdentifier)' == 'linux-x64' OR '$(RuntimeIdentifier)' == 'osx-x64' " SourceFiles="$(SolutionDir)vendor$(DirectorySeparatorChar)bin$(DirectorySeparatorChar)pykotorcli" DestinationFolder="$(TargetDir)Resources$(DirectorySeparatorChar)" />
-    <Copy Condition=" '$(RuntimeIdentifier)' == 'linux-x64' OR '$(RuntimeIdentifier)' == 'osx-x64' " SourceFiles="$(SolutionDir)vendor$(DirectorySeparatorChar)bin$(DirectorySeparatorChar)pykotorcli" DestinationFolder="$(PublishDir)Resources$(DirectorySeparatorChar)" />
+    <Copy Condition=" '$(RuntimeIdentifier)' == 'linux-x64' " SourceFiles="$(SolutionDir)vendor$(DirectorySeparatorChar)bin$(DirectorySeparatorChar)pykotorcli" DestinationFolder="$(TargetDir)Resources$(DirectorySeparatorChar)" />
+    <Copy Condition=" '$(RuntimeIdentifier)' == 'linux-x64' " SourceFiles="$(SolutionDir)vendor$(DirectorySeparatorChar)bin$(DirectorySeparatorChar)pykotorcli" DestinationFolder="$(PublishDir)Resources$(DirectorySeparatorChar)" />
 
 	<!-- For Windows only -->
 	<Copy Condition=" '$(RuntimeIdentifier)' != 'linux-x64' AND '$(RuntimeIdentifier)' != 'osx-x64' " SourceFiles="$(SolutionDir)vendor$(DirectorySeparatorChar)bin$(DirectorySeparatorChar)pykotorcli.exe" DestinationFolder="$(TargetDir)Resources$(DirectorySeparatorChar)" />

@@ -643,7 +643,12 @@ namespace KOTORModSync
                 IStorageFolder startFolder = null;
                 if ( !(MainConfig.SourcePath is null) )
 	                startFolder = await StorageProvider.TryGetFolderFromPathAsync(MainConfig.SourcePath.FullName);
-                string[] filePaths = await ShowFileDialog( isFolderDialog: false, allowMultiple: true, startFolder: startFolder );
+                string[] filePaths = await ShowFileDialog(
+	                windowName: "Select the files to perform this instruction on",
+	                isFolderDialog: false,
+	                allowMultiple: true,
+	                startFolder: startFolder
+                );
                 if ( filePaths is null )
                 {
 	                await Logger.LogVerboseAsync( "User did not select any files." );
@@ -865,36 +870,40 @@ namespace KOTORModSync
                 {
                     return ( false, "Please set your directories first" );
                 }
-                
-                string pykotorcliPath = Path.Combine(
-	                Utility.GetExecutingAssemblyDirectory(),
-	                "Resources",
-	                Environment.OSVersion.Platform == PlatformID.Win32NT
-		                ? "pykotorcli.exe"
-		                : "pykotorcli"
-	            );
-                await Logger.LogAsync( "Ensuring the pykotorcli binary is executable..." );
+				
                 bool pykotorIsExecutable = true;
-                try
-                {
-                    await PlatformAgnosticMethods.MakeExecutableAsync( pykotorcliPath );
-                }
-                catch ( Exception e )
-                {
-                    await Logger.LogExceptionAsync( e );
-                    pykotorIsExecutable = false;
-                }
-
                 bool pykotorTestExecute = false;
-                (int, string, string) result = await PlatformAgnosticMethods.ExecuteProcessAsync( pykotorcliPath );
-                if ( result.Item1 == 1 ) // should return syntax error code since we passed no arguments
-                    pykotorTestExecute = true;
+				if ( MainConfig.PatcherOption == MainConfig.AvailablePatchers.PyKotorCLI )
+				{
+					string pykotorcliPath = Path.Combine(
+						Utility.GetExecutingAssemblyDirectory(),
+						"Resources",
+						Environment.OSVersion.Platform == PlatformID.Win32NT
+							? "pykotorcli.exe"
+							: "pykotorcli"
+					);
 
-                if ( MainConfig.AllComponents.IsNullOrEmptyCollection() )
-                {
-                    return ( false,
-                        "No instructions loaded! Press 'Load Instructions File' or create some instructions first." );
-                }
+					await Logger.LogAsync( "Ensuring the pykotorcli binary is executable..." );
+					try
+					{
+						await PlatformAgnosticMethods.MakeExecutableAsync( pykotorcliPath );
+					}
+					catch ( Exception e )
+					{
+						await Logger.LogExceptionAsync( e );
+						pykotorIsExecutable = false;
+					}
+
+					(int, string, string) result = await PlatformAgnosticMethods.ExecuteProcessAsync( pykotorcliPath );
+					if ( result.Item1 == 1 ) // should return syntax error code since we passed no arguments
+						pykotorTestExecute = true;
+
+					if ( MainConfig.AllComponents.IsNullOrEmptyCollection() )
+					{
+						return ( false,
+							"No instructions loaded! Press 'Load Instructions File' or create some instructions first." );
+					}
+				}
 
                 await Logger.LogAsync( "Finding duplicate case-insensitive folders/files in the install destination..." );
                 IEnumerable<FileSystemInfo> duplicates = PathHelper.FindCaseInsensitiveDuplicates( MainConfig.DestinationPath.FullName );

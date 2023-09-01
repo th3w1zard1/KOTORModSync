@@ -309,7 +309,10 @@ namespace KOTORModSync.Core.FileSystemPathing
                 // find the closest matching file/folder in the current path for unix, useful for duplicates.
                 string previousCurrentPath = Path.Combine(parts.Take(i).ToArray());
                 currentPath = Path.Combine(previousCurrentPath, parts[i]);
-                if ( Environment.OSVersion.Platform != PlatformID.Win32NT && Directory.Exists(previousCurrentPath) )
+                if ( Environment.OSVersion.Platform != PlatformID.Win32NT
+	                && !Directory.Exists(currentPath)
+	                && Directory.Exists(previousCurrentPath)
+	            )
                 {
                     int maxMatchingCharacters = -1;
                     string closestMatch = parts[i];
@@ -322,6 +325,8 @@ namespace KOTORModSync.Core.FileSystemPathing
                     {
                         if ( folderOrFileInfo is null || !folderOrFileInfo.Exists )
                             continue;
+                        if ( folderOrFileInfo is FileInfo && i < parts.Length-1 )
+	                        continue;
 
                         int matchingCharacters = GetMatchingCharactersCount(folderOrFileInfo.Name, parts[i]);
                         if ( matchingCharacters > maxMatchingCharacters )
@@ -337,9 +342,9 @@ namespace KOTORModSync.Core.FileSystemPathing
                 }
                 // resolve case-sensitive pathing. largestExistingPathPartsIndex determines the largest index of the existing path parts.
                 // todo: check if it's the last part of the path, then conditionally call directory.exists OR file.exists based on isFile.
-                else if ( !File.Exists(currentPath)
-                    && !Directory.Exists(currentPath)
-                    && string.IsNullOrEmpty(caseSensitiveCurrentPath) )
+                else if ( string.IsNullOrEmpty(caseSensitiveCurrentPath)
+	                && !File.Exists(currentPath)
+                    && !Directory.Exists(currentPath) )
                 {
                     // Get the case-sensitive path based on the existing parts we've determined.
                     largestExistingPathPartsIndex = i;

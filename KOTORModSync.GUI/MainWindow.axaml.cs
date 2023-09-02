@@ -345,7 +345,7 @@ namespace KOTORModSync
 	                new FilePickerSaveOptions
 	                {
 		                DefaultExtension = "toml",
-		                FileTypeChoices = defaultExts ?? new List<FilePickerFileType>{FilePickerFileTypes.All},
+		                FileTypeChoices = /*defaultExts ??*/ new List<FilePickerFileType>{FilePickerFileTypes.All},
 		                ShowOverwritePrompt = true,
 		                SuggestedFileName = saveFileName ?? "my_toml_instructions.toml",
 	                }
@@ -598,7 +598,7 @@ namespace KOTORModSync
             {
                 string url = textBlock.Text ?? string.Empty;
                 if ( !Uri.TryCreate( url, UriKind.Absolute, out Uri _ ) )
-                    throw new ArgumentException( "Invalid URL" );
+                    throw new InvalidOperationException( $"Invalid URL: '{url}'" );
 
                 if ( RuntimeInformation.IsOSPlatform( OSPlatform.Windows ) )
                 {

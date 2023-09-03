@@ -14,7 +14,7 @@ namespace KOTORModSync
 {
 	public class App : Application
 	{
-		public override void Initialize() => AvaloniaXamlLoader.Load( this );
+		public override void Initialize() => AvaloniaXamlLoader.Load(this);
 
 		public override void OnFrameworkInitializationCompleted()
 		{
@@ -26,11 +26,11 @@ namespace KOTORModSync
 					TaskScheduler.UnobservedTaskException += HandleUnobservedTaskException;
 
 					desktop.MainWindow = new MainWindow();
-					Logger.Log( "Started main window" );
+					Logger.Log("Started main window");
 				}
 				catch ( Exception ex )
 				{
-					Logger.LogException( ex );
+					Logger.LogException(ex);
 				}
 			}
 
@@ -38,10 +38,10 @@ namespace KOTORModSync
 		}
 
 		// ReSharper disable once MemberCanBeMadeStatic.Local
-		private void HandleUnobservedTaskException( [CanBeNull] object sender, UnobservedTaskExceptionEventArgs e )
+		private void HandleUnobservedTaskException([CanBeNull] object sender, UnobservedTaskExceptionEventArgs e)
 		{
 			// Log or handle the unobserved task exception here
-			Logger.LogException( e.Exception );
+			Logger.LogException(e.Exception);
 			e.SetObserved(); // Mark the exception as observed to prevent it from crashing the application
 		}
 	}

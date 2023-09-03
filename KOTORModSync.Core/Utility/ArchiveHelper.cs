@@ -23,119 +23,121 @@ namespace KOTORModSync.Core.Utility
 	{
 		public static readonly ExtractionOptions DefaultExtractionOptions = new ExtractionOptions
 		{
-			ExtractFullPath = false,
-			Overwrite = true,
-			PreserveFileTime = true,
+			ExtractFullPath = false, Overwrite = true, PreserveFileTime = true,
 		};
 
-		public static bool IsArchive( [NotNull] string filePath ) => IsArchive(
-			new FileInfo( filePath ?? throw new ArgumentNullException( nameof( filePath ) ) )
+		public static bool IsArchive([NotNull] string filePath) => IsArchive(
+			new FileInfo(filePath ?? throw new ArgumentNullException(nameof( filePath )))
 		);
 
-		public static bool IsArchive( [NotNull] FileInfo thisFile ) => thisFile.Extension.Equals( ".zip", StringComparison.OrdinalIgnoreCase )
-			|| thisFile.Extension.Equals( ".7z", StringComparison.OrdinalIgnoreCase )
-			|| thisFile.Extension.Equals( ".rar", StringComparison.OrdinalIgnoreCase )
-			|| thisFile.Extension.Equals( ".exe", StringComparison.OrdinalIgnoreCase );
+		public static bool IsArchive([NotNull] FileInfo thisFile) =>
+			thisFile.Extension.Equals(value: ".zip", StringComparison.OrdinalIgnoreCase)
+			|| thisFile.Extension.Equals(value: ".7z", StringComparison.OrdinalIgnoreCase)
+			|| thisFile.Extension.Equals(value: ".rar", StringComparison.OrdinalIgnoreCase)
+			|| thisFile.Extension.Equals(value: ".exe", StringComparison.OrdinalIgnoreCase);
 
-		public static (IArchive, FileStream) OpenArchive( string archivePath )
+		public static (IArchive, FileStream) OpenArchive(string archivePath)
 		{
 			if ( archivePath is null || !File.Exists(archivePath) )
 			{
-				throw new ArgumentException( "Path must be a valid file on disk.", nameof( archivePath ) );
+				throw new ArgumentException(message: "Path must be a valid file on disk.", nameof( archivePath ));
 			}
 
 			try
 			{
-				FileStream stream = File.OpenRead( archivePath );
+				FileStream stream = File.OpenRead(archivePath);
 				IArchive archive = null;
 
-				if ( archivePath.EndsWith( ".zip", StringComparison.OrdinalIgnoreCase ) )
+				if ( archivePath.EndsWith(value: ".zip", StringComparison.OrdinalIgnoreCase) )
 				{
-					archive = ZipArchive.Open( stream );
+					archive = ZipArchive.Open(stream);
 				}
-				else if ( archivePath.EndsWith( ".rar", StringComparison.OrdinalIgnoreCase ) )
+				else if ( archivePath.EndsWith(value: ".rar", StringComparison.OrdinalIgnoreCase) )
 				{
-					archive = RarArchive.Open( stream );
+					archive = RarArchive.Open(stream);
 				}
-				else if ( archivePath.EndsWith( ".7z", StringComparison.OrdinalIgnoreCase ) )
+				else if ( archivePath.EndsWith(value: ".7z", StringComparison.OrdinalIgnoreCase) )
 				{
-					archive = SevenZipArchive.Open( stream );
+					archive = SevenZipArchive.Open(stream);
 				}
 
 				return (archive, stream);
 			}
 			catch ( Exception ex )
 			{
-				Logger.LogException( ex );
+				Logger.LogException(ex);
 				return (null, null);
 			}
 		}
 
 		//todo: seems to return true on all archives?
-		public static bool IsValidArchive( [CanBeNull] string filePath )
+		public static bool IsValidArchive([CanBeNull] string filePath)
 		{
-			if ( !File.Exists( filePath ) )
+			if ( !File.Exists(filePath) )
 				return false;
 
 			try
 			{
 				string exeDir = Utility.GetExecutingAssemblyDirectory();
-				string sevenZDllPath = Path.Combine( exeDir, "Resources", "7z.dll" );
-				SevenZipBase.SetLibraryPath( sevenZDllPath ); // Path to 7z.dll
+				string sevenZDllPath = Path.Combine(exeDir, path2: "Resources", path3: "7z.dll");
+				SevenZipBase.SetLibraryPath(sevenZDllPath); // Path to 7z.dll
 				bool valid = false;
-				using ( var extractor = new SevenZipExtractor( filePath ) )
+				using ( var extractor = new SevenZipExtractor(filePath) )
 				{
 					// The Check() method throws an exception if the archive is invalid.
 					valid = extractor.Check();
 				}
 
 				if ( !valid )
-					valid = IsPotentialSevenZipSFX( filePath );
+					valid = IsPotentialSevenZipSFX(filePath);
 				return valid;
 			}
 			catch ( Exception )
 			{
 				// Here we catch the exception if it's not a valid archive.
 				// We'll then check if it's an SFX.
-				return IsPotentialSevenZipSFX( filePath );
+				return IsPotentialSevenZipSFX(filePath);
 			}
 		}
 
-		public static bool IsPotentialSevenZipSFX( [NotNull] string filePath )
+		public static bool IsPotentialSevenZipSFX([NotNull] string filePath)
 		{
 			// These bytes represent a typical signature for Windows executables. 
-			byte[] sfxSignature = { 0x4D, 0x5A }; // 'MZ' header
+			byte[] sfxSignature =
+			{
+				0x4D, 0x5A,
+			}; // 'MZ' header
 
 			byte[] fileHeader = new byte[sfxSignature.Length];
 
-			using ( var fs = new FileStream( filePath, FileMode.Open, FileAccess.Read ) )
+			using ( var fs = new FileStream(filePath, FileMode.Open, FileAccess.Read) )
 			{
-				_ = fs.Read( fileHeader, offset: 0, sfxSignature.Length );
+				_ = fs.Read(fileHeader, offset: 0, sfxSignature.Length);
 			}
 
-			return sfxSignature.SequenceEqual( fileHeader );
+			return sfxSignature.SequenceEqual(fileHeader);
 		}
 
 
-		public static void ExtractWith7Zip( FileStream stream, string destinationDirectory )
+		public static void ExtractWith7Zip(FileStream stream, string destinationDirectory)
 		{
 			string exeDir = Utility.GetExecutingAssemblyDirectory();
-			string sevenZDllPath = Path.Combine( exeDir, "Resources", "7z.dll" );
+			string sevenZDllPath = Path.Combine(exeDir, path2: "Resources", path3: "7z.dll");
 
-			SevenZipBase.SetLibraryPath( sevenZDllPath ); // Path to 7z.dll
-			var extractor = new SevenZipExtractor( stream );
-			extractor.ExtractArchive( destinationDirectory );
+			SevenZipBase.SetLibraryPath(sevenZDllPath); // Path to 7z.dll
+			var extractor = new SevenZipExtractor(stream);
+			extractor.ExtractArchive(destinationDirectory);
 		}
 
 
-		public static void OutputModTree( [NotNull] DirectoryInfo directory, [NotNull] string outputPath )
+		public static void OutputModTree([NotNull] DirectoryInfo directory, [NotNull] string outputPath)
 		{
 			if ( directory == null )
-				throw new ArgumentNullException( nameof( directory ) );
+				throw new ArgumentNullException(nameof( directory ));
 			if ( outputPath == null )
-				throw new ArgumentNullException( nameof( outputPath ) );
+				throw new ArgumentNullException(nameof( outputPath ));
 
-			Dictionary<string, object> root = GenerateArchiveTreeJson( directory );
+			Dictionary<string, object> root = GenerateArchiveTreeJson(directory);
 			try
 			{
 				string json = JsonConvert.SerializeObject(
@@ -147,19 +149,19 @@ namespace KOTORModSync.Core.Utility
 					}
 				);
 
-				File.WriteAllText( outputPath, json );
+				File.WriteAllText(outputPath, json);
 			}
 			catch ( Exception ex )
 			{
-				Logger.LogException( ex, $"Error writing output file '{outputPath}': {ex.Message}" );
+				Logger.LogException(ex, $"Error writing output file '{outputPath}': {ex.Message}");
 			}
 		}
 
 		[CanBeNull]
-		public static Dictionary<string, object> GenerateArchiveTreeJson( [NotNull] DirectoryInfo directory )
+		public static Dictionary<string, object> GenerateArchiveTreeJson([NotNull] DirectoryInfo directory)
 		{
 			if ( directory == null )
-				throw new ArgumentNullException( nameof( directory ) );
+				throw new ArgumentNullException(nameof( directory ));
 
 			var root = new Dictionary<string, object>
 			{
@@ -176,13 +178,9 @@ namespace KOTORModSync.Core.Utility
 
 			try
 			{
-				foreach (
-					FileInfo file in directory.EnumerateFilesSafely(
-						searchPattern: "*.*"
-					)
-				)
+				foreach ( FileInfo file in directory.EnumerateFilesSafely(searchPattern: "*.*") )
 				{
-					if ( file == null || !IsArchive( file.Extension ) )
+					if ( file == null || !IsArchive(file.Extension) )
 						continue;
 
 					var fileInfo = new Dictionary<string, object>
@@ -194,7 +192,7 @@ namespace KOTORModSync.Core.Utility
 							"Type", "file"
 						},
 					};
-					List<ModDirectory.ArchiveEntry> archiveEntries = TraverseArchiveEntries( file.FullName );
+					List<ModDirectory.ArchiveEntry> archiveEntries = TraverseArchiveEntries(file.FullName);
 					var archiveRoot = new Dictionary<string, object>
 					{
 						{
@@ -210,7 +208,7 @@ namespace KOTORModSync.Core.Utility
 
 					fileInfo["Contents"] = archiveRoot["Contents"];
 
-					( root["Contents"] as List<object> )?.Add( fileInfo );
+					(root["Contents"] as List<object>)?.Add(fileInfo);
 				}
 
 				/*foreach (DirectoryInfo subdirectory in directory.EnumerateDirectoriesSafely())
@@ -227,7 +225,7 @@ namespace KOTORModSync.Core.Utility
 			}
 			catch ( Exception ex )
 			{
-				Logger.Log( $"Error generating archive tree for '{directory.FullName}': {ex.Message}" );
+				Logger.Log($"Error generating archive tree for '{directory.FullName}': {ex.Message}");
 				return null;
 			}
 
@@ -235,34 +233,33 @@ namespace KOTORModSync.Core.Utility
 		}
 
 		[NotNull]
-		private static List<ModDirectory.ArchiveEntry> TraverseArchiveEntries( [NotNull] string archivePath )
+		private static List<ModDirectory.ArchiveEntry> TraverseArchiveEntries([NotNull] string archivePath)
 		{
 			if ( archivePath == null )
-				throw new ArgumentNullException( nameof( archivePath ) );
+				throw new ArgumentNullException(nameof( archivePath ));
 
 			var archiveEntries = new List<ModDirectory.ArchiveEntry>();
 
 			try
 			{
-				(IArchive archive, FileStream stream) = OpenArchive( archivePath );
+				(IArchive archive, FileStream stream) = OpenArchive(archivePath);
 				if ( archive is null || stream is null )
 				{
-					Logger.Log( $"Unsupported archive format: '{Path.GetExtension( archivePath )}'" );
+					Logger.Log($"Unsupported archive format: '{Path.GetExtension(archivePath)}'");
 					stream?.Dispose();
 					return archiveEntries;
 				}
 
 				archiveEntries.AddRange(
-					from entry in archive.Entries.Where( e => !e.IsDirectory )
+					from entry in archive.Entries.Where(e => !e.IsDirectory)
 					let pathParts = entry.Key.Split(
-						archivePath.EndsWith( value: ".rar", StringComparison.OrdinalIgnoreCase )
+						archivePath.EndsWith(value: ".rar", StringComparison.OrdinalIgnoreCase)
 							? '\\' // Use backslash as separator for RAR files
 							: '/'  // Use forward slash for other archive types
 					)
 					select new ModDirectory.ArchiveEntry
 					{
-						Name = pathParts[pathParts.Length - 1],
-						Path = entry.Key,
+						Name = pathParts[pathParts.Length - 1], Path = entry.Key,
 					}
 				);
 
@@ -270,7 +267,7 @@ namespace KOTORModSync.Core.Utility
 			}
 			catch ( Exception ex )
 			{
-				Logger.Log( $"Error reading archive '{archivePath}': {ex.Message}" );
+				Logger.Log($"Error reading archive '{archivePath}': {ex.Message}");
 			}
 
 			return archiveEntries;
@@ -282,11 +279,11 @@ namespace KOTORModSync.Core.Utility
 		)
 		{
 			if ( entry == null )
-				throw new ArgumentNullException( nameof( entry ) );
+				throw new ArgumentNullException(nameof( entry ));
 			if ( currentDirectory == null )
-				throw new ArgumentNullException( nameof( currentDirectory ) );
+				throw new ArgumentNullException(nameof( currentDirectory ));
 
-			string[] pathParts = entry.Key.Split( '/' );
+			string[] pathParts = entry.Key.Split('/');
 			bool isFile = !entry.IsDirectory;
 
 			foreach ( string name in pathParts )
@@ -298,15 +295,15 @@ namespace KOTORModSync.Core.Utility
 
 				object existingChild = existingDirectory.Find(
 					c => c is Dictionary<string, object> dict
-						&& dict.ContainsKey( "Name" )
+						&& dict.ContainsKey("Name")
 						&& dict["Name"] is string directoryName
-						&& directoryName.Equals( name, StringComparison.OrdinalIgnoreCase )
+						&& directoryName.Equals(name, StringComparison.OrdinalIgnoreCase)
 				);
 
 				if ( existingChild != null )
 				{
 					if ( isFile )
-						( (Dictionary<string, object>)existingChild )["Type"] = "file";
+						((Dictionary<string, object>)existingChild)["Type"] = "file";
 
 					currentDirectory = (Dictionary<string, object>)existingChild;
 				}
@@ -326,7 +323,7 @@ namespace KOTORModSync.Core.Utility
 							"Contents", new List<object>()
 						},
 					};
-					existingDirectory.Add( child );
+					existingDirectory.Add(child);
 					currentDirectory = child;
 				}
 			}

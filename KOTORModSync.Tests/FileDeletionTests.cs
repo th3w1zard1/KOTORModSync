@@ -12,204 +12,218 @@ using KOTORModSync.Core.FileSystemPathing;
 
 namespace KOTORModSync.Tests
 {
-    [TestFixture]
-    public class FileDeletionTests
-    {
-	    [OneTimeSetUp]
-        public void CreateTestDirectory()
-        {
-            _testDirectory = Path.Combine( Path.GetTempPath(), path2: "DeleteDuplicateFileTests" );
-            _ = Directory.CreateDirectory( _testDirectory );
-        }
+	[TestFixture]
+	public class FileDeletionTests
+	{
+		[OneTimeSetUp]
+		public void CreateTestDirectory()
+		{
+			_testDirectory = Path.Combine(Path.GetTempPath(), path2: "DeleteDuplicateFileTests");
+			_ = Directory.CreateDirectory(_testDirectory);
+		}
 
-        [OneTimeTearDown]
-        public void DeleteTestDirectory() => Directory.Delete( _testDirectory, recursive: true );
+		[OneTimeTearDown]
+		public void DeleteTestDirectory() => Directory.Delete(_testDirectory, recursive: true);
 
-        private string _testDirectory;
+		private string _testDirectory;
 
-        [Test]
-        public void DeleteDuplicateFile_NoDuplicateFiles_NoFilesDeleted()
-        {
-            // Arrange
-            string directory = Path.Combine( _testDirectory, path2: "NoDuplicates" );
-            _ = Directory.CreateDirectory( directory );
-            string file1 = Path.Combine( directory, path2: "file1.txt" );
-            string file2 = Path.Combine( directory, path2: "file2.png" );
-            File.WriteAllText( file1, contents: "Content 1" );
-            File.WriteAllText( file2, contents: "Content 2" );
-            string fileExtension = ".txt";
+		[Test]
+		public void DeleteDuplicateFile_NoDuplicateFiles_NoFilesDeleted()
+		{
+			// Arrange
+			string directory = Path.Combine(_testDirectory, path2: "NoDuplicates");
+			_ = Directory.CreateDirectory(directory);
+			string file1 = Path.Combine(directory, path2: "file1.txt");
+			string file2 = Path.Combine(directory, path2: "file2.png");
+			File.WriteAllText(file1, contents: "Content 1");
+			File.WriteAllText(file2, contents: "Content 2");
+			string fileExtension = ".txt";
 
-            // Act
-            new Instruction().DeleteDuplicateFile( new DirectoryInfo(directory), fileExtension );
+			// Act
+			new Instruction().DeleteDuplicateFile(new DirectoryInfo(directory), fileExtension);
 
-            // Assert
-            Assert.Multiple(
-                () =>
-                {
-                    Assert.That( File.Exists( file1 ) );
-                    Assert.That( File.Exists( file2 ) );
-                }
-            );
-        }
+			// Assert
+			Assert.Multiple(
+				() =>
+				{
+					Assert.That(File.Exists(file1));
+					Assert.That(File.Exists(file2));
+				}
+			);
+		}
 
-        [Test]
-        [Ignore( "todo in DeleteDuplicateFile()" )]
-        public void DeleteDuplicateFile_DuplicateFilesWithDifferentExtensions_AllDuplicatesDeleted()
-        {
-            // Arrange
-            string directory = Path.Combine( _testDirectory, path2: "Duplicates" );
-            _ = Directory.CreateDirectory( directory );
-            string file1 = Path.Combine( directory, path2: "file.txt" );
-            string file2 = Path.Combine( directory, path2: "file.png" );
-            string file3 = Path.Combine( directory, path2: "file.jpg" );
-            File.WriteAllText( file1, contents: "Content 1" );
-            File.WriteAllText( file2, contents: "Content 2" );
-            File.WriteAllText( file3, contents: "Content 3" );
-            string fileExtension = ".txt";
+		[Test]
+		[Ignore("todo in DeleteDuplicateFile()")]
+		public void DeleteDuplicateFile_DuplicateFilesWithDifferentExtensions_AllDuplicatesDeleted()
+		{
+			// Arrange
+			string directory = Path.Combine(_testDirectory, path2: "Duplicates");
+			_ = Directory.CreateDirectory(directory);
+			string file1 = Path.Combine(directory, path2: "file.txt");
+			string file2 = Path.Combine(directory, path2: "file.png");
+			string file3 = Path.Combine(directory, path2: "file.jpg");
+			File.WriteAllText(file1, contents: "Content 1");
+			File.WriteAllText(file2, contents: "Content 2");
+			File.WriteAllText(file3, contents: "Content 3");
+			string fileExtension = ".txt";
 
-            // Act
-            new Instruction().DeleteDuplicateFile( new DirectoryInfo(directory), fileExtension );
+			// Act
+			new Instruction().DeleteDuplicateFile(new DirectoryInfo(directory), fileExtension, compatibleExtensions: new List<string>{".txt", ".png", ".jpg"});
 
-            // Assert
-            Assert.Multiple(
-                () =>
-                {
-                    Assert.That( !File.Exists( file1 ) );
-                    Assert.That( File.Exists( file2 ) );
-                    Assert.That( File.Exists( file3 ) );
-                }
-            );
-        }
+			// Assert
+			Assert.Multiple(
+				() =>
+				{
+					Assert.That(!File.Exists(file1));
+					Assert.That(File.Exists(file2));
+					Assert.That(File.Exists(file3));
+				}
+			);
+		}
 
-        [Test]
-        public void DeleteDuplicateFile_CaseInsensitiveFileNames_DuplicatesDeleted()
-        {
-            // Arrange
-            string directory = Path.Combine( _testDirectory, path2: "Duplicates" );
-            _ = Directory.CreateDirectory( directory );
-            string file1 = Path.Combine( directory, path2: "FILE.tga" );
-            string file2 = Path.Combine( directory, path2: "fIle.tpc" );
-            File.WriteAllText( file1, contents: "Content 1" );
-            File.WriteAllText( file2, contents: "Content 2" );
-            string fileExtension = ".tga";
+		[Test]
+		public void DeleteDuplicateFile_CaseInsensitiveFileNames_DuplicatesDeleted()
+		{
+			// Arrange
+			string directory = Path.Combine(_testDirectory, path2: "Duplicates");
+			_ = Directory.CreateDirectory(directory);
+			string file1 = Path.Combine(directory, path2: "FILE.tga");
+			string file2 = Path.Combine(directory, path2: "fIle.tpc");
+			File.WriteAllText(file1, contents: "Content 1");
+			File.WriteAllText(file2, contents: "Content 2");
+			string fileExtension = ".tga";
 
-            // Act
-            new Instruction().DeleteDuplicateFile(
-                new DirectoryInfo( directory ),
-                fileExtension,
-                caseInsensitive: true
-            );
+			// Act
+			new Instruction().DeleteDuplicateFile(new DirectoryInfo(directory), fileExtension, caseInsensitive: true);
 
-            // Assert
-            Assert.Multiple(
-                () =>
-                {
-                    Assert.That( !File.Exists( file1 ) );
-                    Assert.That( File.Exists( file2 ) );
-                }
-            );
-        }
+			// Assert
+			Assert.Multiple(
+				() =>
+				{
+					Assert.That(!File.Exists(file1));
+					Assert.That(File.Exists(file2));
+				}
+			);
+		}
 
-        [Test]
-        public void DeleteDuplicateFile_InvalidFileExtension_NoFilesDeleted()
-        {
-            // Arrange
-            string directory = Path.Combine( _testDirectory, path2: "InvalidExtension" );
-            _ = Directory.CreateDirectory( directory );
-            string file1 = Path.Combine( directory, path2: "file1.txt" );
-            string file2 = Path.Combine( directory, path2: "file2.png" );
-            File.WriteAllText( file1, contents: "Content 1" );
-            File.WriteAllText( file2, contents: "Content 2" );
-            string fileExtension = ".txt";
+		[Test]
+		public void DeleteDuplicateFile_InvalidFileExtension_NoFilesDeleted()
+		{
+			// Arrange
+			string directory = Path.Combine(_testDirectory, path2: "InvalidExtension");
+			_ = Directory.CreateDirectory(directory);
+			string file1 = Path.Combine(directory, path2: "file1.txt");
+			string file2 = Path.Combine(directory, path2: "file2.png");
+			File.WriteAllText(file1, contents: "Content 1");
+			File.WriteAllText(file2, contents: "Content 2");
+			string fileExtension = ".jpg";
+			var compatibleExtensions = new List<string>
+			{
+				".txt", ".png",
+			};
 
-            // Act
-            new Instruction().DeleteDuplicateFile( new DirectoryInfo( directory ), fileExtension );
+			// Act
+			new Instruction().DeleteDuplicateFile(new DirectoryInfo(directory), fileExtension, compatibleExtensions: compatibleExtensions);
 
-            // Assert
-            Assert.Multiple(
-                () =>
-                {
-                    Assert.That( File.Exists( file1 ) );
-                    Assert.That( File.Exists( file2 ) );
-                }
-            );
-        }
+			// Assert
+			Assert.Multiple(
+				() =>
+				{
+					Assert.That(File.Exists(file1));
+					Assert.That(File.Exists(file2));
+				}
+			);
+		}
 
-        [Test]
-        public void DeleteDuplicateFile_EmptyDirectory_NoFilesDeleted()
-        {
-            // Arrange
-            string directory = Path.Combine( _testDirectory, path2: "EmptyDirectory" );
-            _ = Directory.CreateDirectory( directory );
-            string fileExtension = ".txt";
+		[Test]
+		public void DeleteDuplicateFile_EmptyDirectory_NoFilesDeleted()
+		{
+			// Arrange
+			string directory = Path.Combine(_testDirectory, path2: "EmptyDirectory");
+			_ = Directory.CreateDirectory(directory);
+			string fileExtension = ".txt";
+			var compatibleExtensions = new List<string>
+			{
+				".txt",
+			};
 
-            // Act
-            new Instruction().DeleteDuplicateFile( new DirectoryInfo( directory ), fileExtension );
+			// Act
+			new Instruction().DeleteDuplicateFile(new DirectoryInfo(directory), fileExtension, compatibleExtensions: compatibleExtensions);
 
-            // Assert
-            Assert.Multiple(
-                () =>
-                {
-                    Assert.That( Directory.Exists( directory ) );
-                    Assert.That( Directory.GetFiles( directory ), Is.Empty );
-                }
-            );
-        }
+			// Assert
+			Assert.Multiple(
+				() =>
+				{
+					Assert.That(Directory.Exists(directory));
+					Assert.That(Directory.GetFiles(directory), Is.Empty);
+				}
+			);
+		}
 
-        [Test]
-        public void DeleteDuplicateFile_DuplicateFilesInSubdirectories_NoFilesDeleted()
-        {
-            // Arrange
-            string directory = Path.Combine( _testDirectory, path2: "DuplicatesWithSubdirectories" );
-            _ = Directory.CreateDirectory( directory );
-            string subdirectory = Path.Combine( directory, path2: "Subdirectory" );
-            _ = Directory.CreateDirectory( subdirectory );
-            string file1 = Path.Combine( directory, path2: "file.txt" );
-            string file2 = Path.Combine( subdirectory, path2: "file.txt" );
-            File.WriteAllText( file1, contents: "Content 1" );
-            File.WriteAllText( file2, contents: "Content 2" );
-            string fileExtension = ".txt";
+		[Test]
+		public void DeleteDuplicateFile_DuplicateFilesInSubdirectories_NoFilesDeleted()
+		{
+			// Arrange
+			string directory = Path.Combine(_testDirectory, path2: "DuplicatesWithSubdirectories");
+			_ = Directory.CreateDirectory(directory);
+			string subdirectory = Path.Combine(directory, path2: "Subdirectory");
+			_ = Directory.CreateDirectory(subdirectory);
+			string file1 = Path.Combine(directory, path2: "file.txt");
+			string file2 = Path.Combine(subdirectory, path2: "file.png");
+			File.WriteAllText(file1, contents: "Content 1");
+			File.WriteAllText(file2, contents: "Content 2");
+			string fileExtension = ".txt";
+			var compatibleExtensions = new List<string>
+			{
+				".txt", ".png",
+			};
 
-            // Act
-            new Instruction().DeleteDuplicateFile( new DirectoryInfo( directory ), fileExtension );
+			// Act
+			new Instruction().DeleteDuplicateFile(new DirectoryInfo(directory), fileExtension, compatibleExtensions: compatibleExtensions);
 
-            // Assert
-            Assert.Multiple(
-                () =>
-                {
-                    Assert.That( File.Exists( file1 ) );
-                    Assert.That( File.Exists( file2 ) );
-                }
-            );
-        }
+			// Assert
+			Assert.Multiple(
+				() =>
+				{
+					Assert.That(File.Exists(file1));
+					Assert.That(File.Exists(file2));
+				}
+			);
+		}
 
-        // won't run correctly on windows, this is for github actions only.
-        [Test]
-        public void DeleteDuplicateFile_CaseSensitiveExtensions_DuplicatesDeleted()
-        {
-            // Arrange
-            string directory = Path.Combine( _testDirectory, path2: "DuplicatesWithCaseInsensitiveExtensions" );
-            _ = Directory.CreateDirectory( directory );
-            string file1 = Path.Combine( directory, path2: "file.tpc" );
-            string file2 = Path.Combine( directory, path2: "file.TPC" );
-            string file3 = Path.Combine( directory, path2: "file.tga" );
-            File.WriteAllText( file1, contents: "Content 1" );
-            File.WriteAllText( file2, contents: "Content 2" );
-            File.WriteAllText( file3, contents: "Content 3" );
-            string fileExtension = ".tpc";
+		// won't run correctly on windows, this is for wsl/github actions only.
+		[Test]
+		public void DeleteDuplicateFile_CaseSensitiveExtensions_DuplicatesDeleted()
+		{
+			if ( Environment.OSVersion.Platform == PlatformID.Win32NT )
+			{
+				Console.WriteLine("Test is not possible on Windows.");
+				return;
+			}
 
-            // Act
-            new Instruction().DeleteDuplicateFile( new DirectoryInfo( directory ), fileExtension );
+			// Arrange
+			string directory = Path.Combine(_testDirectory, path2: "DuplicatesWithCaseInsensitiveExtensions");
+			_ = Directory.CreateDirectory(directory);
+			string file1 = Path.Combine(directory, path2: "file.tpc");
+			string file2 = Path.Combine(directory, path2: "file.TPC");
+			string file3 = Path.Combine(directory, path2: "file.tga");
+			File.WriteAllText(file1, contents: "Content 1");
+			File.WriteAllText(file2, contents: "Content 2");
+			File.WriteAllText(file3, contents: "Content 3");
+			string fileExtension = ".tpc";
 
-            // Assert
-            Assert.Multiple(
-                () =>
-                {
-                    Assert.That( !File.Exists( file1 ) );
-                    Assert.That( !File.Exists( file2 ) );
-                    Assert.That( File.Exists( file3 ) );
-                }
-            );
-        }
-    }
+			// Act
+			new Instruction().DeleteDuplicateFile(new DirectoryInfo(directory), fileExtension);
+
+			// Assert
+			Assert.Multiple(
+				() =>
+				{
+					Assert.That(!File.Exists(file1));
+					Assert.That(!File.Exists(file2));
+					Assert.That(File.Exists(file3));
+				}
+			);
+		}
+	}
 }

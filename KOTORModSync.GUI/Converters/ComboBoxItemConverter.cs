@@ -10,31 +10,31 @@ using JetBrains.Annotations;
 
 namespace KOTORModSync.Converters
 {
-    public class ComboBoxItemConverter : IValueConverter
-    {
-	    [CanBeNull]
-        public object Convert(
-            [CanBeNull] object value,
-            [NotNull] Type targetType,
-            [CanBeNull] object parameter,
-            [NotNull] CultureInfo culture
-        ) =>
-            value is string action
-                ? new ComboBoxItem
-                {
-                    Content = action,
-                }
-                : (object)null;
+	public class ComboBoxItemConverter : IValueConverter
+	{
+		[CanBeNull]
+		public object Convert(
+			[CanBeNull] object value,
+			[NotNull] Type targetType,
+			[CanBeNull] object parameter,
+			[NotNull] CultureInfo culture
+		) =>
+			value is string action
+				? new ComboBoxItem
+				{
+					Content = action,
+				}
+				: (object)null;
 
-        [CanBeNull]
-        public object ConvertBack(
-            [CanBeNull] object value,
-            [NotNull] Type targetType,
-            [CanBeNull] object parameter,
-            [NotNull] CultureInfo culture
-        ) =>
-            value is ComboBoxItem comboBoxItem
-                ? comboBoxItem.Content?.ToString()
-                : (object)null;
-    }
+		[CanBeNull]
+		public object ConvertBack(
+			[CanBeNull] object value,
+			[NotNull] Type targetType,
+			[CanBeNull] object parameter,
+			[NotNull] CultureInfo culture
+		) =>
+			value is ComboBoxItem comboBoxItem
+				? comboBoxItem.Content?.ToString()
+				: (object)null;
+	}
 }

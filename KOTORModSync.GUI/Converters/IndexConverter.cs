@@ -11,16 +11,16 @@ using JetBrains.Annotations;
 
 namespace KOTORModSync.Converters
 {
-    public class IndexConverter : IMultiValueConverter
-    {
-	    public object Convert(
-		    [NotNull] IList<object> values,
-		    [NotNull] Type targetType,
-		    [CanBeNull] object parameter,
-		    [NotNull] CultureInfo culture
-		)
-	    {
-		    return values[0] is IList list ? $"{list.IndexOf(values[1])+1}:" : "-1";
-	    }
-    }
+	public class IndexConverter : IMultiValueConverter
+	{
+		public object Convert(
+			[NotNull] IList<object> values,
+			[NotNull] Type targetType,
+			[CanBeNull] object parameter,
+			[NotNull] CultureInfo culture
+		) =>
+			values[0] is IList list
+				? $"{list.IndexOf(values[1]) + 1}:"
+				: "-1";
+	}
 }

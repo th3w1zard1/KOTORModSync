@@ -10,36 +10,38 @@ using KOTORModSync.Core;
 
 namespace KOTORModSync.Converters
 {
-    public class ActionConverter : IValueConverter
-    {
-	    public object Convert( object value, Type targetType, object parameter, CultureInfo culture )
-        {
-            if ( value is null )
-                return Instruction.ActionType.Unset.ToString();
+	public class ActionConverter : IValueConverter
+	{
+		public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+		{
+			if ( value is null )
+				return Instruction.ActionType.Unset.ToString();
 
-            if ( value is Instruction.ActionType actionType )
-                return actionType.ToString();
+			if ( value is Instruction.ActionType actionType )
+				return actionType.ToString();
 
-            if ( value is string strValue && Enum.TryParse( strValue, true, out Instruction.ActionType result ) )
-                return result.ToString();
-            
-            string msg = $"Valid actions are [{string.Join( separator: ", ", Instruction.ActionTypes )}]";
-            return new BindingNotification( new ArgumentException( msg ), BindingErrorType.Error );
-        }
+			if ( value is string strValue
+				&& Enum.TryParse(strValue, ignoreCase: true, out Instruction.ActionType result) )
+				return result.ToString();
 
-	    public object ConvertBack( object value, Type targetType, object parameter, CultureInfo culture )
-        {
-            if ( value is Instruction.ActionType actual )
-                return actual.ToString();
-            if ( value?.ToString() is string strValue )
-            {
-                if ( Enum.TryParse( strValue, true, out Instruction.ActionType result) )
-                {
-                    return result.ToString();
-                }
-            }
+			string msg = $"Valid actions are [{string.Join(separator: ", ", Instruction.ActionTypes)}]";
+			return new BindingNotification(new ArgumentException(msg), BindingErrorType.Error);
+		}
 
-            return Instruction.ActionType.Unset.ToString();
-        }
-    }
+		public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+		{
+			if ( value is Instruction.ActionType actual )
+				return actual.ToString();
+
+			if ( value?.ToString() is string strValue )
+			{
+				if ( Enum.TryParse(strValue, ignoreCase: true, out Instruction.ActionType result) )
+				{
+					return result.ToString();
+				}
+			}
+
+			return Instruction.ActionType.Unset.ToString();
+		}
+	}
 }

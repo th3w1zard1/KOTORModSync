@@ -8,33 +8,33 @@ using JetBrains.Annotations;
 
 namespace KOTORModSync
 {
-    public partial class ProgressWindow : Window
-    {
-	    public ProgressWindow() => InitializeComponent();
-	    public void Dispose() => Close();
+	public partial class ProgressWindow : Window
+	{
+		public ProgressWindow() => InitializeComponent();
+		public void Dispose() => Close();
 
-	    public static async Task ShowProgressWindow(
-            [CanBeNull] Window parentWindow,
-            [CanBeNull] string message,
-            decimal progress
-        )
-        {
-            var progressWindow = new ProgressWindow
-            {
-                Owner = parentWindow,
-                ProgressTextBlock =
-                {
-                    Text = message,
-                },
-                ProgressBar =
-                {
-                    Value = (double)progress,
-                },
-                Topmost=true,
-            };
+		public static async Task ShowProgressWindow(
+			[CanBeNull] Window parentWindow,
+			[CanBeNull] string message,
+			decimal progress
+		)
+		{
+			var progressWindow = new ProgressWindow
+			{
+				Owner = parentWindow,
+				ProgressTextBlock =
+				{
+					Text = message,
+				},
+				ProgressBar =
+				{
+					Value = (double)progress,
+				},
+				Topmost = true,
+			};
 
-            if ( !( parentWindow is null ) )
-                _ = await progressWindow.ShowDialog<bool?>( parentWindow );
-        }
-    }
+			if ( !(parentWindow is null) )
+				_ = await progressWindow.ShowDialog<bool?>(parentWindow);
+		}
+	}
 }

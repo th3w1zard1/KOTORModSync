@@ -15,124 +15,124 @@ using JetBrains.Annotations;
 
 namespace KOTORModSync
 {
-    public partial class OptionsDialog : Window
-    {
-	    public static readonly AvaloniaProperty OptionsListProperty
-            = AvaloniaProperty.Register<OptionsDialog, List<string>>( nameof( OptionsList ) );
+	public partial class OptionsDialog : Window
+	{
+		public static readonly AvaloniaProperty OptionsListProperty =
+			AvaloniaProperty.Register<OptionsDialog, List<string>>(nameof( OptionsList ));
 
-	    public OptionsDialog()
-        {
-            InitializeComponent();
-            OkButton.Click += OKButton_Click;
-        }
+		public OptionsDialog()
+		{
+			InitializeComponent();
+			OkButton.Click += OKButton_Click;
+		}
 
-	    [CanBeNull]
-        public List<string> OptionsList
-        {
-            get => GetValue( OptionsListProperty ) as List<string>;
-            set => SetValue( OptionsListProperty, value );
-        }
+		[CanBeNull]
+		public List<string> OptionsList
+		{
+			get => GetValue(OptionsListProperty) as List<string>;
+			set => SetValue(OptionsListProperty, value);
+		}
 
-        private void OKButton_Click( [CanBeNull] object sender, [CanBeNull] RoutedEventArgs e )
-        {
-            RadioButton selectedRadioButton = OptionStackPanel.Children.OfType<RadioButton>()
-                .SingleOrDefault( rb => rb.IsChecked == true );
+		private void OKButton_Click([CanBeNull] object sender, [CanBeNull] RoutedEventArgs e)
+		{
+			RadioButton selectedRadioButton = OptionStackPanel.Children.OfType<RadioButton>()
+				.SingleOrDefault(rb => rb.IsChecked == true);
 
-            if ( selectedRadioButton != null )
-            {
-                string selectedOption = selectedRadioButton.Content?.ToString();
-                OptionSelected?.Invoke( this, selectedOption );
-            }
+			if ( selectedRadioButton != null )
+			{
+				string selectedOption = selectedRadioButton.Content?.ToString();
+				OptionSelected?.Invoke(this, selectedOption);
+			}
 
-            Close();
-        }
+			Close();
+		}
 
-        public event EventHandler<string> OptionSelected;
+		public event EventHandler<string> OptionSelected;
 
-        private void OnOpened( [CanBeNull] object sender, [CanBeNull] EventArgs e )
-        {
-            if ( OptionsList is null )
-                throw new NullReferenceException(nameof( OptionsList ));
+		private void OnOpened([CanBeNull] object sender, [CanBeNull] EventArgs e)
+		{
+			if ( OptionsList is null )
+				throw new NullReferenceException(nameof( OptionsList ));
 
-            foreach ( string option in OptionsList )
-            {
-                var radioButton = new RadioButton
-                {
-                    Content = option, GroupName = "OptionsGroup",
-                };
-                OptionStackPanel.Children.Add( radioButton );
-            }
+			foreach ( string option in OptionsList )
+			{
+				var radioButton = new RadioButton
+				{
+					Content = option, GroupName = "OptionsGroup",
+				};
+				OptionStackPanel.Children.Add(radioButton);
+			}
 
-            // Measure and arrange the optionStackPanel to update DesiredSize
-            OptionStackPanel.Measure( new Size( double.PositiveInfinity, double.PositiveInfinity ) );
-            OptionStackPanel.Arrange( new Rect( OptionStackPanel.DesiredSize ) );
+			// Measure and arrange the optionStackPanel to update DesiredSize
+			OptionStackPanel.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
+			OptionStackPanel.Arrange(new Rect(OptionStackPanel.DesiredSize));
 
-            // Get the actual size of the optionStackPanel including children and transformations
-            Size actualSize = OptionStackPanel.Bounds.Size;
+			// Get the actual size of the optionStackPanel including children and transformations
+			Size actualSize = OptionStackPanel.Bounds.Size;
 
-            // Define padding values
-            const double horizontalPadding = 100; // Padding on the left and right
-            const double verticalPadding = 150;   // Padding on the top and bottom
+			// Define padding values
+			const double horizontalPadding = 100; // Padding on the left and right
+			const double verticalPadding = 150;   // Padding on the top and bottom
 
-            // Calculate the desired width and height for the content with padding
-            double contentWidth = actualSize.Width + 2 * horizontalPadding;
-            double contentHeight = actualSize.Height + 2 * verticalPadding;
+			// Calculate the desired width and height for the content with padding
+			double contentWidth = actualSize.Width + 2 * horizontalPadding;
+			double contentHeight = actualSize.Height + 2 * verticalPadding;
 
-            // Set the width and height of the window
-            Width = contentWidth;
-            Height = contentHeight;
+			// Set the width and height of the window
+			Width = contentWidth;
+			Height = contentHeight;
 
-            InvalidateArrange();
-            InvalidateMeasure();
+			InvalidateArrange();
+			InvalidateMeasure();
 
-            // Center the window on the screen
-            Screen screen = Screens.ScreenFromVisual( this );
-            if ( screen is null )
-                throw new NullReferenceException(nameof( screen ));
+			// Center the window on the screen
+			Screen screen = Screens.ScreenFromVisual(this);
+			if ( screen is null )
+				throw new NullReferenceException(nameof( screen ));
 
-            double screenWidth = screen.Bounds.Width;
-            double screenHeight = screen.Bounds.Height;
-            double left = ( screenWidth - contentWidth ) / 2;
-            double top = ( screenHeight - contentHeight ) / 2;
-            Position = new PixelPoint( (int)left, (int)top );
-        }
+			double screenWidth = screen.Bounds.Width;
+			double screenHeight = screen.Bounds.Height;
+			double left = (screenWidth - contentWidth) / 2;
+			double top = (screenHeight - contentHeight) / 2;
+			Position = new PixelPoint((int)left, (int)top);
+		}
 
-        [ItemCanBeNull]
-        public static async Task<string> ShowOptionsDialog(
-            [CanBeNull] Window parentWindow,
-            [CanBeNull] List<string> optionsList
-        )
-        {
-            var tcs = new TaskCompletionSource<string>();
+		[ItemCanBeNull]
+		public static async Task<string> ShowOptionsDialog(
+			[CanBeNull] Window parentWindow,
+			[CanBeNull] List<string> optionsList
+		)
+		{
+			var tcs = new TaskCompletionSource<string>();
 
-            await Dispatcher.UIThread.InvokeAsync(
-                async () =>
-                {
-                    var optionsDialog = new OptionsDialog
-                    {
-                        OptionsList = optionsList,
-                    };
+			await Dispatcher.UIThread.InvokeAsync(
+				async () =>
+				{
+					var optionsDialog = new OptionsDialog
+					{
+						OptionsList = optionsList,
+					};
 
-                    optionsDialog.Closed += ClosedHandler;
-                    optionsDialog.Opened += optionsDialog.OnOpened;
+					optionsDialog.Closed += ClosedHandler;
+					optionsDialog.Opened += optionsDialog.OnOpened;
 
-                    void ClosedHandler( object sender, EventArgs e )
-                    {
-                        optionsDialog.Closed -= ClosedHandler;
-                        _ = tcs.TrySetResult( null );
-                    }
+					void ClosedHandler(object sender, EventArgs e)
+					{
+						optionsDialog.Closed -= ClosedHandler;
+						_ = tcs.TrySetResult(null);
+					}
 
-                    optionsDialog.OptionSelected += ( sender, option ) => _ = tcs.TrySetResult( option );
+					optionsDialog.OptionSelected += (sender, option) => _ = tcs.TrySetResult(option);
 
-                    if ( !( parentWindow is null ) )
-                        await optionsDialog.ShowDialog( parentWindow );
-                }
-            );
+					if ( !(parentWindow is null) )
+						await optionsDialog.ShowDialog(parentWindow);
+				}
+			);
 
-            if ( tcs is null )
-                throw new NullReferenceException(nameof( tcs ));
+			if ( tcs is null )
+				throw new NullReferenceException(nameof( tcs ));
 
-            return await tcs.Task;
-        }
-    }
+			return await tcs.Task;
+		}
+	}
 }

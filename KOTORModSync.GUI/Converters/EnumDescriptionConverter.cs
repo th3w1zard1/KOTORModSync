@@ -23,7 +23,7 @@ namespace KOTORModSync.Converters
 		)
 		{
 			var myEnum = (Enum)value;
-			string description = GetEnumDescription( myEnum );
+			string description = GetEnumDescription(myEnum);
 			return description;
 		}
 
@@ -36,16 +36,16 @@ namespace KOTORModSync.Converters
 		) => value?.ToString();
 
 		[CanBeNull]
-		private static string GetEnumDescription( Enum enumObj )
+		private static string GetEnumDescription(Enum enumObj)
 		{
-			FieldInfo fieldInfo = enumObj.GetType().GetField( enumObj.ToString() );
+			FieldInfo fieldInfo = enumObj.GetType().GetField(enumObj.ToString());
 			if ( fieldInfo is null )
 			{
-				Logger.LogException( new ArgumentNullException( nameof( enumObj ) ) );
+				Logger.LogException(new ArgumentNullException(nameof( enumObj )));
 				return null;
 			}
 
-			object[] attribArray = fieldInfo.GetCustomAttributes( false );
+			object[] attribArray = fieldInfo.GetCustomAttributes(false);
 
 			if ( attribArray.Length == 0 )
 				return enumObj.ToString();

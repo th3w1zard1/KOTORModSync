@@ -11,36 +11,31 @@ using KOTORModSync.Core;
 
 namespace KOTORModSync.Converters
 {
-    public class GuidListToComponentNames : IMultiValueConverter
-    {
-	    public object Convert(
-            IList<object> values,
-            Type targetType,
-            object parameter,
-            CultureInfo culture
-        )
-        {
-            try
-            {
-                if ( !( values[0] is List<Guid> guids ) || !( values[1] is List<Component> componentsList ) )
-                    return null;
+	public class GuidListToComponentNames : IMultiValueConverter
+	{
+		public object Convert(IList<object> values, Type targetType, object parameter, CultureInfo culture)
+		{
+			try
+			{
+				if ( !(values[0] is List<Guid> guids) || !(values[1] is List<Component> componentsList) )
+					return null;
 
-                var selectedComponentNames = ( from cGuid in guids
-                    let foundComponent = Component.FindComponentFromGuid( cGuid, componentsList )
-                    select !( foundComponent is null )
-                        ? foundComponent.Name
-                        : cGuid.ToString() ).ToList();
+				var selectedComponentNames = (from cGuid in guids
+					let foundComponent = Component.FindComponentFromGuid(cGuid, componentsList)
+					select !(foundComponent is null)
+						? foundComponent.Name
+						: cGuid.ToString()).ToList();
 
-                if ( selectedComponentNames.Count == 0 )
-                    selectedComponentNames.Add( "None" );
+				if ( selectedComponentNames.Count == 0 )
+					selectedComponentNames.Add("None");
 
-                return selectedComponentNames;
-            }
-            catch ( Exception e )
-            {
-                Logger.LogException( e );
-                return null;
-            }
-        }
-    }
+				return selectedComponentNames;
+			}
+			catch ( Exception e )
+			{
+				Logger.LogException(e);
+				return null;
+			}
+		}
+	}
 }

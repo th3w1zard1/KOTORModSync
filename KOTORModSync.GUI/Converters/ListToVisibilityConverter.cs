@@ -9,10 +9,12 @@ using Avalonia.Data.Converters;
 
 namespace KOTORModSync.Converters
 {
-    public class ListToVisibilityConverter : IValueConverter
-    {
-	    public object Convert(object value, Type targetType, object parameter, CultureInfo culture) => value is IList list && list.Count > 0;
-	    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) => throw new NotImplementedException();
-    }
+	public class ListToVisibilityConverter : IValueConverter
+	{
+		public object Convert(object value, Type targetType, object parameter, CultureInfo culture) =>
+			value is IList list && list.Count > 0;
 
+		public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) =>
+			throw new NotImplementedException();
+	}
 }

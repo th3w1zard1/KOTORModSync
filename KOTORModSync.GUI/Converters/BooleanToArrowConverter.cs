@@ -9,26 +9,26 @@ using JetBrains.Annotations;
 
 namespace KOTORModSync.Converters
 {
-    public class BooleanToArrowConverter : IValueConverter
-    {
-	    public object Convert(
-            [CanBeNull] object value,
-            [NotNull] Type targetType,
-            [CanBeNull] object parameter,
-            [NotNull] CultureInfo culture
-        ) =>
-            value is bool isExpanded && targetType == typeof( string )
-                ? isExpanded
-                    ? "▼"
-                    : "▶"
-                : (object)string.Empty;
+	public class BooleanToArrowConverter : IValueConverter
+	{
+		public object Convert(
+			[CanBeNull] object value,
+			[NotNull] Type targetType,
+			[CanBeNull] object parameter,
+			[NotNull] CultureInfo culture
+		) =>
+			value is bool isExpanded && targetType == typeof( string )
+				? isExpanded
+					? "▼"
+					: "▶"
+				: (object)string.Empty;
 
-	    public object ConvertBack(
-            [CanBeNull] object value,
-            [NotNull] Type targetType,
-            [CanBeNull] object parameter,
-            [NotNull] CultureInfo culture
-        ) =>
-            throw new NotSupportedException();
-    }
+		public object ConvertBack(
+			[CanBeNull] object value,
+			[NotNull] Type targetType,
+			[CanBeNull] object parameter,
+			[NotNull] CultureInfo culture
+		) =>
+			throw new NotSupportedException();
+	}
 }

@@ -16,105 +16,93 @@ using KOTORModSync.Core.Utility;
 
 namespace KOTORModSync.Converters
 {
-    public class ListToStringConverter : IValueConverter
-    {
-	    public object Convert(
-            object value,
-            Type targetType,
-            object parameter,
-            CultureInfo culture
-        )
-        {
-            if ( !( value is IEnumerable list ) )
-            {
-                return string.Empty;
-            }
+	public class ListToStringConverter : IValueConverter
+	{
+		public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+		{
+			if ( !(value is IEnumerable list) )
+			{
+				return string.Empty;
+			}
 
-            var serializedList = new StringBuilder();
-            foreach ( object item in list )
-            {
-                if ( item is null )
-                {
-                    continue;
-                }
+			var serializedList = new StringBuilder();
+			foreach ( object item in list )
+			{
+				if ( item is null )
+				{
+					continue;
+				}
 
-                _ = serializedList.AppendLine( item.ToString() );
-            }
+				_ = serializedList.AppendLine(item.ToString());
+			}
 
-            return serializedList.ToString();
-        }
+			return serializedList.ToString();
+		}
 
-	    public object ConvertBack(
-            object value,
-            Type targetType,
-            object parameter,
-            CultureInfo culture
-        )
-        {
-            try
-            {
-                if ( !( value is string text ) )
-                {
-                    return null;
-                }
+		public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+		{
+			try
+			{
+				if ( !(value is string text) )
+				{
+					return null;
+				}
 
-                if ( targetType != typeof( List<Guid> ) )
-                {
-                    return text.Split(
-                            new[]
-                            {
-                                Environment.NewLine,
-                            },
-                            StringSplitOptions.RemoveEmptyEntries
-                        )
-                        .ToList();
-                }
+				if ( targetType != typeof( List<Guid> ) )
+				{
+					return text.Split(
+						new[]
+						{
+							Environment.NewLine,
+						},
+						StringSplitOptions.RemoveEmptyEntries
+					).ToList();
+				}
 
-                string[] lines = RemoveSpacesExceptNewLine( text )
-                    .Split(
-                        new[]
-                        {
-                            Environment.NewLine,
-                        },
-                        StringSplitOptions.RemoveEmptyEntries
-                    );
+				string[] lines = RemoveSpacesExceptNewLine(text).Split(
+					new[]
+					{
+						Environment.NewLine,
+					},
+					StringSplitOptions.RemoveEmptyEntries
+				);
 
-                var guids = new List<Guid>();
-                foreach ( string line in lines )
-                {
-                    try
-                    {
-                        guids.Add( Guid.Parse( Serializer.FixGuidString( line ) ) );
-                    }
-                    catch ( FormatException e )
-                    {
-                        return new BindingNotification(
-                            new FormatException( e.Message ),
-                            BindingErrorType.DataValidationError
-                        );
-                    }
-                }
+				var guids = new List<Guid>();
+				foreach ( string line in lines )
+				{
+					try
+					{
+						guids.Add(Guid.Parse(Serializer.FixGuidString(line)));
+					}
+					catch ( FormatException e )
+					{
+						return new BindingNotification(
+							new FormatException(e.Message),
+							BindingErrorType.DataValidationError
+						);
+					}
+				}
 
-                return guids;
-            }
-            catch ( Exception ex )
-            {
-                return new BindingNotification( new FormatException( ex.Message ), BindingErrorType.Error );
-            }
-        }
+				return guids;
+			}
+			catch ( Exception ex )
+			{
+				return new BindingNotification(new FormatException(ex.Message), BindingErrorType.Error);
+			}
+		}
 
-	    [NotNull]
-        public static string RemoveSpacesExceptNewLine( [NotNull] string input )
-        {
-            if ( input is null )
-            {
-                throw new ArgumentNullException( nameof( input ) );
-            }
+		[NotNull]
+		public static string RemoveSpacesExceptNewLine([NotNull] string input)
+		{
+			if ( input is null )
+			{
+				throw new ArgumentNullException(nameof( input ));
+			}
 
-            string pattern = $@"(?:(?!{Environment.NewLine})[^\S{Environment.NewLine}])+";
-            string result = Regex.Replace( input, pattern, replacement: "" );
+			string pattern = $@"(?:(?!{Environment.NewLine})[^\S{Environment.NewLine}])+";
+			string result = Regex.Replace(input, pattern, replacement: "");
 
-            return result;
-        }
-    }
+			return result;
+		}
+	}
 }

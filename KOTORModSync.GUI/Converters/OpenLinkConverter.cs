@@ -31,7 +31,7 @@ namespace KOTORModSync.Converters
 		{
 			if ( value is string url )
 			{
-				OpenLink( url );
+				OpenLink(url);
 			}
 
 			return null;
@@ -44,17 +44,17 @@ namespace KOTORModSync.Converters
 			[NotNull] CultureInfo culture
 		) => throw new NotImplementedException();
 
-		private static void OpenLink( [NotNull] string url )
+		private static void OpenLink([NotNull] string url)
 		{
 			try
 			{
 				if ( url is null )
-					throw new ArgumentNullException( nameof( url ) );
+					throw new ArgumentNullException(nameof( url ));
 
-				if ( !Uri.TryCreate( url, UriKind.Absolute, out Uri _ ) )
-					throw new ArgumentException( "Invalid URL" );
+				if ( !Uri.TryCreate(url, UriKind.Absolute, out Uri _) )
+					throw new ArgumentException("Invalid URL");
 
-				if ( RuntimeInformation.IsOSPlatform( OSPlatform.Windows ) )
+				if ( RuntimeInformation.IsOSPlatform(OSPlatform.Windows) )
 				{
 					_ = Process.Start(
 						new ProcessStartInfo
@@ -63,22 +63,22 @@ namespace KOTORModSync.Converters
 						}
 					);
 				}
-				else if ( RuntimeInformation.IsOSPlatform( OSPlatform.OSX ) )
+				else if ( RuntimeInformation.IsOSPlatform(OSPlatform.OSX) )
 				{
-					_ = Process.Start( fileName: "open", url );
+					_ = Process.Start(fileName: "open", url);
 				}
-				else if ( RuntimeInformation.IsOSPlatform( OSPlatform.Linux ) )
+				else if ( RuntimeInformation.IsOSPlatform(OSPlatform.Linux) )
 				{
-					_ = Process.Start( fileName: "xdg-open", url );
+					_ = Process.Start(fileName: "xdg-open", url);
 				}
 				else
 				{
-					Logger.LogError( "Unsupported platform, cannot open link." );
+					Logger.LogError("Unsupported platform, cannot open link.");
 				}
 			}
 			catch ( Exception ex )
 			{
-				Logger.LogException( ex, $"Failed to open URL: {ex.Message}" );
+				Logger.LogException(ex, $"Failed to open URL: {ex.Message}");
 			}
 		}
 	}

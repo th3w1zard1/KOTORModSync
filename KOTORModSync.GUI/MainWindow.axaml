@@ -96,13 +96,13 @@
                                     <DataTemplate>
                                         <StackPanel>
                                             <SelectableTextBlock Text="{Binding }"
-                                                       TextDecorations="Underline" Tapped="OpenLink_Click"
-                                                       Margin="10,0,0,0" TextWrapping="Wrap"
-                                                       FontSize="17"
-                                                       Cursor="Hand">
+                                                                 TextDecorations="Underline" Tapped="OpenLink_Click"
+                                                                 Margin="10,0,0,0" TextWrapping="Wrap"
+                                                                 FontSize="17"
+                                                                 Cursor="Hand">
                                                 <TextBlock.ContextMenu>
                                                     <ContextMenu>
-                                                        <MenuItem Header="Copy" Click="CopyTextToClipboard_Click"/>
+                                                        <MenuItem Header="Copy" Click="CopyTextToClipboard_Click" />
                                                     </ContextMenu>
                                                 </TextBlock.ContextMenu>
                                             </SelectableTextBlock>
@@ -184,10 +184,12 @@
                                                                            Grid.Column="1">
                                                                     <TextBlock IsVisible="False">
                                                                         <TextBlock.Text>
-                                                                            <MultiBinding Converter="{StaticResource IndexConverter}">
+                                                                            <MultiBinding
+                                                                                Converter="{StaticResource IndexConverter}">
                                                                                 <MultiBinding.Bindings>
-                                                                                    <Binding Path="$parent[ItemsRepeater].DataContext.Instructions"/>
-                                                                                    <Binding Path="."/>
+                                                                                    <Binding
+                                                                                        Path="$parent[ItemsRepeater].DataContext.Instructions" />
+                                                                                    <Binding Path="." />
                                                                                 </MultiBinding.Bindings>
                                                                             </MultiBinding>
                                                                         </TextBlock.Text>
@@ -238,8 +240,9 @@
                                                     <TextBlock.Text>
                                                         <MultiBinding Converter="{StaticResource IndexConverter}">
                                                             <MultiBinding.Bindings>
-                                                                <Binding Path="$parent[ItemsRepeater].DataContext.Instructions"/>
-                                                                <Binding Path="."/>
+                                                                <Binding
+                                                                    Path="$parent[ItemsRepeater].DataContext.Instructions" />
+                                                                <Binding Path="." />
                                                             </MultiBinding.Bindings>
                                                         </MultiBinding>
                                                     </TextBlock.Text>
@@ -345,10 +348,12 @@
                                                     <DockPanel>
                                                         <TextBlock FontWeight="Bold">
                                                             <TextBlock.Text>
-                                                                <MultiBinding Converter="{StaticResource IndexConverter}">
+                                                                <MultiBinding
+                                                                    Converter="{StaticResource IndexConverter}">
                                                                     <MultiBinding.Bindings>
-                                                                        <Binding Path="$parent[ItemsRepeater].DataContext.Instructions"/>
-                                                                        <Binding Path="."/>
+                                                                        <Binding
+                                                                            Path="$parent[ItemsRepeater].DataContext.Instructions" />
+                                                                        <Binding Path="." />
                                                                     </MultiBinding.Bindings>
                                                                 </MultiBinding>
                                                             </TextBlock.Text>
@@ -386,12 +391,16 @@
                                                                       SelectedItem="{Binding ActionString, Converter={StaticResource ActionConverter}}"
                                                                       Focusable="True" />
 
-                                                            <StackPanel x:Name="optionChooser" Grid.Row="4" Grid.RowSpan="2" Grid.Column="0" ToolTip.Tip="Any mod in this list will be installed when this 'Choose' instruction runs. Potential for duplicate installs - be careful defining these!"
-                                                                         IsVisible="{Binding Action, Converter={StaticResource ChooseActionVisibility}}">
-                                                                <TextBlock Text="Options:" ToolTip.Tip="Any mod in this list will be installed when this 'Choose' instruction runs. Potential for duplicate installs - be careful defining these!"/>
+                                                            <StackPanel x:Name="optionChooser" Grid.Row="4"
+                                                                        Grid.RowSpan="2" Grid.Column="0"
+                                                                        ToolTip.Tip="Any mod in this list will be installed when this 'Choose' instruction runs. Potential for duplicate installs - be careful defining these!"
+                                                                        IsVisible="{Binding Action, Converter={StaticResource ChooseActionVisibility}}">
+                                                                <TextBlock Text="Options:"
+                                                                           ToolTip.Tip="Any mod in this list will be installed when this 'Choose' instruction runs. Potential for duplicate installs - be careful defining these!" />
                                                                 <control:DependencyControl>
                                                                     <control:DependencyControl.ThisGuidList>
-                                                                        <Binding Path="Source" Converter="{StaticResource GuidListConverter}"/>
+                                                                        <Binding Path="Source"
+                                                                            Converter="{StaticResource GuidListConverter}" />
                                                                     </control:DependencyControl.ThisGuidList>
                                                                 </control:DependencyControl>
                                                             </StackPanel>
@@ -487,10 +496,12 @@
                                                     <DockPanel>
                                                         <TextBlock FontWeight="Bold">
                                                             <TextBlock.Text>
-                                                                <MultiBinding Converter="{StaticResource IndexConverter}">
+                                                                <MultiBinding
+                                                                    Converter="{StaticResource IndexConverter}">
                                                                     <MultiBinding.Bindings>
-                                                                        <Binding Path="$parent[ItemsRepeater].DataContext.Options"/>
-                                                                        <Binding Path="."/>
+                                                                        <Binding
+                                                                            Path="$parent[ItemsRepeater].DataContext.Options" />
+                                                                        <Binding Path="." />
                                                                     </MultiBinding.Bindings>
                                                                 </MultiBinding>
                                                             </TextBlock.Text>
@@ -558,16 +569,21 @@
                                                                                     <DockPanel>
                                                                                         <TextBlock FontWeight="Bold">
                                                                                             <TextBlock.Text>
-                                                                                                <MultiBinding Converter="{StaticResource IndexConverter}">
+                                                                                                <MultiBinding
+                                                                                                    Converter="{StaticResource IndexConverter}">
                                                                                                     <MultiBinding.Bindings>
-                                                                                                        <Binding Path="$parent[ItemsRepeater].DataContext.Instructions"/>
-                                                                                                        <Binding Path="."/>
+                                                                                                        <Binding
+                                                                                                            Path="$parent[ItemsRepeater].DataContext.Instructions" />
+                                                                                                        <Binding
+                                                                                                            Path="." />
                                                                                                     </MultiBinding.Bindings>
                                                                                                 </MultiBinding>
                                                                                             </TextBlock.Text>
                                                                                         </TextBlock>
-                                                                                        <Button Content="New Instruction Here"
-                                                                                            Click="AddNewInstruction_Click" Tag="{Binding}" />
+                                                                                        <Button
+                                                                                            Content="New Instruction Here"
+                                                                                            Click="AddNewInstruction_Click"
+                                                                                            Tag="{Binding}" />
                                                                                     </DockPanel>
                                                                                     <Border BorderThickness="2"
                                                                                         Margin="10">

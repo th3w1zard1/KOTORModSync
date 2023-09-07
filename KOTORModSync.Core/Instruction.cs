@@ -218,7 +218,7 @@ namespace KOTORModSync.Core
 
 			string destinationPath = Utility.Utility.ReplaceCustomVariables(Destination);
 			DirectoryInfo thisDestination = PathHelper.TryGetValidDirectoryInfo(destinationPath);
-			if ( !noParse )
+			if ( noParse )
 			{
 				RealDestinationPath = thisDestination;
 				return;
@@ -311,7 +311,6 @@ namespace KOTORModSync.Core
 								var thisArchive = new FileInfo(archivePath);
 								using ( FileStream stream = File.OpenRead(archivePath) )
 								{
-									// ReSharper disable once PossibleNullReferenceException
 									string destinationDirectory = Path.Combine(
 										argDestinationPath?.FullName ?? archivePath,
 										Path.GetFileNameWithoutExtension(thisArchive.Name)
@@ -410,63 +409,75 @@ namespace KOTORModSync.Core
 										archive = SevenZipArchive.Open(stream);
 										break;
 									default:
-										throw new OperationCanceledException(
-											$"Archive {thisArchive.Name} is not supported, falling back to 7z.dll..."
-										);
+										archive = ArchiveFactory.Open(stream);
+										break;
 								}
 
-								IReader reader = archive.ExtractAllEntries();
-								while ( reader.MoveToNextEntry() )
+								using ( archive )
+								using ( IReader reader = archive.ExtractAllEntries() )
 								{
-									if ( reader.Entry.IsDirectory )
-										continue;
-
-									string extractFolderName = Path.GetFileNameWithoutExtension(thisArchive.Name);
-									string destinationItemPath = Path.Combine(
-										argDestinationPath.FullName,
-										extractFolderName,
-										reader.Entry.Key
-									);
-									string destinationDirectory = Path.GetDirectoryName(destinationItemPath)
-										?? throw new NullReferenceException($"Path.GetDirectoryName({destinationItemPath})");
-									if ( MainConfig.CaseInsensitivePathing && !Directory.Exists(destinationDirectory) )
+									while ( reader.MoveToNextEntry() )
 									{
-										destinationDirectory = PathHelper.GetCaseSensitivePath(
-											destinationDirectory,
-											isFile: false
-										).Item1;
-									}
-									
-									string destinationRelDirPath = MainConfig.SourcePath is null
-										? destinationDirectory
-										: PathHelper.GetRelativePath(
-											MainConfig.SourcePath.FullName,
-											destinationDirectory
+										if ( reader.Entry.IsDirectory )
+											continue;
+
+										string extractFolderName = Path.GetFileNameWithoutExtension(thisArchive.Name);
+										string destinationItemPath = Path.Combine(
+											argDestinationPath.FullName,
+											extractFolderName,
+											reader.Entry.Key
 										);
-
-									if ( !Directory.Exists(destinationDirectory) )
-									{
-										await Logger.LogAsync($"Create directory '{destinationRelDirPath}'");
-										_ = Directory.CreateDirectory(destinationDirectory);
-									}
-
-									await Logger.LogAsync($"Extract '{reader.Entry.Key}' to '{destinationRelDirPath}'");
-
-									try
-									{
-										await Task.Run(
-											() => reader.WriteEntryToDirectory(
+										string destinationDirectory = Path.GetDirectoryName(destinationItemPath)
+											?? throw new NullReferenceException($"Path.GetDirectoryName({destinationItemPath})");
+										if ( MainConfig.CaseInsensitivePathing && !Directory.Exists(destinationDirectory) )
+										{
+											destinationDirectory = PathHelper.GetCaseSensitivePath(
 												destinationDirectory,
-												ArchiveHelper.DefaultExtractionOptions
-											),
-											cancellationToken
-										);
-									}
-									catch ( UnauthorizedAccessException )
-									{
-										await Logger.LogWarningAsync(
-											$"Skipping file '{reader.Entry.Key}' due to lack of permissions."
-										);
+												isFile: false
+											).Item1;
+										}
+									
+										string destinationRelDirPath = MainConfig.SourcePath is null
+											? destinationDirectory
+											: PathHelper.GetRelativePath(
+												MainConfig.SourcePath.FullName,
+												destinationDirectory
+											);
+
+										if ( !Directory.Exists(destinationDirectory) )
+										{
+											await Logger.LogAsync($"Create directory '{destinationRelDirPath}'");
+											_ = Directory.CreateDirectory(destinationDirectory);
+										}
+
+										await Logger.LogAsync($"Extract '{reader.Entry.Key}' to '{destinationRelDirPath}'");
+
+										try
+										{
+											IReader localReader = reader;
+											await Task.Run(
+												() =>
+												{
+													if ( localReader.Cancelled )
+														return;
+													localReader.WriteEntryToDirectory(
+														destinationDirectory,
+														ArchiveHelper.DefaultExtractionOptions
+													);
+												},
+												cancellationToken
+											);
+										}
+										catch (ObjectDisposedException)
+										{
+											return;
+										}
+										catch ( UnauthorizedAccessException )
+										{
+											await Logger.LogWarningAsync(
+												$"Skipping file '{reader.Entry.Key}' due to lack of permissions."
+											);
+										}
 									}
 								}
 							}
@@ -530,10 +541,8 @@ namespace KOTORModSync.Core
 
 				if ( compatibleExtensionFound )
 				{
-					if ( fileNameCounts.TryGetValue(fileNameWithoutExtension, out int _) )
-						fileNameCounts[fileNameWithoutExtension]++;
-					else
-						fileNameCounts[fileNameWithoutExtension] = 1;
+					_ = fileNameCounts.TryGetValue(fileNameWithoutExtension, out int count);
+					fileNameCounts[fileNameWithoutExtension] = count + 1;
 				}
 			}
 
@@ -606,9 +615,9 @@ namespace KOTORModSync.Core
 			[ItemNotNull][NotNull] List<string> sourcePaths = null
 		)
 		{
-			if ( sourcePaths.IsNullOrEmptyCollection() )
+			if ( sourcePaths is null )
 				sourcePaths = RealSourcePaths;
-			if ( sourcePaths.IsNullOrEmptyCollection() )
+			if ( sourcePaths is null )
 				throw new ArgumentNullException(nameof( sourcePaths ));
 
 			try
@@ -646,6 +655,11 @@ namespace KOTORModSync.Core
 						Logger.LogException(ex);
 						return ActionExitCode.UnknownInnerError;
 					}
+				}
+
+				if ( sourcePaths.Count == 0 )
+				{
+					Logger.Log("No files to delete, skipping this instruction.");
 				}
 
 				return ActionExitCode.Success;

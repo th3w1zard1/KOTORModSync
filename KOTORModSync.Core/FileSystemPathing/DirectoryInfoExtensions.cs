@@ -116,7 +116,7 @@ namespace KOTORModSync.Core.FileSystemPathing
 			catch ( Exception e )
 			{
 				Logger.LogException(e);
-				return null;
+				return Array.Empty<DirectoryInfo>();
 			}
 		}
 
@@ -133,7 +133,7 @@ namespace KOTORModSync.Core.FileSystemPathing
 			catch ( Exception e )
 			{
 				Logger.LogException(e);
-				return null;
+				return Array.Empty<FileInfo>();
 			}
 		}
 
@@ -150,7 +150,7 @@ namespace KOTORModSync.Core.FileSystemPathing
 			catch ( Exception e )
 			{
 				Logger.LogException(e);
-				return null;
+				return Array.Empty<FileSystemInfo>();
 			}
 		}
 	}

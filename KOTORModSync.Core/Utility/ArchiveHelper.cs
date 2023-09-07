@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using JetBrains.Annotations;
 using KOTORModSync.Core.FileSystemPathing;
 using Newtonsoft.Json;
@@ -39,9 +40,7 @@ namespace KOTORModSync.Core.Utility
 		public static (IArchive, FileStream) OpenArchive(string archivePath)
 		{
 			if ( archivePath is null || !File.Exists(archivePath) )
-			{
 				throw new ArgumentException(message: "Path must be a valid file on disk.", nameof( archivePath ));
-			}
 
 			try
 			{
@@ -70,10 +69,10 @@ namespace KOTORModSync.Core.Utility
 			}
 		}
 
-		//todo: seems to return true on all archives?
+		//todo: Check() seems to return true on all files regardless of content?
 		public static bool IsValidArchive([CanBeNull] string filePath)
 		{
-			if ( !File.Exists(filePath) )
+			if ( filePath is null || !File.Exists(filePath) )
 				return false;
 
 			try
@@ -121,6 +120,9 @@ namespace KOTORModSync.Core.Utility
 
 		public static void ExtractWith7Zip(FileStream stream, string destinationDirectory)
 		{
+			if ( !RuntimeInformation.IsOSPlatform(OSPlatform.Windows) )
+				throw new NotImplementedException("Non-windows OS's are not currently supported");
+
 			string exeDir = Utility.GetExecutingAssemblyDirectory();
 			string sevenZDllPath = Path.Combine(exeDir, path2: "Resources", path3: "7z.dll");
 

@@ -352,7 +352,7 @@ namespace KOTORModSync.Core.FileSystemPathing
 						{
 							maxMatchingCharacters = matchingCharacters;
 							closestMatch = folderOrFileInfo.Name;
-							if ( i == parts.Length )
+							if ( i == parts.Length - 1 )
 								isFile = folderOrFileInfo is FileInfo;
 						}
 					}
@@ -390,14 +390,14 @@ namespace KOTORModSync.Core.FileSystemPathing
 				throw new ArgumentException(message: "Value cannot be null or empty.", nameof( str1 ));
 			if ( string.IsNullOrEmpty(str2) )
 				throw new ArgumentException(message: "Value cannot be null or empty.", nameof( str2 ));
+			
+			// don't consider a match if any char in the paths are not case-insensitive matches.
+			if ( !str1.Equals(str2, StringComparison.OrdinalIgnoreCase) )
+				return -1;
 
 			int matchingCount = 0;
 			for ( int i = 0; i < str1.Length && i < str2.Length; i++ )
 			{
-				// don't consider a match if any char in the paths are not case-insensitive matches.
-				if ( char.ToLowerInvariant(str1[i]) != char.ToLowerInvariant(str2[i]) )
-					return -1;
-
 				// increment matching count if case-sensitive match at this char index succeeds
 				if ( str1[i] == str2[i] )
 					matchingCount++;
@@ -613,7 +613,8 @@ namespace KOTORModSync.Core.FileSystemPathing
 				return path;
 
 			// Replace all slashes with the operating system's path separator
-			string formattedPath = path.Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar)
+			string formattedPath = path.TrimStart('\\')
+				.Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar)
 				.Replace(oldChar: '\\', Path.DirectorySeparatorChar).Replace(oldChar: '/', Path.DirectorySeparatorChar);
 
 			// Fix repeated slashes

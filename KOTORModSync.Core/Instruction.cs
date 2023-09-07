@@ -512,6 +512,8 @@ namespace KOTORModSync.Core
 			// internal args
 			if ( directoryPath is null )
 				directoryPath = RealDestinationPath;
+			if ( !(directoryPath is null) && !directoryPath.Exists && MainConfig.CaseInsensitivePathing )
+				directoryPath = PathHelper.GetCaseSensitivePath(directoryPath);
 			if ( directoryPath?.Exists != true )
 				throw new ArgumentException(message: "Invalid directory path.", nameof( directoryPath ));
 

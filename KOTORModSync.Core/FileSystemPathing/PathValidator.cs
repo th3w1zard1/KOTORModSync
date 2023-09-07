@@ -16,8 +16,7 @@ namespace KOTORModSync.Core.FileSystemPathing
 		// we don't check colon or any slashes here, because we aren't validating file/folder names, only a full path string.
 		private static readonly char[] s_invalidPathCharsWindows =
 		{
-			'\0', '\a', '\b', '\t', '\n', '\v', '\f', '\r', '!', '"', '$', '%', '&', '*', '+', '<', '=', '>', '?', '@',
-			'{', '}', '`', ',', '^',
+			'\0', '\a', '\b', '\t', '\n', '\v', '\f', '\r', '"', '*', '<', '>', '?',
 		};
 
 

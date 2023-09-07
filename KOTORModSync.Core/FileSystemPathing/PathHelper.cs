@@ -464,6 +464,11 @@ namespace KOTORModSync.Core.FileSystemPathing
 					if ( !ContainsWildcards(formattedPath) )
 					{
 						// Handle non-wildcard paths
+						if ( !File.Exists(formattedPath) )
+						{
+							(string, bool?) returnTuple = GetCaseSensitivePath(formattedPath);
+							formattedPath = returnTuple.Item1;
+						}
 						if ( File.Exists(formattedPath) )
 							result.Add(formattedPath);
 

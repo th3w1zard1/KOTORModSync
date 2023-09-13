@@ -169,7 +169,7 @@
                                                               Content="{Binding Name}"
                                                               ToolTip.Tip="If checked, this option will be installed." />
                                                 </DockPanel>
-                                                <TextBlock Text="{Binding Description}" />
+                                                <TextBlock Text="{Binding Description}" TextWrapping="Wrap"/>
                                                 <ItemsRepeater
                                                     x:Name="optionsInstructionsRepeater"
                                                     ItemsSource="{Binding Instructions}">

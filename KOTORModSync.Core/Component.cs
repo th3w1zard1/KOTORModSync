@@ -95,8 +95,6 @@ namespace KOTORModSync.Core
 
 		[NotNull] private string _name = string.Empty;
 
-		private bool _nonEnglishFunctionality;
-
 		[NotNull] private ObservableCollection<Option> _options = new ObservableCollection<Option>();
 
 		[NotNull] private List<Guid> _restrictions = new List<Guid>();

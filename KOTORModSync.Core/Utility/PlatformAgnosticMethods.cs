@@ -493,6 +493,7 @@ namespace KOTORModSync.Core.Utility
 									);
 								}
 							};
+							AutoResetEvent localOutputWaitHandle = outputWaitHandle;
 							process.ErrorDataReceived += (sender, e) =>
 							{
 								try

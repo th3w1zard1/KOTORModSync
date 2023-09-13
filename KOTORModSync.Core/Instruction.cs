@@ -621,7 +621,8 @@ namespace KOTORModSync.Core
 				sourcePaths = RealSourcePaths;
 			if ( sourcePaths is null )
 				throw new ArgumentNullException(nameof( sourcePaths ));
-
+			
+			ActionExitCode exitCode = ActionExitCode.Success;
 			try
 			{
 				// ReSharper disable once PossibleNullReferenceException
@@ -639,11 +640,8 @@ namespace KOTORModSync.Core
 
 					if ( !Path.IsPathRooted(realFilePath) || !File.Exists(realFilePath) )
 					{
-						var ex = new ArgumentNullException(
-							$"Invalid wildcards or file does not exist: '{sourceRelDirPath}'"
-						);
-						Logger.LogException(ex);
-						return ActionExitCode.FileNotFoundPost;
+						Logger.LogWarning($"Invalid wildcards or file does not exist: '{sourceRelDirPath}'");
+						exitCode = ActionExitCode.FileNotFoundPost;
 					}
 
 					// Delete the file synchronously
@@ -655,7 +653,10 @@ namespace KOTORModSync.Core
 					catch ( Exception ex )
 					{
 						Logger.LogException(ex);
-						return ActionExitCode.UnknownInnerError;
+						if ( exitCode == ActionExitCode.Success )
+						{
+							exitCode = ActionExitCode.UnknownInnerError;
+						}
 					}
 				}
 
@@ -663,14 +664,17 @@ namespace KOTORModSync.Core
 				{
 					Logger.Log("No files to delete, skipping this instruction.");
 				}
-
-				return ActionExitCode.Success;
 			}
 			catch ( Exception ex )
 			{
 				Logger.LogException(ex);
-				return ActionExitCode.UnknownError;
+				if ( exitCode == ActionExitCode.Success )
+				{
+					exitCode = ActionExitCode.UnknownInnerError;
+				}
 			}
+
+			return exitCode;
 		}
 
 		public ActionExitCode RenameFile(
@@ -682,10 +686,10 @@ namespace KOTORModSync.Core
 				sourcePaths = RealSourcePaths;
 			if ( sourcePaths.IsNullOrEmptyCollection() )
 				throw new ArgumentNullException(nameof( sourcePaths ));
-
+			
+			ActionExitCode exitCode = ActionExitCode.Success;
 			try
 			{
-				ActionExitCode exitCode = ActionExitCode.Success;
 				// ReSharper disable once PossibleNullReferenceException
 				foreach ( string sourcePath in sourcePaths )
 				{
@@ -700,7 +704,11 @@ namespace KOTORModSync.Core
 					if ( !File.Exists(sourcePath) )
 					{
 						Logger.LogError($"'{sourceRelDirPath}' does not exist!");
-						exitCode = ActionExitCode.FileNotFoundPost;
+						if ( exitCode == ActionExitCode.Success )
+						{
+							exitCode = ActionExitCode.FileNotFoundPost;
+						}
+
 						continue;
 					}
 
@@ -743,7 +751,11 @@ namespace KOTORModSync.Core
 					catch ( IOException ex )
 					{
 						// Handle file move error, such as destination file already exists
-						exitCode = ActionExitCode.IOException;
+						if ( exitCode == ActionExitCode.Success )
+						{
+							exitCode = ActionExitCode.IOException;
+						}
+
 						Logger.LogException(ex);
 					}
 				}
@@ -754,8 +766,13 @@ namespace KOTORModSync.Core
 			{
 				// Handle any unexpected exceptions
 				Logger.LogException(ex);
-				return ActionExitCode.UnknownError;
+				if ( exitCode == ActionExitCode.Success )
+				{
+					exitCode = ActionExitCode.UnknownError;
+				}
 			}
+
+			return exitCode;
 		}
 
 		public async Task<ActionExitCode> CopyFileAsync(
@@ -963,13 +980,11 @@ namespace KOTORModSync.Core
 				foreach ( string t in RealSourcePaths )
 				{
 					DirectoryInfo tslPatcherDirectory = File.Exists(t)
-						? new FileInfo(t).Directory // It's a file, get the parent folder.
-						: new DirectoryInfo(t);     // It's a folder, create a DirectoryInfo instance
+						? PathHelper.TryGetValidDirectoryInfo(Path.GetDirectoryName(t)) // It's a file, create DirectoryInfo instance of the parent.
+						: new DirectoryInfo(t);						     				// It's a folder, create a DirectoryInfo instance
 
 					if ( tslPatcherDirectory?.Exists != true )
-					{
 						throw new DirectoryNotFoundException($"The directory '{t}' could not be located on the disk.");
-					}
 
 					//PlaintextLog=0
 					string fullInstallLogFile = Path.Combine(tslPatcherDirectory.FullName, path2: "installlog.rtf");
@@ -1004,6 +1019,13 @@ namespace KOTORModSync.Core
 						case MainConfig.AvailablePatchers.TSLPatcher:
 						default:
 							tslPatcherCliPath = new FileInfo(t);
+							if (int.TryParse(Arguments.Trim(), out int namespaceId))
+							{
+								string message = $"If asked to pick an option, select the {Serializer.ToOrdinal(namespaceId + 1)} from the top.";
+								_ = CallbackObjects.InformationCallback.ShowInformationDialog(message);
+								await Logger.LogWarningAsync(message);
+							}
+
 							break;
 					}
 

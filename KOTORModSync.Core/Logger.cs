@@ -96,7 +96,7 @@ namespace KOTORModSync.Core
 					token.ThrowIfCancellationRequested();
 				}
 
-				Logged.Invoke(logMessage);
+				Logged?.Invoke(logMessage);
 			}
 			catch ( Exception ex )
 			{
@@ -151,15 +151,15 @@ namespace KOTORModSync.Core
 			await LogInternalAsync($"Exception: {ex.GetType()?.Name} - {ex.Message}", color: ConsoleColor.Red);
 			await LogInternalAsync($"Stack trace:{Environment.NewLine}{ex.StackTrace}", color: ConsoleColor.Magenta);
 
-			ExceptionLogged.Invoke(ex); // Raise the ExceptionLogged event
+			ExceptionLogged?.Invoke(ex); // Raise the ExceptionLogged event
 		}
 
 		private static void CurrentDomain_UnhandledException(
 			[NotNull] object sender,
-			[NotNull] UnhandledExceptionEventArgs e
+			UnhandledExceptionEventArgs e
 		)
 		{
-			if ( !(e.ExceptionObject is Exception ex) )
+			if ( !(e?.ExceptionObject is Exception ex) )
 			{
 				LogError("current appdomain's unhandled exception did not have a valid exception handle?");
 				return;
@@ -170,21 +170,21 @@ namespace KOTORModSync.Core
 
 		private static void TaskScheduler_UnobservedTaskException(
 			[NotNull] object sender,
-			[NotNull] UnobservedTaskExceptionEventArgs e
+			UnobservedTaskExceptionEventArgs e
 		)
 		{
-			if ( e.Exception is null )
+			if ( e?.Exception is null )
 			{
 				LogError("appdomain's unhandledexception did not have a valid exception handle?");
 				return;
 			}
 
-			foreach ( Exception ex in e.Exception.InnerExceptions )
+			foreach ( Exception ex in e?.Exception.InnerExceptions )
 			{
 				LogException(ex);
 			}
 
-			e.SetObserved();
+			e?.SetObserved();
 		}
 	}
 }

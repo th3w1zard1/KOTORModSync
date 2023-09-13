@@ -111,6 +111,8 @@ namespace KOTORModSync
 					var optionsDialog = new OptionsDialog
 					{
 						OptionsList = optionsList,
+						Topmost = true,
+						
 					};
 
 					optionsDialog.Closed += ClosedHandler;

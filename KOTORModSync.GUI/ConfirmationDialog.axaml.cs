@@ -53,6 +53,7 @@ namespace KOTORModSync
 						var confirmationDialog = new ConfirmationDialog
 						{
 							ConfirmText = confirmText,
+							Topmost = true,
 						};
 
 						confirmationDialog.YesButtonClicked += YesClickedHandler;

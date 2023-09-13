@@ -79,7 +79,8 @@ namespace KOTORModSync
 				// Create callback objects for use with KOTORModSync.Core
 				CallbackObjects.SetCallbackObjects(
 					new ConfirmationDialogCallback(this),
-					new OptionsDialogCallback(this)
+					new OptionsDialogCallback(this),
+					new InformationDialogCallback(this)
 				);
 
 				PropertyChanged += SearchText_PropertyChanged;
@@ -924,9 +925,10 @@ namespace KOTORModSync
 				}
 
 				bool pykotorIsExecutable = true;
-				bool pykotorTestExecute = false;
+				bool pykotorTestExecute = true;
 				if ( MainConfig.PatcherOption == MainConfig.AvailablePatchers.PyKotorCLI )
 				{
+					pykotorTestExecute = false;
 					string pykotorcliPath = Path.Combine(
 						Utility.GetExecutingAssemblyDirectory(),
 						path2: "Resources",
@@ -954,6 +956,11 @@ namespace KOTORModSync
 					{
 						return (false,
 							"No instructions loaded! Press 'Load Instructions File' or create some instructions first.");
+					}
+
+					if ( !MainConfig.AllComponents.Any(component => component.IsSelected) )
+					{
+						return (false, "Select at least one mod in the left list to be installed first.");
 					}
 				}
 
@@ -1409,19 +1416,21 @@ namespace KOTORModSync
 				{
 					return;
 				}
+				
+				var progressWindow = new ProgressWindow
+				{
+					ProgressBar =
+					{
+						Value = 0,
+					},
+					Topmost = true,
+				};
 
 				try
 				{
 					_ = Logger.LogAsync("Start installing all mods...");
 					_installRunning = true;
 
-					var progressWindow = new ProgressWindow
-					{
-						ProgressBar =
-						{
-							Value = 0,
-						},
-					};
 					progressWindow.Closed += ProgressWindowClosed;
 					progressWindow.Show();
 					_progressWindowClosed = false;
@@ -1456,6 +1465,7 @@ namespace KOTORModSync
 								progressWindow.InstalledRemaining.Text =
 									$"{index}/{selectedMods.Count} Total Installed";
 								progressWindow.PercentCompleted.Text = $"{Math.Round(percentComplete * 100)}%";
+								progressWindow.Topmost = true;
 
 								// Additional fallback options
 								await Task.Delay(millisecondsDelay: 100); // Introduce a small delay
@@ -1520,7 +1530,9 @@ namespace KOTORModSync
 				}
 				catch ( Exception )
 				{
+					progressWindow.Close();
 					_installRunning = false;
+					await Logger.LogErrorAsync("Terminating install due to unhandled exception:");
 					throw;
 				}
 			}

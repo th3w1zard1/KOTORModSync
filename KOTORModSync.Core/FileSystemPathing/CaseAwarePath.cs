@@ -140,9 +140,10 @@ namespace KOTORModSync.Core.FileSystemPathing
 
 				if ( !Directory.Exists(nextPath) && Directory.Exists(basePath) )
 				{
+					int i1 = i;
 					parts[i] = FindClosestMatch(
 						parts[i],
-						Directory.GetFileSystemEntries(basePath).Where(x => i == parts.Count - 1 || Directory.Exists(x))
+						Directory.GetFileSystemEntries(basePath).Where(x => i1 == parts.Count - 1 || Directory.Exists(x))
 					);
 				}
 				else if ( !File.Exists(nextPath) && !Directory.Exists(nextPath) )

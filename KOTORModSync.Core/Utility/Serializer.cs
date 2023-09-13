@@ -18,6 +18,41 @@ namespace KOTORModSync.Core.Utility
 {
 	public static class Serializer
 	{
+		public static string ToOrdinal(object numberObj)
+		{
+			if ( !(numberObj is int number) )
+				throw new ArgumentException(nameof( number ));
+
+			// Negative numbers have the same ordinal suffix as their positive counterpart
+			if (number < 0)
+				return "-" + ToOrdinal(-number);
+
+			int lastDigit = number % 10;
+			int lastTwoDigits = number % 100;
+
+			switch ( lastTwoDigits )
+			{
+				// Handle special cases for numbers ending in 11, 12, or 13
+				case 11:
+				case 12:
+				case 13:
+					return number + "th";
+				default:
+					// Determine the suffix for numbers ending in 1, 2, or 3, otherwise use "th"
+					switch (lastDigit)
+					{
+						case 1:
+							return number + "st";
+						case 2:
+							return number + "nd";
+						case 3:
+							return number + "rd";
+						default:
+							return number + "th";
+					}
+			}
+		}
+
 		[NotNull]
 		public static string FixGuidString([NotNull] string guidString)
 		{

@@ -27,19 +27,19 @@ namespace KOTORModSync
 		}
 
 		public static async Task ShowInformationDialog(
-			[CanBeNull] Window parentWindow,
+			[NotNull] Window parentWindow,
 			[CanBeNull] string message,
 			[CanBeNull] string title = "Information"
 		)
 		{
 			var dialog = new InformationDialog
 			{
-				Title = title, InfoText = message,
+				Title = title, InfoText = message, Topmost = true,
 			};
 			_ = await dialog.ShowDialog<bool?>(parentWindow);
 		}
 
-		protected override void OnOpened([CanBeNull] EventArgs e)
+		protected override void OnOpened([NotNull] EventArgs e)
 		{
 			base.OnOpened(e);
 			UpdateInfoText();

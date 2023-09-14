@@ -1,4 +1,4 @@
-$version = "v0.10.1"
+$version = "v0.10.2"
 $projectFile = "KOTORModSync.GUI\KOTORModSync.csproj"
 $publishProfilesDir = "KOTORModSync.GUI\Properties\PublishProfiles"
 $sevenZipPath = "C:\Program Files\7-Zip\7z.exe"  # Path to 7zip executable
@@ -44,7 +44,7 @@ foreach ($file in $publishProfileFiles) {
 
         # Copy the license
         Copy-Item -Path "LICENSE.TXT" -Destination $publishFolder
-        Copy-Item -Path "usage guide.txt" -Destination $publishFolder
+        Copy-Item -Path "KOTORModSync - Official Documentation.txt" -Destination $publishFolder
 
         # Define the archive file path
         $archiveFile = Join-Path -Path (Split-Path -Path "bin\publish") -ChildPath "$rid.zip"

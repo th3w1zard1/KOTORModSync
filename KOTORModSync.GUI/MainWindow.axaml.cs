@@ -951,18 +951,17 @@ namespace KOTORModSync
 					(int, string, string) result = await PlatformAgnosticMethods.ExecuteProcessAsync(pykotorcliPath);
 					if ( result.Item1 == 1 ) // should return syntax error code since we passed no arguments
 						pykotorTestExecute = true;
-
-					if ( MainConfig.AllComponents.IsNullOrEmptyCollection() )
-					{
-						return (false,
-							"No instructions loaded! Press 'Load Instructions File' or create some instructions first.");
-					}
-
-					if ( !MainConfig.AllComponents.Any(component => component.IsSelected) )
-					{
-						return (false, "Select at least one mod in the left list to be installed first.");
-					}
 				}
+				else if ( !RuntimeInformation.IsOSPlatform(OSPlatform.Windows) )
+				{
+					return (false,	"TSLPatcher is not supported on non-windows operating systems, please use the PyKotorCLI patcher option.");
+				}
+
+				if ( MainConfig.AllComponents.IsNullOrEmptyCollection() )
+					return (false, "No instructions loaded! Press 'Load Instructions File' or create some instructions first.");
+
+				if ( !MainConfig.AllComponents.Any(component => component.IsSelected) )
+					return (false, "Select at least one mod in the left list to be installed first.");
 
 				await Logger.LogAsync("Finding duplicate case-insensitive folders/files in the install destination...");
 				IEnumerable<FileSystemInfo> duplicates =

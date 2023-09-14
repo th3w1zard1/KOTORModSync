@@ -1,0 +1,68 @@
+KMS Official Documentation.
+
+KOTORModSync is an multi-mod installer creator for KOTOR 1 and 2. It's purpose is to allow a user to select the mods they want for install, and choose the options/customizations for each mod, handling the dependencies/custom instruction steps automatically.
+KOTORModSync is also a modbuild creator for users like Snigaroo to define and organize how to install multiple mods with every possible combination easily.
+
+The problem:
+Many users that are new to KOTOR don't understand what mods they're installing or what options they want or how to make it compatible with other mods. They may be used to Vortex or the Steam workshop, and not understand why they can't just simply install mods A->B->C->D and uninstall mod B. They don't understand the reason is mod C depends on mod D. Perhaps mod C is incompatible with mod D. How would they know unless they read, in detail, all the warnings/restrictions etc for each mod and remember each incompatibility? When installing dozens upon dozens of mods it can be overwhelming.
+
+KOTORModSync's solution:
+Create a tool that'll allow the user to simply SELECT the mods they want and press a single 'install all' button. That's all an end user should have to do. There's plenty of installers around (installshield, InnoSetup, Wix etc) that have simple installers that'll show a list of components to install. The user can simply select the ones they want and spam the next button until the thing finishes.
+So, why not KOTOR?
+
+That's the goal here. In order to do this, we need someone to define the instructions. I've seen plenty of batch installers outdated by various mod updates or changes. They sound like a pain to upkeep. So this isn't the way to go either. We need an easy way to *create* instructions. Given this, KOTORModSync is designed to save and load an instruction file written in TOMLIN. TOMLIN was one of the easiest syntaxes to read/interpret by both machine and by human, allowing easy modifications and updates.
+KOTORModSync will allow you to create an instruction file and organize it inside of the tool itself. This means you can define what install steps to perform based on what other mods are being installed. Because KOTORModSync is designed to keep all mod's in a single file, this allows the tool to determine what is/isn't compatible with other mods. This way, if a mod changes or a modbuild creator wants to add another mod, they already have a full list of changes that are potentially happening by other mods and can easily sort through them to define new mods. Not sure if your mod is compatible with another? Slap the 'untested' category on it and the user will be unable to select both unless they've also selected a Compatibility Level of 'Untested'.
+
+The install process:
+The installer will install the selected (checked) mods in the left list from top to bottom when a user clicks 'Install All' following the instructions in the config file. Instructions will be ran in order. The installer does no verification of whether a user is using a vanilla installation of KOTOR, please keep this in mind when handling bug reports.
+
+The KOTORModSync config file:
+The TOMLIN instruction file contains is designed to organize the following mod information in a multi-mod environment. An individual mod has the following groupings:
+Information: the name, description, download link(s), authors, any identifying information. All mods are indexed by a GUID to ensure uniqueness in an instruction file.
+Instructions: A list of all instructions that need to be executed in order to install a mod. This includes specific instructions dependent on other mods (see the dependency section below)
+Options: User-customizeable features that this mod provides. For example, you might see that the 'Visually Repair HK-47' mod for K2 has two options: one that modifies appearance of both hk-47 and hk-50/51, and the other option modifies ONLY hk-47. These options are all redefined here.
+
+A GUID (Globally Unique Identifier) is a 128-bit number, which means it consists of 2^128 unique values. This is a very large number: 340,282,366,920,938,463,463,374,607,431,768,211,456.
+So there are a total of 340 undecillion (short scale) or 340 sextillion (long scale) unique GUIDs.
+
+Mod Dependency Explanation:
+A mod can be defined in the config as being compatible or incompatible with other mods/options. Each specific mod has the following dependency lists to support this:
+Dependencies: List of Mods/Options that are REQUIRED to be SELECTED for an install in order for THIS mod to install.
+Restrictions: List of Mods/Options that CANNOT BE SELECTED in order for THIS Specific mod to be installed. Basically the opposite of the above list. If anything is selected here, the mod won't install and will be skipped.
+InstallAfter: List of Mods/Options that must be installed BEFORE installing THIS mod. This mod must be installed after all of the mods/options in the list.
+InstallBefore: List of Mods/Options that must be installed AFTER installing THIS mod. This mod must be installed before all of the mods/options in the list. Adding a mod/option to the list will immediately reorder the left selection list to follow this requirement of install order.
+
+Instructions explanations:
+KOTORModSync is capable of handling the following Actions:
+Move -> Move a file to a folder
+Copy -> Copy a file to a folder
+Execute -> Execute an executable file
+TSLPatcher -> Execute a TSLPatcher install from the given tslpatchdata directory path.
+Rename -> Renames a file
+Choose -> Defines an instruction that'll choose between a list of GUID options.
+DelDuplicate -> An instruction that will deletes all files containing the specified extension, when the filenames duplicate.
+Extract -> Extracts an archive. Currently supports [.7z, .rar, .zip, and 7zip .EXE] archives ONLY.
+Delete -> Deletes a file.
+
+All of these instructions have the following fields:
+Source -> List of files to handle. If the instruction is 'Choose', this will instead be a list of GUIDs.
+Destination -> Applicable to the 'Move', 'Copy', 'Rename', 'TSLPatcher', and 'Delete' Actions ONLY. This will usually be a location in the install (kotor) directory, or in the case of rename it's the new filename to rename to.
+Overwrite -> Applicable to the 'Move', 'Copy', and 'Rename' Actions ONLY. When 'True', means that the file will be overwritten, when false, means that the file will be skipped if it exists.
+Dependencies -> List of Mods/Options that are REQUIRED to be SELECTED for this specific single instruction to run. If ANY of the mods/options in this list are not selected, this instruction will not be run.
+Restrictions -> List of Mods/Options that CANNOT BE SELECTED in order for this specific single instruction to run. Basically the opposite of the above.
+Arguments -> Applicable to the 'DelDuplicate', 'Execute', and 'TSLPatcher' actions ONLY. For TSLPatcher, this is the namespace option index listed in 'namespaces.ini' indexed based starting at 0 for the first option. For 'DelDuplicate', this is the extension of the files we want deleted if they duplicate. For 'Execute', this defines the extra command line arguments to send to the program before we launch it.
+
+Options explanations:
+An Options is defined just like an individual mod, only nested in a real mod. In case that's not clear, it has the following properties:
+Name, Description, Directions, Dependencies, Restrictions, InstallAfter, InstallBefore
+Instructions.
+
+If an option is incompatible with another option you simply need to add the other option into the Restrictions list for this option and do the same with the other option. E.g. if two options Option A and Option B are incompatible with each other, the Restrictions list of Option A will contain Option B, and the restrictions list of Option B will contain Option A. This makes it impossible for the user to install both with KMS
+
+This can all be pretty overwhelming but what's important to understand is that KMS is capable of following all the mods convoluted installation steps in regards to other mods while still giving the user that one-click install-all approach that they deserve.
+
+Patcher Options:
+KMS supports the following KOTOR patchers:
+TSLPatcher - the default patcher included with mods.
+PyKotorCLI - A cli I wrote to the PyKotor library created by Cortisol: http:\\github.com\NickHugi\PyKotor
+- PyKotorCLI allows an install of all selected mods, without bugging a user to click through multiple TSLPatcher windows and praying they choose the correct option. From my tests, PyKotor installs mods much more efficiently and faster than TSLPatcher, and is supported on linux/mac!

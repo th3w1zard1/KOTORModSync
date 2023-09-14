@@ -55,14 +55,14 @@ namespace KOTORModSync.Core
 		{
 			currentCompatibilityLevel = CompatibilityLevel.Compatible;
 			debugLogging = false;
-			patcherOption = AvailablePatchers.PyKotorCLI;
+			patcherOption = AvailablePatchers.TSLPatcher;
 			attemptFixes = true;
 			noAdmin = false;
 			caseInsensitivePathing = true;
 		}
 
 		[NotNull]
-		public static string CurrentVersion => "0.10.1";
+		public static string CurrentVersion => "0.10.2";
 
 		[UsedImplicitly]
 		[NotNull]

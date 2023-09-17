@@ -37,9 +37,6 @@ See https://pastebin.com/7gML3zCJ for a quick explanation of those fields. See t
 - Q: A mod in the instructions file is out of date, where do I report this?
 - A: [Please notify us that your mod has been updated here.](https://github.com/th3w1zard1/KOTORModSync/discussions/categories/mod-updates)
 
-## Known bugs
-- (Windows) Left-clicking on the console output window causes the whole program to pause. This is a Windows feature I believe, it allows the user to quickly select/copy/paste console output while it's being generated. While this isn't inherently a problem, if a user happens to do this while KOTORModSync is running async code, you may experience timeout events during an install. Please refrain from left-clicking the console window during an installation.
-
 ## Supported Platforms
 KOTORModSync is a cross-platform 32-bit and 64-bit .NET application. It is compatible with the following operating systems:
 - **Windows 7 and 8:** Compatible if running **.NET Framework 4.6.2** or **higher**. The NET6 version is NOT supported.

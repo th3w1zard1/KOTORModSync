@@ -96,6 +96,7 @@ namespace KOTORModSync.Core
 		[NotNull] private string _name = string.Empty;
 
 		[NotNull] private ObservableCollection<Option> _options = new ObservableCollection<Option>();
+		[NotNull] private string _requiredPatcher = string.Empty;
 
 		[NotNull] private List<Guid> _restrictions = new List<Guid>();
 
@@ -1059,22 +1060,37 @@ namespace KOTORModSync.Core
 						break;
 					case Instruction.ActionType.Choose:
 						instruction.SetRealPaths(noParse: true);
-						foreach ( Option thisOption in instruction.GetChosenOptions() )
+						List<Option> list = instruction.GetChosenOptions();
+						for ( int i = 0; i < list.Count; i++ )
 						{
+							Option thisOption = list[i];
 							(installExitCode, _) = await ExecuteInstructionsAsync(
 								thisOption.Instructions,
 								componentsList
 							);
+
+							// ReSharper disable once InvertIf
+							if ( installExitCode != InstallExitCode.Success )
+							{
+								await Logger.LogErrorAsync($"Failed to install chosen option {i+1} in main instruction index {instructionIndex}");
+								exitCode = Instruction.ActionExitCode.OptionalInstallFailed;
+								if ( installExitCode == InstallExitCode.UserCancelledInstall )
+								{
+									return (installExitCode, new Dictionary<SHA1, FileInfo>());
+								}
+								break;
+							}
 						}
+
 						break;
 					/*case "confirm":
-					(var sourcePaths, var something) = instruction.ParsePaths();
-				bool confirmationResult = await confirmDialog.ShowConfirmationDialog(sourcePaths.FirstOrDefault());
-				if (!confirmationResult)
-				{
-					this.Confirmations.Add(true);
-				}
-				break;*/
+						(var sourcePaths, var something) = instruction.ParsePaths();
+						bool confirmationResult = await confirmDialog.ShowConfirmationDialog(sourcePaths.FirstOrDefault());
+						if (!confirmationResult)
+						{
+							this.Confirmations.Add(true);
+						}
+						break;*/
 					default:
 						// Handle unknown instruction type here
 						await Logger.LogWarningAsync($"Unknown instruction '{instruction.ActionString}'");

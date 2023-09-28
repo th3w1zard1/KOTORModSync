@@ -46,6 +46,7 @@ namespace KOTORModSync.Core
 			UnknownInstruction,
 			TSLPatcherLogNotFound,
 			FallbackArchiveExtractionFailed,
+			OptionalInstallFailed
 		}
 
 		public enum ActionType
@@ -372,8 +373,8 @@ namespace KOTORModSync.Core
 							argDestinationPath = argDestinationPath
 								?? thisArchive.Directory
 								?? throw new ArgumentNullException(nameof( argDestinationPath ));
-
-							await Logger.LogAsync($"Using archive path: '{sourceRelDirPath}'");
+							
+							await Logger.LogAsync($"Extracting archive '{sourcePath}'...");
 
 							// (attempt to) handle self-extracting executable archives (7zip)
 							if ( thisArchive.Extension.Equals(value: ".exe", StringComparison.OrdinalIgnoreCase) )
@@ -446,11 +447,11 @@ namespace KOTORModSync.Core
 
 										if ( !Directory.Exists(destinationDirectory) )
 										{
-											await Logger.LogAsync($"Create directory '{destinationRelDirPath}'");
+											await Logger.LogVerboseAsync($"Create directory '{destinationRelDirPath}'");
 											_ = Directory.CreateDirectory(destinationDirectory);
 										}
 
-										await Logger.LogAsync($"Extract '{reader.Entry.Key}' to '{destinationRelDirPath}'");
+										await Logger.LogVerboseAsync($"Extract '{reader.Entry.Key}' to '{destinationRelDirPath}'");
 
 										try
 										{

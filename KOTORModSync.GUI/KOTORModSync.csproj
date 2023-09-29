@@ -111,6 +111,12 @@
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
 
+      <!-- For Mac -->
+    <Copy Condition=" '$(RuntimeIdentifier)' == 'osx-x64' " SourceFiles="$(SolutionDir)vendor$(DirectorySeparatorChar)bin$(DirectorySeparatorChar)pykotorcli_mac" DestinationFolder="$(TargetDir)Resources$(DirectorySeparatorChar)" />
+    <Copy Condition=" '$(RuntimeIdentifier)' == 'osx-x64' " SourceFiles="$(SolutionDir)vendor$(DirectorySeparatorChar)bin$(DirectorySeparatorChar)pykotorcli_mac" DestinationFolder="$(PublishDir)Resources$(DirectorySeparatorChar)" />
+    <Move Condition=" '$(RuntimeIdentifier)' == 'osx-x64' " SourceFiles="$(TargetDir)Resources$(DirectorySeparatorChar)pykotorcli_mac" DestinationFiles="$(TargetDir)Resources$(DirectorySeparatorChar)pykotorcli" />
+    <Move Condition=" '$(RuntimeIdentifier)' == 'osx-x64' " SourceFiles="$(PublishDir)Resources$(DirectorySeparatorChar)pykotorcli_mac" DestinationFiles="$(PublishDir)Resources$(DirectorySeparatorChar)pykotorcli" />
+
 	  <!-- For Linux -->
     <Copy Condition=" '$(RuntimeIdentifier)' == 'linux-x64' " SourceFiles="$(SolutionDir)vendor$(DirectorySeparatorChar)bin$(DirectorySeparatorChar)pykotorcli_linux" DestinationFolder="$(TargetDir)Resources$(DirectorySeparatorChar)" />
     <Copy Condition=" '$(RuntimeIdentifier)' == 'linux-x64' " SourceFiles="$(SolutionDir)vendor$(DirectorySeparatorChar)bin$(DirectorySeparatorChar)pykotorcli_linux" DestinationFolder="$(PublishDir)Resources$(DirectorySeparatorChar)" />

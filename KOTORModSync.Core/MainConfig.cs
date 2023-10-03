@@ -62,7 +62,7 @@ namespace KOTORModSync.Core
 		}
 
 		[NotNull]
-		public static string CurrentVersion => "0.10.23";
+		public static string CurrentVersion => "0.10.3";
 
 		[UsedImplicitly]
 		[NotNull]
@@ -81,6 +81,14 @@ namespace KOTORModSync.Core
 			get => NoAdmin;
 			set => NoAdmin = value && Environment.OSVersion.Platform == PlatformID.Win32NT;
 		}
+
+		public bool useCopyForMoveActions
+		{
+			get => UseCopyForMoveActions;
+			set => UseCopyForMoveActions = value && Environment.OSVersion.Platform == PlatformID.Win32NT;
+		}
+
+		public static bool UseCopyForMoveActions { get; private set; }
 
 		public static bool UseMultiThreadedIO { get; private set; }
 		public bool useMultiThreadedIO { get => UseMultiThreadedIO; set => UseMultiThreadedIO = value; }

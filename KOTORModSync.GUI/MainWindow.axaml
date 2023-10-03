@@ -47,6 +47,7 @@
         </DockPanel>
 
         <Grid Grid.Row="1" Grid.Column="0" RowDefinitions="Auto,*,Auto">
+            <!-- ReSharper disable once Xaml.BindingWithoutContextNotResolved -->
             <TextBox Grid.Row="0" Margin="0,0,0,2" HorizontalAlignment="Stretch"
                      Name="SearchBox" ToolTip.Tip="Search for a mod by name" Text="{Binding SearchText}" />
             <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Disabled">
@@ -86,8 +87,9 @@
             <TabItem x:Name="SummaryTabItem" Header="Summary">
                 <TabItem.Content>
                     <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+                        <!-- ReSharper disable once Xaml.BindingWithoutContextNotResolved -->
                         <StackPanel DataContext="{Binding CurrentComponent}">
-                            <TextBlock Text="Download Links:" FontWeight="DemiBold" Margin="0, 0, 0, 0"
+                            <TextBlock Text="Download Links:" FontWeight="DemiBold" Foreground="#3AAAFF" Margin="0, 0, 0, 0"
                                        ToolTip.Tip="Click a link to open it in your browser."
                                        IsVisible="{Binding ModLink, Converter={StaticResource ListToVisibilityConverter}}" />
                             <ItemsRepeater ItemsSource="{Binding ModLink}"
@@ -187,6 +189,7 @@
                                                                             <MultiBinding
                                                                                 Converter="{StaticResource IndexConverter}">
                                                                                 <MultiBinding.Bindings>
+                                                                                    <!-- ReSharper disable once Xaml.PossibleNullReferenceException Xaml.BindingWithContextNotResolved -->
                                                                                     <Binding
                                                                                         Path="$parent[ItemsRepeater].DataContext.Instructions" />
                                                                                     <Binding Path="." />
@@ -240,6 +243,7 @@
                                                     <TextBlock.Text>
                                                         <MultiBinding Converter="{StaticResource IndexConverter}">
                                                             <MultiBinding.Bindings>
+                                                                <!-- ReSharper disable once Xaml.PossibleNullReferenceException Xaml.BindingWithContextNotResolved -->
                                                                 <Binding
                                                                     Path="$parent[ItemsRepeater].DataContext.Instructions" />
                                                                 <Binding Path="." />
@@ -275,6 +279,7 @@
             <TabItem x:Name="GuiEditTabItem" Header="GUI Edit">
                 <TabItem.Content>
                     <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+                        <!-- ReSharper disable once Xaml.BindingWithoutContextNotResolved -->
                         <StackPanel x:Name="GuiEditGrid" DataContext="{Binding CurrentComponent}">
                             <Expander Header="Information" IsExpanded="False">
                                 <StackPanel>
@@ -351,6 +356,7 @@
                                                                 <MultiBinding
                                                                     Converter="{StaticResource IndexConverter}">
                                                                     <MultiBinding.Bindings>
+                                                                        <!-- ReSharper disable once Xaml.PossibleNullReferenceException Xaml.BindingWithContextNotResolved -->
                                                                         <Binding
                                                                             Path="$parent[ItemsRepeater].DataContext.Instructions" />
                                                                         <Binding Path="." />
@@ -499,6 +505,7 @@
                                                                 <MultiBinding
                                                                     Converter="{StaticResource IndexConverter}">
                                                                     <MultiBinding.Bindings>
+                                                                        <!-- ReSharper disable once Xaml.PossibleNullReferenceException Xaml.BindingWithContextNotResolved -->
                                                                         <Binding
                                                                             Path="$parent[ItemsRepeater].DataContext.Options" />
                                                                         <Binding Path="." />
@@ -572,6 +579,7 @@
                                                                                                 <MultiBinding
                                                                                                     Converter="{StaticResource IndexConverter}">
                                                                                                     <MultiBinding.Bindings>
+                                                                                                        <!-- ReSharper disable once Xaml.PossibleNullReferenceException Xaml.BindingWithContextNotResolved -->
                                                                                                         <Binding
                                                                                                             Path="$parent[ItemsRepeater].DataContext.Instructions" />
                                                                                                         <Binding
@@ -776,6 +784,7 @@
                         Content="Open Output Window" Click="OpenOutputWindow_Click" />
             </Grid>
 
+            <!-- ReSharper disable once Xaml.BindingWithoutContextNotResolved -->
             <StackPanel x:Name="MainConfigStackPanel" DataContext="{Binding MainConfigInstance}">
                 <CheckBox Content="Verbose Logging" IsChecked="{Binding debugLogging}" />
                 <CheckBox Content="Auto-Fix Config Errors" IsChecked="{Binding attemptFixes}" />

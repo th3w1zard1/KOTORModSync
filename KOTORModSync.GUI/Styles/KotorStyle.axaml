@@ -9,8 +9,17 @@
     <Style Selector="TextBlock">
         <Setter Property="FontSize" Value="14" />
         <Setter Property="FontWeight" Value="Normal" />
-        <Setter Property="Margin" Value="0,2" />
+        <Setter Property="TextWrapping" Value="Wrap" />
+        <Setter Property="Margin" Value="0,5,0,2" />
         <Setter Property="Foreground" Value="#3AAAFF" />
+    </Style>
+
+    <Style Selector="SelectableTextBlock">
+        <Setter Property="FontSize" Value="14" />
+        <Setter Property="FontWeight" Value="Normal" />
+        <Setter Property="Foreground" Value="#3AAAFF" />
+        <Setter Property="TextWrapping" Value="Wrap" />
+        <Setter Property="Margin" Value="0,5,0,2" />
     </Style>
 
     <Style Selector="Border">
@@ -26,7 +35,6 @@
         <Setter Property="TextBlock.Foreground" Value="#A8B348" />
     </Style>
     <Style Selector="Button">
-        <Setter Property="Margin" Value="0,2" />
         <Setter Property="BorderThickness" Value="2" />
         <Setter Property="BorderBrush" Value="#062766" />
         <Setter Property="Padding" Value="10" />
@@ -36,6 +44,24 @@
         <Setter Property="HorizontalAlignment" Value="Center" />
         <Setter Property="VerticalAlignment" Value="Center" />
         <Setter Property="FontSize" Value="14" />
+    </Style>
+
+    <Style Selector="Expander">
+        <Setter Property="Background" Value="#062766" />
+        <Setter Property="Foreground" Value="#3AAAFF" />
+    </Style>
+    <Style Selector="Expander /template/ ContentPresenter">
+        <Setter Property="Background" Value="#010116" />
+    </Style>
+    <Style Selector="Expander:expanded /template/ Border#ExpanderContent">
+        <Setter Property="Background" Value="#010116" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="Padding" Value="0" />
+    </Style>
+    <Style Selector="Expander /template/ Border#ExpanderContent">
+        <Setter Property="Background" Value="#010116" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="Padding" Value="0" />
     </Style>
 
     <Style Selector="TextBox:focus /template/ TextBlock#PART_Watermark">
@@ -71,33 +97,37 @@
     </Style>
     <Style Selector="TextBox">
         <Setter Property="CaretBrush" Value="AliceBlue" />
-        <Setter Property="Margin" Value="2" />
-        <Setter Property="Padding" Value="2" />
         <Setter Property="Background" Value="#010116" />
         <Setter Property="FontFamily" Value="Verdana" />
         <Setter Property="Foreground" Value="#3AAAFF" />
         <Setter Property="BorderBrush" Value="#062766" />
         <Setter Property="BorderThickness" Value="2" />
         <Setter Property="FontSize" Value="14" />
+        <Setter Property="TextWrapping" Value="Wrap" />
     </Style>
+
     <Style Selector="ComboBox">
+        <Setter Property="HorizontalAlignment" Value="Center" />
         <Setter Property="Background" Value="#031332" />
         <Setter Property="Foreground" Value="#3AAAFF" />
     </Style>
-    <Style Selector="CheckBox:pointerover /template/ Border#PART_BorderElement">
+    <Style Selector="CheckBox:pointerover">
+        <Setter Property="Foreground" Value="#3AAAFF" />
         <Setter Property="BorderBrush" Value="#FFFFFF" />
-        <Setter Property="Background" Value="#010116" />
+    </Style>
+    <Style Selector="CheckBox:hover">
+        <Setter Property="Foreground" Value="#A8B348" />
+        <Setter Property="BorderBrush" Value="#A8B348" />
     </Style>
     <Style Selector="CheckBox:checked">
+        <Setter Property="Foreground" Value="#3AAAFF" />
         <Setter Property="BorderBrush" Value="#FFFFFF" />
-        <Setter Property="Foreground" Value="#3AAAFF" />
     </Style>
-    <Style Selector="CheckBox:pointerover">
-        <Setter Property="BorderBrush" Value="#FFFFFF" />
-        <Setter Property="Foreground" Value="#3AAAFF" />
+    <Style Selector="CheckBox:unchecked">
+        <Setter Property="Foreground" Value="#A8B348" />
     </Style>
-    <Style Selector="CheckBox">
-        <Setter Property="Foreground" Value="#3AAAFF" />
+    <Style Selector="CheckBox:pointerover /template/ Border#PART_BorderElement">
+        <Setter Property="Background" Value="#010116" />
     </Style>
 
     <Style Selector="ComboBox">
@@ -125,7 +155,6 @@
     </Style>
 
     <Style Selector="TreeView">
-        <Setter Property="Margin" Value="2" />
         <Setter Property="MinWidth" Value="150" />
         <Setter Property="Background" Value="#031332" />
     </Style>
@@ -147,19 +176,5 @@
     </Style>
     <Style Selector="Window">
         <Setter Property="Background" Value="#000116" />
-    </Style>
-
-    <Style Selector="Expander">
-        <Setter Property="Background" Value="#062766" />
-        <Setter Property="Foreground" Value="#3AAAFF" />
-    </Style>
-    <Style Selector="Expander /template/ ContentPresenter">
-        <Setter Property="Background" Value="#010116" />
-    </Style>
-    <Style Selector="Expander:expanded /template/ Border#ExpanderContent">
-        <Setter Property="Background" Value="#010116" />
-    </Style>
-    <Style Selector="Expander:expanded /template/ Border#ExpanderContent">
-        <Setter Property="BorderThickness" Value="0" />
     </Style>
 </Styles>

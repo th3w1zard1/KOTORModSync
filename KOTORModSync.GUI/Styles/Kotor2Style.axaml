@@ -9,9 +9,9 @@
     <Style Selector="TextBlock">
         <Setter Property="FontSize" Value="14" />
         <Setter Property="FontWeight" Value="Normal" />
-        <Setter Property="Foreground" Value="#33C3A2" />
         <Setter Property="TextWrapping" Value="Wrap" />
         <Setter Property="Margin" Value="0,5,0,2" />
+        <Setter Property="Foreground" Value="#33C3A2" />
     </Style>
 
     <Style Selector="SelectableTextBlock">
@@ -43,7 +43,9 @@
         <Setter Property="Foreground" Value="#33C3A2" />
         <Setter Property="HorizontalAlignment" Value="Center" />
         <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="FontSize" Value="14" />
     </Style>
+
     <Style Selector="Expander">
         <Setter Property="Background" Value="#09241D" />
         <Setter Property="Foreground" Value="#33C3A2" />
@@ -103,6 +105,7 @@
         <Setter Property="FontSize" Value="14" />
         <Setter Property="TextWrapping" Value="Wrap" />
     </Style>
+
     <Style Selector="ComboBox">
         <Setter Property="HorizontalAlignment" Value="Center" />
         <Setter Property="Background" Value="#09241D" />

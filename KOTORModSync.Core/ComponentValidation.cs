@@ -81,6 +81,180 @@ namespace KOTORModSync.Core
 		public List<string> GetWarnings([CanBeNull] Instruction instruction) =>
 			_validationResults.Where(r => r.Instruction == instruction && !r.IsError).Select(r => r.Message).ToList();
 
+		
+		public class FileState
+		{
+			public string CurrentPath { get; set; }
+			public string OriginalPath { get; set; }
+			public bool IsVirtual { get; set; }  // False if it's from realFilesForCurrentGlob, True if it's from currentFilesState
+		}
+
+		public abstract class DeferredOperation
+		{
+			public Instruction MainInstruction { get; set; }
+			public ComponentValidation MainComponentValidation { get; set; }
+			public abstract bool Apply(HashSet<FileState> fileStates);
+		}
+		public class CopyOperation : DeferredOperation
+		{
+			public string SourcePath { get; set; }
+			public string DestinationPath { get; set; }
+
+			public override bool Apply(HashSet<FileState> fileStates)
+			{
+				FileState state = fileStates.FirstOrDefault(fs => fs.CurrentPath == SourcePath);
+				return ( state != null && fileStates.Add(new FileState { CurrentPath = DestinationPath } ) )  || MainInstruction.Overwrite;
+			}
+		}
+
+		public class FileExistsCheckOperation : DeferredOperation
+		{
+			public string FilePath { get; set; }
+
+			public override bool Apply(HashSet<FileState> fileStates)
+			{
+				FileState state = fileStates.FirstOrDefault(fs => fs.CurrentPath == FilePath);
+				return ( state != null && fileStates.Contains(state) ) || MainInstruction.Overwrite;
+			}
+		}
+
+		public class DeleteOperation : DeferredOperation
+		{
+			public string FilePath { get; set; }
+
+			public override bool Apply(HashSet<FileState> fileStates)
+			{
+				FileState state = fileStates.FirstOrDefault(fs => fs.CurrentPath == FilePath);
+				return (state != null && fileStates.Remove(state)) || MainInstruction.Overwrite;
+			}
+		}
+		
+		public class RenameOperation : DeferredOperation
+		{
+			public string SourcePath { get; set; }
+			public string NewName { get; set; }
+
+			public override bool Apply(HashSet<FileState> fileStates)
+			{
+				bool success = true;
+				foreach (FileState fileState in fileStates.Where(fs => PathHelper.WildcardPathMatch(fs.CurrentPath, SourcePath)).ToList())
+				{
+					string directoryPath = Path.GetDirectoryName(fileState.CurrentPath);
+					if ( directoryPath is null )
+					{
+						MainComponentValidation.AddError($"fileState '{fileState.CurrentPath}' parent folder could not be determined.", MainInstruction);
+						success = false;
+						continue;
+					}
+
+					string newPath = PathHelper.FixPathFormatting(Path.Combine(directoryPath, NewName));
+					fileState.CurrentPath = newPath;
+				}
+
+				return success;
+			}
+		}
+
+		public class MoveOperation : DeferredOperation
+		{
+			public string SourcePath { get; set; }
+			public string DestinationPath { get; set; }
+
+			public override bool Apply(HashSet<FileState> fileStates)
+			{
+				bool success = true;
+				FileState state = fileStates.FirstOrDefault(fs => fs.CurrentPath == SourcePath);
+				if ( state == null )
+					return false;
+
+				success &= fileStates.Remove(state);
+				state.CurrentPath = PathHelper.FixPathFormatting(Path.Combine(DestinationPath, Path.GetFileName(state.CurrentPath)));
+				success &= fileStates.Add(state);
+				
+				return success;
+			}
+		}
+
+		public class ExtractOperation : DeferredOperation
+		{
+			public string ArchivePath { get; set; }
+			public string Destination { get; set; }
+
+			public override bool Apply(HashSet<FileState> fileStates)
+			{
+				bool? success = null;
+				foreach (string virtualFile in GetAbsolutePathsFromArchives(ArchivePath))
+				{
+					if ( success is null )
+						success = true;
+
+					string newPath = PathHelper.FixPathFormatting(virtualFile);
+					success &= fileStates.Add(new FileState { CurrentPath = newPath, OriginalPath = newPath, IsVirtual = true });
+				}
+
+				return success is true;
+			}
+
+			// This method assumes the archive contents have been listed with their absolute extraction paths.
+			private List<string> GetAbsolutePathsFromArchives([NotNull] string archivePath)
+			{
+				if (archivePath is null)
+					throw new ArgumentNullException(nameof(archivePath));
+
+				var extractedPaths = new List<string>();
+
+				if (!ArchiveHelper.IsArchive(archivePath))
+				{
+					MainComponentValidation.AddError($"'{archivePath}' is not an archive.", MainInstruction);
+					return new List<string>(); // skip non-archives
+				}
+
+				// If the archive is a self-extracting executable, we can't accurately predict its internal structure
+				if (Path.GetExtension(archivePath) == ".exe")
+				{
+					MainComponentValidation.AddWarning($"'{archivePath}' is an EXE file, assuming self extracting executable?", MainInstruction);
+					return new List<string>();
+				}
+
+				using (FileStream stream = File.OpenRead(archivePath))
+				{
+					IArchive archive = null;
+
+					if (archivePath.EndsWith(value: ".zip", StringComparison.OrdinalIgnoreCase))
+					{
+						archive = ZipArchive.Open(stream);
+					}
+					else if (archivePath.EndsWith(value: ".rar", StringComparison.OrdinalIgnoreCase))
+					{
+						archive = RarArchive.Open(stream);
+					}
+					else if (archivePath.EndsWith(value: ".7z", StringComparison.OrdinalIgnoreCase))
+					{
+						archive = SevenZipArchive.Open(stream);
+					}
+
+					if (archive is null)
+					{
+						MainComponentValidation.AddError($"Archive file '{archivePath}' could not be opened.", MainInstruction);
+						return new List<string>(); // could not open this archive, continue with the next
+					}
+
+					string archiveParentDir = Path.GetDirectoryName(archivePath);
+					if ( archiveParentDir is null )
+					{
+						MainComponentValidation.AddError($"Archive file '{archivePath}' does not have a parent folder ergo not a valid file.", MainInstruction);
+						return new List<string>();
+					}
+
+					string archiveDirectory = Path.Combine(archiveParentDir, Path.GetFileNameWithoutExtension(archivePath));
+
+					extractedPaths.AddRange(from entry in archive.Entries where !entry.IsDirectory select PathHelper.FixPathFormatting(Path.Combine(archiveDirectory, entry.Key)));
+				}
+
+				return extractedPaths;
+			}
+		}
+
 		private bool VerifyExtractPaths()
 		{
 			try
@@ -108,101 +282,194 @@ namespace KOTORModSync.Core
 					return success;
 				}
 
-				var instructions = ComponentToValidate.Instructions.ToList();
-				foreach ( Option thisOption in ComponentToValidate.Options )
+				var dryRunInstructions = new List<Instruction>(ComponentToValidate.Instructions);
+
+				int index = 0;
+				while (index < dryRunInstructions.Count)
 				{
-					if ( thisOption is null )
-						continue;
-
-					instructions.AddRange(thisOption.Instructions);
-				}
-
-				foreach ( Instruction instruction in instructions )
-				{
-					switch ( instruction.Action )
+					Instruction instruction = dryRunInstructions[index];
+    
+					if (instruction.Action == Instruction.ActionType.Choose)
 					{
-						case Instruction.ActionType.Unset:
-							AddError(message: "Action cannot be null", instruction);
-							success = false;
-							continue;
-						// we already checked if the archive exists in GetAllArchivesFromInstructions.
-						case Instruction.ActionType.Extract:
-						// 'choose' action uses Source as list of guids to options.
-						case Instruction.ActionType.Choose:
-							continue;
-					}
-
-					// ReSharper disable once ConditionIsAlwaysTrueOrFalse
-					if ( instruction.Source is null )
-						// ReSharper disable twice HeuristicUnreachableCode
-					{
-						AddWarning(message: "Instruction does not have a 'Source' key defined", instruction);
-						success = false;
-						continue;
-					}
-
-					bool archiveNameFound = true;
-					for ( int index = 0; index < instruction.Source.Count; index++ )
-					{
-						string sourcePath = PathHelper.FixPathFormatting(instruction.Source[index]);
-
-						// todo
-						if ( sourcePath.StartsWith(value: "<<kotorDirectory>>", StringComparison.OrdinalIgnoreCase) )
-							continue;
-
-						// ensure tslpatcher.exe sourcePaths use the action 'tslpatcher'
-						if ( sourcePath.EndsWith(value: "tslpatcher.exe", StringComparison.OrdinalIgnoreCase)
-							&& instruction.Action != Instruction.ActionType.TSLPatcher )
+						var instructionsToAdd = new List<Instruction>();
+        
+						foreach (Option thisOption in ComponentToValidate.Options)
 						{
-							AddWarning(
-								message:
-								"'tslpatcher.exe' used in Source path without the action 'tslpatcher', was this intentional?",
-								instruction
-							);
-						}
+							if (thisOption == null)
+								continue;
 
-						(bool, bool) result = IsSourcePathInArchives(sourcePath, allArchives, instruction);
-
-						// For some unholy reason, some archives act like there's another top level folder named after the archive to extract.
-						// doesn't even seem to be related to the archive type. Can't reproduce in 7zip either.
-						// either way, this will hide the issue until a real solution comes along.
-						if ( !result.Item1 && MainConfig.AttemptFixes )
-						{
-							// Split the directory name using the directory separator character
-							string[] parts = sourcePath.Split(Path.DirectorySeparatorChar);
-
-							// Add the first part of the path and repeat it at the beginning
-							// i.e. archive/my/custom/path becomes archive/archive/my/custom/path
-							string duplicatedPart = parts[1] + Path.DirectorySeparatorChar + parts[1];
-							string[] remainingParts = parts.Skip(2).ToArray();
-
-							string path = string.Join(
-								Path.DirectorySeparatorChar.ToString(),
-								new[]
-								{
-									parts[0], duplicatedPart,
-								}.Concat(remainingParts)
-							);
-
-							result = IsSourcePathInArchives(path, allArchives, instruction);
-							if ( result.Item1 )
+							if (instruction.Source.Contains(thisOption.Guid.ToString()))
 							{
-								_ = Logger.LogAsync("Fixing the above issue automatically...");
-								instruction.Source[index] = path;
+								// Add thisOption's instructions to the list of instructions to be added.
+								instructionsToAdd.AddRange(thisOption.Instructions);
 							}
 						}
 
-						success &= result.Item1;
-						archiveNameFound &= result.Item2;
+						if (instructionsToAdd.Count > 0)
+						{
+							// If we found instructions to add, remove the original and insert the new ones.
+							dryRunInstructions.RemoveAt(index);
+							dryRunInstructions.InsertRange(index, instructionsToAdd);
+            
+							// Adjust index to skip past the newly added instructions.
+							index += instructionsToAdd.Count;
+							continue;
+						}
+					}
+    
+					index++;
+				}
+
+				// Main Logic
+				var fileStates = new HashSet<FileState>();
+
+				foreach ( string glob in ComponentToValidate.Instructions.SelectMany(
+						i => i.Source.ConvertAll(Utility.Utility.ReplaceCustomVariables)
+					) )
+				{
+					fileStates.UnionWith(
+						PathHelper.EnumerateFilesWithWildcards(new List<string> { glob }).Select(
+							realFile => new FileState
+							{
+								CurrentPath = realFile, OriginalPath = realFile, IsVirtual = false,
+							}
+						)
+					);
+				}
+
+				foreach ( Instruction instruction in dryRunInstructions )
+				{
+					var deferredOperations = new List<DeferredOperation>();
+					List<string> sourceGlobs = instruction.Source.ConvertAll(Utility.Utility.ReplaceCustomVariables);
+					string destination = Utility.Utility.ReplaceCustomVariables(instruction.Destination);
+
+					foreach ( string sourceGlob in sourceGlobs )
+					{
+						List<FileState> sourceMatches;
+						switch ( instruction.Action )
+						{
+							case Instruction.ActionType.Extract:
+								sourceMatches = fileStates.Where(
+									fs => PathHelper.WildcardPathMatch(fs.CurrentPath, sourceGlob)
+								).ToList();
+
+								foreach ( FileState matchedState in sourceMatches )
+								{
+									if ( matchedState.IsVirtual )
+									{
+										deferredOperations.Add(
+											new ExtractOperation
+											{
+												ArchivePath = matchedState.CurrentPath, Destination = destination,
+											}
+										);
+									}
+									else
+									{
+										List<string> potentialRealArchives = PathHelper.EnumerateFilesWithWildcards(
+											new List<string> { matchedState.CurrentPath, }
+										);
+										foreach ( string potentialArchive in potentialRealArchives )
+										{
+											deferredOperations.Add(
+												new ExtractOperation
+												{
+													ArchivePath = potentialArchive,
+													Destination = destination,
+													MainInstruction=instruction,
+													MainComponentValidation = this,
+												}
+											);
+										}
+									}
+								}
+
+								break;
+
+							case Instruction.ActionType.Move:
+							case Instruction.ActionType.Rename:
+							case Instruction.ActionType.Copy:
+							case Instruction.ActionType.Delete:
+							case Instruction.ActionType.Run:
+							case Instruction.ActionType.Execute:
+							case Instruction.ActionType.HoloPatcher:
+							case Instruction.ActionType.TSLPatcher:
+								sourceMatches = fileStates.Where(
+									fs => PathHelper.WildcardPathMatch(fs.CurrentPath, sourceGlob)
+								).ToList();
+								foreach ( FileState matchedState in sourceMatches )
+								{
+									string newPath = Path.Combine(
+										destination,
+										Path.GetFileName(matchedState.CurrentPath)
+									);
+
+									// ReSharper disable once SwitchStatementMissingSomeEnumCasesNoDefault
+									switch ( instruction.Action )
+									{
+										case Instruction.ActionType.Move:
+											deferredOperations.Add(
+												new MoveOperation
+												{
+													SourcePath = matchedState.CurrentPath, DestinationPath = newPath, MainInstruction=instruction, MainComponentValidation = this,
+												}
+											);
+											break;
+										case Instruction.ActionType.Rename:
+											deferredOperations.Add(
+												new RenameOperation
+												{
+													SourcePath = matchedState.CurrentPath, NewName = newPath, MainInstruction=instruction, MainComponentValidation = this,
+												}
+											);
+											break;
+										case Instruction.ActionType.Copy:
+											deferredOperations.Add(
+												new CopyOperation
+												{
+													SourcePath = matchedState.CurrentPath, DestinationPath = newPath, MainInstruction=instruction, MainComponentValidation = this,
+												}
+											);
+											break;
+										case Instruction.ActionType.Delete:
+											deferredOperations.Add(
+												new DeleteOperation
+												{
+													FilePath = matchedState.CurrentPath, MainInstruction=instruction, MainComponentValidation = this,
+												}
+											);
+											break;
+										case Instruction.ActionType.Run:
+										case Instruction.ActionType.Execute:
+										case Instruction.ActionType.HoloPatcher:
+										case Instruction.ActionType.TSLPatcher:
+											deferredOperations.Add(
+												new FileExistsCheckOperation
+												{
+													FilePath = matchedState.CurrentPath, MainInstruction=instruction, MainComponentValidation = this,
+												}
+											);
+											break;
+									}
+								}
+
+								break;
+
+							//... any other actions ...
+
+							case Instruction.ActionType.DelDuplicate:
+							case Instruction.ActionType.Choose:
+							case Instruction.ActionType.Unset:
+							default:
+								// Optional: Error handling for unsupported operations
+								break;
+						}
 					}
 
-					if ( !archiveNameFound )
+					// Apply deferred operations
+					foreach (DeferredOperation operation in deferredOperations)
 					{
-						AddWarning(
-							"'Source' path does not include the archive's name as part"
-							+ " of the extraction folder, possible FileNotFound exception.",
-							instruction
-						);
+						success &= operation.Apply(fileStates);
 					}
 				}
 
@@ -425,94 +692,6 @@ namespace KOTORModSync.Core
 				default:
 					return "Unknown error";
 			}
-		}
-
-		private (bool, bool) IsSourcePathInArchives(
-			[NotNull] string sourcePath,
-			[NotNull] List<string> allArchives,
-			[NotNull] Instruction instruction
-		)
-		{
-			if ( sourcePath is null )
-				throw new ArgumentNullException(nameof( sourcePath ));
-			if ( allArchives is null )
-				throw new ArgumentNullException(nameof( allArchives ));
-			if ( instruction is null )
-				throw new ArgumentNullException(nameof( instruction ));
-
-			bool foundInAnyArchive = false;
-			bool hasError = false;
-			bool archiveNameFound = false;
-			string errorDescription = string.Empty;
-
-			sourcePath = PathHelper.FixPathFormatting(sourcePath)
-				.Replace($"<<modDirectory>>{Path.DirectorySeparatorChar}", newValue: "").Replace(
-					$"<<kotorDirectory>>{Path.DirectorySeparatorChar}",
-					newValue: ""
-				);
-
-			foreach ( string archivePath in allArchives )
-			{
-				if ( archivePath is null )
-				{
-					AddError(message: "Archive is not a valid file path", instruction);
-					continue;
-				}
-
-				// Check if the archive name matches the first portion of the sourcePath
-				string archiveName = Path.GetFileNameWithoutExtension(archivePath);
-
-				string[] pathParts = sourcePath.Split(Path.DirectorySeparatorChar);
-
-				archiveNameFound = PathHelper.WildcardPathMatch(archiveName, pathParts[0]);
-				ArchivePathCode code = IsPathInArchive(sourcePath, archivePath);
-
-				if ( code == ArchivePathCode.FoundSuccessfully )
-				{
-					foundInAnyArchive = true;
-					break;
-				}
-
-				if ( code == ArchivePathCode.NotFoundInArchive )
-				{
-					continue;
-				}
-
-				hasError = true;
-				errorDescription += GetErrorDescription(code) + Environment.NewLine;
-			}
-
-			if ( hasError )
-			{
-				AddError($"Invalid source path '{sourcePath}'. Reason: {errorDescription}", instruction);
-				return (false, archiveNameFound);
-			}
-
-			if ( _componentsList is null )
-			{
-				AddError(new NullReferenceException(nameof( _componentsList )).Message, instruction);
-				return (false, archiveNameFound);
-			}
-
-			if ( foundInAnyArchive || !Component.ShouldRunInstruction(instruction, _componentsList) )
-			{
-				return (true, true);
-			}
-
-			// todo, stop displaying errors for self extracting executables. This is the only mod using one that I've seen out of 200-some.
-			if ( ComponentToValidate.Name.Equals(value: "Improved AI", StringComparison.OrdinalIgnoreCase) )
-			{
-				return (true, true);
-			}
-
-			// archive not required if instruction isn't running.
-			if ( !Component.ShouldRunInstruction(instruction, _componentsList) )
-			{
-				return (true, true);
-			}
-
-			AddError($"Failed to find '{sourcePath}' in any archives!", instruction);
-			return (false, archiveNameFound);
 		}
 
 		private static ArchivePathCode IsPathInArchive([NotNull] string relativePath, [NotNull] string archivePath)

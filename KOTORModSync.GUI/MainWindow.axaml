@@ -89,7 +89,7 @@
                     <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
                         <!-- ReSharper disable once Xaml.BindingWithoutContextNotResolved -->
                         <StackPanel DataContext="{Binding CurrentComponent}">
-                            <TextBlock Text="Download Links:" FontWeight="DemiBold" Foreground="#3AAAFF" Margin="0, 0, 0, 0"
+                            <TextBlock Text="Download Links:" FontWeight="DemiBold" Margin="0, 0, 0, 0"
                                        ToolTip.Tip="Click a link to open it in your browser."
                                        IsVisible="{Binding ModLink, Converter={StaticResource ListToVisibilityConverter}}" />
                             <ItemsRepeater ItemsSource="{Binding ModLink}"

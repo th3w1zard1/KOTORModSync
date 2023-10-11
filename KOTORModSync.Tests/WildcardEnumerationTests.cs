@@ -44,20 +44,20 @@ namespace KOTORModSync.Tests
 			};
 
 			// Automatically create subfolders and write files
-			foreach ( var kvp in pathsToTest )
+			foreach ( KeyValuePair<string, string> kvp in pathsToTest )
 			{
 				string realPath = Path.Combine(_basePath, kvp.Key);
-				string directoryPath = Path.GetDirectoryName(realPath);
+				string? directoryPath = Path.GetDirectoryName(realPath);
 				if ( !Directory.Exists(directoryPath) )
 				{
-					Directory.CreateDirectory(directoryPath);
+					Directory.CreateDirectory(directoryPath ?? throw new NullReferenceException($"directoryPath {directoryPath}"));
 				}
 
 				File.WriteAllText(realPath, "Arbitrary content for testing.");
 			}
 
 			// Test the EnumerateFilesWithWildcards function
-			foreach ( var kvp in pathsToTest )
+			foreach ( KeyValuePair<string, string> kvp in pathsToTest )
 			{
 				string wildcardPath = Path.Combine(_basePath, kvp.Value);
 				List<string> paths = new()

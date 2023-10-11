@@ -1400,10 +1400,19 @@ namespace KOTORModSync
 						this,
 						"WARNING! While there is code in place to prevent incorrect instructions from running,"
 						+ $" the program cannot predict every possible mistake a user could make in a config file.{Environment.NewLine}"
-						+ " Additionally, the modbuild can be 20GB or larger! As a result, we cannot create any backups."
+						+ " Additionally, some mod builds can be 20GB or larger! Due to this, KOTORModSync will not explicitly create any backups."
 						+ " Please ensure you've backed up your Install directory"
 						+ $" and you've ensured you're running a Vanilla installation.{Environment.NewLine}{Environment.NewLine}"
 						+ " Are you sure you're ready to continue?"
+					)
+					!= true )
+				{
+					return;
+				}
+
+				if ( await ConfirmationDialog.ShowConfirmationDialog(
+						this,
+						$"Are you certain you'd like to use the patcher '{MainConfig.PatcherOption}' for all mods? If not, please choose one now on the right before proceeding."
 					)
 					!= true )
 				{
@@ -1523,14 +1532,14 @@ namespace KOTORModSync
 						);
 						await Logger.LogAsync("Install completed.");
 					}
-
-					progressWindow.Close();
+					
 					_installRunning = false;
+					progressWindow.Close();
 				}
 				catch ( Exception )
 				{
-					progressWindow.Close();
 					_installRunning = false;
+					progressWindow.Close();
 					await Logger.LogErrorAsync("Terminating install due to unhandled exception:");
 					throw;
 				}

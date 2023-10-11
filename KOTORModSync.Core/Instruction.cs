@@ -998,6 +998,7 @@ namespace KOTORModSync.Core
 
 					IniHelper.ReplacePlaintextLog(tslPatcherDirectory);
 					IniHelper.ReplaceLookupGameFolder(tslPatcherDirectory);
+					IniHelper.DisableConfirmations(tslPatcherDirectory);
 
 					string args = $@"""{MainConfig.DestinationPath}""" // arg1 = swkotor directory
 						+ $@" ""{tslPatcherDirectory}""" // arg2 = mod directory (where tslpatchdata folder is)
@@ -1103,6 +1104,7 @@ namespace KOTORModSync.Core
 							: new DirectoryInfo(sourcePath);     // It's a folder, create a DirectoryInfo instance
 						IniHelper.ReplacePlaintextLog(tslPatcherDirectory);
 						IniHelper.ReplaceLookupGameFolder(tslPatcherDirectory);
+						IniHelper.DisableConfirmations(tslPatcherDirectory);
 
 						(int childExitCode, string output, string error) =
 							await PlatformAgnosticMethods.ExecuteProcessAsync(

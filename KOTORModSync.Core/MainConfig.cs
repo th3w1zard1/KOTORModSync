@@ -38,8 +38,8 @@ namespace KOTORModSync.Core
 			TSLPatcher = 0,
 
 			[DefaultValue(true)]
-			[Description("Use PyKotorCLI")]
-			PyKotorCLI = 1,
+			[Description("Use HoloPatcher")]
+			HoloPatcher = 1,
 		}
 
 		[Description("Only components with the selected compatibility level will be installed")]
@@ -62,7 +62,7 @@ namespace KOTORModSync.Core
 		}
 
 		[NotNull]
-		public static string CurrentVersion => "0.10.31";
+		public static string CurrentVersion => "0.10.32";
 
 		[UsedImplicitly]
 		[NotNull]

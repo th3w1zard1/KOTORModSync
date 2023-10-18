@@ -16,14 +16,13 @@ namespace KOTORModSync.Core.TSLPatcher
 {
 	public static class IniHelper
 	{
-		// Stop TSLPatcher from automatically assuming the KOTOR directory.
-		public static void ReplaceLookupGameFolder([NotNull] DirectoryInfo directory)
+		public static void ReplaceIniPattern([NotNull] DirectoryInfo directory, string pattern, string replacement)
 		{
 			if ( directory == null )
 				throw new ArgumentNullException(nameof( directory ));
 
 			FileInfo[] iniFiles = directory.GetFilesSafely(searchPattern: "*.ini", SearchOption.AllDirectories);
-			if ( iniFiles is null || iniFiles.Length == 0 )
+			if ( iniFiles.Length == 0 )
 				throw new InvalidOperationException("No .ini files found!");
 
 			foreach ( FileInfo file in iniFiles )
@@ -31,82 +30,7 @@ namespace KOTORModSync.Core.TSLPatcher
 				string filePath = file.FullName;
 				string fileContents = File.ReadAllText(filePath);
 
-				// Create a regular expression pattern to match "LookupGameFolder=1" with optional whitespace
-				const string pattern = @"LookupGameFolder\s*=\s*1";
-
-				// Use Regex.IsMatch to check if the pattern exists in the file contents
-				if ( !Regex.IsMatch(fileContents, pattern) )
-					continue;
-
-				Logger.LogVerbose($"Preventing tslpatcher's automatic game lookups '{file.Name}'");
-				fileContents = Regex.Replace(fileContents, pattern, replacement: "LookupGameFolder=0");
-
-				// Write the modified file contents back to the file
-				File.WriteAllText(filePath, fileContents);
-			}
-		}
-
-		// use ConfirmationText= for installlog.txt instead of installlog.rtf
-		public static void DisableConfirmations([NotNull] DirectoryInfo directory)
-		{
-			if ( directory == null )
-				throw new ArgumentNullException(nameof( directory ));
-
-			FileInfo[] iniFiles = directory.GetFilesSafely(searchPattern: "*.ini", SearchOption.AllDirectories);
-			if ( iniFiles is null || iniFiles.Length == 0 )
-				throw new InvalidOperationException("No .ini files found!");
-
-			foreach ( FileInfo file in iniFiles )
-			{
-				if ( file is null )
-					continue;
-
-				string filePath = file.FullName;
-				string fileContents = File.ReadAllText(filePath);
-
-				// Create a regular expression pattern to match "ConfirmMessage=0" with optional whitespace
-				const string pattern = @"^.*ConfirmMessage\s*=\s*.*$";
-
-				// Use Regex.IsMatch to check if the pattern exists in the file contents
-				if (!Regex.IsMatch(fileContents, pattern, RegexOptions.IgnoreCase | RegexOptions.Multiline))
-					continue;
-
-				Logger.LogVerbose($"Disabling TSLPatcher confirmations in '{file.Name}'");
-				fileContents = Regex.Replace(fileContents, pattern, replacement: "ConfirmMessage=N/A", RegexOptions.IgnoreCase | RegexOptions.Multiline);
-
-				// Write the modified file contents back to the file
-				File.WriteAllText(filePath, fileContents);
-			}
-		}
-
-		// use PlaintextLog=1 for installlog.txt instead of installlog.rtf
-		public static void ReplacePlaintextLog([NotNull] DirectoryInfo directory)
-		{
-			if ( directory == null )
-				throw new ArgumentNullException(nameof( directory ));
-
-			FileInfo[] iniFiles = directory.GetFilesSafely(searchPattern: "*.ini", SearchOption.AllDirectories);
-			if ( iniFiles is null || iniFiles.Length == 0 )
-				throw new InvalidOperationException("No .ini files found!");
-
-			foreach ( FileInfo file in iniFiles )
-			{
-				if ( file is null )
-					continue;
-
-				string filePath = file.FullName;
-				string fileContents = File.ReadAllText(filePath);
-
-				// Create a regular expression pattern to match "PlaintextLog=0" with optional whitespace
-				const string pattern = @"PlaintextLog\s*=\s*0";
-
-				// Use Regex.IsMatch to check if the pattern exists in the file contents
-				if ( !Regex.IsMatch(fileContents, pattern, RegexOptions.IgnoreCase) )
-					continue;
-
-				Logger.LogVerbose($"Redirecting TSLPatcher logging from '{file.Name}' to 'installlog.txt'");
-				Logger.LogVerbose($"change 'PlaintextLog' from 0 to 1 in '{file.Name}'");
-				fileContents = Regex.Replace(fileContents, pattern, replacement: "PlaintextLog=1");
+				fileContents = Regex.Replace(fileContents, pattern, replacement, RegexOptions.IgnoreCase | RegexOptions.Multiline);
 
 				// Write the modified file contents back to the file
 				File.WriteAllText(filePath, fileContents);

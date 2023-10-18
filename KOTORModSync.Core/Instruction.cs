@@ -1004,7 +1004,7 @@ namespace KOTORModSync.Core
 						+ $@" --tslpatchdata=""{tslPatcherDirectory}""" // arg2 = mod directory (where tslpatchdata folder is)
 						+ (string.IsNullOrEmpty(Arguments)
 							? ""
-							: $"--namespace-option-index={Arguments}"); // arg3 = (optional) install option integer index from namespaces.ini
+							: $" --namespace-option-index={Arguments}"); // arg3 = (optional) install option integer index from namespaces.ini
 
 					string thisExe = null;
 					FileInfo tslPatcherCliPath = null;

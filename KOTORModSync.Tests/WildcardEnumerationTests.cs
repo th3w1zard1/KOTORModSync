@@ -44,25 +44,25 @@ namespace KOTORModSync.Tests
 			};
 
 			// Automatically create subfolders and write files
-			foreach ( var kvp in pathsToTest )
+			foreach ( KeyValuePair<string, string> kvp in pathsToTest )
 			{
 				string realPath = Path.Combine(_basePath, kvp.Key);
-				string directoryPath = Path.GetDirectoryName(realPath);
+				string? directoryPath = Path.GetDirectoryName(realPath);
 				if ( !Directory.Exists(directoryPath) )
 				{
-					Directory.CreateDirectory(directoryPath);
+					_ = Directory.CreateDirectory(directoryPath);
 				}
 
-				File.WriteAllText(realPath, "Arbitrary content for testing.");
+				File.WriteAllText(realPath, contents: "Arbitrary content for testing.");
 			}
 
 			// Test the EnumerateFilesWithWildcards function
-			foreach ( var kvp in pathsToTest )
+			foreach ( KeyValuePair<string, string> kvp in pathsToTest )
 			{
 				string wildcardPath = Path.Combine(_basePath, kvp.Value);
 				List<string> paths = new()
 				{
-					wildcardPath
+					wildcardPath,
 				};
 				List<string> files = PathHelper.EnumerateFilesWithWildcards(paths);
 
@@ -193,7 +193,7 @@ namespace KOTORModSync.Tests
 					path2: "Ultimate_Robes_Repair_For_TSL*",
 					path3: "Ultimate_Robes_Repair_For_TSL*",
 					path4: "*.*"
-				)
+				),
 			};
 
 			foreach ( string path in pathsToTest )

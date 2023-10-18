@@ -786,7 +786,7 @@
                 <CheckBox Content="Use multiple threads for IO operations" IsChecked="{Binding useMultiThreadedIO}"
                           ToolTip.Tip="Whether to concurrently perform disk IO work, or queue them one by one. Recommend this Unchecked if your mod dir or kotor dir is on a HDD. Check this if both dirs are on a SSD." />
                 <TextBlock Text="Patcher Option:"
-                           ToolTip.Tip="Mods are packaged with 'TSLPatcher.exe' by default. Use 'PyKotorCLI' to reduce tedious clicking through tslpatcher windows (beta - use at own risk)." />
+                           ToolTip.Tip="Mods are packaged with 'TSLPatcher.exe' by default. Use 'HoloPatcher' to reduce tedious clicking through tslpatcher windows." />
                 <ComboBox HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
                           ItemsSource="{Binding AllAvailablePatchers}"
                           SelectedItem="{Binding patcherOptionString}"

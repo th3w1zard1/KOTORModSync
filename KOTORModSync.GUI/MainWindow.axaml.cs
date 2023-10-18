@@ -924,37 +924,37 @@ namespace KOTORModSync
 					return (false, "Please set your directories first");
 				}
 
-				bool pykotorIsExecutable = true;
-				bool pykotorTestExecute = true;
-				if ( MainConfig.PatcherOption == MainConfig.AvailablePatchers.PyKotorCLI )
+				bool holopatcherIsExecutable = true;
+				bool holopatcherTestExecute = true;
+				if ( MainConfig.PatcherOption == MainConfig.AvailablePatchers.HoloPatcher )
 				{
-					pykotorTestExecute = false;
-					string pykotorcliPath = Path.Combine(
+					holopatcherTestExecute = false;
+					string holopatcherCliPath = Path.Combine(
 						Utility.GetExecutingAssemblyDirectory(),
 						path2: "Resources",
 						Environment.OSVersion.Platform == PlatformID.Win32NT
-							? "pykotorcli.exe"
-							: "pykotorcli"
+							? "holopatcher.exe"
+							: "holopatcher"
 					);
 
-					await Logger.LogAsync("Ensuring the pykotorcli binary is executable...");
+					await Logger.LogVerboseAsync("Ensuring the holopatcher binary has executable permissions...");
 					try
 					{
-						await PlatformAgnosticMethods.MakeExecutableAsync(pykotorcliPath);
+						await PlatformAgnosticMethods.MakeExecutableAsync(holopatcherCliPath);
 					}
 					catch ( Exception e )
 					{
 						await Logger.LogExceptionAsync(e);
-						pykotorIsExecutable = false;
+						holopatcherIsExecutable = false;
 					}
 
-					(int, string, string) result = await PlatformAgnosticMethods.ExecuteProcessAsync(pykotorcliPath);
-					if ( result.Item1 == 1 ) // should return syntax error code since we passed no arguments
-						pykotorTestExecute = true;
+					(int, string, string) result = await PlatformAgnosticMethods.ExecuteProcessAsync(holopatcherCliPath, cmdlineArgs:"--install");
+					if ( result.Item1 == 2 ) // should return syntax error code since we passed no arguments
+						holopatcherTestExecute = true;
 				}
 				else if ( !RuntimeInformation.IsOSPlatform(OSPlatform.Windows) )
 				{
-					return (false,	"TSLPatcher is not supported on non-windows operating systems, please use the PyKotorCLI patcher option.");
+					return (false,	"TSLPatcher is not supported on non-windows operating systems, please use the HoloPatcher patcher option.");
 				}
 
 				if ( MainConfig.AllComponents.IsNullOrEmptyCollection() )
@@ -1053,17 +1053,17 @@ namespace KOTORModSync
 					await Logger.LogErrorAsync(informationMessage);
 				}
 
-				if ( !pykotorIsExecutable )
+				if ( !holopatcherIsExecutable )
 				{
 					informationMessage =
-						"The PyKotorCLI binary does not seem to be executable, please see the logs in the output window for more information.";
+						"The HoloPatcher binary does not seem to be executable, please see the logs in the output window for more information.";
 					await Logger.LogErrorAsync(informationMessage);
 				}
 
-				if ( !pykotorTestExecute )
+				if ( !holopatcherTestExecute )
 				{
 					informationMessage =
-						"The pykotorcli test execution did not pass, this may mean the binary is corrupted or has unresolved dependency problems.";
+						"The holopatcher test execution did not pass, this may mean the binary is corrupted or has unresolved dependency problems.";
 					await Logger.LogErrorAsync(informationMessage);
 				}
 

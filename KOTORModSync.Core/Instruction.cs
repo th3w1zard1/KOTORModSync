@@ -996,25 +996,26 @@ namespace KOTORModSync.Core
 					if ( File.Exists(fullInstallLogFile) )
 						File.Delete(fullInstallLogFile);
 
-					IniHelper.ReplacePlaintextLog(tslPatcherDirectory);
-					IniHelper.ReplaceLookupGameFolder(tslPatcherDirectory);
+					IniHelper.ReplaceIniPattern(tslPatcherDirectory, pattern:@"^\s*PlaintextLog\s*=\s*0\s*$", replacement:"PlaintextLog=1");
+					IniHelper.ReplaceIniPattern(tslPatcherDirectory, pattern:@"^\s*LookupGameFolder\s*=\s*1\s*$", replacement:"LookupGameFolder=0");
+					IniHelper.ReplaceIniPattern(tslPatcherDirectory, pattern:@"^\s*ConfirmMessage\s*=\s*.*$", replacement:"ConfirmMessage=N/A");
 
-					string args = $@"""{MainConfig.DestinationPath}""" // arg1 = swkotor directory
-						+ $@" ""{tslPatcherDirectory}""" // arg2 = mod directory (where tslpatchdata folder is)
+					string args = $@"--install --game-dir=""{MainConfig.DestinationPath}""" // arg1 = swkotor directory
+						+ $@" --tslpatchdata=""{tslPatcherDirectory}""" // arg2 = mod directory (where tslpatchdata folder is)
 						+ (string.IsNullOrEmpty(Arguments)
 							? ""
-							: $" {Arguments}"); // arg3 = (optional) install option integer index from namespaces.ini
+							: $"--namespace-option-index={Arguments}"); // arg3 = (optional) install option integer index from namespaces.ini
 
 					string thisExe = null;
 					FileInfo tslPatcherCliPath = null;
 					switch ( MainConfig.PatcherOption )
 					{
-						case MainConfig.AvailablePatchers.PyKotorCLI:
+						case MainConfig.AvailablePatchers.HoloPatcher:
 							thisExe = Path.Combine(
 								path1: "Resources",
 								RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
-									? "pykotorcli.exe" // windows
-									: "pykotorcli"     // linux/mac
+									? "holopatcher.exe" // windows
+									: "holopatcher"     // linux/mac
 							);
 							break;
 						case MainConfig.AvailablePatchers.TSLPatcher:
@@ -1101,8 +1102,10 @@ namespace KOTORModSync.Core
 						DirectoryInfo tslPatcherDirectory = File.Exists(sourcePath)
 							? new FileInfo(sourcePath).Directory // It's a file, get the parent folder.
 							: new DirectoryInfo(sourcePath);     // It's a folder, create a DirectoryInfo instance
-						IniHelper.ReplacePlaintextLog(tslPatcherDirectory);
-						IniHelper.ReplaceLookupGameFolder(tslPatcherDirectory);
+
+						IniHelper.ReplaceIniPattern(tslPatcherDirectory, pattern:@"^\s*PlaintextLog\s*=\s*0\s*$", replacement:"PlaintextLog=1");
+						IniHelper.ReplaceIniPattern(tslPatcherDirectory, pattern:@"^\s*LookupGameFolder\s*=\s*1\s*$", replacement:"LookupGameFolder=0");
+						IniHelper.ReplaceIniPattern(tslPatcherDirectory, pattern:@"^\s*ConfirmMessage\s*=\s*.*$", replacement:"ConfirmMessage=N/A");
 
 						(int childExitCode, string output, string error) =
 							await PlatformAgnosticMethods.ExecuteProcessAsync(

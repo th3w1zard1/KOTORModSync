@@ -103,7 +103,7 @@ namespace KOTORModSync.Core
 			public override bool Apply(HashSet<FileState> fileStates)
 			{
 				FileState state = fileStates.FirstOrDefault(fs => fs.CurrentPath == SourcePath);
-				return ( state != null && fileStates.Add(new FileState { CurrentPath = DestinationPath } ) )  || MainInstruction.Overwrite;
+				return ( state != null && fileStates.Add(new FileState { CurrentPath = DestinationPath } ) );
 			}
 		}
 
@@ -114,7 +114,7 @@ namespace KOTORModSync.Core
 			public override bool Apply(HashSet<FileState> fileStates)
 			{
 				FileState state = fileStates.FirstOrDefault(fs => fs.CurrentPath == FilePath);
-				return ( state != null && fileStates.Contains(state) ) || MainInstruction.Overwrite;
+				return ( state != null && fileStates.Contains(state) );
 			}
 		}
 
@@ -191,7 +191,9 @@ namespace KOTORModSync.Core
 					string newPath = PathHelper.FixPathFormatting(virtualFile);
 					success &= fileStates.Add(new FileState { CurrentPath = newPath, OriginalPath = newPath, IsVirtual = true });
 				}
-
+				
+				if ( success is null )
+					success = true;
 				return success is true;
 			}
 
@@ -360,7 +362,10 @@ namespace KOTORModSync.Core
 										deferredOperations.Add(
 											new ExtractOperation
 											{
-												ArchivePath = matchedState.CurrentPath, Destination = destination,
+												ArchivePath = matchedState.CurrentPath,
+												Destination = destination,
+												MainInstruction=instruction,
+												MainComponentValidation = this,
 											}
 										);
 									}

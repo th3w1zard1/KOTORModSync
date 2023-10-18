@@ -2616,9 +2616,9 @@ namespace KOTORModSync
 				}
 
 				var thisInstruction = (Instruction)((Button)sender).Tag;
-				int index = CurrentComponent.Instructions.IndexOf(thisInstruction);
+				int index = thisInstruction.GetParentComponent().Instructions.IndexOf(thisInstruction);
 
-				CurrentComponent.DeleteInstruction(index);
+				thisInstruction.GetParentComponent().DeleteInstruction(index);
 				await Logger.LogVerboseAsync(
 					$"Component '{CurrentComponent.Name}': instruction '{thisInstruction?.Action}' deleted at index #{index}"
 				);

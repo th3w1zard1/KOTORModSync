@@ -429,9 +429,8 @@ namespace KOTORModSync.Core
 			IsSelected = GetValueOrDefault<bool>(componentDict, key: "IsSelected");
 
 			Instructions = DeserializeInstructions(
-				GetValueOrDefault<IList<object>>(componentDict, key: "Instructions")
+				GetValueOrDefault<IList<object>>(componentDict, key: "Instructions"), this
 			);
-			Instructions.ForEach(instruction => instruction?.SetParentComponent(this));
 			Options = DeserializeOptions(GetValueOrDefault<IList<object>>(componentDict, key: "Options"));
 
 			// Validate and log additional errors/warnings.
@@ -535,7 +534,8 @@ namespace KOTORModSync.Core
 		[ItemNotNull]
 		[NotNull]
 		private ObservableCollection<Instruction> DeserializeInstructions(
-			[CanBeNull][ItemCanBeNull] IList<object> instructionsSerializedList
+			[CanBeNull][ItemCanBeNull] IList<object> instructionsSerializedList,
+			Component thisComponent
 		)
 		{
 			if ( instructionsSerializedList.IsNullOrEmptyCollection() )
@@ -586,6 +586,7 @@ namespace KOTORModSync.Core
 					)
 					?? string.Empty;
 				instructions.Add(instruction);
+				instruction.SetParentComponent(thisComponent);
 			}
 
 			return instructions;
@@ -627,7 +628,7 @@ namespace KOTORModSync.Core
 				option.Dependencies =
 					GetValueOrDefault<List<Guid>>(optionsDict, key: "Dependencies") ?? new List<Guid>();
 				option.Instructions = DeserializeInstructions(
-					GetValueOrDefault<IList<object>>(optionsDict, key: "Instructions")
+					GetValueOrDefault<IList<object>>(optionsDict, key: "Instructions"), option
 				);
 				option.IsSelected = GetValueOrDefault<bool>(optionsDict, key: "IsSelected");
 				options.Add(option);
@@ -1440,6 +1441,7 @@ namespace KOTORModSync.Core
 			{
 				Instructions.Insert(index, instruction);
 			}
+			instruction.SetParentComponent(this);
 		}
 
 		public void DeleteInstruction(int index) => Instructions.RemoveAt(index);

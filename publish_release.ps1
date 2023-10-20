@@ -5,7 +5,28 @@ $sevenZipPath = "C:\Program Files\7-Zip\7z.exe"  # Path to 7zip executable
 $publishProfileFiles = Get-ChildItem -Path $publishProfilesDir -Filter "*.pubxml"
 
 # Remove old builds if they exist.
-Remove-Item "bin" -Recurse -ErrorAction SilentlyContinue
+Get-ChildItem -Path "bin" -Filter "*.zip" | ForEach-Object {
+    Remove-Item -Path $_.FullName -Force -Confirm:$false
+}
+Get-ChildItem -Path "bin/publish" -Recurse | ForEach-Object {
+    Remove-Item -Path $_.FullName -Force -Confirm:$false -Recurse
+}
+
+function Set-HiddenAttribute {
+    param (
+        [string]$path
+    )
+    $file = Get-Item $path
+    $file.Attributes = 'Hidden'
+}
+
+function Remove-HiddenAttribute {
+    param (
+        [string]$path
+    )
+    $file = Get-Item $path
+    $file.Attributes = 'Normal'
+}
 
 foreach ($file in $publishProfileFiles) {
     Write-Host "Publishing configuration for '$file'"
@@ -42,19 +63,36 @@ foreach ($file in $publishProfileFiles) {
 
         $publishFolder = Get-Item (Join-Path -Path (Split-Path -Path $projectFile) -ChildPath "..\bin\publish\$lastSection\$framework\$topLevelFolder")
 
-        # Copy the license
-        Copy-Item -Path "LICENSE.TXT" -Destination $publishFolder
-        Copy-Item -Path "KOTORModSync - Official Documentation.txt" -Destination $publishFolder
+        # Ensure 'docs' folder exists inside the $publishFolder
+        $docsFolder = Join-Path -Path $publishFolder -ChildPath "docs"
+        if (-not (Test-Path $docsFolder)) {
+            New-Item -Path $docsFolder -ItemType Directory
+        }
+
+        # Copy the license and documentation into the 'docs' folder
+        Copy-Item -Path "LICENSE.TXT" -Destination $docsFolder
+        Copy-Item -Path "KOTORModSync - Official Documentation.txt" -Destination $docsFolder
+
 
         # Define the archive file path
         $archiveFile = Join-Path -Path (Split-Path -Path "bin\publish") -ChildPath "$rid.zip"
 
+        # Before archiving, set *.pdb files to hidden
+        Get-ChildItem -Path $publishFolder -Recurse -Filter "*.pdb" | ForEach-Object {
+            Set-HiddenAttribute -path $_.FullName
+        }
+
         # Create the archive using 7zip CLI
         $archiveCommand = "& `"$sevenZipPath`" a -tzip `"$archiveFile`" `"$publishFolder*`""
         Invoke-Expression $archiveCommand
+        
+        # Before deleting, set *.pdb files back to normal
+        Get-ChildItem -Path "$publishFolder\..\$topLevelFolder" -Recurse -Filter "*.pdb" | ForEach-Object {
+            Remove-HiddenAttribute -path $_.FullName
+        }
 
         # Remove the leftover folder
-        Remove-Item -Path "$publishFolder\..\$topLevelFolder" -Recurse
+        Remove-Item -Path "$publishFolder\..\$topLevelFolder" -Recurse -Force
 
         Write-Host "Publishing with framework '$framework' completed successfully."
     }

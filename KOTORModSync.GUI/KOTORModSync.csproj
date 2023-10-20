@@ -115,7 +115,7 @@
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
 
-      <!-- For Mac -->
+    <!-- For Mac -->
     <Copy Condition=" '$(RuntimeIdentifier)' == 'osx-x64' OR '$(RuntimeIdentifier)' == 'osx-amd64' " SourceFiles="$(SolutionDir)vendor$(DirectorySeparatorChar)bin$(DirectorySeparatorChar)holopatcher_mac" DestinationFolder="$(TargetDir)Resources$(DirectorySeparatorChar)" />
     <Copy Condition=" '$(RuntimeIdentifier)' == 'osx-x64' OR '$(RuntimeIdentifier)' == 'osx-amd64' " SourceFiles="$(SolutionDir)vendor$(DirectorySeparatorChar)bin$(DirectorySeparatorChar)holopatcher_mac" DestinationFolder="$(PublishDir)Resources$(DirectorySeparatorChar)" />
     <Move Condition=" '$(RuntimeIdentifier)' == 'osx-x64' OR '$(RuntimeIdentifier)' == 'osx-amd64' " SourceFiles="$(TargetDir)Resources$(DirectorySeparatorChar)holopatcher_mac" DestinationFiles="$(TargetDir)Resources$(DirectorySeparatorChar)holopatcher" />
@@ -159,33 +159,6 @@
     <Move SourceFiles="@(TmlFiles)" DestinationFolder="@(BackupFolder)" />
     <Move SourceFiles="@(TomlFiles)" DestinationFolder="@(BackupFolder)" />
     <Move SourceFiles="@(LogFiles)" DestinationFolder="@(BackupFolder)" />
-  </Target>
-
-  <!-- Zip everything up for a release. Doesn't work yet. -->
-  <Target Name="Zip" AfterTargets="Publish">
-    <PropertyGroup>
-      <TargetFolders>$(TargetDir)</TargetFolders>
-      <ZipOutputDir>$(TargetDir)..\</ZipOutputDir>
-    </PropertyGroup>
-    <ItemGroup>
-      <ZipFiles Include="$(TargetFolders)**\*.*" Exclude="$(TargetFolders)**\*.zip" />
-      <ZipArchiveItems Include="@(ZipFiles)">
-        <TargetPath>$([System.IO.Path]::GetFullPath("%(ZipFiles.RecursiveDir)%(ZipFiles.Filename).zip"))</TargetPath>
-      </ZipArchiveItems>
-    </ItemGroup>
-    <MakeDir Directories="@(ZipArchiveItems->'%(RootDir)%(Directory)')" />
-    <PropertyGroup>
-      <SevenZipExecuted Condition="'$(SevenZipExecuted)' != 'true' and '$(OS)' == 'Windows_NT' and !Exists('C:\Program Files\7-Zip\7z.exe')">
-        true
-      </SevenZipExecuted>
-      <SevenZipExecuted Condition="'$(SevenZipExecuted)' != 'true' and '$(OS)' != 'Windows_NT' and !Exists('/usr/bin/7z')">
-        true
-      </SevenZipExecuted>
-    </PropertyGroup>
-    <Exec Command="7z a &quot;%(ZipArchiveItems.Identity)&quot; &quot;%(ZipFiles.FullPath)&quot;" IgnoreExitCode="true" Condition="'$(SevenZipExecuted)' == 'true'">
-      <Output TaskParameter="ExitCode" PropertyName="SevenZipExitCode" />
-    </Exec>
-    <Message Text="7-Zip command not found. Skipping zip portion." Importance="High" Condition="'$(SevenZipExecuted)' == 'true' and '$(SevenZipExitCode)' != '0'" />
   </Target>
 
   <!-- Licensing -->

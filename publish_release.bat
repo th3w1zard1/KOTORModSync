@@ -29,7 +29,7 @@ for /r "%publishProfilesDir%" %%i in (*.pubxml) do (
     echo Subfolder: '!lastSection!'
 
     :: Build the dotnet publish command with the --framework argument
-    set publishCommand=dotnet publish %projectFile% --framework !framework! /p:PublishProfile=!fileName!.pubxml
+    set publishCommand=dotnet publish %projectFile% -c Release --framework !framework! /p:PublishProfile=!fileName!.pubxml
     echo Publish command: !publishCommand!
 
     :: Execute the publish command

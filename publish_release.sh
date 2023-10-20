@@ -35,7 +35,7 @@ for file in "$publishProfilesDir"/*.pubxml; do
     echo "Subfolder: '$lastSection'"
 
     # Build the dotnet publish command with the --framework argument
-    publishCommand="dotnet publish $projectFile --framework $framework -p:PublishProfile=$file"
+    publishCommand="dotnet publish $projectFile -c Release --framework $framework -p:PublishProfile=$file"
     echo "Publish command: $publishCommand"
 
     # Execute the publish command
@@ -72,6 +72,9 @@ for file in "$publishProfilesDir"/*.pubxml; do
 
         # Define the archive file path
         archiveFile="./bin/$rid.zip"
+
+        # Before archiving, set *.pdb files to hidden
+        find "$publishFolder" -name "*.pdb" -exec chmod 600 {} \;
 
         # Create the archive using 7zip CLI
         $sevenZipPath a -tzip "$archiveFile" "$publishFolder/*"

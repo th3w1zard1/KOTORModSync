@@ -116,10 +116,10 @@
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
 
       <!-- For Mac -->
-    <Copy Condition=" '$(RuntimeIdentifier)' == 'osx-x64' " SourceFiles="$(SolutionDir)vendor$(DirectorySeparatorChar)bin$(DirectorySeparatorChar)holopatcher_mac" DestinationFolder="$(TargetDir)Resources$(DirectorySeparatorChar)" />
-    <Copy Condition=" '$(RuntimeIdentifier)' == 'osx-x64' " SourceFiles="$(SolutionDir)vendor$(DirectorySeparatorChar)bin$(DirectorySeparatorChar)holopatcher_mac" DestinationFolder="$(PublishDir)Resources$(DirectorySeparatorChar)" />
-    <Move Condition=" '$(RuntimeIdentifier)' == 'osx-x64' " SourceFiles="$(TargetDir)Resources$(DirectorySeparatorChar)holopatcher_mac" DestinationFiles="$(TargetDir)Resources$(DirectorySeparatorChar)holopatcher" />
-    <Move Condition=" '$(RuntimeIdentifier)' == 'osx-x64' " SourceFiles="$(PublishDir)Resources$(DirectorySeparatorChar)holopatcher_mac" DestinationFiles="$(PublishDir)Resources$(DirectorySeparatorChar)holopatcher" />
+    <Copy Condition=" '$(RuntimeIdentifier)' == 'osx-x64' OR '$(RuntimeIdentifier)' == 'osx-amd64' " SourceFiles="$(SolutionDir)vendor$(DirectorySeparatorChar)bin$(DirectorySeparatorChar)holopatcher_mac" DestinationFolder="$(TargetDir)Resources$(DirectorySeparatorChar)" />
+    <Copy Condition=" '$(RuntimeIdentifier)' == 'osx-x64' OR '$(RuntimeIdentifier)' == 'osx-amd64' " SourceFiles="$(SolutionDir)vendor$(DirectorySeparatorChar)bin$(DirectorySeparatorChar)holopatcher_mac" DestinationFolder="$(PublishDir)Resources$(DirectorySeparatorChar)" />
+    <Move Condition=" '$(RuntimeIdentifier)' == 'osx-x64' OR '$(RuntimeIdentifier)' == 'osx-amd64' " SourceFiles="$(TargetDir)Resources$(DirectorySeparatorChar)holopatcher_mac" DestinationFiles="$(TargetDir)Resources$(DirectorySeparatorChar)holopatcher" />
+    <Move Condition=" '$(RuntimeIdentifier)' == 'osx-x64' OR '$(RuntimeIdentifier)' == 'osx-amd64' " SourceFiles="$(PublishDir)Resources$(DirectorySeparatorChar)holopatcher_mac" DestinationFiles="$(PublishDir)Resources$(DirectorySeparatorChar)holopatcher" />
 
 	  <!-- For Linux -->
     <Copy Condition=" '$(RuntimeIdentifier)' == 'linux-x64' " SourceFiles="$(SolutionDir)vendor$(DirectorySeparatorChar)bin$(DirectorySeparatorChar)holopatcher_linux" DestinationFolder="$(TargetDir)Resources$(DirectorySeparatorChar)" />
@@ -128,8 +128,8 @@
     <Move Condition=" '$(RuntimeIdentifier)' == 'linux-x64' " SourceFiles="$(PublishDir)Resources$(DirectorySeparatorChar)holopatcher_linux" DestinationFiles="$(PublishDir)Resources$(DirectorySeparatorChar)holopatcher" />
 
 	  <!-- For Windows -->
-	  <Copy Condition=" '$(RuntimeIdentifier)' != 'linux-x64' AND '$(RuntimeIdentifier)' != 'osx-x64' AND '$(RuntimeIdentifiers)' != 'osx-amd64' " SourceFiles="$(SolutionDir)vendor$(DirectorySeparatorChar)bin$(DirectorySeparatorChar)holopatcher.exe" DestinationFolder="$(TargetDir)Resources$(DirectorySeparatorChar)" />
-	  <Copy Condition=" '$(RuntimeIdentifier)' != 'linux-x64' AND '$(RuntimeIdentifier)' != 'osx-x64' AND '$(RuntimeIdentifiers)' != 'osx-amd64' " SourceFiles="$(SolutionDir)vendor$(DirectorySeparatorChar)bin$(DirectorySeparatorChar)holopatcher.exe" DestinationFolder="$(PublishDir)Resources$(DirectorySeparatorChar)" />
+	  <Copy Condition=" '$(RuntimeIdentifier)' != 'linux-x64' AND '$(RuntimeIdentifier)' != 'osx-x64' AND '$(RuntimeIdentifier)' != 'osx-amd64' " SourceFiles="$(SolutionDir)vendor$(DirectorySeparatorChar)bin$(DirectorySeparatorChar)holopatcher.exe" DestinationFolder="$(TargetDir)Resources$(DirectorySeparatorChar)" />
+	  <Copy Condition=" '$(RuntimeIdentifier)' != 'linux-x64' AND '$(RuntimeIdentifier)' != 'osx-x64' AND '$(RuntimeIdentifier)' != 'osx-amd64' " SourceFiles="$(SolutionDir)vendor$(DirectorySeparatorChar)bin$(DirectorySeparatorChar)holopatcher.exe" DestinationFolder="$(PublishDir)Resources$(DirectorySeparatorChar)" />
 
     <!-- For x64 Platform -->
     <Copy Condition=" '$(Platform)' == 'x64' " SourceFiles="$(SolutionDir)vendor$(DirectorySeparatorChar)lib$(DirectorySeparatorChar)7z_x64.dll" DestinationFolder="$(TargetDir)Resources$(DirectorySeparatorChar)" />

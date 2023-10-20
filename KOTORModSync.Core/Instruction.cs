@@ -1007,20 +1007,17 @@ namespace KOTORModSync.Core
 							: $" --namespace-option-index={Arguments}"); // arg3 = (optional) install option integer index from namespaces.ini
 
 					string thisExe = null;
-					FileInfo tslPatcherCliPath = null;
+					FileInfo patcherCliPath = null;
 					switch ( MainConfig.PatcherOption )
 					{
 						case MainConfig.AvailablePatchers.HoloPatcher:
-							thisExe = Path.Combine(
-								path1: "Resources",
-								RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
-									? "holopatcher.exe" // windows
-									: "holopatcher"     // linux/mac
-							);
+							thisExe = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+								? "holopatcher.exe" // windows
+								: "holopatcher";    // linux/mac
 							break;
 						case MainConfig.AvailablePatchers.TSLPatcher:
 						default:
-							tslPatcherCliPath = new FileInfo(t);
+							patcherCliPath = new FileInfo(t);
 							if (int.TryParse(Arguments.Trim(), out int namespaceId))
 							{
 								string message = $"If asked to pick an option, select the {Serializer.ToOrdinal(namespaceId + 1)} from the top.";
@@ -1031,24 +1028,19 @@ namespace KOTORModSync.Core
 							break;
 					}
 
-					if ( tslPatcherCliPath is null )
-					{
-						string executingAssemblyLocation = Utility.Utility.GetExecutingAssemblyDirectory();
-
-						tslPatcherCliPath = new FileInfo(Path.Combine(executingAssemblyLocation, thisExe));
-					}
+					patcherCliPath = patcherCliPath ?? new FileInfo(Path.Combine(Utility.Utility.GetResourcesDirectory(), thisExe));
 
 					await Logger.LogAsync("Starting TSLPatcher instructions...");
 					if ( MainConfig.PatcherOption != MainConfig.AvailablePatchers.TSLPatcher )
-						await Logger.LogAsync($"Using CLI to run command: '{tslPatcherCliPath} {args}'");
+						await Logger.LogAsync($"Using CLI to run command: '{patcherCliPath} {args}'");
 
 					// ReSharper disable twice UnusedVariable
 					(int exitCode, string output, string error) = await PlatformAgnosticMethods.ExecuteProcessAsync(
-						tslPatcherCliPath.FullName,
+						patcherCliPath.FullName,
 						args,
 						noAdmin: MainConfig.NoAdmin
 					);
-					await Logger.LogVerboseAsync($"'{tslPatcherCliPath.Name}' exited with exit code {exitCode}");
+					await Logger.LogVerboseAsync($"'{patcherCliPath.Name}' exited with exit code {exitCode}");
 
 					try
 					{

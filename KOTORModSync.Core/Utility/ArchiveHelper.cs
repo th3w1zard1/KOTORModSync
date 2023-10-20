@@ -77,10 +77,8 @@ namespace KOTORModSync.Core.Utility
 
 			try
 			{
-				string exeDir = Utility.GetExecutingAssemblyDirectory();
-				string sevenZDllPath = Path.Combine(exeDir, path2: "Resources", path3: "7z.dll");
-				SevenZipBase.SetLibraryPath(sevenZDllPath); // Path to 7z.dll
-				bool valid = false;
+				SevenZipBase.SetLibraryPath( Path.Combine(Utility.GetResourcesDirectory(), "7z.dll") ); // Path to 7z.dll
+				bool valid;
 				using ( var extractor = new SevenZipExtractor(filePath) )
 				{
 					// The Check() method throws an exception if the archive is invalid.
@@ -123,10 +121,7 @@ namespace KOTORModSync.Core.Utility
 			if ( !RuntimeInformation.IsOSPlatform(OSPlatform.Windows) )
 				throw new NotImplementedException("Non-windows OS's are not currently supported");
 
-			string exeDir = Utility.GetExecutingAssemblyDirectory();
-			string sevenZDllPath = Path.Combine(exeDir, path2: "Resources", path3: "7z.dll");
-
-			SevenZipBase.SetLibraryPath(sevenZDllPath); // Path to 7z.dll
+			SevenZipBase.SetLibraryPath( Path.Combine(Utility.GetResourcesDirectory(), "7z.dll") ); // Path to 7z.dll
 			var extractor = new SevenZipExtractor(stream);
 			extractor.ExtractArchive(destinationDirectory);
 		}

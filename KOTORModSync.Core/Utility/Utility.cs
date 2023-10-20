@@ -6,6 +6,7 @@ using System;
 using System.ComponentModel;
 using System.IO;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using JetBrains.Annotations;
 using KOTORModSync.Core.FileSystemPathing;
 
@@ -32,22 +33,33 @@ namespace KOTORModSync.Core.Utility
 				: fullPath.Replace(MainConfig.SourcePath?.FullName ?? string.Empty, newValue: "<<modDirectory>>")
 					.Replace(MainConfig.DestinationPath?.FullName ?? string.Empty, newValue: "<<kotorDirectory>>");
 
-		[NotNull]
-		public static string GetExecutingAssemblyDirectory()
+		public static bool IsRunningInsideAppBundle(string baseDirectory=null)
 		{
-			string executingAssemblyLocation = Assembly.GetEntryAssembly()?.Location;
-			if ( string.IsNullOrEmpty(executingAssemblyLocation) )
-			{
-				executingAssemblyLocation = Assembly.GetExecutingAssembly().Location;
-			}
+			baseDirectory = baseDirectory ?? GetBaseDirectory();
+			return baseDirectory.Contains(".app/Contents/MacOS");
+		}
 
-			if ( string.IsNullOrEmpty(executingAssemblyLocation) )
-			{
-				executingAssemblyLocation = AppDomain.CurrentDomain.BaseDirectory;
-			}
+		[NotNull]
+		public static string GetBaseDirectory()
+		{
+			string baseDirectory = Assembly.GetEntryAssembly()?.Location;
+			baseDirectory = Path.GetDirectoryName(baseDirectory);
+			baseDirectory = baseDirectory
+				?? Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+			return baseDirectory
+				?? AppDomain.CurrentDomain.BaseDirectory;
+		}
 
-			return Path.GetDirectoryName(executingAssemblyLocation)
-				?? throw new InvalidOperationException("Could not determine the path to the program!");
+		[NotNull]
+		public static string GetResourcesDirectory()
+		{
+			string baseDirectory = GetBaseDirectory();
+
+			return Path.Combine(
+				baseDirectory
+				?? throw new InvalidOperationException("Could not determine the path to the program!"),
+				path2: "Resources"
+			);
 		}
 
 		[CanBeNull]

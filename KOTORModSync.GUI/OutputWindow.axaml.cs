@@ -67,13 +67,16 @@ namespace KOTORModSync
 			};
 
 			string logfileName = $"{Logger.LogFileName}{DateTime.Now:yyyy-MM-dd}";
-			string executingDirectory = Utility.GetExecutingAssemblyDirectory();
-			string logFilePath = Path.Combine(executingDirectory, logfileName + ".txt");
-			if ( !File.Exists(logFilePath) && MainConfig.CaseInsensitivePathing )
-				logFilePath = PathHelper.GetCaseSensitivePath(logFilePath).Item1;
+			string logDir = Path.Combine(Utility.GetBaseDirectory(), "Logs");
+			if ( !Directory.Exists(logDir) )
+				_ = Directory.CreateDirectory(logDir);
+			
+			string logFilePath = Path.Combine(logDir, logfileName + ".log");
+			if ( !File.Exists(logFilePath) )
+				_ = File.Create(logFilePath);
 
 			string[] lines = File.ReadAllLines(logFilePath);
-			int startIndex = Math.Max(val1: 0, lines.Length - _maxLinesShown);
+			int startIndex = Math.Max(0, lines.Length - _maxLinesShown);
 			foreach ( string line in lines.Skip(startIndex) )
 			{
 				AppendLog(line);

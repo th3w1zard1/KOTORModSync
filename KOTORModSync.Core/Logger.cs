@@ -76,7 +76,14 @@ namespace KOTORModSync.Core
 				{
 					try
 					{
-						using ( var writer = new StreamWriter(LogFileName + formattedDate + ".txt", append: true) )
+						string logDir = Path.Combine(Utility.Utility.GetBaseDirectory(), "Logs");
+						if ( !Directory.Exists(logDir) )
+							_ = Directory.CreateDirectory(logDir);
+						string logFilePath = Path.Combine(
+							logDir,
+							LogFileName + formattedDate + ".log"
+						);
+						using ( var writer = new StreamWriter(logFilePath, append: true) )
 						{
 							await writer.WriteLineAsync(logMessage + Environment.NewLine);
 							fileWritten = true;

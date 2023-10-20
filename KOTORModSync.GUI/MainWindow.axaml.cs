@@ -985,8 +985,7 @@ namespace KOTORModSync
 				{
 					holopatcherTestExecute = false;
 					string holopatcherCliPath = Path.Combine(
-						Utility.GetExecutingAssemblyDirectory(),
-						path2: "Resources",
+						Utility.GetResourcesDirectory(),
 						Environment.OSVersion.Platform == PlatformID.Win32NT
 							? "holopatcher.exe"
 							: "holopatcher"

@@ -4,6 +4,7 @@ $publishProfilesDir = "KOTORModSync.GUI\Properties\PublishProfiles"
 $sevenZipPath = "C:\Program Files\7-Zip\7z.exe"  # Path to 7zip executable
 $publishProfileFiles = Get-ChildItem -Path $publishProfilesDir -Filter "*.pubxml"
 $bashLocation = "C:\Program Files\Git\bin\bash.exe"
+$bashZipPath = "C:\Program Files\Git\mingw64\bin\zip.exe"
 
 # Remove old builds if they exist.
 Get-ChildItem -Path "bin" -Filter "*.zip" | ForEach-Object {
@@ -30,24 +31,17 @@ function Remove-HiddenAttribute {
 }
 
 foreach ($file in $publishProfileFiles) {
+    Write-Host ""
     Write-Host "Publishing configuration for '$file'"
     $fileName = [System.IO.Path]::GetFileNameWithoutExtension($file.Name)
     $fileNameParts = $fileName -split '_'
 
     $framework = $fileNameParts[0]
     $rid = $fileNameParts[1]
-    $cpu = ($rid -split '-')[1]
     $lastSection = $fileNameParts[2]
 
-    Write-Host "Framework: '$framework'"
-    Write-Host "RID: '$rid'"
-    Write-Host "CPU: '$cpu'"
-    Write-Host "Subfolder: '$lastSection'"
-
-
     # Build the dotnet publish command with the --framework argument
-    $publishCommand = "dotnet publish $projectFile -c Release --framework $framework /p:PublishProfile=$file"
-    Write-Host "Publish command: $publishCommand"
+    $publishCommand = "dotnet publish $projectFile -c Release --framework $framework /p:PublishProfile=$file 2>&1 | Out-Null"
 
     try {
 
@@ -73,8 +67,6 @@ foreach ($file in $publishProfileFiles) {
         # For EXE paths
         foreach ($exePath in $potentialExePaths) {
             if (Test-Path $exePath) {
-                Write-Host ""
-                Write-Host "Fixing EXE: $exePath"
                 $unixPath = $exePath -replace '\\', '/' -replace 'C:', '/c' -replace ' ', '\ '
                 $command = "& `"$bashLocation`" -c 'chmod +x $unixPath -v'"
                 Write-Host $command
@@ -83,15 +75,14 @@ foreach ($file in $publishProfileFiles) {
         }
 
         # Determine if macOS
-        $isMacOS = $rid -eq "osx-x64" -or $rid -eq "osx-arm64"
+        $isMacOSLegacy = $rid -eq "osx-x64" -or $rid -eq "osx-arm64"
         $destinationResourcesFolder = Join-Path -Path $publishFolder -ChildPath "Resources"
 
         # macOS specific .app structure creation
-        if ($isMacOS) {
+        if ($isMacOSLegacy) {
             $appFolder = Join-Path -Path $publishFolder -ChildPath "KOTORModSync.app"
             $contentsFolder = Join-Path -Path $appFolder -ChildPath "Contents"
             $macOSFolder = Join-Path -Path $contentsFolder -ChildPath "MacOS"
-            $resourcesFolder = Join-Path -Path $contentsFolder -ChildPath "Resources"
 
             # Create the directories
             New-Item -Path $macOSFolder -ItemType Directory -Force
@@ -114,9 +105,7 @@ foreach ($file in $publishProfileFiles) {
         $resourceFiles = Get-ChildItem -Path $destinationResourcesFolder -Recurse -File
         foreach ($file in $resourceFiles) {
             if (Test-Path $file.FullName) {
-                Write-Host ""
                 $filePath = $file.FullName
-                Write-Host "Fixing resource: $filePath"
                 $unixPath = $filePath -replace '\\', '/' -replace 'C:', '/c' -replace ' ', '\ '
                 $command = "& `"$bashLocation`" -c 'chmod +x $unixPath -v'"
                 Write-Host $command
@@ -134,7 +123,7 @@ foreach ($file in $publishProfileFiles) {
         Copy-Item -Path "LICENSE.TXT" -Destination $docsFolder
         Copy-Item -Path "KOTORModSync - Official Documentation.txt" -Destination $docsFolder
 
-        if ($isMacOS) {
+        if ($isMacOSLegacy) {
             # Set the directory for the zip operation to the .app folder
             $archiveSource = $appFolder
         } else {
@@ -147,16 +136,40 @@ foreach ($file in $publishProfileFiles) {
         }
 
         # Define the archive file path
-        $archiveFile = Join-Path -Path (Split-Path -Path "bin\publish") -ChildPath "$rid.zip"
+        if ($rid -like "win*") {
+            $archiveFile = Join-Path -Path (Split-Path -Path "bin\publish") -ChildPath "$rid.zip"
+            $archiveFile = Join-Path -Path $absoluteCwd -ChildPath $archiveFile
+            Compress-Archive -Path $archiveSource -DestinationPath $archiveFile -Force
+        } else {
+            # Define the archive file path
+            $archiveFile = Join-Path -Path (Split-Path -Path "bin\publish") -ChildPath "$rid.tar.gz"
+            $archiveFile = Join-Path -Path $absoluteCwd -ChildPath $archiveFile
 
-        # Create the archive using 7zip CLI
-        $archiveCommand = "& `"$sevenZipPath`" a -tzip `"$archiveFile`" `"$archiveSource*`""
-        Invoke-Expression $archiveCommand
+            # Convert Windows path to Unix-like path for usage in Git Bash
+            $unixArchivePath = $archiveFile -replace '\\', '/' -replace 'C:', '/c' -replace ' ', '\ '
+            $unixArchiveSource = $archiveSource -replace '\\', '/' -replace 'C:', '/c' -replace ' ', '\ '
+
+            # Change permissions to 777 for all files and directories
+            $command = "& `"$bashLocation`" -c 'find $unixArchiveSource -type d -exec chmod 777 {} \;'"
+            Write-Host $command
+            Invoke-Expression $command
+
+            $command = "& `"$bashLocation`" -c 'find $unixArchiveSource -type f -exec chmod 777 {} \;'"
+            Write-Host $command
+            Invoke-Expression $command
+
+            # Use tar to compress with maximum gzip compression
+            $command = "& `"$bashLocation`" -c 'tar czf $unixArchivePath $unixArchiveSource'"
+            Write-Host $command
+            Invoke-Expression $command
+
+        }
 
         # Before deleting, set *.pdb files back to normal
         Get-ChildItem -Path "$publishFolder\..\$topLevelFolder" -Recurse -Filter "*.pdb" | ForEach-Object {
             Remove-HiddenAttribute -path $_.FullName
         }
+
 
         # Remove the leftover folder
         Remove-Item -Path "$publishFolder\..\$topLevelFolder" -Recurse -Force

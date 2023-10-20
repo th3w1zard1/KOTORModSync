@@ -48,12 +48,10 @@
   <!-- Customization -->
   <ItemGroup>
     <Content Include="icon53.ico" />
+    <None Include="Info.plist" Pack="true" PackagePath="Contents\" /> <!-- For .app packaging on mac os -->
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\KOTORModSync.Core\KOTORModSync.Core.csproj" />
-    <PackageReference Include="Avalonia.Controls.ItemsRepeater" Version="11.0.4" />
-    <PackageReference Include="Avalonia.ReactiveUI" Version="11.0.4" />
-    <PackageReference Include="Avalonia.Themes.Fluent" Version="11.0.4" />
     <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
   </ItemGroup>
 
@@ -61,7 +59,8 @@
   <PropertyGroup>
     <AvaloniaCopyWin32Dll>false</AvaloniaCopyWin32Dll>
     <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
-    <NoWin32Manifest>true</NoWin32Manifest>
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+    <NoWin32Manifest>true</NoWin32Manifest> <!-- Only relevant for xp/vista which we don't target -->
   </PropertyGroup>
   <ItemGroup>
     <ProjectCapability Include="Avalonia" />
@@ -69,8 +68,13 @@
     <PackageReference Include="Avalonia" Version="11.0.4" />
     <PackageReference Include="Avalonia.Desktop" Version="11.0.4" />
     <PackageReference Include="Avalonia.LinuxFramebuffer" Version="11.0.4" />
+    <PackageReference Include="Avalonia.Controls.ItemsRepeater" Version="11.0.4" />
+    <PackageReference Include="Avalonia.ReactiveUI" Version="11.0.4" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="11.0.4" />
     <!--Condition below is needed to remove Avalonia.Diagnostics package from build output in Release configuration.-->
     <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="11.0.4" />
+  </ItemGroup>
+  <ItemGroup>
     <AvaloniaXaml Update="Styles\LegacyStyle.axaml">
 	    <Generator>MSBuild:Compile</Generator>
     </AvaloniaXaml>
@@ -124,8 +128,8 @@
     <Move Condition=" '$(RuntimeIdentifier)' == 'linux-x64' " SourceFiles="$(PublishDir)Resources$(DirectorySeparatorChar)holopatcher_linux" DestinationFiles="$(PublishDir)Resources$(DirectorySeparatorChar)holopatcher" />
 
 	  <!-- For Windows -->
-	  <Copy Condition=" '$(RuntimeIdentifier)' != 'linux-x64' AND '$(RuntimeIdentifier)' != 'osx-x64' " SourceFiles="$(SolutionDir)vendor$(DirectorySeparatorChar)bin$(DirectorySeparatorChar)holopatcher.exe" DestinationFolder="$(TargetDir)Resources$(DirectorySeparatorChar)" />
-	  <Copy Condition=" '$(RuntimeIdentifier)' != 'linux-x64' AND '$(RuntimeIdentifier)' != 'osx-x64' " SourceFiles="$(SolutionDir)vendor$(DirectorySeparatorChar)bin$(DirectorySeparatorChar)holopatcher.exe" DestinationFolder="$(PublishDir)Resources$(DirectorySeparatorChar)" />
+	  <Copy Condition=" '$(RuntimeIdentifier)' != 'linux-x64' AND '$(RuntimeIdentifier)' != 'osx-x64' AND '$(RuntimeIdentifiers)' != 'osx-amd64' " SourceFiles="$(SolutionDir)vendor$(DirectorySeparatorChar)bin$(DirectorySeparatorChar)holopatcher.exe" DestinationFolder="$(TargetDir)Resources$(DirectorySeparatorChar)" />
+	  <Copy Condition=" '$(RuntimeIdentifier)' != 'linux-x64' AND '$(RuntimeIdentifier)' != 'osx-x64' AND '$(RuntimeIdentifiers)' != 'osx-amd64' " SourceFiles="$(SolutionDir)vendor$(DirectorySeparatorChar)bin$(DirectorySeparatorChar)holopatcher.exe" DestinationFolder="$(PublishDir)Resources$(DirectorySeparatorChar)" />
 
     <!-- For x64 Platform -->
     <Copy Condition=" '$(Platform)' == 'x64' " SourceFiles="$(SolutionDir)vendor$(DirectorySeparatorChar)lib$(DirectorySeparatorChar)7z_x64.dll" DestinationFolder="$(TargetDir)Resources$(DirectorySeparatorChar)" />

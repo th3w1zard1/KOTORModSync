@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>CFBundleDisplayName</key>
+    <string>KOTOR Mod Sync</string>
+    <key>CFBundleIdentifier</key>
+    <string>com.th3w1zard1.kotormodsync</string>
+    <key>CFBundleShortVersionString</key>
+    <string>v0.10</string>
+    <key>CFBundleVersion</key>
+    <string>v0.10.43</string>
+    <key>LSMinimumSystemVersion</key>
+    <string>10.13</string>
+    <key>CFBundleIconFile</key>
+    <string>icon53</string>
+    <key>CFBundleExecutable</key>
+    <string>KOTORModSync</string>
+    <key>LSApplicationCategoryType</key>
+    <string>public.app-category.utilities</string>
+</dict>
+</plist>

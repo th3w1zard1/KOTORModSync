@@ -8,6 +8,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{9F65FCCE-2210-4FAA-9D60-362FCD21A8BE}"
 	ProjectSection(SolutionItems) = preProject
 		.editorconfig = .editorconfig
+		Info.plist = Info.plist
 		kotor2 specific dev notes.txt = kotor2 specific dev notes.txt
 		testenvironments.json = testenvironments.json
 	EndProjectSection

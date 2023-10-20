@@ -55,14 +55,14 @@ namespace KOTORModSync.Core
 		{
 			currentCompatibilityLevel = CompatibilityLevel.Compatible;
 			debugLogging = false;
-			patcherOption = AvailablePatchers.TSLPatcher;
+			patcherOption = AvailablePatchers.HoloPatcher;
 			attemptFixes = true;
 			noAdmin = false;
 			caseInsensitivePathing = true;
 		}
 
 		[NotNull]
-		public static string CurrentVersion => "0.10.32";
+		public static string CurrentVersion => "0.10.43";
 
 		[UsedImplicitly]
 		[NotNull]

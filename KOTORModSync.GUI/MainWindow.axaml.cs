@@ -36,6 +36,7 @@ using KOTORModSync.Core;
 using KOTORModSync.Core.FileSystemPathing;
 using KOTORModSync.Core.Utility;
 using Component = KOTORModSync.Core.Component;
+using NotNullAttribute = JetBrains.Annotations.NotNullAttribute;
 
 // ReSharper disable AsyncVoidMethod
 
@@ -171,8 +172,8 @@ namespace KOTORModSync
 		}
 
 		private void SearchText_PropertyChanged(
-			[JetBrains.Annotations.NotNull] object sender,
-			[JetBrains.Annotations.NotNull] PropertyChangedEventArgs e
+			[NotNull] object sender,
+			[NotNull] PropertyChangedEventArgs e
 		)
 		{
 			try
@@ -193,8 +194,8 @@ namespace KOTORModSync
 		}
 
 		public static void FilterControlListItems(
-			[JetBrains.Annotations.NotNull] object item,
-			[JetBrains.Annotations.NotNull] string searchText
+			[NotNull] object item,
+			[NotNull] string searchText
 		)
 		{
 			if ( searchText == null )
@@ -216,9 +217,9 @@ namespace KOTORModSync
 		}
 
 		private static void ApplySearchVisibility(
-			[JetBrains.Annotations.NotNull] Visual item,
-			[JetBrains.Annotations.NotNull] string itemName,
-			[JetBrains.Annotations.NotNull] string searchText
+			[NotNull] Visual item,
+			[NotNull] string itemName,
+			[NotNull] string searchText
 		)
 		{
 			if ( item is null )
@@ -290,7 +291,7 @@ namespace KOTORModSync
 		}
 
 		// Prevents a combobox click from dragging the window around.
-		public void FindComboBoxesInWindow([JetBrains.Annotations.NotNull] Window thisWindow)
+		public void FindComboBoxesInWindow([NotNull] Window thisWindow)
 		{
 			if ( thisWindow is null )
 				throw new ArgumentNullException(nameof( thisWindow ));
@@ -299,8 +300,8 @@ namespace KOTORModSync
 		}
 
 		private void ComboBox_Opened(
-			[JetBrains.Annotations.NotNull] object sender,
-			[JetBrains.Annotations.NotNull] RoutedEventArgs e
+			[NotNull] object sender,
+			[NotNull] RoutedEventArgs e
 		)
 		{
 			_mouseDownForWindowMoving = false;
@@ -308,8 +309,8 @@ namespace KOTORModSync
 		}
 
 		private void InputElement_OnPointerMoved(
-			[JetBrains.Annotations.NotNull] object sender,
-			[JetBrains.Annotations.NotNull] PointerEventArgs e
+			[NotNull] object sender,
+			[NotNull] PointerEventArgs e
 		)
 		{
 			if ( !_mouseDownForWindowMoving )
@@ -330,8 +331,8 @@ namespace KOTORModSync
 		}
 
 		private void InputElement_OnPointerPressed(
-			[JetBrains.Annotations.NotNull] object sender,
-			[JetBrains.Annotations.NotNull] PointerEventArgs e
+			[NotNull] object sender,
+			[NotNull] PointerEventArgs e
 		)
 		{
 			if ( WindowState == WindowState.Maximized || WindowState == WindowState.FullScreen )
@@ -345,19 +346,19 @@ namespace KOTORModSync
 		}
 
 		private void InputElement_OnPointerReleased(
-			[JetBrains.Annotations.NotNull] object sender,
-			[JetBrains.Annotations.NotNull] PointerEventArgs e
+			[NotNull] object sender,
+			[NotNull] PointerEventArgs e
 		) =>
 			_mouseDownForWindowMoving = false;
 
 		[UsedImplicitly] private void CloseButton_Click(
-			[JetBrains.Annotations.NotNull] object sender,
-			[JetBrains.Annotations.NotNull] RoutedEventArgs e
+			[NotNull] object sender,
+			[NotNull] RoutedEventArgs e
 		) => Close();
 
 		[UsedImplicitly] private void MinimizeButton_Click(
-			[JetBrains.Annotations.NotNull] object sender,
-			[JetBrains.Annotations.NotNull] RoutedEventArgs e
+			[NotNull] object sender,
+			[NotNull] RoutedEventArgs e
 		) =>
 			WindowState = WindowState.Minimized;
 
@@ -459,7 +460,7 @@ namespace KOTORModSync
 		}
 
 		private async Task<bool> FindDuplicateComponents(
-			[JetBrains.Annotations.NotNull][ItemNotNull] List<Component> components
+			[NotNull][ItemNotNull] List<Component> components
 		)
 		{
 			if ( components == null )
@@ -524,8 +525,8 @@ namespace KOTORModSync
 
 		[UsedImplicitly]
 		private async void LoadInstallFile_Click(
-			[JetBrains.Annotations.NotNull] object sender,
-			[JetBrains.Annotations.NotNull] RoutedEventArgs e
+			[NotNull] object sender,
+			[NotNull] RoutedEventArgs e
 		)
 		{
 			try
@@ -584,8 +585,8 @@ namespace KOTORModSync
 		}
 
 		public async void LoadMarkdown_Click(
-			[JetBrains.Annotations.NotNull] object sender,
-			[JetBrains.Annotations.NotNull] RoutedEventArgs e
+			[NotNull] object sender,
+			[NotNull] RoutedEventArgs e
 		)
 		{
 			try
@@ -629,8 +630,8 @@ namespace KOTORModSync
 
 		[UsedImplicitly]
 		private void OpenLink_Click(
-			[JetBrains.Annotations.NotNull] object sender,
-			[JetBrains.Annotations.NotNull] TappedEventArgs e
+			[NotNull] object sender,
+			[NotNull] TappedEventArgs e
 		)
 		{
 			if ( !(sender is TextBlock textBlock) )
@@ -672,8 +673,8 @@ namespace KOTORModSync
 
 		[UsedImplicitly]
 		private async void BrowseSourceFiles_Click(
-			[JetBrains.Annotations.NotNull] object sender,
-			[JetBrains.Annotations.NotNull] RoutedEventArgs e
+			[NotNull] object sender,
+			[NotNull] RoutedEventArgs e
 		)
 		{
 			try
@@ -756,6 +757,60 @@ namespace KOTORModSync
 			}
 		}
 
+		private async void BrowseSourceFromFolders_Click(
+			[NotNull] object sender,
+			[NotNull] RoutedEventArgs e
+		)
+		{
+			try
+			{
+				var button = (Button)sender;
+				Instruction thisInstruction = (Instruction)button.DataContext
+					?? throw new NullReferenceException("Could not find instruction instance");
+
+				if ( !(button.Tag is TextBox sourceTextBox) )
+					return;
+				
+				IStorageFolder startFolder = null;
+				if ( !(MainConfig.SourcePath is null) )
+					startFolder = await StorageProvider.TryGetFolderFromPathAsync(MainConfig.SourcePath.FullName);
+				string[] folderPaths = await ShowFileDialog(
+					windowName: "Select the folder to perform this instruction on",
+					isFolderDialog: true,
+					allowMultiple: true,
+					startFolder: startFolder
+				);
+
+				if (folderPaths is null || folderPaths.Length == 0)
+				{
+					await Logger.LogVerboseAsync("User did not select any folders.");
+					return;
+				}
+				
+				var modifiedFolders = folderPaths.SelectMany(
+					thisFolder => new DirectoryInfo(thisFolder)
+						.EnumerateDirectories(searchPattern: "*", SearchOption.AllDirectories)
+						.Select(folder => folder.FullName + Path.DirectorySeparatorChar + "*.*")
+				).ToList();
+
+				thisInstruction.Source = modifiedFolders;
+				
+				string convertedItems = new ListToStringConverter().Convert(
+					modifiedFolders,
+					typeof( string ),
+					parameter: null,
+					CultureInfo.CurrentCulture
+				) as string;
+
+				sourceTextBox.Text = convertedItems;
+			}
+			catch (Exception ex)
+			{
+				await Logger.LogExceptionAsync(ex);
+			}
+		}
+
+
 		[UsedImplicitly]
 		private async void BrowseDestination_Click([CanBeNull] object sender, [CanBeNull] RoutedEventArgs e)
 		{
@@ -807,8 +862,8 @@ namespace KOTORModSync
 
 		[UsedImplicitly]
 		private async void SaveButton_Click(
-			[JetBrains.Annotations.NotNull] object sender,
-			[JetBrains.Annotations.NotNull] RoutedEventArgs e
+			[NotNull] object sender,
+			[NotNull] RoutedEventArgs e
 		)
 		{
 			try
@@ -836,8 +891,8 @@ namespace KOTORModSync
 		}
 
 		private async void ResolveDuplicateFilesAndFolders(
-			[JetBrains.Annotations.NotNull] object sender,
-			[JetBrains.Annotations.NotNull] RoutedEventArgs e
+			[NotNull] object sender,
+			[NotNull] RoutedEventArgs e
 		)
 		{
 			try
@@ -1118,8 +1173,8 @@ namespace KOTORModSync
 
 		[UsedImplicitly]
 		private async void ValidateButton_Click(
-			[JetBrains.Annotations.NotNull] object sender,
-			[JetBrains.Annotations.NotNull] RoutedEventArgs e
+			[NotNull] object sender,
+			[NotNull] RoutedEventArgs e
 		)
 		{
 			try
@@ -1135,8 +1190,8 @@ namespace KOTORModSync
 
 		[UsedImplicitly]
 		private async void AddComponentButton_Click(
-			[JetBrains.Annotations.NotNull] object sender,
-			[JetBrains.Annotations.NotNull] RoutedEventArgs e
+			[NotNull] object sender,
+			[NotNull] RoutedEventArgs e
 		)
 		{
 			// Create a new default component with a new GUID
@@ -1165,15 +1220,15 @@ namespace KOTORModSync
 
 		[UsedImplicitly]
 		private async void RefreshComponents_Click(
-			[JetBrains.Annotations.NotNull] object sender,
-			[JetBrains.Annotations.NotNull] RoutedEventArgs e
+			[NotNull] object sender,
+			[NotNull] RoutedEventArgs e
 		) =>
 			await ProcessComponentsAsync(MainConfig.AllComponents);
 
 		[UsedImplicitly]
 		private async void RemoveComponentButton_Click(
-			[JetBrains.Annotations.NotNull] object sender,
-			[JetBrains.Annotations.NotNull] RoutedEventArgs e
+			[NotNull] object sender,
+			[NotNull] RoutedEventArgs e
 		)
 		{
 			// Get the selected component from the TreeView
@@ -1210,8 +1265,8 @@ namespace KOTORModSync
 
 		[UsedImplicitly]
 		private async void SetDirectories_Click(
-			[JetBrains.Annotations.NotNull] object sender,
-			[JetBrains.Annotations.NotNull] RoutedEventArgs e
+			[NotNull] object sender,
+			[NotNull] RoutedEventArgs e
 		)
 		{
 			try
@@ -1273,8 +1328,8 @@ namespace KOTORModSync
 
 		[UsedImplicitly]
 		private async void InstallModSingle_Click(
-			[JetBrains.Annotations.NotNull] object sender,
-			[JetBrains.Annotations.NotNull] RoutedEventArgs e
+			[NotNull] object sender,
+			[NotNull] RoutedEventArgs e
 		)
 		{
 			try
@@ -1374,8 +1429,8 @@ namespace KOTORModSync
 
 		[UsedImplicitly]
 		private async void StartInstall_Click(
-			[JetBrains.Annotations.NotNull] object sender,
-			[JetBrains.Annotations.NotNull] RoutedEventArgs e
+			[NotNull] object sender,
+			[NotNull] RoutedEventArgs e
 		)
 		{
 			try
@@ -1572,8 +1627,8 @@ namespace KOTORModSync
 
 		[UsedImplicitly]
 		private async void DocsButton_Click(
-			[JetBrains.Annotations.NotNull] object sender,
-			[JetBrains.Annotations.NotNull] RoutedEventArgs e
+			[NotNull] object sender,
+			[NotNull] RoutedEventArgs e
 		)
 		{
 			try
@@ -1605,8 +1660,8 @@ namespace KOTORModSync
 		}
 
 		private static async Task SaveDocsToFileAsync(
-			[JetBrains.Annotations.NotNull] string filePath,
-			[JetBrains.Annotations.NotNull] string documentation
+			[NotNull] string filePath,
+			[NotNull] string documentation
 		)
 		{
 			if ( filePath is null )
@@ -1677,8 +1732,8 @@ namespace KOTORModSync
 		/// <param name="e">The event arguments containing information about the selection change.</param>
 		[UsedImplicitly]
 		private async void TabControl_SelectionChanged(
-			[JetBrains.Annotations.NotNull] object sender,
-			[JetBrains.Annotations.NotNull] SelectionChangedEventArgs e
+			[NotNull] object sender,
+			[NotNull] SelectionChangedEventArgs e
 		)
 		{
 			if ( _ignoreInternalTabChange )
@@ -1813,7 +1868,7 @@ namespace KOTORModSync
 		[CanBeNull]
 		private static string GetControlNameFromHeader([CanBeNull] TabItem tabItem) => tabItem?.Header?.ToString();
 
-		private void SetTabInternal([JetBrains.Annotations.NotNull] TabControl tabControl, TabItem tabItem)
+		private void SetTabInternal([NotNull] TabControl tabControl, TabItem tabItem)
 		{
 			if ( tabControl is null )
 				throw new ArgumentNullException(nameof( tabControl ));
@@ -1823,7 +1878,7 @@ namespace KOTORModSync
 			_ignoreInternalTabChange = false;
 		}
 
-		private async void LoadComponentDetails([JetBrains.Annotations.NotNull] Component selectedComponent)
+		private async void LoadComponentDetails([NotNull] Component selectedComponent)
 		{
 			if ( selectedComponent == null )
 				throw new ArgumentNullException(nameof( selectedComponent ));
@@ -1853,7 +1908,7 @@ namespace KOTORModSync
 
 		private void SetCurrentComponent([CanBeNull] Component c) => CurrentComponent = c;
 
-		private async Task<bool> LoadIntoRawEditTextBox([JetBrains.Annotations.NotNull] Component selectedComponent)
+		private async Task<bool> LoadIntoRawEditTextBox([NotNull] Component selectedComponent)
 		{
 			if ( selectedComponent is null )
 				throw new ArgumentNullException(nameof( selectedComponent ));
@@ -1881,8 +1936,8 @@ namespace KOTORModSync
 		// todo: figure out if this is needed.
 		// ReSharper disable once MemberCanBeMadeStatic.Local
 		private void RawEditTextBox_LostFocus(
-			[JetBrains.Annotations.NotNull] object sender,
-			[JetBrains.Annotations.NotNull] RoutedEventArgs e
+			[NotNull] object sender,
+			[NotNull] RoutedEventArgs e
 		) =>
 			e.Handled = true;
 
@@ -2028,22 +2083,22 @@ namespace KOTORModSync
 
 		[UsedImplicitly]
 		private void MoveUpButton_Click(
-			[JetBrains.Annotations.NotNull] object sender,
-			[JetBrains.Annotations.NotNull] RoutedEventArgs e
+			[NotNull] object sender,
+			[NotNull] RoutedEventArgs e
 		) =>
 			MoveComponentListItem(CurrentComponent, relativeIndex: -1);
 
 		[UsedImplicitly]
 		private void MoveDownButton_Click(
-			[JetBrains.Annotations.NotNull] object sender,
-			[JetBrains.Annotations.NotNull] RoutedEventArgs e
+			[NotNull] object sender,
+			[NotNull] RoutedEventArgs e
 		) =>
 			MoveComponentListItem(CurrentComponent, relativeIndex: 1);
 
 		[UsedImplicitly]
 		private async void SaveModFile_Click(
-			[JetBrains.Annotations.NotNull] object sender,
-			[JetBrains.Annotations.NotNull] RoutedEventArgs e
+			[NotNull] object sender,
+			[NotNull] RoutedEventArgs e
 		)
 		{
 			try
@@ -2081,8 +2136,8 @@ namespace KOTORModSync
 
 		[UsedImplicitly]
 		private void GenerateGuidButton_Click(
-			[JetBrains.Annotations.NotNull] object sender,
-			[JetBrains.Annotations.NotNull] RoutedEventArgs e
+			[NotNull] object sender,
+			[NotNull] RoutedEventArgs e
 		)
 		{
 			try
@@ -2097,8 +2152,8 @@ namespace KOTORModSync
 
 
 		private void ComponentCheckboxChecked(
-			[JetBrains.Annotations.NotNull] Component component,
-			[JetBrains.Annotations.NotNull] HashSet<Component> visitedComponents,
+			[NotNull] Component component,
+			[NotNull] HashSet<Component> visitedComponents,
 			bool suppressErrors = false
 		)
 		{
@@ -2177,7 +2232,7 @@ namespace KOTORModSync
 		}
 
 		private void ComponentCheckboxUnchecked(
-			[JetBrains.Annotations.NotNull] Component component,
+			[NotNull] Component component,
 			[CanBeNull] HashSet<Component> visitedComponents,
 			bool suppressErrors = false
 		)
@@ -2258,8 +2313,8 @@ namespace KOTORModSync
 			}
 		}
 
-		[JetBrains.Annotations.NotNull]
-		private CheckBox CreateComponentCheckbox([JetBrains.Annotations.NotNull] Component component)
+		[NotNull]
+		private CheckBox CreateComponentCheckbox([NotNull] Component component)
 		{
 			if ( component is null )
 				throw new ArgumentNullException(nameof( component ));
@@ -2284,8 +2339,8 @@ namespace KOTORModSync
 			return checkBox;
 		}
 
-		[JetBrains.Annotations.NotNull]
-		private Control CreateComponentHeader([JetBrains.Annotations.NotNull] Component component, int index)
+		[NotNull]
+		private Control CreateComponentHeader([NotNull] Component component, int index)
 		{
 			if ( component is null )
 				throw new ArgumentNullException(nameof( component ));
@@ -2325,7 +2380,7 @@ namespace KOTORModSync
 		}
 
 
-		private TreeViewItem CreateComponentItem([JetBrains.Annotations.NotNull] Component component, int index)
+		private TreeViewItem CreateComponentItem([NotNull] Component component, int index)
 		{
 			if ( component is null )
 				throw new ArgumentNullException(nameof( component ));
@@ -2376,7 +2431,7 @@ namespace KOTORModSync
 		}
 
 		private void CreateTreeViewItem(
-			[JetBrains.Annotations.NotNull] Component component,
+			[NotNull] Component component,
 			ItemsControl parentItem,
 			int index
 		)
@@ -2415,7 +2470,7 @@ namespace KOTORModSync
 			}
 		}
 
-		[JetBrains.Annotations.NotNull]
+		[NotNull]
 		private TreeViewItem CreateRootTreeViewItem()
 		{
 			var rootCheckBox = new CheckBox
@@ -2492,7 +2547,7 @@ namespace KOTORModSync
 		}
 
 		private async Task ProcessComponentsAsync(
-			[JetBrains.Annotations.NotNull][ItemNotNull] IReadOnlyList<Component> componentsList
+			[NotNull][ItemNotNull] IReadOnlyList<Component> componentsList
 		)
 		{
 			try
@@ -2557,8 +2612,8 @@ namespace KOTORModSync
 
 		[UsedImplicitly]
 		private async void AddNewInstruction_Click(
-			[JetBrains.Annotations.NotNull] object sender,
-			[JetBrains.Annotations.NotNull] RoutedEventArgs e
+			[NotNull] object sender,
+			[NotNull] RoutedEventArgs e
 		)
 		{
 			try
@@ -2603,8 +2658,8 @@ namespace KOTORModSync
 
 		[UsedImplicitly]
 		private async void DeleteInstruction_Click(
-			[JetBrains.Annotations.NotNull] object sender,
-			[JetBrains.Annotations.NotNull] RoutedEventArgs e
+			[NotNull] object sender,
+			[NotNull] RoutedEventArgs e
 		)
 		{
 			try
@@ -2633,8 +2688,8 @@ namespace KOTORModSync
 
 		[UsedImplicitly]
 		private async void MoveInstructionUp_Click(
-			[JetBrains.Annotations.NotNull] object sender,
-			[JetBrains.Annotations.NotNull] RoutedEventArgs e
+			[NotNull] object sender,
+			[NotNull] RoutedEventArgs e
 		)
 		{
 			try
@@ -2667,8 +2722,8 @@ namespace KOTORModSync
 
 		[UsedImplicitly]
 		private async void MoveInstructionDown_Click(
-			[JetBrains.Annotations.NotNull] object sender,
-			[JetBrains.Annotations.NotNull] RoutedEventArgs e
+			[NotNull] object sender,
+			[NotNull] RoutedEventArgs e
 		)
 		{
 			try
@@ -2683,9 +2738,11 @@ namespace KOTORModSync
 				int index = CurrentComponent.Instructions.IndexOf(thisInstruction);
 
 				if ( thisInstruction is null )
+				{
 					throw new NullReferenceException(
 						$"Could not get instruction instance from button's tag: {((Button)sender).Content}"
 					);
+				}
 
 				CurrentComponent.MoveInstructionToIndex(thisInstruction, index + 1);
 				LoadComponentDetails(CurrentComponent);
@@ -2698,8 +2755,8 @@ namespace KOTORModSync
 
 		[UsedImplicitly]
 		private void OpenOutputWindow_Click(
-			[JetBrains.Annotations.NotNull] object sender,
-			[JetBrains.Annotations.NotNull] RoutedEventArgs e
+			[NotNull] object sender,
+			[NotNull] RoutedEventArgs e
 		)
 		{
 			if ( _outputWindow?.IsVisible == true )
@@ -2713,8 +2770,8 @@ namespace KOTORModSync
 
 		[UsedImplicitly]
 		private async void StyleComboBox_SelectionChanged(
-			[JetBrains.Annotations.NotNull] object sender,
-			[JetBrains.Annotations.NotNull] SelectionChangedEventArgs e
+			[NotNull] object sender,
+			[NotNull] SelectionChangedEventArgs e
 		)
 		{
 			try
@@ -2763,8 +2820,8 @@ namespace KOTORModSync
 
 		[UsedImplicitly]
 		private void ToggleMaximizeButton_Click(
-			[JetBrains.Annotations.NotNull] object sender,
-			[JetBrains.Annotations.NotNull] RoutedEventArgs e
+			[NotNull] object sender,
+			[NotNull] RoutedEventArgs e
 		)
 		{
 			if ( !(sender is Button maximizeButton) )
@@ -2784,8 +2841,8 @@ namespace KOTORModSync
 
 		[UsedImplicitly]
 		private async void AddNewOption_Click(
-			[JetBrains.Annotations.NotNull] object sender,
-			[JetBrains.Annotations.NotNull] RoutedEventArgs e
+			[NotNull] object sender,
+			[NotNull] RoutedEventArgs e
 		)
 		{
 			try
@@ -2829,8 +2886,8 @@ namespace KOTORModSync
 
 		[UsedImplicitly]
 		private async void DeleteOption_Click(
-			[JetBrains.Annotations.NotNull] object sender,
-			[JetBrains.Annotations.NotNull] RoutedEventArgs e
+			[NotNull] object sender,
+			[NotNull] RoutedEventArgs e
 		)
 		{
 			try
@@ -2859,8 +2916,8 @@ namespace KOTORModSync
 
 		[UsedImplicitly]
 		private async void MoveOptionUp_Click(
-			[JetBrains.Annotations.NotNull] object sender,
-			[JetBrains.Annotations.NotNull] RoutedEventArgs e
+			[NotNull] object sender,
+			[NotNull] RoutedEventArgs e
 		)
 		{
 			try
@@ -2890,8 +2947,8 @@ namespace KOTORModSync
 
 		[UsedImplicitly]
 		private async void MoveOptionDown_Click(
-			[JetBrains.Annotations.NotNull] object sender,
-			[JetBrains.Annotations.NotNull] RoutedEventArgs e
+			[NotNull] object sender,
+			[NotNull] RoutedEventArgs e
 		)
 		{
 			try
@@ -2934,10 +2991,10 @@ namespace KOTORModSync
 		public class RelayCommand : ICommand
 		{
 			[CanBeNull] private readonly Func<object, bool> _canExecute;
-			[JetBrains.Annotations.NotNull] private readonly Action<object> _execute;
+			[NotNull] private readonly Action<object> _execute;
 
 			public RelayCommand(
-				[JetBrains.Annotations.NotNull] Action<object> execute,
+				[NotNull] Action<object> execute,
 				[CanBeNull] Func<object, bool> canExecute = null
 			)
 			{

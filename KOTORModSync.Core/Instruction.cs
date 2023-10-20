@@ -51,6 +51,7 @@ namespace KOTORModSync.Core
 
 		public enum ActionType
 		{
+			Unset,
 			Extract,
 			Execute,
 			TSLPatcher,
@@ -62,7 +63,6 @@ namespace KOTORModSync.Core
 			Choose,
 			HoloPatcher,
 			Run,
-			Unset,
 		}
 
 

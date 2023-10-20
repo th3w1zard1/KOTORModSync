@@ -420,12 +420,21 @@
                                                                          Text="{Binding Source, Converter={StaticResource ListToStringConverter}}" />
                                                             </StackPanel>
 
-                                                            <Button Grid.Row="5" Grid.Column="1"
-                                                                    HorizontalAlignment="Stretch"
-                                                                    Content="Browse Files"
-                                                                    Click="BrowseSourceFiles_Click"
-                                                                    Tag="{Binding ElementName=SourceTextBox}"
-                                                                    IsVisible="{Binding !IsVisible, ElementName=optionChooser}" />
+                                                            
+
+                                                            <StackPanel Grid.Row="5" Grid.Column="1">
+                                                                <Button HorizontalAlignment="Stretch"
+                                                                        Content="Browse Files"
+                                                                        Click="BrowseSourceFiles_Click"
+                                                                        Tag="{Binding ElementName=SourceTextBox}"
+                                                                        IsVisible="{Binding !IsVisible, ElementName=optionChooser}" />
+
+                                                                <Button HorizontalAlignment="Stretch"
+                                                                        Content="Browse Folder"
+                                                                        Click="BrowseSourceFromFolders_Click"
+                                                                        Tag="{Binding ElementName=SourceTextBox}"
+                                                                        IsVisible="{Binding !IsVisible, ElementName=optionChooser}" />
+                                                            </StackPanel>
 
                                                             <TextBlock Grid.Row="6" Grid.Column="0"
                                                                        Text="Destination:"
@@ -642,12 +651,19 @@
                                                                                                 x:Name="SourceTextBox"
                                                                                                 Text="{Binding Source, Converter={StaticResource ListToStringConverter}}" />
 
-                                                                                            <Button Grid.Row="5"
-                                                                                                Grid.Column="1"
-                                                                                                HorizontalAlignment="Stretch"
-                                                                                                Content="Browse Files"
-                                                                                                Click="BrowseSourceFiles_Click"
-                                                                                                Tag="{Binding ElementName=SourceTextBox}" />
+                                                                                            <StackPanel Grid.Row="5" Grid.Column="1">
+                                                                                                <Button 
+                                                                                                    HorizontalAlignment="Stretch"
+                                                                                                    Content="Browse Files"
+                                                                                                    Click="BrowseSourceFiles_Click"
+                                                                                                    Tag="{Binding ElementName=SourceTextBox}" />
+
+                                                                                                <Button
+                                                                                                    HorizontalAlignment="Stretch"
+                                                                                                    Content="Browse Folder"
+                                                                                                    Click="BrowseSourceFromFolders_Click"
+                                                                                                    Tag="{Binding ElementName=SourceTextBox}" />
+                                                                                            </StackPanel>
 
                                                                                             <TextBlock Grid.Row="6"
                                                                                                 Grid.Column="0"

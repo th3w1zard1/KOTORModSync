@@ -80,20 +80,20 @@ This man saved me countless amount of hours. I'd still be struggling through gam
 #### JCarter426
 Ditto. There were so many KOTOR-specific things to learn, without his help I'd still be trying to deserialize encapsulated resource files. His time and patience were incredibly useful to the project and this project would be impossible without him.
 
+#### Cortisol
+Created HoloPatcher and the PyKotor library that KOTORModSync uses to patch mods. These projects are the main reason KOTORModSync can be supported on Mac/Linux. While the PyKotor/HoloPatcher projects have had some issues, this guy was more or less available for comment if I had questions on how I could fix any remaining problems myself.
+
 ### Testers:
 ##### Lewok from r/KOTOR
 Thank you for helping test that obnoxious UAC elevation problem legacy Windows apps like TSLPatcher have.
 ##### Thor110
 Tested multiple installs and provided wisdom on the internal workings of KOTOR.
 
-#### Other notable users
-#### @NickHugi
-Created *PyKotor* used in the project, and helped iron out the remaining bugs with the CLI.
-
+#### Other notable users:
 #### Fair-Strides
-Released source code of *TSLPatcher* on GitHub, and coded in a few updates to the program.
+Provided the perl source code of TSLPatcher on GitHub, and generally maintained the TSLPatcher project in Stoffe's absence.
 
 #### *Stoffe*
-The original creator of *TSLPatcher*
+Creator of *TSLPatcher*
 
 Thank you to the entire KOTOR community for what you do.

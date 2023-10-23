@@ -1,4 +1,5 @@
 $ErrorActionPreference = 'Stop'
+Set-Location -Path $PSScriptRoot
 
 trap {
     Write-Host -ForegroundColor Red "$($_.InvocationInfo.PositionMessage)`n$($_.Exception.Message)"
@@ -13,17 +14,20 @@ $projectFile = "KOTORModSync.GUI\KOTORModSync.csproj"
 $publishProfilesDir = "KOTORModSync.GUI\Properties\PublishProfiles"
 $sevenZipPath = "C:\Program Files\7-Zip\7z.exe"  # Path to 7zip executable
 $publishProfileFiles = Get-ChildItem -Path $publishProfilesDir -Filter "*.pubxml"
-$bashLocation = "C:\Program Files\Git\bin\bash.exe"
+$gitBashLocation = "C:\Program Files\Git\bin\bash.exe"
 
 # Remove old builds if they exist.
 Get-ChildItem -Path "bin" -Filter "*.zip" | ForEach-Object {
-    Remove-Item -Path $_.FullName -Force -Confirm:$false
+    Remove-Item -Path $_.FullName -Force
 }
-Get-ChildItem -Path "bin" -Filter "*.tar.gz" | ForEach-Object {
-    Remove-Item -Path $_.FullName -Force -Confirm:$false
+Get-ChildItem -Path "bin" -Filter "*.tar" | ForEach-Object {
+    Remove-Item -Path $_.FullName -Force
+}
+Get-ChildItem -Path "bin" -Filter "*.gz" | ForEach-Object {
+    Remove-Item -Path $_.FullName -Force
 }
 Get-ChildItem -Path "bin/publish" -Recurse | ForEach-Object {
-    Remove-Item -Path $_.FullName -Force -Confirm:$false -Recurse
+    Remove-Item -Path $_.FullName -Force -Recurse
 }
 
 function Set-HiddenAttribute {
@@ -41,6 +45,131 @@ function Remove-HiddenAttribute {
     $file = Get-Item $path
     $file.Attributes = 'Normal'
 }
+
+function Convert-WindowsPathToUnix {
+    param(
+        [string]$path
+    )
+    $unixPath = $path -replace '\\', '/' -replace ' ', '\ '
+    if ($null -ne (Get-Command "wsl" -ErrorAction SilentlyContinue)) {
+        $unixPath = $unixPath -replace 'C:', '/mnt/c'
+    } else {
+        $unixPath = $unixPath -replace 'C:', '/c'
+    }
+    return $unixPath
+}
+
+function Prepare-MacOSAppBundle {
+    param(
+        [string]$path
+    )
+    $appFolder = Join-Path -Path $path -ChildPath "KOTORModSync.app"
+    $contentsFolder = Join-Path -Path $appFolder -ChildPath "Contents"
+    $macOSFolder = Join-Path -Path $contentsFolder -ChildPath "MacOS"
+
+    New-Item -Path $macOSFolder -ItemType Directory -Force > $null
+
+    Get-ChildItem -Path $path | Where-Object { $_.FullName -ne $appFolder } | ForEach-Object {
+        Move-Item -Path $_.FullName -Destination $macOSFolder
+    }
+
+    $oldResourcesFolder = Join-Path -Path $macOSFolder -ChildPath "Resources"
+    Move-Item -Path $oldResourcesFolder -Destination $appFolder
+
+    Copy-Item -Path "./Info.plist" -Destination $contentsFolder
+
+    return $appFolder
+}
+
+function Change-UnixFilePermissions {
+    param(
+        [string]$path,
+        [string]$permissions
+    )
+    $unixArchiveSource = Convert-WindowsPathToUnix -path $path
+    if ($null -ne (Get-Command "wsl" -ErrorAction SilentlyContinue)) {
+        $command = "& wsl chmod $permissions -Rv $unixArchiveSource"
+        Write-Host $command
+        Invoke-Expression $command
+    } else {
+        $command = "& `"$gitBashLocation`" -c 'find $unixArchiveSource -type d -exec chmod $permissions {} \;'"
+        Write-Host $command
+        Invoke-Expression $command
+        $command = "& `"$gitBashLocation`" -c 'find $unixArchiveSource -type f -exec chmod $permissions {} \;'"
+        Write-Host $command
+        Invoke-Expression $command
+    }
+}
+
+function Compress-TarGz {
+    param(
+        [string]$archiveFile,
+        [string]$archiveSource
+    )
+    $unixArchivePath = Convert-WindowsPathToUnix -path $archiveFile
+    $unixArchiveSource = Convert-WindowsPathToUnix -path $archiveSource
+    $folderName = [System.IO.Path]::GetFileName($archiveSource)
+    $parentDir = [System.IO.Path]::GetDirectoryName($archiveSource)
+    $unixParentDir = Convert-WindowsPathToUnix -path $parentDir
+    if ($null -ne (Get-Command "wsl" -ErrorAction SilentlyContinue)) {
+        $command = "& wsl tar -czvf $unixArchivePath -C $unixParentDir '$folderName'"
+        Write-Host $command
+        Invoke-Expression $command
+    } elseif ($null -ne (Get-Command "tar" -ErrorAction SilentlyContinue)) {
+        $command = "& tar -czvf $archivePath -C $parentDir '$folderName'"
+        Write-Host $command
+        Invoke-Expression $command
+    } elseif ($null -ne (Get-Command "7z" -ErrorAction SilentlyContinue)) {
+        $tarArchive = $archiveFile -replace '\.gz$', ''
+        & '7z' a -ttar -mx=9 $tarArchive $archiveSource
+        & '7z' a -tgzip -mx=9 $archiveFile $tarArchive
+        Remove-Item -Path $tarArchive
+    } elseif (Test-Path -Path $sevenZipPath) {
+        $tarArchive = $archiveFile -replace '\.gz$', ''
+        & $sevenZipPath a -ttar -mx=9 $tarArchive $archiveSource
+        & $sevenZipPath a -tgzip -mx=9 $archiveFile $tarArchive
+        Remove-Item -Path $tarArchive
+    } elseif (Test-Path -Path $gitBashLocation) {
+        $command = "& `"$gitBashLocation`" -c 'tar czf $unixArchivePath $unixArchiveSource'"
+        Write-Host $command
+        Invoke-Expression $command
+    } else {
+        Write-Error "No available method for archive creation found."
+        return
+    }
+}
+
+function Compress-Zip {
+    param(
+        [string]$archiveFile,
+        [string]$archiveSource
+    )
+    if ($null -ne (Get-Command "zip" -ErrorAction SilentlyContinue)) {
+        $parentDir = [System.IO.Path]::GetDirectoryName($archiveSource)
+        $originalDir = Get-Location
+        $archiveFile = [System.IO.Path]::GetFullPath((Join-Path $originalDir $archiveFile))
+        $command = "cd '$parentDir'; & 'zip' -r -9 '$archiveFile' '$([System.IO.Path]::GetFileName($archiveSource))'; cd '$originalDir'"
+        Write-Host $command
+        Invoke-Expression $command
+    } elseif ($null -ne (Get-Command "7z" -ErrorAction SilentlyContinue)) {
+        $command = "& '7z' a -tzip -mx=9 `"$archiveFile`" `"$archiveSource`""
+        Write-Host $command
+        Invoke-Expression $command
+    } elseif (Test-Path -Path $sevenZipPath) {
+        $command = "& `"$sevenZipPath`" a -tzip -mx=9 `"$archiveFile`" `"$archiveSource`""
+        Write-Host $command
+        Invoke-Expression $command
+    } else {
+        $parentDir = Split-Path -Parent $archiveSource
+        $newParentFolder = Join-Path $parentDir ("TempParent_" + (Get-Date).Ticks)
+        New-Item -Path $newParentFolder -ItemType Directory -Force
+        Move-Item -Path $archiveSource -Destination $newParentFolder
+        Compress-Archive -Path "$newParentFolder\*" -DestinationPath $archiveFile -Force
+        Remove-Item -Path $newParentFolder -Recurse -Force
+    }
+}
+
+
 try {
     foreach ($file in $publishProfileFiles) {
         Write-Host ""
@@ -68,145 +197,34 @@ try {
 
         $publishFolder = Get-Item (Join-Path -Path (Split-Path -Path $projectFile) -ChildPath "..\bin\publish\$lastSection\$framework\$topLevelFolder")
 
-        # Set executable flag on our main EXE
-        $potentialExePaths = @(
-            (Join-Path -Path $publishFolder -ChildPath "KOTORModSync"),
-            (Join-Path -Path $publishFolder -ChildPath "KOTORModSync.exe")
-        )
-
         # Determine if macOS
         $isMacOSTarget = $rid -eq "osx-x64" -or $rid -eq "osx-arm64"
-        $resourcesFolder = Join-Path -Path $publishFolder -ChildPath "Resources"
 
-        # macOS specific .app structure creation
         if ($isMacOSTarget) {
-            $appFolder = Join-Path -Path $publishFolder -ChildPath "KOTORModSync.app"
-            $contentsFolder = Join-Path -Path $appFolder -ChildPath "Contents"
-            $macOSFolder = Join-Path -Path $contentsFolder -ChildPath "MacOS"
-            $resourcesFolder = Join-Path -Path $appFolder -ChildPath "Resources"
-
-            # Create the directories
-            New-Item -Path $macOSFolder -ItemType Directory -Force > $null
-
-            # Move all published files to the MacOS directory
-            Get-ChildItem -Path $publishFolder | Where-Object { $_.FullName -ne $appFolder } | ForEach-Object {
-                Move-Item -Path $_.FullName -Destination $macOSFolder
-            }
-
-            # Move the Resources folder from MacOS to the App root
-            $oldResourcesFolder = Join-Path -Path $macOSFolder -ChildPath "Resources"
-            Move-Item -Path $oldResourcesFolder -Destination $appFolder
-
-            # Copy Info.plist to the Contents folder
-            Copy-Item -Path "./Info.plist" -Destination $contentsFolder
+            $archiveSource = Prepare-MacOSAppBundle -path $publishFolder
+        } else {
+            $archiveSource = $publishFolder
         }
 
         # Copy the license and documentation
         Copy-Item -Path "LICENSE.TXT" -Destination $publishFolder
         Copy-Item -Path "KOTORModSync - Official Documentation.txt" -Destination $publishFolder
 
-        if ($isMacOSTarget) {
-            # Set the directory for the zip operation to the .app folder
-            $archiveSource = $appFolder
-        } else {
-            $archiveSource = $publishFolder
-        }
-
         # Before archiving, set *.pdb files to hidden
         Get-ChildItem -Path $archiveSource -Recurse -Filter "*.pdb" | ForEach-Object {
             Set-HiddenAttribute -path $_.FullName
         }
 
-        # Check if WSL is available
-        $wslAvailable = $null -ne (Get-Command "wsl" -ErrorAction SilentlyContinue)
+        $archiveFile = Join-Path -Path (Split-Path -Path "bin\publish") -ChildPath ("$rid" + $(if ($rid -like "win*") { ".zip" } else { ".tar.gz" }))
 
-        # Determine the file extension based on $rid
+        # Fix file permissions before archiving
+        Change-UnixFilePermissions -path $archiveSource -permissions "777"
+
+        # Determine compression method
         if ($rid -like "win*") {
-            $extension = ".zip"
+            Compress-Zip -archiveFile $archiveFile -archiveSource $archiveSource
         } else {
-            $extension = ".tar.gz"
-        }
-
-        $archiveFile = Join-Path -Path (Split-Path -Path "bin\publish") -ChildPath ("$rid" + $extension)
-        # Convert Windows path to Unix-like path for usage in Git Bash
-        $gitBashArchivePath = $archiveFile -replace '\\', '/' -replace 'C:', '/c' -replace ' ', '\ '
-        $gitBashArchiveSource = $archiveSource -replace '\\', '/' -replace 'C:', '/c' -replace ' ', '\ '
-        # Convert Windows path to Unix-like path for usage in WSL
-        $unixArchivePath = $archiveFile -replace '\\', '/' -replace 'C:', '/mnt/c' -replace ' ', '\ '
-        $unixArchiveSource = $archiveSource -replace '\\', '/' -replace 'C:', '/mnt/c' -replace ' ', '\ '
-
-        # Check extension to determine compression method
-        if ($extension -eq ".zip") {
-            if ($null -ne (Get-Command "zip" -ErrorAction SilentlyContinue)) {
-                $parentDir = [System.IO.Path]::GetDirectoryName($archiveSource)
-                $originalDir = Get-Location
-                $archiveFile = [System.IO.Path]::GetFullPath((Join-Path $originalDir $archiveFile))
-
-                Set-Location -Path $parentDir
-                $command = "cd '$parentDir'; & 'zip' -r -9 '$archiveFile' '$([System.IO.Path]::GetFileName($archiveSource))'; cd '$originalDir'"
-                Write-Host $command
-                Invoke-Expression $command
-                Set-Location -Path $originalDir
-            } elseif ($null -ne (Get-Command "7z" -ErrorAction SilentlyContinue)) {
-                & '7z' a -tzip $archiveFile $archiveSource
-            } else {
-                # Determine parent directory of $archiveSource
-                $parentDir = Split-Path -Parent $archiveSource
-
-                # Create a unique temporary parent folder name in the same location as $archiveSource
-                $newParentFolder = Join-Path $parentDir ("TempParent_" + (Get-Date).Ticks)
-                New-Item -Path $newParentFolder -ItemType Directory -Force
-
-                # Move $archiveSource into the new parent folder
-                Move-Item -Path $archiveSource -Destination $newParentFolder
-
-                # Run Compress-Archive on the new parent folder
-                Compress-Archive -Path "$newParentFolder\*" -DestinationPath $archiveFile -Force
-
-                # Remove the new parent folder
-                Remove-Item -Path $newParentFolder -Recurse -Force
-            }
-        } else {
-            # Change permissions to 777 for all files and directories
-            if ($wslAvailable) {
-                $command = "& wsl chmod 777 -Rv $unixArchiveSource"
-                Write-Host $command
-                Invoke-Expression $command
-            } else { # use git bash
-                $command = "& `"$bashLocation`" -c 'find $gitBashArchiveSource -type d -exec chmod 777 {} \;'"
-                Write-Host $command
-                Invoke-Expression $command
-                $command = "& `"$bashLocation`" -c 'find $gitBashArchiveSource -type f -exec chmod 777 {} \;'"
-                Write-Host $command
-                Invoke-Expression $command
-            }
-            if ($wslAvailable) {
-                $parentDir = [System.IO.Path]::GetFileName($archiveSource)
-                $unixParentDir = $parentDir -replace '\\', '/' -replace 'C:', '/mnt/c' -replace ' ', '\ '
-                $originalDir = Get-Location
-                $archiveFile = [System.IO.Path]::GetFullPath((Join-Path $originalDir $archiveFile))
-                $unixArchivePath = $archiveFile -replace '\\', '/' -replace 'C:', '/mnt/c' -replace ' ', '\ '
-                $unixArchiveSource = [System.IO.Path]::GetDirectoryName($archiveSource) -replace '\\', '/' -replace 'C:', '/mnt/c' -replace ' ', '\ '
-
-                $command = "& wsl tar -czvf $unixArchivePath -C $unixArchiveSource $unixParentDir"
-                Write-Host $command
-                Invoke-Expression $command
-            } else {
-                # Check if 7z is available
-                $sevenZipAvailable = $null -ne (Get-Command "7z" -ErrorAction SilentlyContinue)
-                if ($sevenZipAvailable) {
-                    # Use 7z to create a .tar.gz
-                    $tarArchive = $archiveFile -replace '\.gz$', ''  # Remove the .gz extension for intermediate .tar file
-                    & '7z' a -ttar -mx=9 $tarArchive $archiveSource
-                    & '7z' a -tgzip -mx=9 $archiveFile $tarArchive
-                    Remove-Item -Path $tarArchive  # Delete the intermediate .tar file
-                } else { # Fallback to git bash method if 7z isn't available
-                    # Use tar to compress
-                    $command = "& `"$bashLocation`" -c 'tar czf $gitBashArchivePath $gitBashArchiveSource'"
-                    Write-Host $command
-                    Invoke-Expression $command
-                }
-            }
+            Compress-TarGz -archiveFile $archiveFile -archiveSource $archiveSource
         }
 
         # Before deleting, set *.pdb files back to normal
@@ -226,6 +244,6 @@ try {
     continue
 }
 
-Write-Host "Built all targets."
+Write-Host "Built all targets successfully."
 Write-Host "Press any key to continue..."
 $null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")

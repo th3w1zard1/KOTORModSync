@@ -1000,20 +1000,45 @@ namespace KOTORModSync.Core
 					IniHelper.ReplaceIniPattern(tslPatcherDirectory, pattern:@"^\s*LookupGameFolder\s*=\s*1\s*$", replacement:"LookupGameFolder=0");
 					IniHelper.ReplaceIniPattern(tslPatcherDirectory, pattern:@"^\s*ConfirmMessage\s*=\s*.*$", replacement:"ConfirmMessage=N/A");
 
-					string args = $@"--install --game-dir=""{MainConfig.DestinationPath}""" // arg1 = swkotor directory
-						+ $@" --tslpatchdata=""{tslPatcherDirectory}""" // arg2 = mod directory (where tslpatchdata folder is)
-						+ (string.IsNullOrEmpty(Arguments)
-							? ""
-							: $" --namespace-option-index={Arguments}"); // arg3 = (optional) install option integer index from namespaces.ini
+					var argList = new List<string>
+					{
+						"--install",
+						$"--game-dir=\"{MainConfig.DestinationPath}\"",
+						$"--tslpatchdata=\"{tslPatcherDirectory}\"",
+					};
 
-					string thisExe = null;
+					if (!string.IsNullOrEmpty(Arguments))
+					{
+						argList.Add($"--namespace-option-index={Arguments}");
+					}
+
+					string args = string.Join(separator: " ", argList);
+
+
 					FileInfo patcherCliPath = null;
 					switch ( MainConfig.PatcherOption )
 					{
 						case MainConfig.AvailablePatchers.HoloPatcher:
-							thisExe = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
-								? "holopatcher.exe" // windows
-								: "holopatcher";    // linux/mac
+							string resourcesDir = Utility.Utility.GetResourcesDirectory();
+							if ( RuntimeInformation.IsOSPlatform(OSPlatform.Windows) )
+							{
+								patcherCliPath = new FileInfo(Path.Combine(resourcesDir, "holopatcher.exe"));
+							}
+							else
+							{
+								patcherCliPath = PathHelper.GetCaseSensitivePath(new FileInfo(Path.Combine(resourcesDir, "holopatcher")));
+								if ( !patcherCliPath.Exists && RuntimeInformation.IsOSPlatform(OSPlatform.OSX) )
+								{
+									patcherCliPath = PathHelper.GetCaseSensitivePath(new FileInfo(Path.Combine(resourcesDir, "holopatcher.app")));
+								}
+							}
+
+							if ( patcherCliPath is null || !patcherCliPath.Exists )
+							{
+								throw new FileNotFoundException(
+									$"Could not load HoloPatcher from the '{resourcesDir}' directory!"
+								);
+							}
 							break;
 						case MainConfig.AvailablePatchers.TSLPatcher:
 						default:
@@ -1028,10 +1053,9 @@ namespace KOTORModSync.Core
 							break;
 					}
 
-					patcherCliPath = patcherCliPath ?? new FileInfo(Path.Combine(Utility.Utility.GetResourcesDirectory(), thisExe));
-
-					await Logger.LogAsync("Starting TSLPatcher instructions...");
-					if ( MainConfig.PatcherOption != MainConfig.AvailablePatchers.TSLPatcher )
+					if ( MainConfig.PatcherOption == MainConfig.AvailablePatchers.TSLPatcher )
+						await Logger.LogAsync("Starting TSLPatcher...");
+					else
 						await Logger.LogAsync($"Using CLI to run command: '{patcherCliPath} {args}'");
 
 					// ReSharper disable twice UnusedVariable
@@ -1041,33 +1065,28 @@ namespace KOTORModSync.Core
 						noAdmin: MainConfig.NoAdmin
 					);
 					await Logger.LogVerboseAsync($"'{patcherCliPath.Name}' exited with exit code {exitCode}");
+					if ( exitCode != 0 )
+					{
+						return ActionExitCode.TSLPatcherCLIError;
+					}
 
 					try
 					{
 						List<string> installErrors = VerifyInstall();
-						if ( installErrors.Count > 0 )
-						{
-							await Logger.LogAsync(string.Join(Environment.NewLine, installErrors));
-							return ActionExitCode.TSLPatcherError;
-						}
+						if ( installErrors.Count <= 0 )
+							continue;
+
+						await Logger.LogAsync(string.Join(Environment.NewLine, installErrors));
+						return ActionExitCode.TSLPatcherError;
 					}
 					catch ( FileNotFoundException )
 					{
 						await Logger.LogAsync("No TSLPatcher log file found!");
 						return ActionExitCode.TSLPatcherLogNotFound;
 					}
-
-					return exitCode == 0
-						? ActionExitCode.Success
-						: ActionExitCode.TSLPatcherCLIError;
 				}
 
 				return ActionExitCode.Success;
-			}
-			catch ( DirectoryNotFoundException ex )
-			{
-				await Logger.LogExceptionAsync(ex);
-				throw;
 			}
 			catch ( Exception ex )
 			{
@@ -1090,15 +1109,6 @@ namespace KOTORModSync.Core
 				{
 					try
 					{
-						// TODO: add a config option to which installer to use for tslpatcher action.
-						DirectoryInfo tslPatcherDirectory = File.Exists(sourcePath)
-							? new FileInfo(sourcePath).Directory // It's a file, get the parent folder.
-							: new DirectoryInfo(sourcePath);     // It's a folder, create a DirectoryInfo instance
-
-						IniHelper.ReplaceIniPattern(tslPatcherDirectory, pattern:@"^\s*PlaintextLog\s*=\s*0\s*$", replacement:"PlaintextLog=1");
-						IniHelper.ReplaceIniPattern(tslPatcherDirectory, pattern:@"^\s*LookupGameFolder\s*=\s*1\s*$", replacement:"LookupGameFolder=0");
-						IniHelper.ReplaceIniPattern(tslPatcherDirectory, pattern:@"^\s*ConfirmMessage\s*=\s*.*$", replacement:"ConfirmMessage=N/A");
-
 						(int childExitCode, string output, string error) =
 							await PlatformAgnosticMethods.ExecuteProcessAsync(
 								sourcePath,
@@ -1134,7 +1144,7 @@ namespace KOTORModSync.Core
 			}
 		}
 
-		// parse TSLPatcher's installlog.rtf (or installlog.txt) for errors when not using the CLI.
+		// parse TSLPatcher's installlog.rtf (or installlog.txt) for errors.
 		[NotNull]
 		private List<string> VerifyInstall([ItemNotNull] List<string> sourcePaths = null)
 		{
@@ -1169,42 +1179,6 @@ namespace KOTORModSync.Core
 
 			Logger.LogVerbose("No errors found in TSLPatcher installation log file");
 			return new List<string>();
-		}
-
-		// this method removes the tslpatcher log file.
-		// should be called BEFORE any tslpatcher install takes place from KOTORModSync, never post-install.
-		public void CleanupTSLPatcherInstall([ItemNotNull] List<string> sourcePaths = null)
-		{
-			if ( sourcePaths == null )
-				sourcePaths = RealSourcePaths;
-			if ( sourcePaths == null )
-				throw new ArgumentNullException(nameof( sourcePaths ));
-
-			Logger.LogVerbose("Preparing TSLPatcher install...");
-			foreach ( string sourcePath in sourcePaths )
-			{
-				string tslPatcherDirPath = Path.GetDirectoryName(sourcePath)
-					?? throw new DirectoryNotFoundException($"Could not retrieve parent directory of '{sourcePath}'.");
-
-				//PlaintextLog=0
-				string fullInstallLogFile = Path.Combine(tslPatcherDirPath, path2: "installlog.rtf");
-
-				if ( !File.Exists(fullInstallLogFile) )
-				{
-					//PlaintextLog=1
-					fullInstallLogFile = Path.Combine(tslPatcherDirPath, path2: "installlog.txt");
-					if ( !File.Exists(fullInstallLogFile) )
-					{
-						Logger.LogVerbose($"No prior install found for {sourcePath}");
-						return;
-					}
-				}
-
-				Logger.LogVerbose($"Delete {fullInstallLogFile}");
-				File.Delete(fullInstallLogFile);
-			}
-
-			Logger.LogVerbose("Finished cleaning tslpatcher install");
 		}
 
 		public event PropertyChangedEventHandler PropertyChanged;

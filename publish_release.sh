@@ -1,6 +1,6 @@
 #!/bin/bash
 
-version="v0.10.43"
+version="v0.10.5"
 projectFile="KOTORModSync.GUI/KOTORModSync.csproj"
 publishProfilesDir="KOTORModSync.GUI/Properties/PublishProfiles"
 sevenZipPath="7z"

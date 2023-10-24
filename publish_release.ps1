@@ -1,13 +1,5 @@
 Set-Location -Path $PSScriptRoot
 
-trap {
-    Write-Host -ForegroundColor Red "$($_.InvocationInfo.PositionMessage)`n$($_.Exception.Message)"
-    Write-Host "Press any key to continue regardless..."
-    $null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
-    continue
-}
-
-
 $version = "v0.10.43"
 $projectFile = "KOTORModSync.GUI\KOTORModSync.csproj"
 $publishProfilesDir = "KOTORModSync.GUI\Properties\PublishProfiles"
@@ -16,12 +8,11 @@ $publishProfileFiles = Get-ChildItem -Path $publishProfilesDir -Filter "*.pubxml
 $gitBashLocation = "C:\Program Files\Git\bin\bash.exe"
 $dotnetPath = "/mnt/c/Program Files/dotnet/dotnet.exe"
 
-# Remove old builds if they exist.
-Get-ChildItem -Path "bin" -File | ForEach-Object {
-    Remove-Item -Path $_.FullName -Force -Confirm:$false
-}
-Get-ChildItem -Path "bin/publish" -Recurse | ForEach-Object {
-    Remove-Item -Path $_.FullName -Force -Recurse
+trap {
+    Write-Host -ForegroundColor Red "$($_.InvocationInfo.PositionMessage)`n$($_.Exception.Message)"
+    Write-Host "Press any key to continue regardless..."
+    $null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
+    continue
 }
 
 function Convert-WindowsPathToUnix {
@@ -37,7 +28,7 @@ function Convert-WindowsPathToUnix {
     return $unixPath
 }
 
-function Prepare-MacOSAppBundle {
+function Initialize-MacOSAppBundle {
     param(
         [string]$path
     )
@@ -59,7 +50,7 @@ function Prepare-MacOSAppBundle {
     return $appFolder
 }
 
-function Change-UnixFilePermissions {
+function Set-UnixFilePermissions {
     param(
         [string]$path,
         [string]$permissions
@@ -161,6 +152,14 @@ function Compress-Zip {
 
 
 try {
+
+    # Remove old builds if they exist.
+    Get-ChildItem -Path "bin" -File | ForEach-Object {
+        Remove-Item -Path $_.FullName -Force -Confirm:$false
+    }
+    Get-ChildItem -Path "bin/publish" -Recurse | ForEach-Object {
+        Remove-Item -Path $_.FullName -Force -Recurse
+    }
     foreach ($file in $publishProfileFiles) {
         Write-Host ""
         Write-Host "Publishing configuration for '$file'"
@@ -188,7 +187,7 @@ try {
         $publishFolder = Get-Item (Join-Path -Path (Split-Path -Path $projectFile) -ChildPath "..\bin\publish\$lastSection\$framework\$topLevelFolder")
 
         if ($rid -like "osx-*") {
-            $archiveSource = Prepare-MacOSAppBundle -path $publishFolder
+            $archiveSource = Initialize-MacOSAppBundle -path $publishFolder
         } else {
             $archiveSource = $publishFolder
         }
@@ -203,7 +202,7 @@ try {
         }
 
         # Fix file permissions before archiving
-        Change-UnixFilePermissions -path $archiveSource -permissions "777"
+        Set-UnixFilePermissions -path $archiveSource -permissions "777"
 
         # Determine compression method
         if ($rid -like "win*" -or ($null -ne (Get-Command "wsl" -ErrorAction SilentlyContinue))) {

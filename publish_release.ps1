@@ -220,13 +220,13 @@ try {
 
         Write-Host "Publishing '$file' completed successfully."
     }
+
+    Write-Host "Built all targets successfully."
+    Write-Host "Press any key to continue..."
+    $null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
 } catch {
     Write-Host -ForegroundColor Red "$($_.InvocationInfo.PositionMessage)`n$($_.Exception.Message)"
     Write-Host "Press any key to exit..."
     $null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
     continue
 }
-
-Write-Host "Built all targets successfully."
-Write-Host "Press any key to continue..."
-$null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")

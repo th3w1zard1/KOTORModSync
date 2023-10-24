@@ -64,5 +64,5 @@ This can all be pretty overwhelming but what's important to understand is that K
 Patcher Options:
 KMS supports the following KOTOR patchers:
 TSLPatcher - the default patcher included with mods.
-PyKotorCLI - A cli I wrote to the PyKotor library created by Cortisol: http:\\github.com\NickHugi\PyKotor
-- PyKotorCLI allows an install of all selected mods, without bugging a user to click through multiple TSLPatcher windows and praying they choose the correct option. From my tests, PyKotor installs mods much more efficiently and faster than TSLPatcher, and is supported on linux/mac!
+PyKotorCLI (now HoloPatcher in the latest version!) - A cli I wrote to the PyKotor library created by Cortisol: http:\\github.com\NickHugi\PyKotor
+- PyKotorCLI/HoloPatcher allows an install of all selected mods, without bugging a user to click through multiple TSLPatcher windows and praying they choose the correct option. From my tests, PyKotor installs mods much more efficiently and faster than TSLPatcher, and is supported on linux/mac!

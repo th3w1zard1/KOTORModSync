@@ -173,11 +173,6 @@ namespace KOTORModSync.Core
 		public Component GetParentComponent() => _parentComponent;
 		public void SetParentComponent(Component thisComponent) => _parentComponent = thisComponent;
 
-		public static async Task<bool> ExecuteInstructionAsync([NotNull] Func<Task<bool>> instructionMethod) =>
-			await (instructionMethod() ?? throw new ArgumentNullException(nameof( instructionMethod ))).ConfigureAwait(
-				false
-			);
-
 		// This method will replace custom variables such as <<modDirectory>> and <<kotorDirectory>> with their actual paths.
 		// This method should not be ran before an instruction is executed.
 		// Otherwise we risk deserializing a full path early, which can lead to unsafe config injections. (e.g. malicious config file targeting sys files)

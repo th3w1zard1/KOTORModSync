@@ -21,7 +21,7 @@ namespace KOTORModSync.Core.Utility
 		public static string ToOrdinal(object numberObj)
 		{
 			if ( !(numberObj is int number) )
-				throw new ArgumentException(nameof( number ));
+				throw new ArgumentException(message: "Not a valid number", nameof( numberObj ));
 
 			// Negative numbers have the same ordinal suffix as their positive counterpart
 			if (number < 0)
@@ -196,36 +196,6 @@ namespace KOTORModSync.Core.Utility
 				.Select(line => line?.Trim()).ToArray();
 
 			return string.Join(Environment.NewLine, lines);
-		}
-
-		[NotNull]
-		public static List<object> CreateMergedList([NotNull] params IEnumerable<object>[] lists)
-		{
-			var mergedList = new List<object>();
-
-			foreach ( IEnumerable<object> list in lists )
-			{
-				if ( list is null )
-					continue;
-
-				mergedList.AddRange(list);
-			}
-
-			return mergedList;
-		}
-
-		[NotNull]
-		[ItemNotNull]
-		public static IEnumerable<object> EnumerateDictionaryEntries([NotNull] IEnumerator enumerator)
-		{
-			while ( enumerator.MoveNext() )
-			{
-				if ( enumerator.Current is null )
-					continue;
-
-				var entry = (DictionaryEntry)enumerator.Current;
-				yield return new KeyValuePair<object, object>(entry.Key, entry.Value);
-			}
 		}
 
 		[CanBeNull]

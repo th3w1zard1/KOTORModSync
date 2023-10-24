@@ -31,7 +31,7 @@
     <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
     <AllowEditAndContinue>false</AllowEditAndContinue>
     <DebugSymbols>false</DebugSymbols>
-    <DebugType>portable</DebugType>
+    <DebugType>None</DebugType>
   </PropertyGroup>
 
   <!-- Debug Configuration: No error handling/optimizations, this provides the means to find more problems before release. -->

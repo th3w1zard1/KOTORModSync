@@ -2639,8 +2639,9 @@ namespace KOTORModSync
 				}
 				else
 				{
-					index = CurrentComponent.Instructions.IndexOf(thisInstruction);
-					CurrentComponent.CreateInstruction(index);
+					Component parentComponent = thisInstruction.GetParentComponent();
+					index = parentComponent.Instructions.IndexOf(thisInstruction);
+					parentComponent.CreateInstruction(index);
 				}
 
 				await Logger.LogVerboseAsync(

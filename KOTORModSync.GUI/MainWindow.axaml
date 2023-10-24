@@ -474,22 +474,12 @@
 
                                                             <TextBlock Grid.Row="14" Grid.Column="0"
                                                                        Text="Arguments:"
-                                                                       ToolTip.Tip="For 'execute' action, any command-line arguments to send. For 'DelDuplicate', the extension to delete when duplicates are found."
+                                                                       ToolTip.Tip="Namespace option index if action is TSLPatcher. For 'execute' action, any command-line arguments to send. For 'DelDuplicate', the extension to delete when duplicates are found."
                                                                        IsVisible="{Binding !IsVisible, ElementName=optionChooser}" />
-                                                            <TextBlock Grid.Row="14" Grid.Column="1"
-                                                                       Text="Namespace Ini Option:"
-                                                                       IsVisible="{Binding !IsVisible, ElementName=optionChooser}" />
-                                                            <TextBox Grid.Row="15" Grid.Column="0"
+                                                            <TextBox Grid.Row="15"
+                                                                     Grid.Column="0"
                                                                      Focusable="True"
-                                                                     Text="{Binding Arguments}"
-                                                                     IsVisible="{Binding !IsVisible, ElementName=optionChooser}" />
-                                                            <ComboBox
-                                                                Grid.Row="15"
-                                                                Grid.Column="1"
-                                                                HorizontalAlignment="Left"
-                                                                ItemsSource="{Binding Converter={StaticResource NamespacesIniOptionConverter}}"
-                                                                SelectionChanged="ComboBox_SelectionChanged"
-                                                                IsVisible="{Binding !IsVisible, ElementName=optionChooser}" />
+                                                                     Text="{Binding Arguments}" />
 
                                                         </Grid>
                                                     </Border>
@@ -712,21 +702,11 @@
                                                                                             <TextBlock Grid.Row="14"
                                                                                                 Grid.Column="0"
                                                                                                 Text="Arguments:"
-                                                                                                ToolTip.Tip="For 'execute' action, any command-line arguments to send. For 'DelDuplicate', the extension to delete when duplicates are found." />
-                                                                                            <TextBlock Grid.Row="14"
-                                                                                                Grid.Column="1"
-                                                                                                Text="Namespace Ini Option:" />
+                                                                                                ToolTip.Tip="Namespace option index if action is TSLPatcher. For 'execute' action, any command-line arguments to send. For 'DelDuplicate', the extension to delete when duplicates are found." />
                                                                                             <TextBox Grid.Row="15"
                                                                                                 Grid.Column="0"
                                                                                                 Focusable="True"
                                                                                                 Text="{Binding Arguments}" />
-                                                                                            <ComboBox
-                                                                                                Grid.Row="15"
-                                                                                                Grid.Column="1"
-                                                                                                HorizontalAlignment="Left"
-                                                                                                ItemsSource="{Binding Converter={StaticResource NamespacesIniOptionConverter}}"
-                                                                                                SelectionChanged="ComboBox_SelectionChanged" />
-
                                                                                         </Grid>
                                                                                     </Border>
                                                                                 </StackPanel>

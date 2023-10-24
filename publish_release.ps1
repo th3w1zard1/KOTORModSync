@@ -24,22 +24,6 @@ Get-ChildItem -Path "bin/publish" -Recurse | ForEach-Object {
     Remove-Item -Path $_.FullName -Force -Recurse
 }
 
-function Set-HiddenAttribute {
-    param (
-        [string]$path
-    )
-    $file = Get-Item $path
-    $file.Attributes = 'Hidden'
-}
-
-function Remove-HiddenAttribute {
-    param (
-        [string]$path
-    )
-    $file = Get-Item $path
-    $file.Attributes = 'Normal'
-}
-
 function Convert-WindowsPathToUnix {
     param(
         [string]$path
@@ -154,7 +138,7 @@ function Compress-Zip {
         $parentDir = [System.IO.Path]::GetDirectoryName($archiveSource)
         $originalDir = Get-Location
         $archiveFile = [System.IO.Path]::GetFullPath((Join-Path $originalDir $archiveFile))
-        $command = "cd '$parentDir'; & 'zip' -q -r -9 '$archiveFile' '$([System.IO.Path]::GetFileName($archiveSource))'; cd '$originalDir'"
+        $command = "cd '$parentDir'; & zip -q -r -9 '$archiveFile' '$([System.IO.Path]::GetFileName($archiveSource))'; cd '$originalDir'"
         Write-Host $command
         Invoke-Expression $command
     } elseif ($null -ne (Get-Command "7z" -ErrorAction SilentlyContinue)) {
@@ -213,9 +197,9 @@ try {
         Copy-Item -Path "LICENSE.TXT" -Destination $publishFolder
         Copy-Item -Path "KOTORModSync - Official Documentation.txt" -Destination $publishFolder
 
-        # Before archiving, set *.pdb files to hidden
+        # Before archiving, remove *.pdb files
         Get-ChildItem -Path $archiveSource -Recurse -Filter "*.pdb" | ForEach-Object {
-            Set-HiddenAttribute -path $_.FullName
+            Remove-Item -Path $_.FullName -Force -Confirm:$false
         }
 
         # Fix file permissions before archiving

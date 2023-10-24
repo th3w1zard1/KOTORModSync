@@ -7,6 +7,7 @@ sevenZipPath="7z"
 
 # Remove old builds if they exist.
 rm -f bin/*.zip
+rm -f bin/*.gz
 rm -rf bin/publish/*
 
 # Use chmod to change the file attribute instead of PowerShell's hidden attribute method

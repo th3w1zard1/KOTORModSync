@@ -1,4 +1,3 @@
-$ErrorActionPreference = 'Stop'
 Set-Location -Path $PSScriptRoot
 
 trap {
@@ -15,16 +14,11 @@ $publishProfilesDir = "KOTORModSync.GUI\Properties\PublishProfiles"
 $sevenZipPath = "C:\Program Files\7-Zip\7z.exe"  # Path to 7zip executable
 $publishProfileFiles = Get-ChildItem -Path $publishProfilesDir -Filter "*.pubxml"
 $gitBashLocation = "C:\Program Files\Git\bin\bash.exe"
+$dotnetPath = "/mnt/c/Program Files/dotnet/dotnet.exe"
 
 # Remove old builds if they exist.
-Get-ChildItem -Path "bin" -Filter "*.zip" | ForEach-Object {
-    Remove-Item -Path $_.FullName -Force
-}
-Get-ChildItem -Path "bin" -Filter "*.tar" | ForEach-Object {
-    Remove-Item -Path $_.FullName -Force
-}
-Get-ChildItem -Path "bin" -Filter "*.gz" | ForEach-Object {
-    Remove-Item -Path $_.FullName -Force
+Get-ChildItem -Path "bin" -File | ForEach-Object {
+    Remove-Item -Path $_.FullName -Force -Confirm:$false
 }
 Get-ChildItem -Path "bin/publish" -Recurse | ForEach-Object {
     Remove-Item -Path $_.FullName -Force -Recurse
@@ -88,7 +82,11 @@ function Change-UnixFilePermissions {
     )
     $unixArchiveSource = Convert-WindowsPathToUnix -path $path
     if ($null -ne (Get-Command "wsl" -ErrorAction SilentlyContinue)) {
-        $command = "& wsl chmod $permissions -Rv $unixArchiveSource"
+        $command = "& wsl chmod $permissions -Rc $unixArchiveSource"
+        Write-Host $command
+        Invoke-Expression $command
+    } elseif ($null -ne (Get-Command "chmod" -ErrorAction SilentlyContinue)) {
+        $command = "& chmod $permissions -Rc '$path'"
         Write-Host $command
         Invoke-Expression $command
     } else {
@@ -144,11 +142,19 @@ function Compress-Zip {
         [string]$archiveFile,
         [string]$archiveSource
     )
-    if ($null -ne (Get-Command "zip" -ErrorAction SilentlyContinue)) {
+    if ($null -ne (Get-Command "wsl" -ErrorAction SilentlyContinue)) {
         $parentDir = [System.IO.Path]::GetDirectoryName($archiveSource)
         $originalDir = Get-Location
         $archiveFile = [System.IO.Path]::GetFullPath((Join-Path $originalDir $archiveFile))
-        $command = "cd '$parentDir'; & 'zip' -r -9 '$archiveFile' '$([System.IO.Path]::GetFileName($archiveSource))'; cd '$originalDir'"
+        $unixArchivePath = Convert-WindowsPathToUnix -path $archiveFile
+        $command = "cd '$parentDir'; & wsl zip -q -r -9 '$unixArchivePath' '$([System.IO.Path]::GetFileName($archiveSource))'; cd '$originalDir'"
+        Write-Host $command
+        Invoke-Expression $command
+    } elseif ($null -ne (Get-Command "zip" -ErrorAction SilentlyContinue)) {
+        $parentDir = [System.IO.Path]::GetDirectoryName($archiveSource)
+        $originalDir = Get-Location
+        $archiveFile = [System.IO.Path]::GetFullPath((Join-Path $originalDir $archiveFile))
+        $command = "cd '$parentDir'; & 'zip' -q -r -9 '$archiveFile' '$([System.IO.Path]::GetFileName($archiveSource))'; cd '$originalDir'"
         Write-Host $command
         Invoke-Expression $command
     } elseif ($null -ne (Get-Command "7z" -ErrorAction SilentlyContinue)) {
@@ -182,25 +188,22 @@ try {
         $lastSection = $fileNameParts[2]
 
         # Build the dotnet publish command with the --framework argument
-        $publishCommand = "dotnet publish $projectFile -c Release --framework $framework /p:PublishProfile=$file 2>&1 | Out-Null"
-
-        # Execute the publish command
+        if ($null -ne (Get-Command "dotnet" -ErrorAction SilentlyContinue)) {
+            $publishCommand = "dotnet publish $projectFile -c Release --framework $framework /p:PublishProfile=$file"
+        } elseif (Test-Path -Path $dotnetPath) {
+            $publishCommand = "& `"$dotnetPath`" publish $projectFile -c Release --framework $framework /p:PublishProfile=$file"
+        }
         Invoke-Expression $publishCommand
 
         $topLevelFolder = "KOTORModSync $version"
 
-        # Get the publish folder path
-        $publishFolder = Get-Item (Join-Path -Path (Split-Path -Path $projectFile) -ChildPath "..\bin\publish\$lastSection\$framework\$rid")
-
         # Rename for our top level folder for the archive.
-        Rename-Item -Path $publishFolder -NewName $topLevelFolder
+        Rename-Item -Path $(Get-Item (Join-Path -Path (Split-Path -Path $projectFile) -ChildPath "..\bin\publish\$lastSection\$framework\$rid")) -NewName $topLevelFolder
 
+        # Get the publish folder path
         $publishFolder = Get-Item (Join-Path -Path (Split-Path -Path $projectFile) -ChildPath "..\bin\publish\$lastSection\$framework\$topLevelFolder")
 
-        # Determine if macOS
-        $isMacOSTarget = $rid -eq "osx-x64" -or $rid -eq "osx-arm64"
-
-        if ($isMacOSTarget) {
+        if ($rid -like "osx-*") {
             $archiveSource = Prepare-MacOSAppBundle -path $publishFolder
         } else {
             $archiveSource = $publishFolder
@@ -215,21 +218,17 @@ try {
             Set-HiddenAttribute -path $_.FullName
         }
 
-        $archiveFile = Join-Path -Path (Split-Path -Path "bin\publish") -ChildPath ("$rid" + $(if ($rid -like "win*") { ".zip" } else { ".tar.gz" }))
-
         # Fix file permissions before archiving
         Change-UnixFilePermissions -path $archiveSource -permissions "777"
 
         # Determine compression method
-        if ($rid -like "win*") {
+        if ($rid -like "win*" -or ($null -ne (Get-Command "wsl" -ErrorAction SilentlyContinue))) {
+            $archiveFile = Join-Path -Path (Split-Path -Path "bin\publish") -ChildPath "$rid.zip"
             Compress-Zip -archiveFile $archiveFile -archiveSource $archiveSource
         } else {
+            Write-Warning "Creating .tar.gz instead of .zip archives to preserve file attributes, please run on unix or wsl if you want zips."
+            $archiveFile = Join-Path -Path (Split-Path -Path "bin\publish") -ChildPath "$rid.tar.gz"
             Compress-TarGz -archiveFile $archiveFile -archiveSource $archiveSource
-        }
-
-        # Before deleting, set *.pdb files back to normal
-        Get-ChildItem -Path "$publishFolder\..\$topLevelFolder" -Recurse -Filter "*.pdb" | ForEach-Object {
-            Remove-HiddenAttribute -path $_.FullName
         }
 
         # Remove the leftover folders

@@ -78,13 +78,13 @@
   </ItemGroup>
   <ItemGroup>
     <AvaloniaXaml Update="Styles\LegacyStyle.axaml">
-	    <Generator>MSBuild:Compile</Generator>
+        <Generator>MSBuild:Compile</Generator>
     </AvaloniaXaml>
     <AvaloniaXaml Update="Styles\Kotor2Style.axaml">
-	    <Generator>MSBuild:Compile</Generator>
+        <Generator>MSBuild:Compile</Generator>
     </AvaloniaXaml>
     <AvaloniaXaml Update="Styles\KotorStyle.axaml">
-	    <Generator>MSBuild:Compile</Generator>
+        <Generator>MSBuild:Compile</Generator>
     </AvaloniaXaml>
   </ItemGroup>
   <ItemGroup>
@@ -104,6 +104,9 @@
       <DependentUpon>DependencyControl.axaml</DependentUpon>
     </Compile>
   </ItemGroup>
+  <ItemGroup Condition=" '$(RuntimeIdentifier)' == 'osx-x64' OR '$(RuntimeIdentifier)' == 'osx-arm64' ">
+    <AppFiles Include="$(SolutionDir)vendor\bin\holopatcher.app\**\*.*" />
+  </ItemGroup>
 
   <PropertyGroup Condition=" '$(OS)' == 'Windows_NT' ">
     <IsUnix>false</IsUnix>
@@ -118,32 +121,30 @@
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
 
     <!-- For Mac -->
-    <Copy Condition=" '$(RuntimeIdentifier)' == 'osx-x64' OR '$(RuntimeIdentifier)' == 'osx-arm64' " SourceFiles="$(SolutionDir)vendor$(DirectorySeparatorChar)bin$(DirectorySeparatorChar)holopatcher_mac" DestinationFolder="$(TargetDir)Resources$(DirectorySeparatorChar)" />
-    <Copy Condition=" '$(RuntimeIdentifier)' == 'osx-x64' OR '$(RuntimeIdentifier)' == 'osx-arm64' " SourceFiles="$(SolutionDir)vendor$(DirectorySeparatorChar)bin$(DirectorySeparatorChar)holopatcher_mac" DestinationFolder="$(PublishDir)Resources$(DirectorySeparatorChar)" />
-    <Move Condition=" '$(RuntimeIdentifier)' == 'osx-x64' OR '$(RuntimeIdentifier)' == 'osx-arm64' " SourceFiles="$(TargetDir)Resources$(DirectorySeparatorChar)holopatcher_mac" DestinationFiles="$(TargetDir)Resources$(DirectorySeparatorChar)holopatcher" />
-    <Move Condition=" '$(RuntimeIdentifier)' == 'osx-x64' OR '$(RuntimeIdentifier)' == 'osx-arm64' " SourceFiles="$(PublishDir)Resources$(DirectorySeparatorChar)holopatcher_mac" DestinationFiles="$(PublishDir)Resources$(DirectorySeparatorChar)holopatcher" />
+    <Copy Condition=" '$(RuntimeIdentifier)' == 'osx-x64' OR '$(RuntimeIdentifier)' == 'osx-arm64' " SourceFiles="@(AppFiles)" DestinationFolder="$(PublishDir)Resources\holopatcher.app\%(RecursiveDir)" />
+    <Copy Condition=" '$(RuntimeIdentifier)' == 'osx-x64' OR '$(RuntimeIdentifier)' == 'osx-arm64' " SourceFiles="@(AppFiles)" DestinationFolder="$(PublishDir)Resources\holopatcher.app\%(RecursiveDir)" />
 
-	  <!-- For Linux -->
+    <!-- For Linux -->
     <Copy Condition=" '$(RuntimeIdentifier)' == 'linux-x64' " SourceFiles="$(SolutionDir)vendor$(DirectorySeparatorChar)bin$(DirectorySeparatorChar)holopatcher_linux" DestinationFolder="$(TargetDir)Resources$(DirectorySeparatorChar)" />
     <Copy Condition=" '$(RuntimeIdentifier)' == 'linux-x64' " SourceFiles="$(SolutionDir)vendor$(DirectorySeparatorChar)bin$(DirectorySeparatorChar)holopatcher_linux" DestinationFolder="$(PublishDir)Resources$(DirectorySeparatorChar)" />
     <Move Condition=" '$(RuntimeIdentifier)' == 'linux-x64' " SourceFiles="$(TargetDir)Resources$(DirectorySeparatorChar)holopatcher_linux" DestinationFiles="$(TargetDir)Resources$(DirectorySeparatorChar)holopatcher" />
     <Move Condition=" '$(RuntimeIdentifier)' == 'linux-x64' " SourceFiles="$(PublishDir)Resources$(DirectorySeparatorChar)holopatcher_linux" DestinationFiles="$(PublishDir)Resources$(DirectorySeparatorChar)holopatcher" />
 
-	  <!-- For Windows -->
-	  <Copy Condition=" '$(RuntimeIdentifier)' != 'linux-x64' AND '$(RuntimeIdentifier)' != 'osx-x64' AND '$(RuntimeIdentifier)' != 'osx-arm64' " SourceFiles="$(SolutionDir)vendor$(DirectorySeparatorChar)bin$(DirectorySeparatorChar)holopatcher.exe" DestinationFolder="$(TargetDir)Resources$(DirectorySeparatorChar)" />
-	  <Copy Condition=" '$(RuntimeIdentifier)' != 'linux-x64' AND '$(RuntimeIdentifier)' != 'osx-x64' AND '$(RuntimeIdentifier)' != 'osx-arm64' " SourceFiles="$(SolutionDir)vendor$(DirectorySeparatorChar)bin$(DirectorySeparatorChar)holopatcher.exe" DestinationFolder="$(PublishDir)Resources$(DirectorySeparatorChar)" />
+    <!-- For Windows -->
+    <Copy Condition=" '$(RuntimeIdentifier)' != 'linux-x64' AND '$(RuntimeIdentifier)' != 'osx-x64' AND '$(RuntimeIdentifier)' != 'osx-arm64' " SourceFiles="$(SolutionDir)vendor$(DirectorySeparatorChar)bin$(DirectorySeparatorChar)holopatcher.exe" DestinationFolder="$(TargetDir)Resources$(DirectorySeparatorChar)" />
+    <Copy Condition=" '$(RuntimeIdentifier)' != 'linux-x64' AND '$(RuntimeIdentifier)' != 'osx-x64' AND '$(RuntimeIdentifier)' != 'osx-arm64' " SourceFiles="$(SolutionDir)vendor$(DirectorySeparatorChar)bin$(DirectorySeparatorChar)holopatcher.exe" DestinationFolder="$(PublishDir)Resources$(DirectorySeparatorChar)" />
 
     <!-- For x64 Platform -->
     <Copy Condition=" '$(Platform)' == 'x64' " SourceFiles="$(SolutionDir)vendor$(DirectorySeparatorChar)lib$(DirectorySeparatorChar)7z_x64.dll" DestinationFolder="$(TargetDir)Resources$(DirectorySeparatorChar)" />
-	  <Copy Condition=" '$(Platform)' == 'x64' " SourceFiles="$(SolutionDir)vendor$(DirectorySeparatorChar)lib$(DirectorySeparatorChar)7z_x64.dll" DestinationFolder="$(PublishDir)Resources$(DirectorySeparatorChar)" />
-	  <Move Condition=" '$(Platform)' == 'x64' " SourceFiles="$(TargetDir)Resources$(DirectorySeparatorChar)7z_x64.dll" DestinationFiles="$(TargetDir)Resources$(DirectorySeparatorChar)7z.dll" />
-	  <Move Condition=" '$(Platform)' == 'x64' " SourceFiles="$(PublishDir)Resources$(DirectorySeparatorChar)7z_x64.dll" DestinationFiles="$(PublishDir)Resources$(DirectorySeparatorChar)7z.dll" />
+    <Copy Condition=" '$(Platform)' == 'x64' " SourceFiles="$(SolutionDir)vendor$(DirectorySeparatorChar)lib$(DirectorySeparatorChar)7z_x64.dll" DestinationFolder="$(PublishDir)Resources$(DirectorySeparatorChar)" />
+    <Move Condition=" '$(Platform)' == 'x64' " SourceFiles="$(TargetDir)Resources$(DirectorySeparatorChar)7z_x64.dll" DestinationFiles="$(TargetDir)Resources$(DirectorySeparatorChar)7z.dll" />
+    <Move Condition=" '$(Platform)' == 'x64' " SourceFiles="$(PublishDir)Resources$(DirectorySeparatorChar)7z_x64.dll" DestinationFiles="$(PublishDir)Resources$(DirectorySeparatorChar)7z.dll" />
 
     <!-- For x86 Platform -->
     <Copy Condition=" '$(Platform)' == 'x86' " SourceFiles="$(SolutionDir)vendor$(DirectorySeparatorChar)lib$(DirectorySeparatorChar)7z_x86.dll" DestinationFolder="$(TargetDir)Resources$(DirectorySeparatorChar)" />
-	  <Copy Condition=" '$(Platform)' == 'x86' " SourceFiles="$(SolutionDir)vendor$(DirectorySeparatorChar)lib$(DirectorySeparatorChar)7z_x86.dll" DestinationFolder="$(PublishDir)Resources$(DirectorySeparatorChar)" />
-	  <Move Condition=" '$(Platform)' == 'x86' " SourceFiles="$(TargetDir)Resources$(DirectorySeparatorChar)7z_x86.dll" DestinationFiles="$(TargetDir)Resources$(DirectorySeparatorChar)7z.dll" />
-	  <Move Condition=" '$(Platform)' == 'x86' " SourceFiles="$(PublishDir)Resources$(DirectorySeparatorChar)7z_x86.dll" DestinationFiles="$(PublishDir)Resources$(DirectorySeparatorChar)7z.dll" />
+    <Copy Condition=" '$(Platform)' == 'x86' " SourceFiles="$(SolutionDir)vendor$(DirectorySeparatorChar)lib$(DirectorySeparatorChar)7z_x86.dll" DestinationFolder="$(PublishDir)Resources$(DirectorySeparatorChar)" />
+    <Move Condition=" '$(Platform)' == 'x86' " SourceFiles="$(TargetDir)Resources$(DirectorySeparatorChar)7z_x86.dll" DestinationFiles="$(TargetDir)Resources$(DirectorySeparatorChar)7z.dll" />
+    <Move Condition=" '$(Platform)' == 'x86' " SourceFiles="$(PublishDir)Resources$(DirectorySeparatorChar)7z_x86.dll" DestinationFiles="$(PublishDir)Resources$(DirectorySeparatorChar)7z.dll" />
   </Target>
 
   <!-- Delete logs and other temp output -->

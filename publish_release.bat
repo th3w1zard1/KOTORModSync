@@ -1,7 +1,7 @@
 @echo off
 SETLOCAL ENABLEDELAYEDEXPANSION
 
-set kms_version=v0.10.5
+set kms_version=v1.0.0
 set projectFile=KOTORModSync.GUI\KOTORModSync.csproj
 set publishProfilesDir=KOTORModSync.GUI\Properties\PublishProfiles
 set sevenZipPath="C:\Program Files\7-Zip\7z.exe"

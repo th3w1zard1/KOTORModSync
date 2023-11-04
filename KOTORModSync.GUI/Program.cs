@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Threading;
+//using System.Threading;
 using Avalonia;
 using Avalonia.ReactiveUI;
 using KOTORModSync.Core;
@@ -19,8 +19,8 @@ namespace KOTORModSync
 		[STAThread]
 		public static void Main(string[] args)
 		{
-			var consoleThread = new Thread(ConsoleLoop);
-			consoleThread.Start();
+			//var consoleThread = new Thread(ConsoleLoop);
+			//consoleThread.Start();
 
 			_ = BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
 		}
@@ -34,7 +34,6 @@ namespace KOTORModSync
 				while ( true )
 				{
 					string input = Console.ReadLine();
-					input = string.Empty;
 					char key;
 
 					switch ( input )

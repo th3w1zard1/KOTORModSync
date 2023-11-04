@@ -27,7 +27,6 @@ x86/
 [Aa][Rr][Mm]/
 [Aa][Rr][Mm]64/
 bld/
-[Bb]in/
 [Oo]bj/
 [Oo]ut/
 [Ll]og/
@@ -369,3 +368,4 @@ FodyWeavers.xsd
 *.toml
 *.tml
 logs_and_data_saved_from_dotnet_clean/*
+bin/*

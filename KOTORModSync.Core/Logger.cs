@@ -43,10 +43,13 @@ namespace KOTORModSync.Core
 		[NotNull]
 		private static async Task LogInternalAsync(
 			[CanBeNull] string internalMessage,
-			bool fileOnly = false,
+			bool verbose = false,
 			ConsoleColor? color = null
 		)
 		{
+			if ( verbose && !MainConfig.DebugLogging )
+				return;
+
 			internalMessage = internalMessage ?? string.Empty;
 
 			await s_semaphore.WaitAsync();
@@ -54,19 +57,16 @@ namespace KOTORModSync.Core
 			{
 				string logMessage = $"[{DateTime.Now}] {internalMessage}";
 
-				if ( !fileOnly )
-				{
-					string consoleMessage = $"[{DateTime.Now:HH:mm:ss}] {internalMessage}";
-					// Set color if specified.
-					if ( color.HasValue )
-						Console.ForegroundColor = color.Value;
+				string consoleMessage = $"[{DateTime.Now:HH:mm:ss}] {internalMessage}";
+				// Set color if specified.
+				if ( color.HasValue )
+					Console.ForegroundColor = color.Value;
 
-					await Console.Out.WriteLineAsync(consoleMessage);
+				await Console.Out.WriteLineAsync(consoleMessage);
 
-					// Reset the color before continuing.
-					if ( color.HasValue )
-						Console.ResetColor();
-				}
+				// Reset the color before continuing.
+				if ( color.HasValue )
+					Console.ResetColor();
 
 				string formattedDate = DateTime.Now.ToString("yyyy-MM-dd");
 				CancellationToken token = new CancellationTokenSource(delay: TimeSpan.FromMinutes(2)).Token;
@@ -85,7 +85,7 @@ namespace KOTORModSync.Core
 						);
 						using ( var writer = new StreamWriter(logFilePath, append: true) )
 						{
-							await writer.WriteLineAsync(logMessage + Environment.NewLine);
+							await writer.WriteLineAsync(logMessage);
 							fileWritten = true;
 						}
 					}
@@ -123,11 +123,11 @@ namespace KOTORModSync.Core
 		public static Task LogAsync([CanBeNull] string message) => LogInternalAsync(message);
 
 		public static void LogVerbose([CanBeNull] string message) =>
-			_ = LogInternalAsync($"[Verbose] {message}", !MainConfig.DebugLogging, ConsoleColor.DarkGray);
+			_ = LogInternalAsync($"[Verbose] {message}", verbose: true, ConsoleColor.DarkGray);
 
 		[NotNull]
 		public static Task LogVerboseAsync([CanBeNull] string message) =>
-			LogInternalAsync($"[Verbose] {message}", !MainConfig.DebugLogging, ConsoleColor.DarkGray);
+			LogInternalAsync($"[Verbose] {message}", verbose: true, color: ConsoleColor.DarkGray);
 
 		// ReSharper disable once UnusedMember.Global
 		public static void LogWarning([NotNull] string message) => _ = LogInternalAsync(

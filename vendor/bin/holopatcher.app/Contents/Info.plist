@@ -3,17 +3,17 @@
 <plist version="1.0">
 <dict>
 	<key>CFBundleDisplayName</key>
-	<string>holopatcher</string>
+	<string>HoloPatcher</string>
 	<key>CFBundleExecutable</key>
-	<string>holopatcher</string>
+	<string>HoloPatcher</string>
 	<key>CFBundleIconFile</key>
 	<string>generated-3428e394f0da4af9efb2b98a791ea27541384091ef76339ceb3f6e7c2152447e.icns</string>
 	<key>CFBundleIdentifier</key>
-	<string>holopatcher</string>
+	<string>HoloPatcher</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
-	<string>holopatcher</string>
+	<string>HoloPatcher</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>

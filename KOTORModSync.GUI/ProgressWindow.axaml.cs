@@ -33,6 +33,8 @@ namespace KOTORModSync
 				Topmost = true,
 			};
 
+
+
 			if ( !(parentWindow is null) )
 				_ = await progressWindow.ShowDialog<bool?>(parentWindow);
 		}

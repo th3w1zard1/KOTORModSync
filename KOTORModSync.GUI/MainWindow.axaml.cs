@@ -1494,6 +1494,32 @@ namespace KOTORModSync
 					_installRunning = true;
 
 					progressWindow.Closed += ProgressWindowClosed;
+					bool isClosingProgressWindow = false;
+					progressWindow.Closing += async (sender2, e2) =>
+					{
+						// If the window is already in the process of closing, do nothing
+						if (isClosingProgressWindow)
+							return;
+
+						// Otherwise, prevent the window from closing and show the confirmation dialog
+						e2.Cancel = true;
+
+						// Create and show the confirmation dialog
+						bool? result = await ConfirmationDialog.ShowConfirmationDialog(
+							this,
+							confirmText: "Closing the progress window will stop the install after the current instruction completes. Really cancel the install?"
+						);
+
+						// If the result is true, the user confirmed they want to close the window
+						if (result == true)
+						{
+							// Mark the window as in the process of closing
+							isClosingProgressWindow = true;
+        
+							// Re-initiate the closing of the window
+							progressWindow.Close();
+						}
+					};
 					progressWindow.Show();
 					_progressWindowClosed = false;
 
@@ -1588,11 +1614,13 @@ namespace KOTORModSync
 					}
 					
 					_installRunning = false;
+					isClosingProgressWindow = true;
 					progressWindow.Close();
 				}
 				catch ( Exception )
 				{
 					_installRunning = false;
+					isClosingProgressWindow = true;
 					progressWindow.Close();
 					await Logger.LogErrorAsync("Terminating install due to unhandled exception:");
 					throw;

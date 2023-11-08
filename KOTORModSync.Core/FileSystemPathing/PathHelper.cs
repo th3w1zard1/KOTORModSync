@@ -165,14 +165,14 @@ namespace KOTORModSync.Core.FileSystemPathing
 
 			if ( commonLength < relativeTo.Length )
 			{
-				sb.Append("..");
+				//sb.Append("..");
 
 				for ( int i = commonLength + 1; i < relativeTo.Length; i++ )
 				{
 					if ( relativeTo[i] == Path.DirectorySeparatorChar )
 					{
-						sb.Append(Path.DirectorySeparatorChar);
-						sb.Append("..");
+						//sb.Append(Path.DirectorySeparatorChar);
+						//sb.Append("..");
 					}
 				}
 			}

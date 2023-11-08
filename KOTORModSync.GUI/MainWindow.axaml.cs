@@ -1488,13 +1488,13 @@ namespace KOTORModSync
 					Topmost = true,
 				};
 
+				bool isClosingProgressWindow = false;
 				try
 				{
 					_ = Logger.LogAsync("Start installing all mods...");
 					_installRunning = true;
 
 					progressWindow.Closed += ProgressWindowClosed;
-					bool isClosingProgressWindow = false;
 					progressWindow.Closing += async (sender2, e2) =>
 					{
 						// If the window is already in the process of closing, do nothing

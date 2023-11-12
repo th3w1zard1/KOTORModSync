@@ -1,12 +1,12 @@
 # KOTORModSync
 KOTORModSync is a multi-mod installer for KOTOR games that makes it easier to install and manage mods.
 
-I usually install the Reddit mod build every year or so. The process takes about an hour and it's repetitive moving files, running tslpatcher, deleting specific files, and occasionally renaming some files. The last time I installed the modbuild I made a mistake on a single different step, 3 times in a row. Most mistakes require a full restart from the beginning.
+I usually install the Reddit mod build every year or so. The process takes about an hour and it's repetitive moving files, running TSLPatcher, deleting specific files, and occasionally renaming some files. The last time I installed the modbuild I made a mistake on a single different step, 3 times in a row. Most mistakes require a full restart from the beginning.
 This is tedious, so I decided to create an installer creator in C# to simplify the process.
 
 ## Goals
 Mod creators work really hard on their mods. It's the least we can do to install them and use them, right? However, who wants to reinstall to vanilla and spend several hours reinstalling mods, just to add 1 or 2 extra mods on top of it?
-Other mod managers I've tried were either too difficult to configure, require significant changes to a hard-to-understand configuration file, or only provided limited functionality for defining new mods. KOTOR mods definitely can have complex dependency relationships with each other in regard to compatibility, due to the nature and age of TSLPatcher.
+Other mod managers I've tried were either too difficult to configure, require significant changes to a hard-to-understand configuration file, or only provided limited functionality for defining new mods. KOTOR mods definitely can have complex dependency relationships with each other in regard to compatibility, due to the nature of TSLPatcher and KOTOR itself.
 
 ### Enter KOTORMODSync.
 ![KMS k1](https://github.com/th3w1zard1/KOTORModSync/assets/2219836/7ab62c61-e617-4bab-a8c5-7259ff66a7be)
@@ -62,8 +62,9 @@ I'm honestly not sure what all you need, I was able to build and run it on both 
 
 All you need to do is build KOTORModSync.GUI. This should build the program into ./KOTORModSync.GUI/bin directory. Or run the command `dotnet build` then `dotnet run` inside KOTORModSync.GUI folder.
 You may alternatively run my publish scripts in the solution directory if you like.
-#### KOTORModSync
-- Main GUI running on AvaloniaYU 11
+#### KOTORModSync.GUI
+- Main application
+- Uses AvaloniaUI v11 for the UI.
 - Buttons, windows, dialogs, and controls defined here.
 #### KOTORModSync.Core
 - All the main logic is defined here.

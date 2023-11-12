@@ -14,7 +14,8 @@ Other mod managers I've tried were either too difficult to configure, require si
 
 
 ## Features
-- Can install the r/KOTOR mod builds in about 20 minutes from a vanilla install.
+- Can install the https://kotor.neocities.org/ mod builds in about 20 minutes from a vanilla install.
+- Supports TSLPatching on mac/linux without wine!
 - Select the individual mods you want for an install - the dependencies and incompatibilities will automatically be chosen and sorted. This means end users don't have to worry about specific instructions regarding other mods in the list. All the compatibility steps are handled internally by KOTORModSync and the default instructions files provided here. An end user simply can select the mods they want to install in the left list, and any customizations if they like, and simply press 'Install All' to have everything installed automatically.
 - This program has a built-in GUI editor and an installer packed into one. Modbuild creators can create instructions with little to no knowledge of the format and easily share them with end users. End users can install everything from the instruction file with a simple click of a button. Edit any instructions and verify the configuration with built-in tools. There's also some support to dry run an install.
 - A flexible configuration editor and parser utilizing TOML syntax. This is very user-friendly and similar to INI which TSLPatcher already uses and most modders are used to.

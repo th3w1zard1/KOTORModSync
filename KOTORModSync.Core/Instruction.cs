@@ -3,6 +3,7 @@
 // See LICENSE.txt file in the project root for full license information.
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
@@ -1072,11 +1073,47 @@ namespace KOTORModSync.Core
 							continue;
 
 						await Logger.LogAsync(string.Join(Environment.NewLine, installErrors));
+
+						// Attempt to uninstall the failed mod if using HoloPatcher:
+						if ( MainConfig.PatcherOption == MainConfig.AvailablePatchers.HoloPatcher ) {
+							argList.ForEach(item =>
+							{
+								if (item.Contains("--install"))
+								{
+									int index = argList.IndexOf(item);
+									argList[index] = item.Replace("--install", "--uninstall");
+								}
+							});
+
+							args = string.Join(separator: " ", argList);
+							(int _, string _, string _) = await PlatformAgnosticMethods.ExecuteProcessAsync(
+								patcherCliPath.FullName,
+								args,
+								noAdmin: MainConfig.NoAdmin
+							);
+						}
 						return ActionExitCode.TSLPatcherError;
 					}
-					catch ( FileNotFoundException )
+					catch ( Exception )
 					{
-						await Logger.LogAsync("No TSLPatcher log file found!");
+						// Attempt to uninstall the failed mod if using HoloPatcher:
+						if ( MainConfig.PatcherOption == MainConfig.AvailablePatchers.HoloPatcher ) {
+							argList.ForEach(item =>
+							{
+								if (item.Contains("--install"))
+								{
+									int index = argList.IndexOf(item);
+									argList[index] = item.Replace("--install", "--uninstall");
+								}
+							});
+
+							args = string.Join(separator: " ", argList);
+							(int _, string _, string _) = await PlatformAgnosticMethods.ExecuteProcessAsync(
+								patcherCliPath.FullName,
+								args,
+								noAdmin: MainConfig.NoAdmin
+							);
+						}
 						return ActionExitCode.TSLPatcherLogNotFound;
 					}
 				}

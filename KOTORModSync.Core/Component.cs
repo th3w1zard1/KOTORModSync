@@ -60,9 +60,7 @@ namespace KOTORModSync.Core
 			[Description("A tslpatcher error was thrown")]
 			TSLPatcherError,
 
-			[Description(
-				"The files in the install directory do not match the expected contents provided by the instructions file"
-			)]
+			[Description("The files in the install directory do not match the expected contents provided by the instructions file")]
 			ValidationPostInstallMismatch,
 		}
 

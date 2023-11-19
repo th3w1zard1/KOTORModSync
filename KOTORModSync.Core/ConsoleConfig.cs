@@ -21,6 +21,39 @@ namespace KOTORModSync.Core
 
 		[DllImport("kernel32.dll", SetLastError = true)]
 		public static extern bool SetConsoleMode(IntPtr hConsoleHandle, uint dwMode);
+		
+		[DllImport("kernel32.dll", SetLastError = true)]
+		public static extern bool SetConsoleCtrlHandler(HandlerRoutine Handler, bool Add);
+		
+		public enum CtrlTypes
+		{
+			CTRL_CLOSE_EVENT = 2
+		}
+		public delegate bool HandlerRoutine(CtrlTypes CtrlType);
+		
+		private const int MF_BYCOMMAND = 0x00000000;
+		public const int SC_CLOSE = 0xF060;
+
+		[DllImport("user32.dll")]
+		public static extern int DeleteMenu(IntPtr hMenu, int nPosition, int wFlags);
+
+		[DllImport("user32.dll")]
+		private static extern IntPtr GetSystemMenu(IntPtr hWnd, bool bRevert);
+
+		[DllImport("kernel32.dll", ExactSpelling = true)]
+		private static extern IntPtr GetConsoleWindow();
+
+		private static IntPtr hSysMenu;
+
+		public static void DisableConsoleCloseButton() => DeleteMenu(GetSystemMenu(GetConsoleWindow(), false), SC_CLOSE, MF_BYCOMMAND);
+		
+		public static void EnableCloseButton()
+		{
+			// Reset the system menu to its default state, which includes the close button
+			GetSystemMenu(GetConsoleWindow(), true);
+			// Need to call GetSystemMenu again to update the handle
+			hSysMenu = GetSystemMenu(GetConsoleWindow(), false);
+		}
 
 		public static void DisableQuickEdit()
 		{

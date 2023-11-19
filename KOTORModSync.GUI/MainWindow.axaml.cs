@@ -1489,6 +1489,11 @@ namespace KOTORModSync
 				};
 
 				bool isClosingProgressWindow = false;
+				if ( Environment.OSVersion.Platform == PlatformID.Win32NT )
+				{
+					_ = Logger.LogVerboseAsync("Disabling the close button on the console window, to prevent an install from being interrupted...");
+					ConsoleConfig.DisableConsoleCloseButton();
+				}
 				try
 				{
 					_ = Logger.LogAsync("Start installing all mods...");
@@ -1645,6 +1650,11 @@ namespace KOTORModSync
 				progressWindow.Closed -= ProgressWindowClosed;
 				progressWindow.Dispose();
 				_progressWindowClosed = true;
+				if ( Environment.OSVersion.Platform == PlatformID.Win32NT )
+				{
+					_ = Logger.LogVerboseAsync("Install terminated, re-enabling the close button in the console window");
+					ConsoleConfig.EnableCloseButton();
+				}
 			}
 			catch ( Exception exception )
 			{

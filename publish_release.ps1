@@ -1,6 +1,6 @@
 Set-Location -Path $PSScriptRoot
 
-$version = "v1.0.0"
+$version = "v1.0.1"
 $projectFile = "KOTORModSync.GUI\KOTORModSync.csproj"
 $publishProfilesDir = "KOTORModSync.GUI\Properties\PublishProfiles"
 $sevenZipPath = "C:\Program Files\7-Zip\7z.exe"  # Path to 7zip executable

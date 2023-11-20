@@ -1076,7 +1076,7 @@ namespace KOTORModSync.Core
 
 						// Attempt to uninstall the failed mod if using HoloPatcher:
 						if ( MainConfig.PatcherOption == MainConfig.AvailablePatchers.HoloPatcher ) {
-							argList.ForEach(item =>
+							/*argList.ForEach(item =>
 							{
 								if (item.Contains("--install"))
 								{
@@ -1090,7 +1090,7 @@ namespace KOTORModSync.Core
 								patcherCliPath.FullName,
 								args,
 								noAdmin: MainConfig.NoAdmin
-							);
+							);*/
 						}
 						return ActionExitCode.TSLPatcherError;
 					}
@@ -1098,7 +1098,7 @@ namespace KOTORModSync.Core
 					{
 						// Attempt to uninstall the failed mod if using HoloPatcher:
 						if ( MainConfig.PatcherOption == MainConfig.AvailablePatchers.HoloPatcher ) {
-							argList.ForEach(item =>
+							/*argList.ForEach(item =>
 							{
 								if (item.Contains("--install"))
 								{
@@ -1112,7 +1112,7 @@ namespace KOTORModSync.Core
 								patcherCliPath.FullName,
 								args,
 								noAdmin: MainConfig.NoAdmin
-							);
+							);*/
 						}
 						return ActionExitCode.TSLPatcherLogNotFound;
 					}

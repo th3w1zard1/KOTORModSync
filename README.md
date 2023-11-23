@@ -15,8 +15,9 @@ Other mod managers I've tried were either too difficult to configure, require si
 
 ## Features
 - Can install the https://kotor.neocities.org/ mod builds in about 20 minutes from a vanilla install.
-- Supports TSLPatching on mac/linux without wine!
-- Select the individual mods you want for an install - the dependencies and incompatibilities will automatically be chosen and sorted. This means end users don't have to worry about specific instructions regarding other mods in the list. All the compatibility steps are handled internally by KOTORModSync and the default instructions files provided here. An end user simply can select the mods they want to install in the left list, and any customizations if they like, and simply press 'Install All' to have everything installed automatically.
+- Supports TSLPatching on Mac/Linux without wine!
+- Select the individual mods you want for an install - the dependencies and incompatibilities will automatically be chosen and sorted. This means end users don't have to worry about specific instructions regarding other mods in the list.
+- All the compatibility steps are handled internally by KOTORModSync and the default instructions files provided here. An end user simply can select the mods they want to install in the left list, and any customizations if they like, and simply press 'Install All' to have everything installed automatically.
 - This program has a built-in GUI editor and an installer packed into one. Modbuild creators can create instructions with little to no knowledge of the format and easily share them with end users. End users can install everything from the instruction file with a simple click of a button. Edit any instructions and verify the configuration with built-in tools. There's also some support to dry run an install.
 - A flexible configuration editor and parser utilizing TOML syntax. This is very user-friendly and similar to INI which TSLPatcher already uses and most modders are used to.
 - Create instructions files with complex dependency structures for multiple mods, and have end users install everything exactly according to the instructions created. No more manually copying/deleting files: KOTORModSync handles all of that for your end user.
@@ -33,9 +34,9 @@ See https://pastebin.com/7gML3zCJ for a quick explanation of those fields. See t
 
 ## FAQ:
 - Q: I've created my own mod, will you add it to the KOTORModSync project?
-- A: Yes! [Please submit your instructions here.](https://github.com/th3w1zard1/KOTORModSync/discussions/categories/share-your-instructions) As long as your mod is SFW, I'll most likely add it to the list. KOTORModSync is designed to support the Vanilla Plus mod build created and managed by Snigaroo and others. Users will still be able to manually select your mod for installation if they desire, as an optional component.
+- A: Yes! [Please submit your instructions here.](https://github.com/th3w1zard1/KOTORModSync/discussions/categories/share-your-instructions) As long as your mod is SFW, I'll most likely add it to the list.
 - Q: A mod in the instructions file is out of date, where do I report this?
-- A: [Please notify us that your mod has been updated here.](https://github.com/th3w1zard1/KOTORModSync/discussions/categories/mod-updates)
+- A: [Please notify me that mod has been updated here.](https://github.com/th3w1zard1/KOTORModSync/discussions/categories/mod-updates)
 
 ## Supported Platforms
 KOTORModSync is a cross-platform 32-bit and 64-bit .NET application. It is compatible with the following operating systems:
@@ -45,11 +46,11 @@ KOTORModSync is a cross-platform 32-bit and 64-bit .NET application. It is compa
 Users do not need to download any additional runtimes: everything is self-contained within the application. Additionally, **.NET Framework 4.6.2** is preinstalled on Windows 7 and 8 or at least provided by Windows Updates.
 
 ### Linux/Mac
-The Linux build runs correctly on my Ubuntu laptop. You may need additional X11 development libraries. In order to get this working on WSL, for example, I had to install the following packages:
+You may need additional X11 development libraries. In order to get this working on WSL, for example, I had to install the following packages:
 
 `sudo apt install libsm6 libice6 libx11-dev libfontconfig1 libx11-6 libx11-xcb1 libxau6 libxcb1 libxdmcp6 libxcb-xkb1 libxcb-render0 libxcb-shm0 libxcb-xfixes0 libxcb-util1 libxcb-xinerama0 libxcb-randr0 libxcb-image0 libxcb-keysyms1 libxcb-sync1 libxcb-xtest0`
 
-Then you can simply run the EXE like this in a terminal:
+Then you can simply run like this in a terminal:
 
 `./KOTORModSync`
 
@@ -92,7 +93,7 @@ Tested multiple installs and provided wisdom on the internal workings of KOTOR.
 
 #### Other notable users:
 #### Fair-Strides
-Provided the perl source code of TSLPatcher on GitHub, and generally maintained the TSLPatcher project in Stoffe's absence.
+Provided the Perl source code of TSLPatcher on GitHub, and generally maintained the TSLPatcher project in Stoffe's absence.
 
 #### *Stoffe*
 Creator of *TSLPatcher*

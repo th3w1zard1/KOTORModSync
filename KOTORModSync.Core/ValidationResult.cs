@@ -27,11 +27,10 @@ namespace KOTORModSync.Core
 			Message = message;
 			IsError = isError;
 
-			string where = $" Component: '{Component.Name}', Instruction #{InstructionIndex + 1}, Action '{instruction.Action}'";
+			string where = $"{Environment.NewLine}Name: {Component.Name}{Environment.NewLine}Instruction #{InstructionIndex + 1}: '{instruction.Action}'";
 			if ( IsError )
 			{
-				Logger.LogError(where);
-				Logger.LogError(message);
+				Logger.LogError(where + Environment.NewLine + "Issue: " + message);
 			}
 			else
 			{

@@ -98,7 +98,7 @@ namespace KOTORModSync.Core
 						if ( instruction.Action == Instruction.ActionType.Extract )
 						{
 							AddError(
-								$"Missing Required Archives for 'Extract' action: [{string.Join(separator: ",", instruction.Source)}]",
+								$"Missing Required Archives: [{string.Join(separator: ",", instruction.Source)}]",
 								instruction
 							);
 							success = false;
@@ -130,6 +130,26 @@ namespace KOTORModSync.Core
 						// 'choose' action uses Source as list of guids to options.
 						case Instruction.ActionType.Choose:
 							continue;
+						case Instruction.ActionType.Execute:
+							break;
+						case Instruction.ActionType.TSLPatcher:
+							break;
+						case Instruction.ActionType.Move:
+							break;
+						case Instruction.ActionType.Copy:
+							break;
+						case Instruction.ActionType.Rename:
+							break;
+						case Instruction.ActionType.Delete:
+							break;
+						case Instruction.ActionType.DelDuplicate:
+							break;
+						case Instruction.ActionType.HoloPatcher:
+							break;
+						case Instruction.ActionType.Run:
+							break;
+						default:
+							break;
 					}
 
 					// ReSharper disable once ConditionIsAlwaysTrueOrFalse
@@ -276,10 +296,7 @@ namespace KOTORModSync.Core
 				if ( thisOption is null )
 					continue;
 
-				foreach ( Instruction optionInstruction in thisOption.Instructions )
-				{
-					instructions.Add(optionInstruction);
-				}
+				instructions.AddRange(thisOption.Instructions);
 			}
 
 			foreach ( Instruction instruction in instructions )

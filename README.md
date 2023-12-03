@@ -33,6 +33,8 @@ The installer parses the fields `InstallBefore`, `InstallAfter`, `Dependencies`,
 See https://pastebin.com/7gML3zCJ for a quick explanation of those fields. See the examples for the `Ultimate Character Overhaul` and the `Handmaiden/Disciple Same-Gender Romance Mod` for the more complex examples.
 
 ## FAQ:
+- Q: I get an error saying the holopatcher binary failed to execute. how to fix?
+- A: The most common reason is your AV is blocking it, but check your log file for more information.
 - Q: I've created my own mod, will you add it to the KOTORModSync project?
 - A: Yes! [Please submit your instructions here.](https://github.com/th3w1zard1/KOTORModSync/discussions/categories/share-your-instructions) As long as your mod is SFW, I'll most likely add it to the list.
 - Q: A mod in the instructions file is out of date, where do I report this?

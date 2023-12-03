@@ -98,6 +98,36 @@ namespace KOTORModSync
 			}
 		}
 
+		public bool isClosingMainWindow = false;
+
+		protected override void OnClosing(WindowClosingEventArgs e)
+		{
+			base.OnClosing(e);
+			if (isClosingMainWindow)
+				return;
+
+			// Always cancel the initial closing event
+			e.Cancel = true;
+
+			// Run the asynchronous dialog handling in a separate task
+			HandleClosingAsync();
+		}
+
+		private async void HandleClosingAsync()
+		{
+			var result = await ConfirmationDialog.ShowConfirmationDialog(this, "Really close?");
+			if ( result == true )
+			{
+				// User chose to close, so manually close the window
+				isClosingMainWindow = true;
+				await Dispatcher.UIThread.InvokeAsync(() => Close());
+			}
+			// If result is not true, do nothing and the window remains open
+		}
+
+
+
+
 		public static List<Component> ComponentsList => MainConfig.AllComponents;
 
 		[CanBeNull]

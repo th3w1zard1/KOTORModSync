@@ -11,6 +11,96 @@ namespace KOTORModSync.Core
 {
 	public static class ModParser
 	{
+		private const string Separator = "\n\n\n";
+		private static readonly Regex s_modNameRegex = new Regex(
+			pattern: @"^(.+?) - by (.+)$",
+			RegexOptions.Compiled | RegexOptions.Multiline
+		);
+		private static readonly Regex s_propertyRegex = new Regex(
+			pattern: @"\*\*(Type|Tier|Rank|Installation Instructions):\*\* (.+)",
+			RegexOptions.Compiled | RegexOptions.Multiline
+		);
+		private static readonly Regex s_descriptionRegex = new Regex(
+			pattern: @"(?<=\n)(?!Type:|Tier:|Rank:|Installation Instructions:).+",
+			RegexOptions.Compiled | RegexOptions.Singleline
+		);
+
+		private static readonly Regex s_modSectionRegex = new Regex(
+			pattern: @"(.*?) - by (.*?)\nType: (.*?)\n(Rank|Tier): (.*?)\nInstallation Instructions: (.*?)\n\t(.*?)\n",
+			RegexOptions.Compiled | RegexOptions.Singleline
+		);
+
+		public static List<Component> ParseMods(string source)
+		{
+			MatchCollection modSections = new Regex(
+				pattern: @"^(.*?)\r?\nType:\s*(.*?)\r?\n(Rank:\s*(.*?)\r?\n)?(Installation Instructions:\s*(.*?))?\r?\n((?:\t.*\r?\n)+)",
+				RegexOptions.Compiled | RegexOptions.Multiline
+			).Matches(source);
+			var mods = new List<Component>();
+
+			foreach (Match modSection in modSections)
+			{
+				var mod = new Component
+				{
+					Name = modSection.Groups[1].Value.Trim(),
+					Guid = Guid.NewGuid(),
+					Category = modSection.Groups[2].Value.Trim(),
+					Tier = modSection.Groups[4].Value.Trim(),
+					Directions = modSection.Groups[6].Value.Trim(),
+					Description = modSection.Groups[7].Value.Trim(),
+				};
+				mods.Add(mod);
+			}
+
+			return mods;
+		}
+
+		private static Component ParseMod(string modText)
+		{
+			var mod = new Component();
+
+			// Extract mod name and author
+			Match nameAuthorMatch = s_modNameRegex.Match(modText);
+			if (nameAuthorMatch.Success)
+			{
+				mod.Name = nameAuthorMatch.Groups[1].Value.Trim();
+				mod.Author = nameAuthorMatch.Groups[2].Value.Trim();
+			}
+
+			// Extract properties
+			MatchCollection propertyMatches = s_propertyRegex.Matches(modText);
+			foreach (Match match in propertyMatches)
+			{
+				string propertyName = match.Groups[1].Value.Trim();
+				string propertyValue = match.Groups[2].Value.Trim();
+
+				switch (propertyName)
+				{
+					case "Type":
+						mod.Category = propertyValue;
+						break;
+					case "Tier":
+					case "Rank":
+						mod.Tier = propertyValue;
+						break;
+					case "Installation Instructions":
+						mod.Directions = propertyValue;
+						break;
+				}
+			}
+
+			// Extract description
+			Match descriptionMatch = s_descriptionRegex.Match(modText);
+			if (descriptionMatch.Success)
+			{
+				mod.Description = descriptionMatch.Value.Trim();
+			}
+
+			return mod;
+		}
+	}
+	public static class RedditModParser
+	{
 		private const string Separator = "__";
 		private static readonly Regex s_propertyRegex = new Regex(pattern: @"\*\*\w+:\*\* (.+)", RegexOptions.Compiled);
 

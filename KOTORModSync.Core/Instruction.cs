@@ -39,7 +39,7 @@ namespace KOTORModSync.Core
 			FileNotFoundPost,
 			IOException,
 			RenameTargetAlreadyExists,
-			TSLPatcherCLIError,
+			PatcherError,
 			ChildProcessError,
 			UnknownError,
 			UnknownInnerError,
@@ -987,6 +987,7 @@ namespace KOTORModSync.Core
 					string fullInstallLogFile = Path.Combine(tslPatcherDirectory.FullName, path2: "installlog.rtf");
 					if ( File.Exists(fullInstallLogFile) )
 						File.Delete(fullInstallLogFile);
+
 					//PlaintextLog=1
 					fullInstallLogFile = Path.Combine(tslPatcherDirectory.FullName, path2: "installlog.txt");
 					if ( File.Exists(fullInstallLogFile) )
@@ -1039,7 +1040,7 @@ namespace KOTORModSync.Core
 								}
 							}
 
-							if ( !patcherCliPath.Exists )
+							if ( patcherCliPath is null || !patcherCliPath.Exists )
 								throw new FileNotFoundException($"Could not load HoloPatcher from the '{resourcesDir}' directory!");
 							break;
 						case MainConfig.AvailablePatchers.TSLPatcher:
@@ -1069,7 +1070,7 @@ namespace KOTORModSync.Core
 					await Logger.LogVerboseAsync($"'{patcherCliPath.Name}' exited with exit code {exitCode}");
 					if ( exitCode != 0 )
 					{
-						return ActionExitCode.TSLPatcherCLIError;
+						return ActionExitCode.PatcherError;
 					}
 
 					try

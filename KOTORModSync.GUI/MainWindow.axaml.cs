@@ -94,6 +94,8 @@ namespace KOTORModSync
 					//ConsoleConfig.DisableConsoleCloseButton();
 				}
 
+				AddHandler(DragDrop.DropEvent, Drop);
+				AddHandler(DragDrop.DragOverEvent, DragOver);
 			}
 			catch ( Exception e )
 			{
@@ -101,6 +103,67 @@ namespace KOTORModSync
 				throw;
 			}
 		}
+
+		private void DragOver(object sender, DragEventArgs e)
+		{
+			e.DragEffects = e.Data.Contains(DataFormats.Files) ? DragDropEffects.Copy : DragDropEffects.None;
+			e.Handled = true;
+		}
+
+		private async void Drop(object sender, DragEventArgs e)
+		{
+			if ( !e.Data.Contains(DataFormats.Files) )
+				return;
+			// Attempt to get the data as a string array (file paths)
+			if (!(e.Data.Get(DataFormats.Files) is IEnumerable<IStorageItem> items))
+				return;
+
+			// Processing the first file
+			IStorageItem storageItem = items.FirstOrDefault();
+			string filePath = storageItem?.TryGetLocalPath();
+			if ( string.IsNullOrEmpty(filePath) )
+				return;
+
+			// Check if the storageItem is a file
+			if (storageItem is IStorageFile file)
+			{
+				if (
+					Path.GetExtension(filePath).Equals(value: ".toml", StringComparison.OrdinalIgnoreCase)
+					|| Path.GetExtension(filePath).Equals(value: ".tml", StringComparison.OrdinalIgnoreCase)
+				)
+				{
+					// File has .toml extension
+					if ( MainConfig.AllComponents.Count > 0 )
+					{
+						bool? confirm = await ConfirmationDialog.ShowConfirmationDialog(
+							this,
+							confirmText:
+							"You already have a config loaded. Do you want to load this instruction file anyway?"
+						);
+						if ( confirm != true )
+							return;
+					}
+
+					// Load components dynamically
+					MainConfigInstance.allComponents = Component.ReadComponentsFromFile(filePath);
+					await ProcessComponentsAsync(MainConfig.AllComponents);
+				}
+				else
+				{
+					// File does not have .toml extension
+					// Handle rejection logic here
+				}
+			}
+			else if ( storageItem is IStorageFolder folder )
+			{
+				// Handle folder logic
+				// Folder specific processing here
+			} else
+			{
+				throw new NullReferenceException(filePath);
+			}
+		}
+
 
 		public bool IsClosingMainWindow;
 

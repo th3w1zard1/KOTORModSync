@@ -1264,7 +1264,7 @@ namespace KOTORModSync
 
 				if ( !individuallyValidated )
 				{
-					informationMessage = "Some components failed to individually validate.";
+					informationMessage = $"Some components failed to validate. Check the output/console window for details.{Environment.NewLine}If you are seeing this as an end user you most likely need to whitelist KOTORModSync and HoloPatcher in your antivirus, or download the missing mods.";
 					await Logger.LogErrorAsync(informationMessage);
 				}
 

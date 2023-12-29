@@ -1025,10 +1025,10 @@ namespace KOTORModSync.Core
 							{
 								// Handling OSX specific paths
 								string[] possibleOSXPaths = {
-									Path.Combine(resourcesDir, "holopatcher"),
-									Path.Combine(baseDir, "Resources", "holopatcher"),
 									Path.Combine(resourcesDir, "HoloPatcher.app"),
-									Path.Combine(baseDir, "Resources", "HoloPatcher.app")
+									Path.Combine(resourcesDir, "holopatcher"),
+									Path.Combine(baseDir, "Resources", "HoloPatcher.app"),
+									Path.Combine(baseDir, "Resources", "holopatcher")
 								};
 
 								foreach (string path in possibleOSXPaths)

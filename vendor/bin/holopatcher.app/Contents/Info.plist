@@ -7,7 +7,7 @@
 	<key>CFBundleExecutable</key>
 	<string>HoloPatcher</string>
 	<key>CFBundleIconFile</key>
-	<string>generated-fec3cebf3ac3fba4a016351160d306a145046664a06a26a91a81332403723613.icns</string>
+	<string>icon-windowed.icns</string>
 	<key>CFBundleIdentifier</key>
 	<string>HoloPatcher</string>
 	<key>CFBundleInfoDictionaryVersion</key>

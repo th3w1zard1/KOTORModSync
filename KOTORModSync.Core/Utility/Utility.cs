@@ -20,46 +20,97 @@ namespace KOTORModSync.Core.Utility
 			if ( path is null )
 				throw new ArgumentNullException(nameof( path ));
 
-			return path.Replace(oldValue: "<<modDirectory>>", MainConfig.SourcePath?.FullName).Replace(
+			return path.Replace(
+				oldValue: "<<modDirectory>>",
+				newValue: MainConfig.SourcePath?.FullName
+			).Replace(
 				oldValue: "<<kotorDirectory>>",
-				MainConfig.DestinationPath?.FullName
+				newValue: MainConfig.DestinationPath?.FullName
 			);
 		}
 
 		[NotNull]
-		public static string RestoreCustomVariables([NotNull] string fullPath) =>
-			fullPath is null
-				? throw new ArgumentNullException(nameof( fullPath ))
-				: fullPath.Replace(MainConfig.SourcePath?.FullName ?? string.Empty, newValue: "<<modDirectory>>")
-					.Replace(MainConfig.DestinationPath?.FullName ?? string.Empty, newValue: "<<kotorDirectory>>");
+		public static string RestoreCustomVariables([NotNull] string fullPath)
+		{
+			if ( fullPath is null )
+				throw new ArgumentNullException(nameof( fullPath ));
+
+			return fullPath.Replace(
+				oldValue: MainConfig.SourcePath?.FullName ?? string.Empty,
+				newValue: "<<modDirectory>>"
+			).Replace(
+				oldValue: MainConfig.DestinationPath?.FullName ?? string.Empty,
+				newValue: "<<kotorDirectory>>"
+			);
+		}
 
 		public static bool IsRunningInsideAppBundle(string baseDirectory=null)
 		{
 			baseDirectory = baseDirectory ?? GetBaseDirectory();
-			return baseDirectory.Contains(".app/Contents/MacOS");
+			return baseDirectory.IndexOf(value: ".app/Contents/MacOS", StringComparison.OrdinalIgnoreCase) >= 0;
 		}
 
 		[NotNull]
 		public static string GetBaseDirectory()
 		{
 			string baseDirectory = Assembly.GetEntryAssembly()?.Location;
-			baseDirectory = Path.GetDirectoryName(baseDirectory);
-			baseDirectory = baseDirectory
-				?? Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-			return baseDirectory
-				?? AppDomain.CurrentDomain.BaseDirectory;
+			return (
+				!(baseDirectory is null)
+					? Path.GetDirectoryName(baseDirectory)
+					: Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)
+			) ?? AppDomain.CurrentDomain.BaseDirectory;
 		}
 
 		[NotNull]
-		public static string GetResourcesDirectory()
+		public static OSPlatform GetOS()
 		{
-			string baseDirectory = GetBaseDirectory();
+			if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+				return OSPlatform.OSX;
+			if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+				return OSPlatform.Windows;
+			if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+				return OSPlatform.Linux;
+			
+			switch ( Environment.OSVersion.Platform )
+			{
+				case PlatformID.Win32NT:
+				case PlatformID.Win32S:
+				case PlatformID.Win32Windows:
+				case PlatformID.WinCE:
+				case PlatformID.Xbox:
+					return OSPlatform.Windows;
+				case PlatformID.MacOSX:
+					return OSPlatform.OSX;
+				case PlatformID.Unix:
+					return OSPlatform.Linux;
+				default:
+					throw new Exception("Unknown/unsupported operating system, cannot continue");
+			}
+		}
+
+		[NotNull]
+		public static string GetResourcesDirectory(string baseDirectory=null)
+		{
+			baseDirectory = baseDirectory ?? GetBaseDirectory();
+
+			if ( !IsRunningInsideAppBundle(baseDirectory) )
+			{
+				return Path.Combine(
+					baseDirectory,
+					path2: "Resources"
+				);
+			}
+			
+			// Navigate up two levels from 'MacOS' to get to KOTORModSync.app/Contents/MacOS/../../
+			var directoryInfo = new DirectoryInfo(baseDirectory);
+			if ( !(directoryInfo.Parent?.Parent is null) )
+				baseDirectory = directoryInfo.Parent.Parent.FullName;
 
 			return Path.Combine(
-				baseDirectory
-				?? throw new InvalidOperationException("Could not determine the path to the program!"),
+				baseDirectory,
 				path2: "Resources"
 			);
+
 		}
 
 		[CanBeNull]

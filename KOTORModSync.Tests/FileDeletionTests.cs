@@ -4,8 +4,10 @@
 
 // ReSharper disable RedundantUsingDirective
 
+using System.Runtime.InteropServices;
 using KOTORModSync.Core;
 using KOTORModSync.Core.FileSystemPathing;
+using KOTORModSync.Core.Utility;
 
 // ReSharper disable ConvertToConstant.Local
 #pragma warning disable U2U1000, CS8618, RCS1118 // Mark local variable as const.
@@ -195,7 +197,7 @@ namespace KOTORModSync.Tests
 		[Test]
 		public void DeleteDuplicateFile_CaseSensitiveExtensions_DuplicatesDeleted()
 		{
-			if ( Environment.OSVersion.Platform == PlatformID.Win32NT )
+			if ( Utility.GetOS() == OSPlatform.Windows )
 			{
 				Console.WriteLine("Test is not possible on Windows.");
 				return;

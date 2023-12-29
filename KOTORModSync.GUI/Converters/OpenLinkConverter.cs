@@ -17,6 +17,7 @@ using System.Runtime.InteropServices;
 using Avalonia.Data.Converters;
 using JetBrains.Annotations;
 using KOTORModSync.Core;
+using KOTORModSync.Core.Utility;
 
 namespace KOTORModSync.Converters
 {
@@ -54,7 +55,8 @@ namespace KOTORModSync.Converters
 				if ( !Uri.TryCreate(url, UriKind.Absolute, out Uri _) )
 					throw new ArgumentException("Invalid URL");
 
-				if ( RuntimeInformation.IsOSPlatform(OSPlatform.Windows) )
+				var runningOs = Utility.GetOS();
+				if ( runningOs == OSPlatform.Windows )
 				{
 					_ = Process.Start(
 						new ProcessStartInfo
@@ -63,11 +65,11 @@ namespace KOTORModSync.Converters
 						}
 					);
 				}
-				else if ( RuntimeInformation.IsOSPlatform(OSPlatform.OSX) )
+				else if ( runningOs == OSPlatform.OSX )
 				{
 					_ = Process.Start(fileName: "open", url);
 				}
-				else if ( RuntimeInformation.IsOSPlatform(OSPlatform.Linux) )
+				else if ( runningOs == OSPlatform.Linux )
 				{
 					_ = Process.Start(fileName: "xdg-open", url);
 				}

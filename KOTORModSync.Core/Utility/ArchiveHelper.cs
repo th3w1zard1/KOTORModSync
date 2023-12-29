@@ -118,7 +118,7 @@ namespace KOTORModSync.Core.Utility
 
 		public static void ExtractWith7Zip(FileStream stream, string destinationDirectory)
 		{
-			if ( !RuntimeInformation.IsOSPlatform(OSPlatform.Windows) )
+			if ( !(Utility.GetOS() == OSPlatform.Windows) )
 				throw new NotImplementedException("Non-windows OS's are not currently supported");
 
 			SevenZipBase.SetLibraryPath( Path.Combine(Utility.GetResourcesDirectory(), "7z.dll") ); // Path to 7z.dll

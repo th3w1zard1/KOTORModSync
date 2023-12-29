@@ -133,7 +133,7 @@ namespace KOTORModSync.Core.Utility
 			{
 				using ( new Process() )
 				{
-					string args = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+					string args = Utility.GetOS() == OSPlatform.Windows
 						? $"/c \"{command}\""  // Use "/c" for Windows command prompt
 						: $"-c \"{command}\""; // Use "-c" for Unix-like shells
 					Task<(int, string, string)> executeProcessTask = ExecuteProcessAsync(shellPath, args);
@@ -186,13 +186,13 @@ namespace KOTORModSync.Core.Utility
 				string command;
 				string arguments;
 
-				if ( RuntimeInformation.IsOSPlatform(OSPlatform.Windows) )
+				if ( Utility.GetOS() == OSPlatform.Windows )
 				{
 					command = "cmd.exe";
 					arguments = $"/C winsat disk -drive \"{drivePath}\" -seq -read -ramsize 4096";
 				}
-				else if ( RuntimeInformation.IsOSPlatform(OSPlatform.Linux)
-					|| RuntimeInformation.IsOSPlatform(OSPlatform.OSX) )
+				else if ( Utility.GetOS() == OSPlatform.Linux
+					|| Utility.GetOS() == OSPlatform.OSX )
 				{
 					command = "dd";
 					arguments = $"if={drivePath} bs=1M count=256 iflag=direct";
@@ -250,7 +250,7 @@ namespace KOTORModSync.Core.Utility
 
 		public static bool? IsExecutorAdmin()
 		{
-			if ( RuntimeInformation.IsOSPlatform(OSPlatform.Windows) )
+			if ( Utility.GetOS() == OSPlatform.Windows )
 			{
 				var windowsIdentity = WindowsIdentity.GetCurrent();
 				var windowsPrincipal = new WindowsPrincipal(windowsIdentity);
@@ -295,7 +295,7 @@ namespace KOTORModSync.Core.Utility
 		public static async Task MakeExecutableAsync([NotNull] string filePath)
 		{
 			// For Linux/macOS: Using chmod for setting execute permissions for the current user.
-			if ( RuntimeInformation.IsOSPlatform(OSPlatform.Linux) || RuntimeInformation.IsOSPlatform(OSPlatform.OSX) )
+			if ( Utility.GetOS() == OSPlatform.Linux || Utility.GetOS() == OSPlatform.OSX )
 			{
 				if ( filePath is null )
 					throw new ArgumentNullException(nameof( filePath ));

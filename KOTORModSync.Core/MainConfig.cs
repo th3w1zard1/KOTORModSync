@@ -9,6 +9,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using JetBrains.Annotations;
 
 namespace KOTORModSync.Core
@@ -79,13 +80,13 @@ namespace KOTORModSync.Core
 		public bool noAdmin
 		{
 			get => NoAdmin;
-			set => NoAdmin = value && Environment.OSVersion.Platform == PlatformID.Win32NT;
+			set => NoAdmin = value && Utility.Utility.GetOS() == OSPlatform.Windows;
 		}
 
 		public bool useCopyForMoveActions
 		{
 			get => UseCopyForMoveActions;
-			set => UseCopyForMoveActions = value && Environment.OSVersion.Platform == PlatformID.Win32NT;
+			set => UseCopyForMoveActions = value;
 		}
 
 		public static bool UseCopyForMoveActions { get; private set; }
@@ -98,7 +99,7 @@ namespace KOTORModSync.Core
 		public bool caseInsensitivePathing
 		{
 			get => CaseInsensitivePathing;
-			set => CaseInsensitivePathing = value && Environment.OSVersion.Platform != PlatformID.Win32NT;
+			set => CaseInsensitivePathing = value && Utility.Utility.GetOS() != OSPlatform.Windows;
 		}
 
 		public static bool DebugLogging { get; private set; }

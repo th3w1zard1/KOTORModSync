@@ -2,8 +2,10 @@
 // Licensed under the GNU General Public License v3.0 (GPLv3).
 // See LICENSE.txt file in the project root for full license information.
 
+using System.Runtime.InteropServices;
 using System.Text;
 using KOTORModSync.Core.FileSystemPathing;
+using KOTORModSync.Core.Utility;
 
 namespace KOTORModSync.Tests
 {
@@ -87,7 +89,7 @@ namespace KOTORModSync.Tests
 		// will always fail on windows
 		public void FindCaseInsensitiveDuplicates_FindsFileDuplicates_CaseInsensitive()
 		{
-			if ( Environment.OSVersion.Platform == PlatformID.Win32NT )
+			if ( Utility.GetOS() == OSPlatform.Windows )
 			{
 				Console.WriteLine("Test is not possible on Windows.");
 				return;
@@ -154,7 +156,7 @@ namespace KOTORModSync.Tests
 		[Test]
 		public void TestGetClosestMatchingEntry()
 		{
-			if ( Environment.OSVersion.Platform == PlatformID.Win32NT )
+			if ( Utility.GetOS() == OSPlatform.Windows )
 			{
 				Console.WriteLine("Test is not possible on Windows.");
 				return;
@@ -181,7 +183,7 @@ namespace KOTORModSync.Tests
 		[Test]
 		public void TestDuplicatesWithFileInfo()
 		{
-			if ( Environment.OSVersion.Platform == PlatformID.Win32NT )
+			if ( Utility.GetOS() == OSPlatform.Windows )
 			{
 				Console.WriteLine("Test is not possible on Windows.");
 				return;
@@ -206,7 +208,7 @@ namespace KOTORModSync.Tests
 		[Test]
 		public void TestDuplicatesWithDirectoryNameString()
 		{
-			if ( Environment.OSVersion.Platform == PlatformID.Win32NT )
+			if ( Utility.GetOS() == OSPlatform.Windows )
 			{
 				Console.WriteLine("Test is not possible on Windows.");
 				return;
@@ -230,7 +232,7 @@ namespace KOTORModSync.Tests
 		[Test]
 		public void TestDuplicateDirectories()
 		{
-			if ( Environment.OSVersion.Platform == PlatformID.Win32NT )
+			if ( Utility.GetOS() == OSPlatform.Windows )
 			{
 				Console.WriteLine("Test is not possible on Windows.");
 				return;
@@ -255,7 +257,7 @@ namespace KOTORModSync.Tests
 		[Test]
 		public void TestDuplicatesWithDifferentCasingFilesInNestedDirectories()
 		{
-			if ( Environment.OSVersion.Platform == PlatformID.Win32NT )
+			if ( Utility.GetOS() == OSPlatform.Windows )
 			{
 				Console.WriteLine("Test is not possible on Windows.");
 				return;
@@ -286,7 +288,7 @@ namespace KOTORModSync.Tests
 		[Test]
 		public void TestDuplicateNestedDirectories()
 		{
-			if ( Environment.OSVersion.Platform == PlatformID.Win32NT )
+			if ( Utility.GetOS() == OSPlatform.Windows )
 			{
 				Console.WriteLine("Test is not possible on Windows.");
 				return;

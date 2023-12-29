@@ -9,6 +9,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
+using KOTORModSync.Core.Utility;
 
 namespace KOTORModSync.Core.FileSystemPathing
 {
@@ -196,7 +197,7 @@ namespace KOTORModSync.Core.FileSystemPathing
 			string formattedPath = path.Replace(oldValue: "\\", Path.DirectorySeparatorChar.ToString())
 				.Replace(oldValue: "/", Path.DirectorySeparatorChar.ToString());
 
-			formattedPath = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+			formattedPath = Utility.Utility.GetOS() == OSPlatform.Windows
 				? Regex.Replace(formattedPath, pattern: @"\\{2,}", replacement: @"\")
 				: Regex.Replace(formattedPath, pattern: @"/{2,}", replacement: "/");
 
@@ -204,7 +205,7 @@ namespace KOTORModSync.Core.FileSystemPathing
 		}
 
 		private static bool ShouldResolveCase(string path) =>
-			!RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+			!(Utility.Utility.GetOS() == OSPlatform.Windows)
 			&& Path.IsPathRooted(path)
 			&& !File.Exists(path)
 			&& !Directory.Exists(path);

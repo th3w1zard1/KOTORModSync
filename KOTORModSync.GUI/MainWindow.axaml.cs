@@ -88,8 +88,12 @@ namespace KOTORModSync
 
 				// Fixes an annoying problem on Windows where selecting in the console window causes the app to hang.
 				// Selection now is only possible through ctrl + m or right click -> mark, which still causes the same hang but is less accidental at least.
-				if ( Environment.OSVersion.Platform == PlatformID.Win32NT )
+				if ( Utility.GetOS() == OSPlatform.Windows )
+				{
 					ConsoleConfig.DisableQuickEdit();
+					//ConsoleConfig.DisableConsoleCloseButton();
+				}
+
 			}
 			catch ( Exception e )
 			{
@@ -98,12 +102,12 @@ namespace KOTORModSync
 			}
 		}
 
-		public bool isClosingMainWindow = false;
+		public bool IsClosingMainWindow;
 
 		protected override void OnClosing(WindowClosingEventArgs e)
 		{
 			base.OnClosing(e);
-			if (isClosingMainWindow)
+			if (IsClosingMainWindow)
 				return;
 
 			// Always cancel the initial closing event
@@ -119,7 +123,7 @@ namespace KOTORModSync
 			if ( result == true )
 			{
 				// User chose to close, so manually close the window
-				isClosingMainWindow = true;
+				IsClosingMainWindow = true;
 				await Dispatcher.UIThread.InvokeAsync(() => Close());
 			}
 			// If result is not true, do nothing and the window remains open
@@ -673,7 +677,8 @@ namespace KOTORModSync
 				if ( !Uri.TryCreate(url, UriKind.Absolute, out Uri _) )
 					throw new InvalidOperationException($"Invalid URL: '{url}'");
 
-				if ( RuntimeInformation.IsOSPlatform(OSPlatform.Windows) )
+				var runningOs = Utility.GetOS();
+				if ( Utility.GetOS() == OSPlatform.Windows )
 				{
 					_ = Process.Start(
 						new ProcessStartInfo
@@ -682,11 +687,11 @@ namespace KOTORModSync
 						}
 					);
 				}
-				else if ( RuntimeInformation.IsOSPlatform(OSPlatform.OSX) )
+				else if ( Utility.GetOS() == OSPlatform.OSX )
 				{
 					_ = Process.Start(fileName: "open", url);
 				}
-				else if ( RuntimeInformation.IsOSPlatform(OSPlatform.Linux) )
+				else if ( Utility.GetOS() == OSPlatform.Linux )
 				{
 					_ = Process.Start(fileName: "xdg-open", url);
 				}
@@ -1016,7 +1021,7 @@ namespace KOTORModSync
 					holopatcherTestExecute = false;
 					string holopatcherCliPath = Path.Combine(
 						Utility.GetResourcesDirectory(),
-						Environment.OSVersion.Platform == PlatformID.Win32NT
+						Utility.GetOS() == OSPlatform.Windows
 							? "holopatcher.exe"
 							: "holopatcher"
 					);
@@ -1036,7 +1041,7 @@ namespace KOTORModSync
 					if ( result.Item1 == 2 ) // should return syntax error code since we passed no arguments
 						holopatcherTestExecute = true;
 				}
-				else if ( !RuntimeInformation.IsOSPlatform(OSPlatform.Windows) )
+				else if ( !(Utility.GetOS() == OSPlatform.Windows) )
 				{
 					return (false,	"TSLPatcher is not supported on non-windows operating systems, please use the HoloPatcher patcher option.");
 				}
@@ -1519,7 +1524,7 @@ namespace KOTORModSync
 				};
 
 				bool isClosingProgressWindow = false;
-				if ( Environment.OSVersion.Platform == PlatformID.Win32NT )
+				if ( Utility.GetOS() == OSPlatform.Windows )
 				{
 					_ = Logger.LogVerboseAsync("Disabling the close button on the console window, to prevent an install from being interrupted...");
 					ConsoleConfig.DisableConsoleCloseButton();
@@ -1680,7 +1685,7 @@ namespace KOTORModSync
 				progressWindow.Closed -= ProgressWindowClosed;
 				progressWindow.Dispose();
 				_progressWindowClosed = true;
-				if ( Environment.OSVersion.Platform == PlatformID.Win32NT )
+				if ( Utility.GetOS() == OSPlatform.Windows )
 				{
 					_ = Logger.LogVerboseAsync("Install terminated, re-enabling the close button in the console window");
 					ConsoleConfig.EnableCloseButton();

@@ -124,7 +124,7 @@ Name=hk50 with tslrcm
 
 				// Assert
 				Assert.That(result, Is.Not.Null);
-				Assert.That(result, Has.Count.EqualTo(4));
+				Assert.That(result, Has.Count.EqualTo(5));
 				Assert.Multiple(
 					() =>
 					{

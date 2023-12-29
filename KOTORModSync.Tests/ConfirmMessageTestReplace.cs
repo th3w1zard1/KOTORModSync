@@ -34,7 +34,7 @@ namespace KOTORModSync.Tests
 		[Test]
 		public void DisableConfirmations_NullDirectory_ThrowsArgumentNullException()
 		{
-			Assert.Throws<ArgumentNullException>(() => IniHelper.DisableConfirmations(null!));
+			Assert.Throws<ArgumentNullException>(() => IniHelper.ReplaceIniPattern(null!, pattern:@"^\s*ConfirmMessage\s*=\s*.*$", replacement:"ConfirmMessage=N/A"));
 		}
 
 		[Test]
@@ -42,7 +42,7 @@ namespace KOTORModSync.Tests
 		{
 			DirectoryInfo directory = new DirectoryInfo(_testDirectoryPath);
 
-			Assert.Throws<InvalidOperationException>(() => IniHelper.DisableConfirmations(directory));
+			Assert.Throws<InvalidOperationException>(() => IniHelper.ReplaceIniPattern(directory, pattern:@"^\s*ConfirmMessage\s*=\s*.*$", replacement:"ConfirmMessage=N/A"));
 		}
 
 		[Test]
@@ -55,7 +55,7 @@ namespace KOTORModSync.Tests
 
 			var directory = new DirectoryInfo(_testDirectoryPath);
 
-			IniHelper.DisableConfirmations(directory);
+			IniHelper.ReplaceIniPattern(directory, pattern:@"^\s*ConfirmMessage\s*=\s*.*$", replacement:"ConfirmMessage=N/A");
 
 			string modifiedContent = File.ReadAllText(Path.Combine(_testDirectoryPath, iniFileName));
 			Assert.That(modifiedContent, Does.Contain("ConfirmMessage=N/A"));

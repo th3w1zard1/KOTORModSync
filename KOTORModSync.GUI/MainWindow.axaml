@@ -9,7 +9,8 @@
         ExtendClientAreaToDecorationsHint="True"
         ExtendClientAreaChromeHints="NoChrome"
         ExtendClientAreaTitleBarHeightHint="-1"
-        SystemDecorations="BorderOnly">
+        SystemDecorations="BorderOnly"
+        DragDrop.AllowDrop="True">
 
     <Window.Resources>
         <converters:ListToStringConverter x:Key="ListToStringConverter" />

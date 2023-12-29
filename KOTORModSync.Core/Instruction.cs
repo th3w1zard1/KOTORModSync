@@ -1015,26 +1015,32 @@ namespace KOTORModSync.Core
 					switch ( MainConfig.PatcherOption )
 					{
 						case MainConfig.AvailablePatchers.HoloPatcher:
-							string resourcesDir = Utility.Utility.GetResourcesDirectory();
-							if ( RuntimeInformation.IsOSPlatform(OSPlatform.Windows) )
+							string baseDir = Utility.Utility.GetBaseDirectory();
+							string resourcesDir = Utility.Utility.GetResourcesDirectory(baseDir);
+							if ( Utility.Utility.GetOS() == OSPlatform.Windows )
 							{
 								patcherCliPath = new FileInfo(Path.Combine(resourcesDir, "holopatcher.exe"));
 							}
 							else
 							{
-								patcherCliPath = PathHelper.GetCaseSensitivePath(new FileInfo(Path.Combine(resourcesDir, "holopatcher")));
-								if ( !patcherCliPath.Exists && RuntimeInformation.IsOSPlatform(OSPlatform.OSX) )
+								// Handling OSX specific paths
+								string[] possibleOSXPaths = {
+									Path.Combine(resourcesDir, "holopatcher"),
+									Path.Combine(baseDir, "Resources", "holopatcher"),
+									Path.Combine(resourcesDir, "HoloPatcher.app"),
+									Path.Combine(baseDir, "Resources", "HoloPatcher.app")
+								};
+
+								foreach (string path in possibleOSXPaths)
 								{
-									patcherCliPath = PathHelper.GetCaseSensitivePath(new FileInfo(Path.Combine(resourcesDir, "holopatcher.app")));
+									patcherCliPath = PathHelper.GetCaseSensitivePath(new FileInfo(path));
+									if (patcherCliPath.Exists)
+										break;
 								}
 							}
 
-							if ( patcherCliPath is null || !patcherCliPath.Exists )
-							{
-								throw new FileNotFoundException(
-									$"Could not load HoloPatcher from the '{resourcesDir}' directory!"
-								);
-							}
+							if ( !patcherCliPath.Exists )
+								throw new FileNotFoundException($"Could not load HoloPatcher from the '{resourcesDir}' directory!");
 							break;
 						case MainConfig.AvailablePatchers.TSLPatcher:
 						default:

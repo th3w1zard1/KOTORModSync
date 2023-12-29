@@ -67,7 +67,7 @@ namespace KOTORModSync.Core.FileSystemPathing
 			if ( string.IsNullOrWhiteSpace(path) )
 				throw new ArgumentException($"'{nameof( path )}' cannot be null or whitespace.", nameof( path ));
 
-			if ( Environment.OSVersion.Platform != PlatformID.Win32NT )
+			if ( Utility.Utility.GetOS() == OSPlatform.Windows )
 				return path;
 
 			if ( !PathValidator.IsValidPath(path) )
@@ -332,7 +332,7 @@ namespace KOTORModSync.Core.FileSystemPathing
 				// find the closest matching file/folder in the current path for unix, useful for duplicates.
 				string previousCurrentPath = Path.Combine(parts.Take(i).ToArray());
 				currentPath = Path.Combine(previousCurrentPath, parts[i]);
-				if ( Environment.OSVersion.Platform != PlatformID.Win32NT
+				if ( Utility.Utility.GetOS() == OSPlatform.Windows
 					&& !Directory.Exists(currentPath)
 					&& Directory.Exists(previousCurrentPath) )
 				{
@@ -663,7 +663,7 @@ namespace KOTORModSync.Core.FileSystemPathing
 			if ( !PathValidator.IsValidPath(formattedPath) )
 				throw new ArgumentException($"'{path}' is not a valid path string");
 
-			if ( Environment.OSVersion.Platform == PlatformID.Win32NT )
+			if ( Utility.Utility.GetOS() == OSPlatform.Windows )
 				yield break;
 
 			// determine if path is a folder or a file, and resolve case-insensitive pathing.

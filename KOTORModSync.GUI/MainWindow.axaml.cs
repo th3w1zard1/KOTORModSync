@@ -124,43 +124,39 @@ namespace KOTORModSync
 			if ( string.IsNullOrEmpty(filePath) )
 				return;
 
-			// Check if the storageItem is a file
-			if (storageItem is IStorageFile file)
+			switch ( storageItem )
 			{
-				if (
-					Path.GetExtension(filePath).Equals(value: ".toml", StringComparison.OrdinalIgnoreCase)
-					|| Path.GetExtension(filePath).Equals(value: ".tml", StringComparison.OrdinalIgnoreCase)
-				)
-				{
-					// File has .toml extension
-					if ( MainConfig.AllComponents.Count > 0 )
+				// Check if the storageItem is a file
+				case IStorageFile file when Path.GetExtension(filePath).Equals(value: ".toml", StringComparison.OrdinalIgnoreCase)
+					|| Path.GetExtension(filePath).Equals(value: ".tml", StringComparison.OrdinalIgnoreCase):
 					{
-						bool? confirm = await ConfirmationDialog.ShowConfirmationDialog(
-							this,
-							confirmText:
-							"You already have a config loaded. Do you want to load this instruction file anyway?"
-						);
-						if ( confirm != true )
-							return;
-					}
+						// File has .toml extension
+						if ( MainConfig.AllComponents.Count > 0 )
+						{
+							bool? confirm = await ConfirmationDialog.ShowConfirmationDialog(
+								this,
+								confirmText:
+								"You already have a config loaded. Do you want to load this instruction file anyway?"
+							);
+							if ( confirm != true )
+								return;
+						}
 
-					// Load components dynamically
-					MainConfigInstance.allComponents = Component.ReadComponentsFromFile(filePath);
-					await ProcessComponentsAsync(MainConfig.AllComponents);
-				}
-				else
-				{
+						// Load components dynamically
+						MainConfigInstance.allComponents = Component.ReadComponentsFromFile(filePath);
+						await ProcessComponentsAsync(MainConfig.AllComponents);
+						break;
+					}
+				case IStorageFile file:
 					// File does not have .toml extension
 					// Handle rejection logic here
-				}
-			}
-			else if ( storageItem is IStorageFolder folder )
-			{
-				// Handle folder logic
-				// Folder specific processing here
-			} else
-			{
-				throw new NullReferenceException(filePath);
+					break;
+				case IStorageFolder folder:
+					// Handle folder logic
+					// Folder specific processing here
+					break;
+				default:
+					throw new NullReferenceException(filePath);
 			}
 		}
 
@@ -182,13 +178,13 @@ namespace KOTORModSync
 
 		private async void HandleClosingAsync()
 		{
-			var result = await ConfirmationDialog.ShowConfirmationDialog(this, "Really close?");
-			if ( result == true )
-			{
-				// User chose to close, so manually close the window
-				IsClosingMainWindow = true;
-				await Dispatcher.UIThread.InvokeAsync(() => Close());
-			}
+			bool? result = await ConfirmationDialog.ShowConfirmationDialog(this, confirmText: "Really close?");
+			if ( result != true )
+				return;
+
+			// User chose to close, so manually close the window
+			IsClosingMainWindow = true;
+			await Dispatcher.UIThread.InvokeAsync(Close);
 			// If result is not true, do nothing and the window remains open
 		}
 
@@ -515,7 +511,6 @@ namespace KOTORModSync
 					return default;
 				}
 
-				string[] results;
 				if ( isFolderDialog )
 				{
 					// Start async operation to open the dialog.
@@ -740,7 +735,7 @@ namespace KOTORModSync
 				if ( !Uri.TryCreate(url, UriKind.Absolute, out Uri _) )
 					throw new InvalidOperationException($"Invalid URL: '{url}'");
 
-				var runningOs = Utility.GetOS();
+				OSPlatform runningOs = Utility.GetOS();
 				if ( Utility.GetOS() == OSPlatform.Windows )
 				{
 					_ = Process.Start(
@@ -1082,17 +1077,43 @@ namespace KOTORModSync
 				if ( MainConfig.PatcherOption == MainConfig.AvailablePatchers.HoloPatcher )
 				{
 					holopatcherTestExecute = false;
-					string holopatcherCliPath = Path.Combine(
-						Utility.GetResourcesDirectory(),
-						Utility.GetOS() == OSPlatform.Windows
-							? "holopatcher.exe"
-							: "holopatcher"
-					);
+					string baseDir = Utility.GetBaseDirectory();
+					string resourcesDir = Utility.GetResourcesDirectory(baseDir);
+					FileInfo patcherCliPath = null;
+					if ( Utility.GetOS() == OSPlatform.Windows )
+					{
+						patcherCliPath = new FileInfo(Path.Combine(resourcesDir, "holopatcher.exe"));
+					}
+					else
+					{
+						// Handling OSX specific paths
+						string[] possibleOSXPaths = {
+							Path.Combine(resourcesDir, "HoloPatcher.app"),
+							Path.Combine(resourcesDir, "holopatcher"),
+							Path.Combine(baseDir, "Resources", "HoloPatcher.app"),
+							Path.Combine(baseDir, "Resources", "holopatcher")
+						};
+
+						foreach (string path in possibleOSXPaths)
+						{
+							patcherCliPath = PathHelper.GetCaseSensitivePath(new FileInfo(path));
+							if (patcherCliPath.Exists)
+								break;
+						}
+					}
+
+					if ( patcherCliPath is null )
+					{
+						return (
+							false,
+							"HoloPatcher could not be found in the Resources directory. Please ensure your AV isn't quarantining it and the file exists."
+						);
+					}
 
 					await Logger.LogVerboseAsync("Ensuring the holopatcher binary has executable permissions...");
 					try
 					{
-						await PlatformAgnosticMethods.MakeExecutableAsync(holopatcherCliPath);
+						await PlatformAgnosticMethods.MakeExecutableAsync(patcherCliPath.FullName);
 					}
 					catch ( Exception e )
 					{
@@ -1100,7 +1121,7 @@ namespace KOTORModSync
 						holopatcherIsExecutable = false;
 					}
 
-					(int, string, string) result = await PlatformAgnosticMethods.ExecuteProcessAsync(holopatcherCliPath, cmdlineArgs:"--install");
+					(int, string, string) result = await PlatformAgnosticMethods.ExecuteProcessAsync(patcherCliPath.FullName, cmdlineArgs:"--install");
 					if ( result.Item1 == 2 ) // should return syntax error code since we passed no arguments
 						holopatcherTestExecute = true;
 				}

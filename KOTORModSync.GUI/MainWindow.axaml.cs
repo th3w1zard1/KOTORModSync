@@ -85,6 +85,7 @@ namespace KOTORModSync
 				);
 
 				PropertyChanged += SearchText_PropertyChanged;
+				PointerMoved += MainWindow_PointerMoved;
 
 				// Fixes an annoying problem on Windows where selecting in the console window causes the app to hang.
 				// Selection now is only possible through ctrl + m or right click -> mark, which still causes the same hang but is less accidental at least.
@@ -1981,6 +1982,7 @@ namespace KOTORModSync
 			}
 		}
 
+
 		[UsedImplicitly]
 		private void ComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
 		{
@@ -2535,6 +2537,51 @@ namespace KOTORModSync
 			return header;
 		}
 
+		private Control _currentDragVisual;
+		private Control CreateDragVisual(TreeViewItem item)
+		{
+			// Assuming the header of your TreeViewItem is a simple text. 
+			// You may need to adjust this to match your TreeViewItem structure.
+			var headerText = (item.Header as TextBlock)?.Text ?? "Item";
+    
+			var dragVisual = new Border
+			{
+				Background = new SolidColorBrush(Colors.Gray) { Opacity = 0.5 },
+				Child = new TextBlock { Text = headerText },
+				Padding = new Thickness(5),
+				Margin = new Thickness(0, 0, 0, 5),
+				IsHitTestVisible = false, // Make sure the visual doesn't interfere with other UI elements
+			};
+
+			return dragVisual;
+		}
+		private void MainWindow_PointerMoved(object sender, PointerEventArgs e)
+		{
+			if (_currentDragVisual != null)
+			{
+				var position = e.GetPosition(OverlayContainer);
+				Canvas.SetLeft(_currentDragVisual, position.X);
+				Canvas.SetTop(_currentDragVisual, position.Y);
+			}
+		}
+
+
+		private void StartDragOperation(TreeViewItem item, PointerPressedEventArgs e)
+		{
+			_currentDragVisual = CreateDragVisual(item);
+
+			// Add the drag visual to your overlay
+			OverlayContainer.Children.Add(_currentDragVisual);
+
+			// Initiate the drag and drop operation
+			var dataObject = new DataObject();
+			dataObject.Set("myCustomFormat", item.DataContext);
+			DragDrop.DoDragDrop(e, dataObject, DragDropEffects.Move);
+
+			// After drag operation, remove the drag visual
+			OverlayContainer.Children.Remove(_currentDragVisual);
+			_currentDragVisual = null;
+		}
 
 		private TreeViewItem CreateComponentItem([NotNull] Component component, int index)
 		{
@@ -2546,10 +2593,32 @@ namespace KOTORModSync
 				Header = CreateComponentHeader(component, index),
 				Tag = component,
 				IsExpanded = true,
-				HorizontalAlignment = HorizontalAlignment.Left };
+				HorizontalAlignment = HorizontalAlignment.Left,
+			};
+			
+			PointerPressedEventArgs pointerPressedArgs = null;
+			var pointerPressedTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(200) };
+			pointerPressedTimer.Tick += (o, args) =>
+			{
+				pointerPressedTimer.Stop();
+				if (pointerPressedArgs != null)
+				{
+					StartDragOperation(componentItem, pointerPressedArgs);
+				}
+			};
 
 			componentItem.PointerPressed += (sender, e) =>
 			{
+				pointerPressedArgs = e;
+				pointerPressedTimer.Start();
+			};
+			componentItem.PointerReleased += (sender, e) =>
+			{
+				if ( !pointerPressedTimer.IsEnabled )
+					return;
+
+				pointerPressedTimer.Stop();
+				pointerPressedArgs = null; // Reset the stored event args
 				try
 				{
 					ItemClickCommand?.Execute(component);

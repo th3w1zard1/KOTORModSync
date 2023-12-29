@@ -811,5 +811,9 @@
                 <TextBlock Text="{Binding destinationPathFullName}" />
             </StackPanel>
         </StackPanel>
+        <!-- Overlay Canvas for Drag Visuals -->
+        <Canvas x:Name="OverlayContainer" IsHitTestVisible="False">
+            <!-- This container will hold the drag visual -->
+        </Canvas>
     </Grid>
 </Window>

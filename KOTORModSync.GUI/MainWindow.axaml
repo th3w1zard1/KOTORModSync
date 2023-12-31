@@ -47,7 +47,7 @@
                     HorizontalContentAlignment="Center" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" />
         </DockPanel>
 
-        <Grid Grid.Row="1" Grid.Column="0" RowDefinitions="Auto,*,Auto">
+        <Grid Grid.Row="1" Grid.Column="0" RowDefinitions="Auto,*,Auto" Margin="0,0,10,0">
             <!-- ReSharper disable once Xaml.BindingWithoutContextNotResolved -->
             <TextBox Grid.Row="0" Margin="0,0,0,2" HorizontalAlignment="Stretch"
                      Name="SearchBox" ToolTip.Tip="Search for a mod by name" Text="{Binding SearchText}" />
@@ -345,6 +345,7 @@
                                         ThisGuidList="{Binding InstallAfter}" />
                                 </StackPanel>
                             </Expander>
+
                             <Expander Header="Instructions" IsExpanded="False">
                                 <StackPanel>
                                     <ItemsRepeater x:Name="instructionsRepeater" ItemsSource="{Binding Instructions}">
@@ -392,6 +393,7 @@
                                                                         Tag="{Binding}"
                                                                         HorizontalContentAlignment="Center" />
                                                             </DockPanel>
+
                                                             <ComboBox Grid.Row="3" Grid.Column="0"
                                                                       HorizontalAlignment="Left"
                                                                       ItemsSource="{Binding ActionTypes}"
@@ -411,6 +413,7 @@
                                                                     </control:DependencyControl.ThisGuidList>
                                                                 </control:DependencyControl>
                                                             </StackPanel>
+
                                                             <StackPanel Grid.Row="4" Grid.RowSpan="2" Grid.Column="0"
                                                                         IsVisible="{Binding !IsVisible, ElementName=optionChooser}">
                                                                 <TextBlock Text="Source:" />
@@ -420,8 +423,6 @@
                                                                          x:Name="SourceTextBox"
                                                                          Text="{Binding Source, Converter={StaticResource ListToStringConverter}}" />
                                                             </StackPanel>
-
-                                                            
 
                                                             <StackPanel Grid.Row="5" Grid.Column="1">
                                                                 <Button HorizontalAlignment="Stretch"

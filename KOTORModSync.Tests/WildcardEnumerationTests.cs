@@ -50,7 +50,7 @@ namespace KOTORModSync.Tests
 				string? directoryPath = Path.GetDirectoryName(realPath);
 				if ( !Directory.Exists(directoryPath) )
 				{
-					_ = Directory.CreateDirectory(directoryPath);
+					_ = Directory.CreateDirectory(directoryPath!);
 				}
 
 				File.WriteAllText(realPath, contents: "Arbitrary content for testing.");

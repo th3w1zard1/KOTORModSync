@@ -1255,7 +1255,7 @@ namespace KOTORModSync.Core
 
 		//The instruction will run if any of the following conditions are met:
 		//The instruction has no dependencies or restrictions.
-		//The instruction has dependencies, and all of the required components are being installed.
+		//The instruction has dependencies, and all the required components are being installed.
 		//The instruction has restrictions, but none of the restricted components are being installed.
 		public static bool ShouldRunInstruction(
 			[NotNull] Instruction instruction,
@@ -1491,15 +1491,11 @@ namespace KOTORModSync.Core
 		public void MoveOptionToIndex([NotNull] Option thisOption, int index)
 		{
 			if ( thisOption is null || index < 0 || index >= Options.Count )
-			{
 				throw new ArgumentException("Invalid option or index.");
-			}
 
 			int currentIndex = Options.IndexOf(thisOption);
 			if ( currentIndex < 0 )
-			{
 				throw new ArgumentException("Option does not exist in the list.");
-			}
 
 			if ( index == currentIndex )
 			{

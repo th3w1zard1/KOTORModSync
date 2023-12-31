@@ -106,7 +106,9 @@ namespace KOTORModSync
 
 		private void DragOver(object sender, DragEventArgs e)
 		{
-			e.DragEffects = e.Data.Contains(DataFormats.Files) ? DragDropEffects.Copy : DragDropEffects.None;
+			e.DragEffects = e.Data.Contains(DataFormats.Files)
+				? DragDropEffects.Copy
+				: DragDropEffects.None;
 			e.Handled = true;
 		}
 
@@ -124,11 +126,12 @@ namespace KOTORModSync
 			if ( string.IsNullOrEmpty(filePath) )
 				return;
 
+			string fileExt = Path.GetExtension(filePath);
 			switch ( storageItem )
 			{
 				// Check if the storageItem is a file
-				case IStorageFile file when Path.GetExtension(filePath).Equals(value: ".toml", StringComparison.OrdinalIgnoreCase)
-					|| Path.GetExtension(filePath).Equals(value: ".tml", StringComparison.OrdinalIgnoreCase):
+				case IStorageFile file when fileExt.Equals(value: ".toml", StringComparison.OrdinalIgnoreCase)
+					|| fileExt.Equals(value: ".tml", StringComparison.OrdinalIgnoreCase):
 					{
 						// File has .toml extension
 						if ( MainConfig.AllComponents.Count > 0 )
@@ -178,18 +181,15 @@ namespace KOTORModSync
 
 		private async void HandleClosingAsync()
 		{
+			// If result is not true, do nothing and the app remains open
 			bool? result = await ConfirmationDialog.ShowConfirmationDialog(this, confirmText: "Really close?");
 			if ( result != true )
 				return;
 
-			// User chose to close, so manually close the window
+			// Start a new app closing event.
 			IsClosingMainWindow = true;
 			await Dispatcher.UIThread.InvokeAsync(Close);
-			// If result is not true, do nothing and the window remains open
 		}
-
-
-
 
 		public static List<Component> ComponentsList => MainConfig.AllComponents;
 

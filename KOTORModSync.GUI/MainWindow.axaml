@@ -466,11 +466,11 @@
 
                                                             <TextBlock Grid.Row="12" Grid.Column="0"
                                                                        Text="Overwrite:"
-                                                                       ToolTip.Tip="Should we overwrite if already exists in the install directory?"
+                                                                       ToolTip.Tip="Should we overwrite if file already exists in the installation directory?"
                                                                        IsVisible="{Binding !IsVisible, ElementName=optionChooser}" />
-                                                            <TextBox Grid.Row="13" Grid.Column="0"
+                                                            <CheckBox Grid.Row="13" Grid.Column="0"
                                                                      Focusable="True"
-                                                                     Text="{Binding Overwrite}"
+                                                                     IsChecked="{Binding Overwrite}"
                                                                      IsVisible="{Binding !IsVisible, ElementName=optionChooser}" />
 
                                                             <TextBlock Grid.Row="14" Grid.Column="0"
@@ -694,11 +694,11 @@
                                                                                             <TextBlock Grid.Row="12"
                                                                                                 Grid.Column="0"
                                                                                                 Text="Overwrite:"
-                                                                                                ToolTip.Tip="Should we overwrite if already exists in the install directory?" />
-                                                                                            <TextBox Grid.Row="13"
+                                                                                                ToolTip.Tip="Should we overwrite if this file already exists in the installation directory?" />
+                                                                                            <CheckBox Grid.Row="13"
                                                                                                 Grid.Column="0"
                                                                                                 Focusable="True"
-                                                                                                Text="{Binding Overwrite}" />
+                                                                                                IsChecked="{Binding Overwrite}" />
 
                                                                                             <TextBlock Grid.Row="14"
                                                                                                 Grid.Column="0"

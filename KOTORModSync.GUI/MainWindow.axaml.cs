@@ -1155,7 +1155,7 @@ namespace KOTORModSync
 				bool isInstallDirectoryWritable = Utility.IsDirectoryWritable(MainConfig.DestinationPath);
 				bool isModDirectoryWritable = Utility.IsDirectoryWritable(MainConfig.SourcePath);
 
-				await Logger.LogAsync("Validating the order of operations and install order of all components...");
+				/*await Logger.LogAsync("Validating the order of operations and install order of all components...");
 				(bool isCorrectOrder, List<Component> reorderedList) =
 					Component.ConfirmComponentsInstallOrder(MainConfig.AllComponents);
 				if ( !isCorrectOrder && MainConfig.AttemptFixes )
@@ -1163,7 +1163,7 @@ namespace KOTORModSync
 					await Logger.LogWarningAsync("Incorrect order detected, but has been automatically reordered.");
 					MainConfigInstance.allComponents = reorderedList;
 					isCorrectOrder = true;
-				}
+				}*/
 
 				await Logger.LogAsync("Validating individual components, this might take a while...");
 				bool individuallyValidated = true;
@@ -1218,13 +1218,13 @@ namespace KOTORModSync
 				await Logger.LogVerboseAsync("Finished validating all components.");
 
 				string informationMessage = string.Empty;
-				if ( !isCorrectOrder )
+				/*if ( !isCorrectOrder )
 				{
 					informationMessage = "Your components are not in the correct order."
 						+ " There are specific mods found that need to be installed either before or after another or more mods."
 						+ " Please ensure the correct order, or rerun the validator with 'Attempt Fixes' enabled.";
 					await Logger.LogErrorAsync(informationMessage);
-				}
+				}*/
 
 				if ( !holopatcherIsExecutable )
 				{
@@ -2713,13 +2713,13 @@ namespace KOTORModSync
 
 				try
 				{
-					(bool isCorrectOrder, List<Component> reorderedList) =
+					/*(bool isCorrectOrder, List<Component> reorderedList) =
 						Component.ConfirmComponentsInstallOrder(MainConfig.AllComponents);
 					if ( !isCorrectOrder )
 					{
-						await Logger.LogVerboseAsync("Reordered list to match dependency structure.");
+						await Logger.LogAsync("Reordered list to match dependency structure.");
 						MainConfigInstance.allComponents = reorderedList;
-					}
+					}*/
 				}
 				catch ( KeyNotFoundException )
 				{

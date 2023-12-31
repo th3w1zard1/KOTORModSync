@@ -35,6 +35,7 @@ using KOTORModSync.Converters;
 using KOTORModSync.Core;
 using KOTORModSync.Core.FileSystemPathing;
 using KOTORModSync.Core.Utility;
+using SharpCompress.Archives;
 using Component = KOTORModSync.Core.Component;
 using NotNullAttribute = JetBrains.Annotations.NotNullAttribute;
 
@@ -151,8 +152,14 @@ namespace KOTORModSync
 						break;
 					}
 				case IStorageFile file:
-					// File does not have .toml extension
-					// Handle rejection logic here
+
+					(IArchive archive, FileStream archiveStream) = ArchiveHelper.OpenArchive(filePath);
+					if ( archive is null || archiveStream is null )
+						return;
+
+					string exePath = ArchiveHelper.AnalyzeArchiveForExe(archiveStream, archive);
+					await Logger.LogVerboseAsync(exePath);
+
 					break;
 				case IStorageFolder folder:
 					// Handle folder logic

@@ -17,6 +17,7 @@ using SharpCompress.Archives.Rar;
 using SharpCompress.Archives.SevenZip;
 using SharpCompress.Archives.Zip;
 using SharpCompress.Common;
+using SharpCompress.Readers;
 
 namespace KOTORModSync.Core.Utility
 {
@@ -115,6 +116,50 @@ namespace KOTORModSync.Core.Utility
 			return sfxSignature.SequenceEqual(fileHeader);
 		}
 
+		public static string AnalyzeArchiveForExe(FileStream fileStream, IArchive archive)
+		{
+			string exePath = null;
+			bool tslPatchDataFolderExists = false;
+
+			using (IReader reader = archive.ExtractAllEntries())
+			{
+				while (reader.MoveToNextEntry())
+				{
+					if ( reader.Entry.IsDirectory )
+						continue;
+
+					string fileName = Path.GetFileName(reader.Entry.Key);
+					string directory = Path.GetDirectoryName(reader.Entry.Key);
+
+					// Check for exe file
+					if (fileName.EndsWith(value: ".exe", StringComparison.OrdinalIgnoreCase))
+					{
+						if (exePath != null)
+							return null;  // Multiple exe files found in the archive.
+
+						exePath = reader.Entry.Key;
+					}
+
+					// Check for 'tslpatchdata' folder
+					if (!(directory is null) && directory.Contains("tslpatchdata"))
+					{
+						tslPatchDataFolderExists = true;
+					}
+				}
+			}
+
+			if (
+				exePath != null
+				&& tslPatchDataFolderExists 
+				// ReSharper disable once PossibleNullReferenceException
+				&& Path.GetDirectoryName(exePath).Contains("tslpatchdata")
+			)
+			{
+				return exePath;
+			}
+
+			return null;
+		}
 
 		public static void ExtractWith7Zip(FileStream stream, string destinationDirectory)
 		{

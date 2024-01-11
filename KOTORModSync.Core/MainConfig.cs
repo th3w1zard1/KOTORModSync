@@ -80,7 +80,7 @@ namespace KOTORModSync.Core
 		public bool noAdmin
 		{
 			get => NoAdmin;
-			set => NoAdmin = value && Utility.Utility.GetOS() == OSPlatform.Windows;
+			set => NoAdmin = value && Utility.Utility.GetOperatingSystem() == OSPlatform.Windows;
 		}
 
 		public bool useCopyForMoveActions
@@ -99,7 +99,7 @@ namespace KOTORModSync.Core
 		public bool caseInsensitivePathing
 		{
 			get => CaseInsensitivePathing;
-			set => CaseInsensitivePathing = Utility.Utility.GetOS() != OSPlatform.Windows;
+			set => CaseInsensitivePathing = Utility.Utility.GetOperatingSystem() != OSPlatform.Windows;
 		}
 
 		public static bool DebugLogging { get; private set; }
@@ -133,19 +133,7 @@ namespace KOTORModSync.Core
 
 		[NotNull] public string patcherOptionString
 		{
-			get
-			{
-				try
-				{
-					return PatcherOption.ToString() ?? throw new InvalidOperationException();
-				}
-				catch ( Exception e )
-				{
-					Logger.LogException(e);
-				}
-
-				return "UNDEFINED";
-			}
+			get => PatcherOption.ToString();
 			set => PatcherOption = (AvailablePatchers)Enum.Parse(typeof( AvailablePatchers ), value);
 		}
 
@@ -163,19 +151,7 @@ namespace KOTORModSync.Core
 
 		[NotNull] public string currentCompatibilityString
 		{
-			get
-			{
-				try
-				{
-					return CurrentCompatibilityLevel.ToString() ?? throw new InvalidOperationException();
-				}
-				catch ( Exception e )
-				{
-					Logger.LogException(e);
-				}
-
-				return "UNDEFINED";
-			}
+			get => CurrentCompatibilityLevel.ToString();
 			set => CurrentCompatibilityLevel = (CompatibilityLevel)Enum.Parse(typeof( CompatibilityLevel ), value);
 		}
 

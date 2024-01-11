@@ -197,7 +197,7 @@ namespace KOTORModSync.Core.FileSystemPathing
 			string formattedPath = path.Replace(oldValue: "\\", Path.DirectorySeparatorChar.ToString())
 				.Replace(oldValue: "/", Path.DirectorySeparatorChar.ToString());
 
-			formattedPath = Utility.Utility.GetOS() == OSPlatform.Windows
+			formattedPath = Utility.Utility.GetOperatingSystem() == OSPlatform.Windows
 				? Regex.Replace(formattedPath, pattern: @"\\{2,}", replacement: @"\")
 				: Regex.Replace(formattedPath, pattern: @"/{2,}", replacement: "/");
 
@@ -205,7 +205,7 @@ namespace KOTORModSync.Core.FileSystemPathing
 		}
 
 		private static bool ShouldResolveCase(string path) =>
-			!(Utility.Utility.GetOS() == OSPlatform.Windows)
+			!(Utility.Utility.GetOperatingSystem() == OSPlatform.Windows)
 			&& Path.IsPathRooted(path)
 			&& !File.Exists(path)
 			&& !Directory.Exists(path);

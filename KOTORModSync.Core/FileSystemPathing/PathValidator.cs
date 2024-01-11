@@ -70,7 +70,7 @@ namespace KOTORModSync.Core.FileSystemPathing
 
 				// Check for reserved file names in Windows
 				// ReSharper disable once InvertIf
-				if ( enforceAllPlatforms || Utility.Utility.GetOS() == OSPlatform.Windows )
+				if ( enforceAllPlatforms || Utility.Utility.GetOperatingSystem() == OSPlatform.Windows )
 				{
 					if ( HasColonOutsideOfPathRoot(path) )
 						return false;
@@ -126,7 +126,7 @@ namespace KOTORModSync.Core.FileSystemPathing
 
 
 		public static char[] GetInvalidCharsForPlatform() =>
-			Utility.Utility.GetOS() == OSPlatform.Linux
+			Utility.Utility.GetOperatingSystem() == OSPlatform.Linux
 				? s_invalidPathCharsUnix
 				: s_invalidPathCharsWindows;
 

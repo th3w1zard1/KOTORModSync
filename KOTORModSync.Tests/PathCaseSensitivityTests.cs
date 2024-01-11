@@ -89,7 +89,7 @@ namespace KOTORModSync.Tests
 		// will always fail on windows
 		public void FindCaseInsensitiveDuplicates_FindsFileDuplicates_CaseInsensitive()
 		{
-			if ( Utility.GetOS() == OSPlatform.Windows )
+			if ( Utility.GetOperatingSystem() == OSPlatform.Windows )
 			{
 				Console.WriteLine("Test is not possible on Windows.");
 				return;
@@ -156,7 +156,7 @@ namespace KOTORModSync.Tests
 		[Test]
 		public void TestGetClosestMatchingEntry()
 		{
-			if ( Utility.GetOS() == OSPlatform.Windows )
+			if ( Utility.GetOperatingSystem() == OSPlatform.Windows )
 			{
 				Console.WriteLine("Test is not possible on Windows.");
 				return;
@@ -183,7 +183,7 @@ namespace KOTORModSync.Tests
 		[Test]
 		public void TestDuplicatesWithFileInfo()
 		{
-			if ( Utility.GetOS() == OSPlatform.Windows )
+			if ( Utility.GetOperatingSystem() == OSPlatform.Windows )
 			{
 				Console.WriteLine("Test is not possible on Windows.");
 				return;
@@ -208,7 +208,7 @@ namespace KOTORModSync.Tests
 		[Test]
 		public void TestDuplicatesWithDirectoryNameString()
 		{
-			if ( Utility.GetOS() == OSPlatform.Windows )
+			if ( Utility.GetOperatingSystem() == OSPlatform.Windows )
 			{
 				Console.WriteLine("Test is not possible on Windows.");
 				return;
@@ -232,7 +232,7 @@ namespace KOTORModSync.Tests
 		[Test]
 		public void TestDuplicateDirectories()
 		{
-			if ( Utility.GetOS() == OSPlatform.Windows )
+			if ( Utility.GetOperatingSystem() == OSPlatform.Windows )
 			{
 				Console.WriteLine("Test is not possible on Windows.");
 				return;
@@ -257,7 +257,7 @@ namespace KOTORModSync.Tests
 		[Test]
 		public void TestDuplicatesWithDifferentCasingFilesInNestedDirectories()
 		{
-			if ( Utility.GetOS() == OSPlatform.Windows )
+			if ( Utility.GetOperatingSystem() == OSPlatform.Windows )
 			{
 				Console.WriteLine("Test is not possible on Windows.");
 				return;
@@ -288,7 +288,7 @@ namespace KOTORModSync.Tests
 		[Test]
 		public void TestDuplicateNestedDirectories()
 		{
-			if ( Utility.GetOS() == OSPlatform.Windows )
+			if ( Utility.GetOperatingSystem() == OSPlatform.Windows )
 			{
 				Console.WriteLine("Test is not possible on Windows.");
 				return;

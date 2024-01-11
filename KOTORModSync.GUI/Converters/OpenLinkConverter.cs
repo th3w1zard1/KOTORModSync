@@ -55,7 +55,7 @@ namespace KOTORModSync.Converters
 				if ( !Uri.TryCreate(url, UriKind.Absolute, out Uri _) )
 					throw new ArgumentException("Invalid URL");
 
-				var runningOs = Utility.GetOS();
+				var runningOs = Utility.GetOperatingSystem();
 				if ( runningOs == OSPlatform.Windows )
 				{
 					_ = Process.Start(

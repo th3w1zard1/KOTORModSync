@@ -62,7 +62,7 @@ namespace KOTORModSync.Core.Utility
 		}
 
 		[NotNull]
-		public static OSPlatform GetOS()
+		public static OSPlatform GetOperatingSystem()
 		{
 			if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
 				return OSPlatform.OSX;
@@ -70,7 +70,8 @@ namespace KOTORModSync.Core.Utility
 				return OSPlatform.Windows;
 			if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
 				return OSPlatform.Linux;
-			
+
+			// Fallbacks
 			switch ( Environment.OSVersion.Platform )
 			{
 				case PlatformID.Win32NT:
@@ -137,8 +138,12 @@ namespace KOTORModSync.Core.Utility
 
 			try
 			{
+				string testFile = Path.Combine(
+					PathHelper.GetCaseSensitivePath(dirPath).FullName,
+					Path.GetRandomFileName()
+				);
 				using ( File.Create(
-						Path.Combine(PathHelper.GetCaseSensitivePath(dirPath).FullName, Path.GetRandomFileName()),
+						testFile,
 						bufferSize: 1,
 						FileOptions.DeleteOnClose
 					) ) { }

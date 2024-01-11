@@ -197,7 +197,7 @@ namespace KOTORModSync.Tests
 		[Test]
 		public void DeleteDuplicateFile_CaseSensitiveExtensions_DuplicatesDeleted()
 		{
-			if ( Utility.GetOS() == OSPlatform.Windows )
+			if ( Utility.GetOperatingSystem() == OSPlatform.Windows )
 			{
 				Console.WriteLine("Test is not possible on Windows.");
 				return;

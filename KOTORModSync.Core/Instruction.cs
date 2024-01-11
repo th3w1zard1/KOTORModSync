@@ -1018,7 +1018,7 @@ namespace KOTORModSync.Core
 						case MainConfig.AvailablePatchers.HoloPatcher:
 							string baseDir = Utility.Utility.GetBaseDirectory();
 							string resourcesDir = Utility.Utility.GetResourcesDirectory(baseDir);
-							if ( Utility.Utility.GetOS() == OSPlatform.Windows )
+							if ( Utility.Utility.GetOperatingSystem() == OSPlatform.Windows )
 							{
 								patcherCliPath = new FileInfo(Path.Combine(resourcesDir, "holopatcher.exe"));
 							}

@@ -35,6 +35,7 @@ using KOTORModSync.Converters;
 using KOTORModSync.Core;
 using KOTORModSync.Core.FileSystemPathing;
 using KOTORModSync.Core.Utility;
+using ReactiveUI;
 using SharpCompress.Archives;
 using Component = KOTORModSync.Core.Component;
 using NotNullAttribute = JetBrains.Annotations.NotNullAttribute;
@@ -74,6 +75,7 @@ namespace KOTORModSync
 				InitializeComponent();
 				DataContext = this;
 				InitializeControls();
+				InitializeTopMenu();
 
 				// Initialize the logger
 				Logger.Initialize();
@@ -92,7 +94,7 @@ namespace KOTORModSync
 				if ( Utility.GetOS() == OSPlatform.Windows )
 				{
 					ConsoleConfig.DisableQuickEdit();
-					//ConsoleConfig.DisableConsoleCloseButton();
+					ConsoleConfig.DisableConsoleCloseButton();
 				}
 
 				AddHandler(DragDrop.DropEvent, Drop);
@@ -105,7 +107,124 @@ namespace KOTORModSync
 			}
 		}
 
-		private void DragOver(object sender, DragEventArgs e)
+	    private void InitializeTopMenu()
+	    {
+	        var menu = new Menu();
+
+	        // Tools menu
+	        var toolsMenu = new MenuItem {
+		        Header = "Tools",
+		        ItemsSource = new[]
+		        {
+			        new MenuItem { Header = "Fix file and folder permissions", Command = ReactiveCommand.Create( () => FindDuplicateComponents(MainConfig.AllComponents)) },
+			        new MenuItem { Header = "Create modbuild documentation.", Command = ReactiveCommand.Create( () => DocsButton_Click(new object(), new RoutedEventArgs())) },
+			        new MenuItem { Header = "Parse text instructions into TOML using Regex", Command = ReactiveCommand.Create( () => LoadMarkdown_Click(new object(), new RoutedEventArgs())) },
+		        },
+	        };
+
+	        // Adding tooltips
+	        if ( Utility.GetOS() == OSPlatform.Windows )
+	        {
+		        ToolTip.SetTip(
+			        ((MenuItem[])toolsMenu.ItemsSource)[0],
+			        "(Linux/Mac only) This will acquire a list of any case-insensitive duplicates in the mod directory or"
+			        + " the kotor directory, including subfolders, and resolve them."
+			    );
+	        }
+	        ToolTip.SetTip(
+		        ((MenuItem[])toolsMenu.ItemsSource)[1],
+		        "Create documentation for all instructions in the loaded setup. Useful if"
+		        + " you need human-readable instructions in text form."
+		    );
+	        ToolTip.SetTip(((MenuItem[])toolsMenu.ItemsSource)[2], value: "Attempts to create and load an instructions file from a Reddit post's source.");
+
+
+	        // Help menu
+	        var helpMenu = new MenuItem { Header = "Help" };
+	        var deadlystreamMenu = new MenuItem {
+		        Header = "DeadlyStream",
+		        ItemsSource = new[]
+		        {
+			        new MenuItem { Header = "Discord", Command = ReactiveCommand.Create(() => OpenUrl("https://discord.gg/nDkHXfc36s")) },
+			        new MenuItem { Header = "Website", Command = ReactiveCommand.Create(() => OpenUrl("https://deadlystream.com")) }
+		        },
+	        };
+
+	        var neocitiesMenu = new MenuItem {
+		        Header = "KOTOR Community Portal",
+		        ItemsSource = new[]
+		        {
+			        new MenuItem { Header = "Discord", Command = ReactiveCommand.Create(() => OpenUrl("https://discord.com/invite/kotor")) },
+			        new MenuItem { Header = "Website", Command = ReactiveCommand.Create(() => OpenUrl("https://kotor.neocities.org")) }
+		        },
+	        };
+
+	        var pcgamingwikiMenu = new MenuItem {
+		        Header = "PCGamingWiki",
+		        ItemsSource = new[]
+		        {
+			        new MenuItem { Header = "KOTOR 1", Command = ReactiveCommand.Create(() => OpenUrl("https://www.pcgamingwiki.com/wiki/Star_Wars:_Knights_of_the_Old_Republic")) },
+			        new MenuItem { Header = "KOTOR 2: TSL", Command = ReactiveCommand.Create(() => OpenUrl("https://www.pcgamingwiki.com/wiki/Star_Wars:_Knights_of_the_Old_Republic_II_-_The_Sith_Lords")) }
+		        },
+	        };
+
+	        helpMenu.ItemsSource = new[] { deadlystreamMenu, neocitiesMenu, pcgamingwikiMenu };
+
+	        // About menu
+	        var aboutMenu = new MenuItem {
+		        Header = "About",
+		        ItemsSource = new[]
+		        {
+			        //new MenuItem { Header = "Check for Updates", Command = ReactiveCommand.Create(check_for_updates) },
+			        new MenuItem { Header = "HoloPatcher Home", Command = ReactiveCommand.Create(() => OpenUrl("https://deadlystream.com/files/file/2243-holopatcher")) },
+			        new MenuItem { Header = "GitHub Source", Command = ReactiveCommand.Create(() => OpenUrl("https://github.com/NickHugi/PyKotor")) }
+		        },
+	        };
+
+	        menu.ItemsSource = new[] { toolsMenu, helpMenu, aboutMenu };
+	        this.FindControl<Menu>(name: "TopMenu").ItemsSource = menu.Items;
+	    }
+
+	    private static void OpenUrl([NotNull] string url)
+	    {
+		    try
+		    {
+			    if ( string.IsNullOrEmpty(url) )
+				    throw new ArgumentException(message: "Value cannot be null or empty.", nameof( url ));
+			    if ( !Uri.TryCreate(url, UriKind.Absolute, out Uri _) )
+				    throw new InvalidOperationException($"Invalid URL: '{url}'");
+
+			    OSPlatform runningOs = Utility.GetOS();
+			    if ( runningOs == OSPlatform.Windows )
+			    {
+				    _ = Process.Start(
+					    new ProcessStartInfo
+					    {
+						    FileName = url,
+						    UseShellExecute = true,
+					    }
+				    );
+			    }
+			    else if ( runningOs == OSPlatform.OSX )
+			    {
+				    _ = Process.Start(fileName: "open", url);
+			    }
+			    else if ( runningOs == OSPlatform.Linux )
+			    {
+				    _ = Process.Start(fileName: "xdg-open", url);
+			    }
+			    else
+			    {
+				    Logger.LogError($"Unsupported platform, cannot open link '{url}'.");
+			    }
+		    }
+		    catch ( Exception ex )
+		    {
+			    Logger.LogException(ex, $"Failed to open URL: {ex.Message}");
+		    }
+	    }
+
+	    private static void DragOver(object sender, DragEventArgs e)
 		{
 			e.DragEffects = e.Data.Contains(DataFormats.Files)
 				? DragDropEffects.Copy
@@ -739,31 +858,7 @@ namespace KOTORModSync
 			try
 			{
 				string url = textBlock.Text ?? string.Empty;
-				if ( !Uri.TryCreate(url, UriKind.Absolute, out Uri _) )
-					throw new InvalidOperationException($"Invalid URL: '{url}'");
-
-				OSPlatform runningOs = Utility.GetOS();
-				if ( Utility.GetOS() == OSPlatform.Windows )
-				{
-					_ = Process.Start(
-						new ProcessStartInfo
-						{
-							FileName = url, UseShellExecute = true,
-						}
-					);
-				}
-				else if ( Utility.GetOS() == OSPlatform.OSX )
-				{
-					_ = Process.Start(fileName: "open", url);
-				}
-				else if ( Utility.GetOS() == OSPlatform.Linux )
-				{
-					_ = Process.Start(fileName: "xdg-open", url);
-				}
-				else
-				{
-					Logger.LogError("Unsupported platform, cannot open link.");
-				}
+				OpenUrl(url);
 			}
 			catch ( Exception ex )
 			{

@@ -28,6 +28,30 @@
     </Window.Styles>
 
     <Grid x:Name="MainGrid" MinWidth="200" RowDefinitions="Auto,*">
+        <!--<Menu>
+            <MenuItem Header="File">
+                <MenuItem Header="Open" />
+                <MenuItem Header="Save" />
+            </MenuItem>
+            <MenuItem Header="Tools">
+                <MenuItem Header="Fix file and folder permissions" />
+                <MenuItem Header="Create modbuild documentation." />
+                <MenuItem Header="Parse text instructions into TOML using Regex" />
+            </MenuItem>
+            <MenuItem Header="Help">
+                <MenuItem Header="About" />
+                <MenuItem Header="Discord">
+                    <MenuItem Header="DeadlyStream">
+
+                    </MenuItem>
+                </MenuItem>
+                <MenuItem Header="Websites">
+                    <MenuItem Header="DeadlyStream"></MenuItem>
+                    <MenuItem Header="DeadlyStream"></MenuItem>
+                </MenuItem>
+            </MenuItem>
+        </Menu>-->
+        <Menu Grid.Row="0" Grid.Column="0" x:Name="TopMenu"/>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*" MinWidth="250" />
             <ColumnDefinition Width="*" />
@@ -767,18 +791,9 @@
                         Content="Pre-install Validation" Click="ValidateButton_Click"
                         ToolTip.Tip="Validates all mods on disk, and their TOML instructions, to ensure instructions can logically execute." />
                 <Button Grid.Row="3" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
-                        Content="Fix Duplicate Files/Folders" Click="ResolveDuplicateFilesAndFolders"
-                        ToolTip.Tip="(Linux/Mac only) This will acquire a list of any case-insensitive duplicates in the mod directory or the kotor directory, including subfolders, and resolve them." />
+                        Content="Start Install" Click="StartInstall_Click"
+                        ToolTip.Tip="Starts a full installation of all selected mods." />
                 <Button Grid.Row="4" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
-                        Content="Start an Install" Click="StartInstall_Click"
-                        ToolTip.Tip="Starts a full install of all selected mods." />
-                <Button Grid.Row="5" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
-                        Content="Generate Docs from TOML" Click="DocsButton_Click"
-                        ToolTip.Tip="Create documentation for all instructions in the loaded setup. Useful if you need human-readable instructions in text form." />
-                <Button Grid.Row="6" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
-                        Content="Deserialize Markdown File" Click="LoadMarkdown_Click"
-                        ToolTip.Tip="Attempts to create and load an instructions file from a Reddit post's source." />
-                <Button Grid.Row="7" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
                         Content="Open Output Window" Click="OpenOutputWindow_Click" />
             </Grid>
 

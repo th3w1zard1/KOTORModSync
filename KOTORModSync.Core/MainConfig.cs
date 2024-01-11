@@ -99,7 +99,7 @@ namespace KOTORModSync.Core
 		public bool caseInsensitivePathing
 		{
 			get => CaseInsensitivePathing;
-			set => CaseInsensitivePathing = value && Utility.Utility.GetOS() != OSPlatform.Windows;
+			set => CaseInsensitivePathing = Utility.Utility.GetOS() != OSPlatform.Windows;
 		}
 
 		public static bool DebugLogging { get; private set; }

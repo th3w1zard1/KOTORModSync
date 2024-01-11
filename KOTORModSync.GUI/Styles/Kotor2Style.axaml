@@ -6,6 +6,20 @@
         </Border>
     </Design.PreviewWith>
 
+    <Style Selector="Menu">
+        <Setter Property="FontSize" Value="14" />
+        <Setter Property="FontWeight" Value="Normal" />
+        <Setter Property="Margin" Value="0,5,0,2" />
+        <Setter Property="Foreground" Value="#33C3A2" />
+    </Style>
+
+    <Style Selector="MenuItem">
+        <Setter Property="FontSize" Value="14" />
+        <Setter Property="FontWeight" Value="Normal" />
+        <Setter Property="Margin" Value="0,5,0,2" />
+        <Setter Property="Foreground" Value="#33C3A2" />
+    </Style>
+
     <Style Selector="TextBlock">
         <Setter Property="FontSize" Value="14" />
         <Setter Property="FontWeight" Value="Normal" />

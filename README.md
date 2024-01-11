@@ -9,7 +9,7 @@ Mod creators work really hard on their mods. It's the least we can do to install
 Other mod managers I've tried were either too difficult to configure, require significant changes to a hard-to-understand configuration file, or only provided limited functionality for defining new mods. KOTOR mods definitely can have complex dependency relationships with each other in regard to compatibility, due to the nature of TSLPatcher and KOTOR itself.
 
 ### Enter KOTORMODSync.
-![KMS k1](https://github.com/th3w1zard1/KOTORModSync/assets/2219836/7ab62c61-e617-4bab-a8c5-7259ff66a7be)
+![image](https://github.com/th3w1zard1/KOTORModSync/assets/2219836/1d3afdbb-24cf-428b-93e1-37b61f48aa20)
 
 
 

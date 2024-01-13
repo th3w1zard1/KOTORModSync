@@ -114,29 +114,39 @@ namespace KOTORModSync
 	        // Tools menu
 	        var toolsMenu = new MenuItem {
 		        Header = "Tools",
-		        ItemsSource = new[]
-		        {
-			        new MenuItem { Header = "Fix file and folder permissions", Command = ReactiveCommand.Create( () => FindDuplicateComponents(MainConfig.AllComponents)) },
-			        new MenuItem { Header = "Create modbuild documentation.", Command = ReactiveCommand.Create( () => DocsButton_Click(new object(), new RoutedEventArgs())) },
-			        new MenuItem { Header = "Parse text instructions into TOML using Regex", Command = ReactiveCommand.Create( () => LoadMarkdown_Click(new object(), new RoutedEventArgs())) },
-		        },
 	        };
 
 	        // Adding tooltips
-	        if ( Utility.GetOperatingSystem() == OSPlatform.Windows )
+	        if ( Utility.GetOperatingSystem() != OSPlatform.Windows )
 	        {
+		        toolsMenu.ItemsSource = new[] {
+			        new MenuItem { Header = "Create modbuild documentation.", Command = ReactiveCommand.Create( () => DocsButton_Click(new object(), new RoutedEventArgs())) },
+			        new MenuItem { Header = "Parse text instructions into TOML using Regex", Command = ReactiveCommand.Create( () => LoadMarkdown_Click(new object(), new RoutedEventArgs())) },
+			        new MenuItem
+			        {
+				        Header = "Fix file and folder permissions",
+				        Command = ReactiveCommand.Create(() => FindDuplicateComponents(MainConfig.AllComponents)),
+			        },
+		        };
 		        ToolTip.SetTip(
-			        ((MenuItem[])toolsMenu.ItemsSource)[0],
+			        ((MenuItem[])toolsMenu.ItemsSource)[2],
 			        "(Linux/Mac only) This will acquire a list of any case-insensitive duplicates in the mod directory or"
 			        + " the kotor directory, including subfolders, and resolve them."
 			    );
 	        }
+	        else
+	        {
+		        toolsMenu.ItemsSource = new[] {
+			        new MenuItem { Header = "Create modbuild documentation.", Command = ReactiveCommand.Create( () => DocsButton_Click(new object(), new RoutedEventArgs())) },
+			        new MenuItem { Header = "Parse text instructions into TOML using Regex", Command = ReactiveCommand.Create( () => LoadMarkdown_Click(new object(), new RoutedEventArgs())) },
+		        };
+	        }
 	        ToolTip.SetTip(
-		        ((MenuItem[])toolsMenu.ItemsSource)[1],
+		        ((MenuItem[])toolsMenu.ItemsSource)[0],
 		        "Create documentation for all instructions in the loaded setup. Useful if"
-		        + " you need human-readable instructions in text form."
+		        + " you need human-readable instructions."
 		    );
-	        ToolTip.SetTip(((MenuItem[])toolsMenu.ItemsSource)[2], value: "Attempts to create and load an instructions file from a Reddit post's source.");
+	        ToolTip.SetTip(((MenuItem[])toolsMenu.ItemsSource)[1], value: "Attempts to create and load a toml instructions file from various text sources using custom regex.");
 
 
 	        // Help menu
@@ -146,7 +156,7 @@ namespace KOTORModSync
 		        ItemsSource = new[]
 		        {
 			        new MenuItem { Header = "Discord", Command = ReactiveCommand.Create(() => OpenUrl("https://discord.gg/nDkHXfc36s")) },
-			        new MenuItem { Header = "Website", Command = ReactiveCommand.Create(() => OpenUrl("https://deadlystream.com")) }
+			        new MenuItem { Header = "Website", Command = ReactiveCommand.Create(() => OpenUrl("https://deadlystream.com")) },
 		        },
 	        };
 
@@ -155,7 +165,7 @@ namespace KOTORModSync
 		        ItemsSource = new[]
 		        {
 			        new MenuItem { Header = "Discord", Command = ReactiveCommand.Create(() => OpenUrl("https://discord.com/invite/kotor")) },
-			        new MenuItem { Header = "Website", Command = ReactiveCommand.Create(() => OpenUrl("https://kotor.neocities.org")) }
+			        new MenuItem { Header = "Website", Command = ReactiveCommand.Create(() => OpenUrl("https://kotor.neocities.org")) },
 		        },
 	        };
 
@@ -164,23 +174,45 @@ namespace KOTORModSync
 		        ItemsSource = new[]
 		        {
 			        new MenuItem { Header = "KOTOR 1", Command = ReactiveCommand.Create(() => OpenUrl("https://www.pcgamingwiki.com/wiki/Star_Wars:_Knights_of_the_Old_Republic")) },
-			        new MenuItem { Header = "KOTOR 2: TSL", Command = ReactiveCommand.Create(() => OpenUrl("https://www.pcgamingwiki.com/wiki/Star_Wars:_Knights_of_the_Old_Republic_II_-_The_Sith_Lords")) }
+			        new MenuItem { Header = "KOTOR 2: TSL", Command = ReactiveCommand.Create(() => OpenUrl("https://www.pcgamingwiki.com/wiki/Star_Wars:_Knights_of_the_Old_Republic_II_-_The_Sith_Lords")) },
 		        },
 	        };
 
 	        helpMenu.ItemsSource = new[] { deadlystreamMenu, neocitiesMenu, pcgamingwikiMenu };
 
-	        // About menu
-	        var aboutMenu = new MenuItem {
+		    var engineRewritesMenu = new MenuItem
+		    {
+		        Header = "Open-Source Odyssey/Aurora Engines",
+		        ItemsSource = new[]
+		        {
+		            new MenuItem { Header = "KotOR.js", Command = ReactiveCommand.Create(() => OpenUrl("https://github.com/KobaltBlu/KotOR.js")) },
+		            new MenuItem { Header = "NorthernLights", Command = ReactiveCommand.Create(() => OpenUrl("https://github.com/lachjames/NorthernLights")) },
+		            new MenuItem { Header = "reone", Command = ReactiveCommand.Create(() => OpenUrl("https://github.com/seedhartha/reone")) },
+		        },
+		    };
+
+		    var otherProjectsMenu = new MenuItem
+		    {
+		        Header = "Other Projects",
+		        ItemsSource = new[]
+		        {
+		            new MenuItem { Header = "Holocron Toolset", Command = ReactiveCommand.Create(() => OpenUrl("https://github.com/NickHugi/PyKotor/blob/master/Tools/HolocronToolset")) },
+		            new MenuItem { Header = "PyKotor", Command = ReactiveCommand.Create(() => OpenUrl("https://github.com/NickHugi/PyKotor")) },
+		            engineRewritesMenu,
+		        },
+		    };
+
+		    var aboutMenu = new MenuItem
+		    {
 		        Header = "About",
 		        ItemsSource = new[]
 		        {
-			        //new MenuItem { Header = "Check for Updates", Command = ReactiveCommand.Create(check_for_updates) },
-			        new MenuItem { Header = "HoloPatcher Home", Command = ReactiveCommand.Create(() => OpenUrl("https://deadlystream.com/files/file/2243-holopatcher")) },
-			        new MenuItem { Header = "ModSync Home", Command = ReactiveCommand.Create(() => OpenUrl("https://deadlystream.com/files/file/2317-kotormodsync/")) },
-			        new MenuItem { Header = "GitHub Source", Command = ReactiveCommand.Create(() => OpenUrl("https://github.com/th3w1zard1/KOTORModSync")) }
+		            new MenuItem { Header = "HoloPatcher Home", Command = ReactiveCommand.Create(() => OpenUrl("https://deadlystream.com/files/file/2243-holopatcher")) },
+		            new MenuItem { Header = "ModSync Home", Command = ReactiveCommand.Create(() => OpenUrl("https://deadlystream.com/files/file/2317-kotormodsync/")) },
+		            new MenuItem { Header = "ModSync Github", Command = ReactiveCommand.Create(() => OpenUrl("https://github.com/th3w1zard1/KOTORModSync")) },
+		            otherProjectsMenu,
 		        },
-	        };
+		    };
 
 	        menu.ItemsSource = new[] { toolsMenu, helpMenu, aboutMenu };
 	        this.FindControl<Menu>(name: "TopMenu").ItemsSource = menu.Items;

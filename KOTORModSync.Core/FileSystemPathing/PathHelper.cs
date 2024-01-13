@@ -317,10 +317,12 @@ namespace KOTORModSync.Core.FileSystemPathing
 			// insert the root into the list (will be / on unix, and drive name (e.g. C:\\ on windows)
 			string currentPath = Path.GetPathRoot(formattedPath);
 			if ( !string.IsNullOrEmpty(currentPath) && !Path.IsPathRooted(parts[0]) )
+			{
 				parts = new[]
 				{
 					currentPath,
 				}.Concat(parts).ToArray();
+			}
 			// append directory separator to drive roots
 			if ( parts[0].EndsWith(":") )
 				parts[0] += Path.DirectorySeparatorChar;
@@ -332,7 +334,7 @@ namespace KOTORModSync.Core.FileSystemPathing
 				// find the closest matching file/folder in the current path for unix, useful for duplicates.
 				string previousCurrentPath = Path.Combine(parts.Take(i).ToArray());
 				currentPath = Path.Combine(previousCurrentPath, parts[i]);
-				if ( Utility.Utility.GetOperatingSystem() == OSPlatform.Windows
+				if ( Utility.Utility.GetOperatingSystem() != OSPlatform.Windows
 					&& !Directory.Exists(currentPath)
 					&& Directory.Exists(previousCurrentPath) )
 				{

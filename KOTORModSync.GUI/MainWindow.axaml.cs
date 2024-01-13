@@ -1197,11 +1197,16 @@ namespace KOTORModSync
 							Path.Combine(baseDir, "Resources", "holopatcher")
 						};
 
-						foreach (string path in possibleOSXPaths)
+						foreach ( string path in possibleOSXPaths )
 						{
 							patcherCliPath = PathHelper.GetCaseSensitivePath(new FileInfo(path));
-							if (patcherCliPath.Exists)
+							if ( patcherCliPath.Exists )
+							{
+								await Logger.LogVerboseAsync($"Found holopatcher at '{patcherCliPath.FullName}'...");
 								break;
+							}
+
+							await Logger.LogVerboseAsync($"Holopatcher not found at '{patcherCliPath.FullName}'...");
 						}
 					}
 

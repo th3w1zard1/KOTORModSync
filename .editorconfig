@@ -84,6 +84,8 @@ dotnet_style_prefer_auto_properties = true:suggestion
 dotnet_style_object_initializer = false:suggestion
 end_of_line = crlf
 dotnet_diagnostic.ca2249.severity = silent
+dotnet_style_prefer_collection_expression = true:suggestion
+dotnet_style_collection_initializer = true:suggestion
 
 [project.json]
 indent_size = 2

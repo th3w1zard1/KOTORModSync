@@ -278,9 +278,9 @@ namespace KOTORModSync.Core.FileSystemPathing
 			return new FileInfo(thisFilePath);
 		}
 
-		public static DirectoryInfo GetCaseSensitivePath(DirectoryInfo file)
+		public static DirectoryInfo GetCaseSensitivePath(DirectoryInfo folder)
 		{
-			(string thisFilePath, _) = GetCaseSensitivePath(file?.FullName, isFile: true);
+			(string thisFilePath, _) = GetCaseSensitivePath(folder?.FullName, isFile: true);
 			return new DirectoryInfo(thisFilePath);
 		}
 

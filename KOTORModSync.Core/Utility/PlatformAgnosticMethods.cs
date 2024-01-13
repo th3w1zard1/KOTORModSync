@@ -292,21 +292,18 @@ namespace KOTORModSync.Core.Utility
 			}
 		}
 
-		public static async Task MakeExecutableAsync([NotNull] string filePath)
+		public static async Task MakeExecutableAsync([NotNull] FileSystemInfo fileOrApp )
 		{
 			// For Linux/macOS: Using chmod for setting execute permissions for the current user.
 			if ( Utility.GetOperatingSystem() == OSPlatform.Linux || Utility.GetOperatingSystem() == OSPlatform.OSX )
 			{
-				if ( filePath is null )
-					throw new ArgumentNullException(nameof( filePath ));
-				if ( !PathValidator.IsValidPath(filePath) )
-					throw new ArgumentException($"{filePath} is not a valid path to a file");
+				if ( fileOrApp is null )
+					throw new ArgumentNullException(nameof( fileOrApp ));
 
-				var fileInfo = new FileInfo(filePath);
-				if ( !fileInfo.Exists && MainConfig.CaseInsensitivePathing )
-					fileInfo = new FileInfo(PathHelper.GetCaseSensitivePath(filePath).Item1);
-				if ( !fileInfo.Exists )
-					throw new FileNotFoundException($"The file {filePath} does not exist.");
+				if ( !fileOrApp.Exists && MainConfig.CaseInsensitivePathing )
+					fileOrApp = PathHelper.GetCaseSensitivePath(fileOrApp);
+				if ( !fileOrApp.Exists )
+					throw new FileNotFoundException($"The file {fileOrApp} does not exist.");
 
 				await Task.Run(
 					() =>
@@ -314,7 +311,7 @@ namespace KOTORModSync.Core.Utility
 						var startInfo = new ProcessStartInfo
 						{
 							FileName = "chmod",
-							Arguments = $"u+x \"{filePath}\"",
+							Arguments = $"u+x \"{fileOrApp}\"",
 							RedirectStandardOutput = true,
 							RedirectStandardError = true,
 							UseShellExecute = false,

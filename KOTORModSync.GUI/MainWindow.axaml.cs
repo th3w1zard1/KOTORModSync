@@ -1171,9 +1171,7 @@ namespace KOTORModSync
 			try
 			{
 				if ( MainConfigInstance is null || MainConfig.DestinationPath is null || MainConfig.SourcePath is null )
-				{
 					return (false, "Please set your directories first");
-				}
 
 				bool holopatcherIsExecutable = true;
 				bool holopatcherTestExecute = true;
@@ -1182,7 +1180,7 @@ namespace KOTORModSync
 					holopatcherTestExecute = false;
 					string baseDir = Utility.GetBaseDirectory();
 					string resourcesDir = Utility.GetResourcesDirectory(baseDir);
-					FileInfo patcherCliPath = null;
+					FileSystemInfo patcherCliPath = null;
 					if ( Utility.GetOperatingSystem() == OSPlatform.Windows )
 					{
 						patcherCliPath = new FileInfo(Path.Combine(resourcesDir, "holopatcher.exe"));
@@ -1197,9 +1195,17 @@ namespace KOTORModSync
 							Path.Combine(baseDir, "Resources", "holopatcher")
 						};
 
+						OSPlatform thisOperatingSystem = Utility.GetOperatingSystem();
 						foreach ( string path in possibleOSXPaths )
 						{
-							patcherCliPath = PathHelper.GetCaseSensitivePath(new FileInfo(path));
+							if ( thisOperatingSystem == OSPlatform.OSX && path.ToLowerInvariant().EndsWith(".app") )
+							{
+								patcherCliPath = PathHelper.GetCaseSensitivePath(new DirectoryInfo(path));
+							}
+							else
+							{
+								patcherCliPath = PathHelper.GetCaseSensitivePath(new FileInfo(path));
+							}
 							if ( patcherCliPath.Exists )
 							{
 								await Logger.LogVerboseAsync($"Found holopatcher at '{patcherCliPath.FullName}'...");
@@ -1221,7 +1227,7 @@ namespace KOTORModSync
 					await Logger.LogVerboseAsync("Ensuring the holopatcher binary has executable permissions...");
 					try
 					{
-						await PlatformAgnosticMethods.MakeExecutableAsync(patcherCliPath.FullName);
+						await PlatformAgnosticMethods.MakeExecutableAsync(patcherCliPath);
 					}
 					catch ( Exception e )
 					{

@@ -1011,8 +1011,8 @@ namespace KOTORModSync.Core
 
 					string args = string.Join(separator: " ", argList);
 
-
-					FileInfo patcherCliPath = null;
+					
+					FileSystemInfo patcherCliPath = null;
 					switch ( MainConfig.PatcherOption )
 					{
 						case MainConfig.AvailablePatchers.HoloPatcher:
@@ -1032,11 +1032,24 @@ namespace KOTORModSync.Core
 									Path.Combine(baseDir, "Resources", "holopatcher")
 								};
 
-								foreach (string path in possibleOSXPaths)
+								OSPlatform thisOperatingSystem = Utility.Utility.GetOperatingSystem();
+								foreach ( string path in possibleOSXPaths )
 								{
-									patcherCliPath = PathHelper.GetCaseSensitivePath(new FileInfo(path));
-									if (patcherCliPath.Exists)
+									if ( thisOperatingSystem == OSPlatform.OSX && path.ToLowerInvariant().EndsWith(".app") )
+									{
+										patcherCliPath = PathHelper.GetCaseSensitivePath(new DirectoryInfo(path));
+									}
+									else
+									{
+										patcherCliPath = PathHelper.GetCaseSensitivePath(new FileInfo(path));
+									}
+									if ( patcherCliPath.Exists )
+									{
+										await Logger.LogVerboseAsync($"Found holopatcher at '{patcherCliPath.FullName}'...");
 										break;
+									}
+
+									await Logger.LogVerboseAsync($"Holopatcher not found at '{patcherCliPath.FullName}'...");
 								}
 							}
 

@@ -177,7 +177,8 @@ namespace KOTORModSync
 		        {
 			        //new MenuItem { Header = "Check for Updates", Command = ReactiveCommand.Create(check_for_updates) },
 			        new MenuItem { Header = "HoloPatcher Home", Command = ReactiveCommand.Create(() => OpenUrl("https://deadlystream.com/files/file/2243-holopatcher")) },
-			        new MenuItem { Header = "GitHub Source", Command = ReactiveCommand.Create(() => OpenUrl("https://github.com/NickHugi/PyKotor")) }
+			        new MenuItem { Header = "ModSync Home", Command = ReactiveCommand.Create(() => OpenUrl("https://deadlystream.com/files/file/2317-kotormodsync/")) },
+			        new MenuItem { Header = "GitHub Source", Command = ReactiveCommand.Create(() => OpenUrl("https://github.com/th3w1zard1/KOTORModSync")) }
 		        },
 	        };
 

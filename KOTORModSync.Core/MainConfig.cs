@@ -63,7 +63,7 @@ namespace KOTORModSync.Core
 		}
 
 		[NotNull]
-		public static string CurrentVersion => "1.0.2";
+		public static string CurrentVersion => "1.1.0b";
 
 		[UsedImplicitly]
 		[NotNull]

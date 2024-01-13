@@ -1216,7 +1216,7 @@ namespace KOTORModSync
 						}
 					}
 
-					if ( patcherCliPath is null )
+					if ( patcherCliPath is null || !patcherCliPath.Exists )
 					{
 						return (
 							false,

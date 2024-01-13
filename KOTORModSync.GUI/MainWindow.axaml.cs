@@ -516,12 +516,12 @@ namespace KOTORModSync
 			}
 		}
 
-		private void FindComboBoxes([CanBeNull] Control control)
+		private void FindProblemControls([CanBeNull] Control control)
 		{
 			if ( !(control is ILogical visual) )
 				throw new ArgumentNullException(nameof( control ));
 
-			if ( control is ComboBox )
+			if ( control is ComboBox || control is MenuItem)
 			{
 				control.Tapped -= ComboBox_Opened;
 				control.PointerCaptureLost -= ComboBox_Opened;
@@ -537,7 +537,7 @@ namespace KOTORModSync
 			{
 				if ( child is Control childControl )
 				{
-					FindComboBoxes(childControl);
+					FindProblemControls(childControl);
 				}
 			}
 		}
@@ -548,7 +548,7 @@ namespace KOTORModSync
 			if ( thisWindow is null )
 				throw new ArgumentNullException(nameof( thisWindow ));
 
-			FindComboBoxes(thisWindow);
+			FindProblemControls(thisWindow);
 		}
 
 		private void ComboBox_Opened(

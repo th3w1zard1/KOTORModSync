@@ -1188,10 +1188,11 @@ namespace KOTORModSync
 					else
 					{
 						// Handling OSX specific paths
+						// FIXME: .app's aren't accepting command-line arguments correctly.
 						string[] possibleOSXPaths = {
-							Path.Combine(resourcesDir, "HoloPatcher.app"),
+							//Path.Combine(resourcesDir, "HoloPatcher.app"),
 							Path.Combine(resourcesDir, "holopatcher"),
-							Path.Combine(baseDir, "Resources", "HoloPatcher.app"),
+							//Path.Combine(baseDir, "Resources", "HoloPatcher.app"),
 							Path.Combine(baseDir, "Resources", "holopatcher")
 						};
 
@@ -1246,19 +1247,15 @@ namespace KOTORModSync
 
 				if ( MainConfig.AllComponents.IsNullOrEmptyCollection() )
 					return (false, "No instructions loaded! Press 'Load Instructions File' or create some instructions first.");
-
 				if ( !MainConfig.AllComponents.Any(component => component.IsSelected) )
 					return (false, "Select at least one mod in the left list to be installed first.");
 
 				await Logger.LogAsync("Finding duplicate case-insensitive folders/files in the install destination...");
-				IEnumerable<FileSystemInfo> duplicates =
-					PathHelper.FindCaseInsensitiveDuplicates(MainConfig.DestinationPath.FullName);
+				IEnumerable<FileSystemInfo> duplicates = PathHelper.FindCaseInsensitiveDuplicates(MainConfig.DestinationPath.FullName);
 				var fileSystemInfos = duplicates.ToList();
 				foreach ( FileSystemInfo duplicate in fileSystemInfos )
 				{
-					await Logger.LogErrorAsync(
-						duplicate?.FullName + " has a duplicate, please resolve before attempting an install."
-					);
+					await Logger.LogErrorAsync(duplicate?.FullName + " has a duplicate, please resolve before attempting an install.");
 				}
 
 				await Logger.LogAsync("Checking for duplicate components...");

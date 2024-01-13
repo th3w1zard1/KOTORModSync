@@ -67,7 +67,7 @@ namespace KOTORModSync.Core.FileSystemPathing
 			if ( string.IsNullOrWhiteSpace(path) )
 				throw new ArgumentException($"'{nameof( path )}' cannot be null or whitespace.", nameof( path ));
 
-			if ( Utility.Utility.GetOperatingSystem() == OSPlatform.Windows )
+			if ( Utility.Utility.GetOperatingSystem() != OSPlatform.Windows )
 				return path;
 
 			if ( !PathValidator.IsValidPath(path) )

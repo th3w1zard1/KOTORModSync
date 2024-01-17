@@ -56,15 +56,11 @@ namespace KOTORModSync
 
 		[CanBeNull] private Component _currentComponent;
 		private bool _ignoreWindowMoveWhenClickingComboBox;
-
 		private bool _initialize = true;
-
 		private bool _installRunning;
 		private bool _mouseDownForWindowMoving;
 		private PointerPoint _originalPoint;
-
 		private Window _outputWindow;
-
 		private bool _progressWindowClosed;
 		private string _searchText;
 
@@ -323,7 +319,6 @@ namespace KOTORModSync
 
 
 		public bool IsClosingMainWindow;
-
 		protected override void OnClosing(WindowClosingEventArgs e)
 		{
 			base.OnClosing(e);
@@ -357,7 +352,8 @@ namespace KOTORModSync
 			get => _searchText;
 			set
 			{
-				if ( _searchText == value ) return; // prevent recursion problems
+				if ( _searchText == value )
+					return; // prevent recursion problems
 
 				_searchText = value;
 				PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof( SearchText )));
@@ -403,8 +399,7 @@ namespace KOTORModSync
 			componentListColumn.Width = new GridLength(250);
 
 			// Column 1
-			RawEditTextBox.LostFocus +=
-				RawEditTextBox_LostFocus; // Prevents RawEditTextBox from being cleared when clicking elsewhere (?)
+			RawEditTextBox.LostFocus += RawEditTextBox_LostFocus; // Prevents RawEditTextBox from being cleared when clicking elsewhere (?)
 			RawEditTextBox.DataContext = new ObservableCollection<string>();
 
 			// Column 2
@@ -487,34 +482,6 @@ namespace KOTORModSync
 			item.IsVisible = itemName.IndexOf(searchText, StringComparison.OrdinalIgnoreCase) >= 0;
 		}
 
-		// test the options dialog for use with the 'Options' IDictionary<string, object>.
-		public async void TestWindow()
-		{
-			// Create an instance of OptionsDialogCallback
-			var optionsDialogCallback = new OptionsDialogCallback(this);
-
-			// Create a list of options
-			var options = new List<string>
-			{
-				"Option 1", "Option 2", "Option 3",
-			};
-
-			// Show the options dialog and get the selected option
-			string selectedOption = await optionsDialogCallback.ShowOptionsDialog(options);
-
-			// Use the selected option
-			if ( selectedOption != null )
-			{
-				// Option selected, do something with it
-				Console.WriteLine("Selected option: " + selectedOption);
-			}
-			else
-			{
-				// No option selected or dialog closed
-				Console.WriteLine("No option selected or dialog closed");
-			}
-		}
-
 		private void FindProblemControls([CanBeNull] Control control)
 		{
 			if ( !(control is ILogical visual) )
@@ -588,7 +555,6 @@ namespace KOTORModSync
 		{
 			if ( WindowState == WindowState.Maximized || WindowState == WindowState.FullScreen )
 				return;
-
 			if ( sender is ComboBox )
 				return;
 
@@ -596,22 +562,9 @@ namespace KOTORModSync
 			_originalPoint = e.GetCurrentPoint(this);
 		}
 
-		private void InputElement_OnPointerReleased(
-			[NotNull] object sender,
-			[NotNull] PointerEventArgs e
-		) =>
-			_mouseDownForWindowMoving = false;
-
-		[UsedImplicitly] private void CloseButton_Click(
-			[NotNull] object sender,
-			[NotNull] RoutedEventArgs e
-		) => Close();
-
-		[UsedImplicitly] private void MinimizeButton_Click(
-			[NotNull] object sender,
-			[NotNull] RoutedEventArgs e
-		) =>
-			WindowState = WindowState.Minimized;
+		private void InputElement_OnPointerReleased([NotNull] object sender, [NotNull] PointerEventArgs e) => _mouseDownForWindowMoving = false;
+		[UsedImplicitly] private void CloseButton_Click([NotNull] object sender, [NotNull] RoutedEventArgs e) => Close();
+		[UsedImplicitly] private void MinimizeButton_Click([NotNull] object sender, [NotNull] RoutedEventArgs e) => WindowState = WindowState.Minimized;
 
 		[ItemCanBeNull]
 		private async Task<string> SaveFile(
@@ -709,9 +662,7 @@ namespace KOTORModSync
 			return null;
 		}
 
-		private async Task<bool> FindDuplicateComponents(
-			[NotNull][ItemNotNull] List<Component> components
-		)
+		private async Task<bool> FindDuplicateComponents([NotNull][ItemNotNull] List<Component> components)
 		{
 			if ( components == null )
 				throw new ArgumentNullException(nameof( components ));
@@ -853,20 +804,19 @@ namespace KOTORModSync
 				using ( var reader = new StreamReader(filePath) )
 				{
 					string fileContents = await reader.ReadToEndAsync();
-					if ( MainConfig.AllComponents.Count > 0
+					if (
+						MainConfig.AllComponents.Count > 0
 						&& await ConfirmationDialog.ShowConfirmationDialog(
 							this,
 							confirmText: "You already have a config loaded. Do you want to load the markdown anyway?"
-						)
-						!= true )
+						) != true
+					)
 					{
 						return;
 					}
 
 					List<Component> parsedMods = ModParser.ParseMods(string.Join(Environment.NewLine, fileContents))
-						?? throw new NullReferenceException(
-							"ModParser.ParseMods( string.Join( Environment.NewLine, fileContents ) )"
-						);
+						?? throw new NullReferenceException("ModParser.ParseMods( string.Join( Environment.NewLine, fileContents ) )");
 
 					MainConfigInstance.allComponents = parsedMods;
 					await ProcessComponentsAsync(MainConfig.AllComponents);
@@ -889,7 +839,12 @@ namespace KOTORModSync
 
 			try
 			{
-				string url = textBlock.Text ?? string.Empty;
+				string url = textBlock.Text;
+				if ( string.IsNullOrEmpty(url) )
+				{
+					throw new InvalidOperationException("url (textBlock.Text) cannot be null/empty");
+				}
+
 				OpenUrl(url);
 			}
 			catch ( Exception ex )
@@ -932,9 +887,7 @@ namespace KOTORModSync
 				var files = filePaths.ToList();
 				if ( files.Count == 0 )
 				{
-					_ = Logger.LogVerboseAsync(
-						"No files chosen in BrowseSourceFiles_Click, returning to previous values"
-					);
+					_ = Logger.LogVerboseAsync("No files chosen in BrowseSourceFiles_Click, returning to previous values");
 					return;
 				}
 
@@ -957,9 +910,7 @@ namespace KOTORModSync
 
 				if ( MainConfig.SourcePath is null )
 				{
-					_ = Logger.LogWarningAsync(
-						"Not using custom variables <<kotorDirectory>> and <<modDirectory>> due to directories not being set prior."
-					);
+					_ = Logger.LogWarningAsync("Not using custom variables <<kotorDirectory>> and <<modDirectory>> due to directories not being set prior.");
 				}
 
 				thisInstruction.Source = files;
@@ -1620,7 +1571,7 @@ namespace KOTORModSync
 
 				// Open the folder dialog to select a folder
 				string[] result = await ShowFileDialog(
-					windowName: "Select your <<kotorDirectory>> (path to the game exe)",
+					windowName: "Select your <<kotorDirectory>> (path to the game install)",
 					isFolderDialog: true,
 					startFolder: startFolder
 				);
@@ -1639,8 +1590,7 @@ namespace KOTORModSync
 				}
 
 				if ( !(MainConfig.SourcePath is null) )
-					startFolder = await StorageProvider.TryGetFolderFromPathAsync(MainConfig.SourcePath.FullName)
-						?? startFolder;
+					startFolder = await StorageProvider.TryGetFolderFromPathAsync(MainConfig.SourcePath.FullName) ?? startFolder;
 
 				// Open the folder dialog to select a folder
 				result = await ShowFileDialog(
@@ -1817,18 +1767,12 @@ namespace KOTORModSync
 					return;
 				}
 
-				if ( await ConfirmationDialog.ShowConfirmationDialog(this, confirmText: "Really install all mods?")
-					!= true )
-				{
+				if ( await ConfirmationDialog.ShowConfirmationDialog(this, confirmText: "Really install all mods?") != true )
 					return;
-				}
 				
 				var progressWindow = new ProgressWindow
 				{
-					ProgressBar =
-					{
-						Value = 0,
-					},
+					ProgressBar = {Value = 0},
 					Topmost = true,
 				};
 
@@ -1941,10 +1885,9 @@ namespace KOTORModSync
 								+ Environment.NewLine
 								+ $"Skip '{component.Name}' and install the next mod anyway? (NOT RECOMMENDED!)"
 							);
+
 							if ( confirm == true )
-							{
 								continue;
-							}
 
 							await Logger.LogAsync("Install cancelled");
 							break;
@@ -1961,18 +1904,17 @@ namespace KOTORModSync
 						);
 						await Logger.LogAsync("Install completed.");
 					}
-					
-					_installRunning = false;
-					isClosingProgressWindow = true;
-					progressWindow.Close();
 				}
 				catch ( Exception )
+				{
+					await Logger.LogErrorAsync("Terminating install due to unhandled exception:");
+					throw;
+				}
+				finally
 				{
 					_installRunning = false;
 					isClosingProgressWindow = true;
 					progressWindow.Close();
-					await Logger.LogErrorAsync("Terminating install due to unhandled exception:");
-					throw;
 				}
 			}
 			catch ( Exception ex )
@@ -1986,9 +1928,7 @@ namespace KOTORModSync
 			try
 			{
 				if ( !(sender is ProgressWindow progressWindow) )
-				{
 					return;
-				}
 
 				progressWindow.ProgressBar.Value = 0;
 				progressWindow.Closed -= ProgressWindowClosed;
@@ -2021,14 +1961,15 @@ namespace KOTORModSync
 						FilePickerFileTypes.TextPlain,
 					}
 				);
+
 				if ( file is null )
 					return; // user cancelled
 
 				string docs = Component.GenerateModDocumentation(MainConfig.AllComponents);
 				await SaveDocsToFileAsync(file, docs);
 				string message = $"Saved documentation of {MainConfig.AllComponents.Count} mods to '{file}'";
+				await Logger.LogAsync(message);
 				await InformationDialog.ShowInformationDialog(this, message);
-				_ = Logger.LogAsync(message);
 			}
 			catch ( Exception ex )
 			{
@@ -2316,16 +2257,8 @@ namespace KOTORModSync
 
 		// todo: figure out if this is needed.
 		// ReSharper disable once MemberCanBeMadeStatic.Local
-		private void RawEditTextBox_LostFocus(
-			[NotNull] object sender,
-			[NotNull] RoutedEventArgs e
-		) =>
-			e.Handled = true;
-
-		private bool CurrentComponentHasChanges() =>
-			CurrentComponent != null
-			&& !string.IsNullOrWhiteSpace(RawEditTextBox.Text)
-			&& RawEditTextBox.Text != CurrentComponent.SerializeComponent();
+		private void RawEditTextBox_LostFocus( [NotNull] object sender, [NotNull] RoutedEventArgs e ) => e.Handled = true;
+		private bool CurrentComponentHasChanges() => CurrentComponent != null && !string.IsNullOrWhiteSpace(RawEditTextBox.Text) && RawEditTextBox.Text != CurrentComponent.SerializeComponent();
 
 		/// <summary>
 		///     Asynchronous method that determines if changes should be saved before performing an action.
@@ -2463,18 +2396,10 @@ namespace KOTORModSync
 		}
 
 		[UsedImplicitly]
-		private void MoveUpButton_Click(
-			[NotNull] object sender,
-			[NotNull] RoutedEventArgs e
-		) =>
-			MoveComponentListItem(CurrentComponent, relativeIndex: -1);
+		private void MoveUpButton_Click( [NotNull] object sender, [NotNull] RoutedEventArgs e ) => MoveComponentListItem(CurrentComponent, relativeIndex: -1);
 
 		[UsedImplicitly]
-		private void MoveDownButton_Click(
-			[NotNull] object sender,
-			[NotNull] RoutedEventArgs e
-		) =>
-			MoveComponentListItem(CurrentComponent, relativeIndex: 1);
+		private void MoveDownButton_Click( [NotNull] object sender, [NotNull] RoutedEventArgs e ) => MoveComponentListItem(CurrentComponent, relativeIndex: 1);
 
 		[UsedImplicitly]
 		private async void SaveModFile_Click(
@@ -3254,9 +3179,7 @@ namespace KOTORModSync
 				}
 
 				CurrentComponent.CreateOption(index);
-				await Logger.LogVerboseAsync(
-					$"Component '{CurrentComponent.Name}': Option '{thisOption.Name}' created at index #{index}"
-				);
+				await Logger.LogVerboseAsync( $"Component '{CurrentComponent.Name}': Option '{thisOption.Name}' created at index #{index}" );
 
 				LoadComponentDetails(CurrentComponent);
 			}
@@ -3284,9 +3207,7 @@ namespace KOTORModSync
 				int index = CurrentComponent.Options.IndexOf(thisOption);
 
 				CurrentComponent.DeleteOption(index);
-				await Logger.LogVerboseAsync(
-					$"Component '{CurrentComponent.Name}': instruction '{thisOption?.Name}' deleted at index #{index}"
-				);
+				await Logger.LogVerboseAsync( $"Component '{CurrentComponent.Name}': instruction '{thisOption?.Name}' deleted at index #{index}" );
 
 				LoadComponentDetails(CurrentComponent);
 			}
@@ -3314,9 +3235,7 @@ namespace KOTORModSync
 				int index = CurrentComponent.Options.IndexOf(thisOption);
 
 				if ( thisOption is null )
-					throw new NullReferenceException(
-						$"Could not get option instance from button's tag: {((Button)sender).Content}"
-					);
+					throw new NullReferenceException( $"Could not get option instance from button's tag: {((Button)sender).Content}" );
 
 				CurrentComponent.MoveOptionToIndex(thisOption, index - 1);
 				LoadComponentDetails(CurrentComponent);
@@ -3345,9 +3264,7 @@ namespace KOTORModSync
 				int index = CurrentComponent.Options.IndexOf(thisOption);
 
 				if ( thisOption is null )
-					throw new NullReferenceException(
-						$"Could not get option instance from button's tag: {((Button)sender).Content}"
-					);
+					throw new NullReferenceException( $"Could not get option instance from button's tag: {((Button)sender).Content}" );
 
 				CurrentComponent.MoveOptionToIndex(thisOption, index + 1);
 				LoadComponentDetails(CurrentComponent);

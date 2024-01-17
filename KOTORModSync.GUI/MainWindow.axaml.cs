@@ -790,8 +790,8 @@ namespace KOTORModSync
 				// Open the file dialog to select a file
 				string[] result = await ShowFileDialog(
 					windowName: "Load the TOML instruction file you've downloaded/created",
-					isFolderDialog: false,
-					filters: filters
+					isFolderDialog: false
+					//filters: filters //TODO: fix filters, don't seem to work on all operating systems.
 				);
 				if ( result is null || result.Length <= 0 )
 					return;

@@ -116,38 +116,37 @@ namespace KOTORModSync
 		        Header = "Tools",
 	        };
 
-	        // Adding tooltips
+			// Adding tooltips
+			var toolItems = new List<MenuItem>
+			{
+				new MenuItem { Header = "Create modbuild documentation.", Command = ReactiveCommand.Create(() => DocsButton_Click(new object(), new RoutedEventArgs())) },
+				new MenuItem { Header = "Parse text instructions into TOML using Regex", Command = ReactiveCommand.Create(() => LoadMarkdown_Click(new object(), new RoutedEventArgs())) },
+				new MenuItem { Header = "Fix iOS case sensitivity.", Command = ReactiveCommand.Create(() => FixIOSCaseSensitivityStart(new object(), new RoutedEventArgs())) }
+			};
+	        ToolTip.SetTip(
+		        toolItems[0],
+		        "Create documentation for all instructions in the loaded setup. Useful if you need human-readable documentation of your TOML."
+		    );
+	        ToolTip.SetTip(
+				toolItems[1],
+				value: "Attempts to create and load a toml instructions file from various text sources using custom regex."
+			);
 	        if ( Utility.GetOperatingSystem() != OSPlatform.Windows )
 	        {
-		        toolsMenu.ItemsSource = new[] {
-			        new MenuItem { Header = "Create modbuild documentation.", Command = ReactiveCommand.Create( () => DocsButton_Click(new object(), new RoutedEventArgs())) },
-			        new MenuItem { Header = "Parse text instructions into TOML using Regex", Command = ReactiveCommand.Create( () => LoadMarkdown_Click(new object(), new RoutedEventArgs())) },
-			        new MenuItem
-			        {
-				        Header = "Fix file and folder permissions",
-				        Command = ReactiveCommand.Create(() => FindDuplicateComponents(MainConfig.AllComponents)),
-			        },
-		        };
+				var filePermFixTool = new MenuItem
+				{
+					Header = "Fix file and folder permissions",
+					Command = ReactiveCommand.Create(() => ResolveDuplicateFilesAndFolders(new object(), new RoutedEventArgs())),
+				};
 		        ToolTip.SetTip(
-			        ((MenuItem[])toolsMenu.ItemsSource)[2],
+			        filePermFixTool,
 			        "(Linux/Mac only) This will acquire a list of any case-insensitive duplicates in the mod directory or"
 			        + " the kotor directory, including subfolders, and resolve them."
 			    );
+				toolItems.Add( filePermFixTool );
 	        }
-	        else
-	        {
-		        toolsMenu.ItemsSource = new[] {
-			        new MenuItem { Header = "Create modbuild documentation.", Command = ReactiveCommand.Create( () => DocsButton_Click(new object(), new RoutedEventArgs())) },
-			        new MenuItem { Header = "Parse text instructions into TOML using Regex", Command = ReactiveCommand.Create( () => LoadMarkdown_Click(new object(), new RoutedEventArgs())) },
-		        };
-	        }
-	        ToolTip.SetTip(
-		        ((MenuItem[])toolsMenu.ItemsSource)[0],
-		        "Create documentation for all instructions in the loaded setup. Useful if"
-		        + " you need human-readable instructions."
-		    );
-	        ToolTip.SetTip(((MenuItem[])toolsMenu.ItemsSource)[1], value: "Attempts to create and load a toml instructions file from various text sources using custom regex.");
 
+			toolsMenu.ItemsSource = toolItems;
 
 	        // Help menu
 	        var helpMenu = new MenuItem { Header = "Help" };
@@ -1115,6 +1114,89 @@ namespace KOTORModSync
 			catch ( Exception ex )
 			{
 				await Logger.LogExceptionAsync(ex);
+			}
+		}
+
+		private async void FixIOSCaseSensitivityStart(
+			[NotNull] object sender,
+			[NotNull] RoutedEventArgs e
+		)
+		{
+			try
+			{
+				string[] results = await ShowFileDialog(
+					windowName: "Select the folder(s) you'd like to lowercase all files/folders inside",
+					isFolderDialog: true,
+					allowMultiple: true
+				);
+
+				if ( results is null || results.Length <= 0 )
+					return;  // user cancelled.
+
+				int numObjectsRenamed = 0;
+				foreach (string folder in results)
+				{
+					var thisDir = new DirectoryInfo(folder);
+					if (!thisDir.Exists)
+					{
+						_ = Logger.LogErrorAsync($"Directory not found: '{thisDir.FullName}', skipping...");
+						continue;
+					}
+
+					numObjectsRenamed += await FixIOSCaseSensitivity(thisDir);
+				}
+				Logger.Log($"Successfully renamed {numObjectsRenamed} files/folders.");
+			}
+			catch ( Exception exception )
+			{
+				await Logger.LogExceptionAsync(exception);
+			}
+		}
+
+		public static async Task<int> FixIOSCaseSensitivity( [NotNull] DirectoryInfo gameDirectory )
+		{
+			try
+			{
+				int numObjectsRenamed = 0;
+				// Process all files in the current directory
+				foreach ( FileInfo file in gameDirectory.GetFilesSafely() )
+				{
+					string lowercaseName = file.Name.ToLowerInvariant();
+					string lowercasePath = Path.Combine(file.DirectoryName, lowercaseName);
+					if (lowercasePath != file.FullName)
+					{
+						await Logger.LogAsync($"Rename file '{file.FullName}' -> '{lowercasePath}'");
+						File.Move(file.FullName, lowercasePath);
+						numObjectsRenamed++;
+					}
+				}
+
+				// Recursively process all subdirectories
+				foreach ( DirectoryInfo directory in gameDirectory.GetDirectoriesSafely())
+				{
+					string lowercaseName = directory.Name.ToLowerInvariant();
+					string lowercasePath = Path.Combine(directory.Parent.FullName, lowercaseName);
+					if (lowercasePath != directory.FullName)
+					{
+						await Logger.LogAsync($"Rename folder '{directory.FullName}' -> '{lowercasePath}'");
+						Directory.Move(directory.FullName, lowercasePath);
+						numObjectsRenamed++;
+						// Recurse into the subdirectory
+						numObjectsRenamed += await FixIOSCaseSensitivity(new DirectoryInfo(lowercasePath));
+					}
+					else
+					{
+						// Directory name is already lowercase, just recurse
+						await Logger.LogAsync($"Recursing into folder '{directory.FullName}'...");
+						numObjectsRenamed += await FixIOSCaseSensitivity(directory);
+					}
+				}
+				return numObjectsRenamed;
+			}
+			catch ( Exception exception )
+			{
+				await Logger.LogExceptionAsync(exception);
+				return -1;
 			}
 		}
 

@@ -1304,9 +1304,9 @@ namespace KOTORModSync
 						// Handling OSX specific paths
 						// FIXME: .app's aren't accepting command-line arguments correctly.
 						string[] possibleOSXPaths = {
-							//Path.Combine(resourcesDir, "HoloPatcher.app"),
+							Path.Combine(resourcesDir, "HoloPatcher.app", "Contents", "MacOS", "holopatcher"),
 							Path.Combine(resourcesDir, "holopatcher"),
-							//Path.Combine(baseDir, "Resources", "HoloPatcher.app"),
+							Path.Combine(baseDir, "Resources", "HoloPatcher.app", "Contents", "MacOS", "holopatcher"),
 							Path.Combine(baseDir, "Resources", "holopatcher")
 						};
 

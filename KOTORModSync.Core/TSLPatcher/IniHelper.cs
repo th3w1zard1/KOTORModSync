@@ -8,7 +8,7 @@ using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using JetBrains.Annotations;
-using KOTORModSync.Core.FileSystemPathing;
+using KOTORModSync.Core.FileSystemUtils;
 using KOTORModSync.Core.Utility;
 using SharpCompress.Archives;
 

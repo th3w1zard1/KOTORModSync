@@ -15,7 +15,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
-using KOTORModSync.Core.FileSystemPathing;
+using KOTORModSync.Core.FileSystemUtils;
 using KOTORModSync.Core.Utility;
 using Microsoft.CSharp.RuntimeBinder;
 using Tomlyn;

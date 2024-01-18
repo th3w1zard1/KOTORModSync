@@ -8,7 +8,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using JetBrains.Annotations;
 
-namespace KOTORModSync.Core.FileSystemPathing
+namespace KOTORModSync.Core.FileSystemUtils
 {
 	public static class PathValidator
 	{
@@ -21,16 +21,13 @@ namespace KOTORModSync.Core.FileSystemPathing
 
 
 		// Characters not allowed in Unix file and directory names
-		private static readonly char[] s_invalidPathCharsUnix =
-		{
-			'\0',
-		};
+		private static readonly char[] s_invalidPathCharsUnix = { '\0' };
 
 		// Reserved file names in Windows
 		private static readonly string[] s_reservedFileNamesWindows =
 		{
-			"CON", "PRN", "AUX", "NUL", "COM0", "COM1", "COM2", "COM3", "COM4", "COM5", "COM6", "COM7", "COM8", "COM9",
-			"LPT0", "LPT1", "LPT2", "LPT3", "LPT4", "LPT5", "LPT6", "LPT7", "LPT8", "LPT9",
+			"CON", "PRN", "AUX", "NUL", "COM0", "COM1", "COM2", "COM3", "COM4", "COM5", "COM6", "COM7", "COM8",
+			"COM9", "LPT0", "LPT1", "LPT2", "LPT3", "LPT4", "LPT5", "LPT6", "LPT7", "LPT8", "LPT9",
 		};
 
 		// Checks if the path is valid on running platform, or optionally (default) enforce for all platforms.
@@ -144,10 +141,7 @@ namespace KOTORModSync.Core.FileSystemPathing
 			if ( string.IsNullOrWhiteSpace(path) ) return false;
 
 			string[] pathParts = path.Split(
-				new[]
-				{
-					'\\', '/', Path.DirectorySeparatorChar,
-				},
+				new[] { '\\', '/', Path.DirectorySeparatorChar },
 				StringSplitOptions.RemoveEmptyEntries
 			);
 
@@ -164,10 +158,7 @@ namespace KOTORModSync.Core.FileSystemPathing
 			if ( string.IsNullOrEmpty(path) ) return false;
 
 			string[] pathParts = path.Split(
-				new[]
-				{
-					'\\', '/', Path.DirectorySeparatorChar,
-				},
+				new[] { '\\', '/', Path.DirectorySeparatorChar },
 				StringSplitOptions.RemoveEmptyEntries
 			);
 			foreach ( string part in pathParts )

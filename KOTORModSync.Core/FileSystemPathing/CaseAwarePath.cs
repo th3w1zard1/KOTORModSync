@@ -11,7 +11,7 @@ using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using KOTORModSync.Core.Utility;
 
-namespace KOTORModSync.Core.FileSystemPathing
+namespace KOTORModSync.Core.FileSystemUtils
 {
 	[SuppressMessage(category: "ReSharper", checkId: "UnusedMember.Global")]
 	public class CaseAwarePath

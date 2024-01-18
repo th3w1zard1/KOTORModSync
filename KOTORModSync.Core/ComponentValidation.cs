@@ -7,7 +7,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using JetBrains.Annotations;
-using KOTORModSync.Core.FileSystemPathing;
+using KOTORModSync.Core.FileSystemUtils;
 using KOTORModSync.Core.Utility;
 using SharpCompress.Archives;
 using SharpCompress.Archives.Rar;

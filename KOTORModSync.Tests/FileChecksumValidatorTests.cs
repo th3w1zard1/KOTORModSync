@@ -6,6 +6,7 @@ using System.Diagnostics;
 using System.Security.Cryptography;
 using KOTORModSync.Core.Utility;
 using Newtonsoft.Json;
+using NUnit.Framework.Legacy;
 
 #pragma warning disable CS8604
 

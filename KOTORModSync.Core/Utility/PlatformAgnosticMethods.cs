@@ -15,7 +15,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
-using KOTORModSync.Core.FileSystemPathing;
+using KOTORModSync.Core.FileSystemUtils;
 
 namespace KOTORModSync.Core.Utility
 {
@@ -208,7 +208,7 @@ namespace KOTORModSync.Core.Utility
 					command,
 					arguments,
 					timeout: 60000,
-					noAdmin: true
+					useShellExecute: false
 				);
 				result.Wait();
 				string output = result.Result.Item2;
@@ -275,7 +275,8 @@ namespace KOTORModSync.Core.Utility
 						Arguments = "-n true",
 						UseShellExecute = false,
 						RedirectStandardOutput = true,
-						CreateNoWindow = true },
+						CreateNoWindow = true
+					},
 				};
 
 				try
@@ -294,125 +295,149 @@ namespace KOTORModSync.Core.Utility
 
 		public static async Task MakeExecutableAsync([NotNull] FileSystemInfo fileOrApp )
 		{
-			// For Linux/macOS: Using chmod for setting execute permissions for the current user.
-			if ( Utility.GetOperatingSystem() == OSPlatform.Linux || Utility.GetOperatingSystem() == OSPlatform.OSX )
+			if ( Utility.GetOperatingSystem() == OSPlatform.Windows )
 			{
-				if ( fileOrApp is null )
-					throw new ArgumentNullException(nameof( fileOrApp ));
+				await FilePermissionHelper.FixPermissionsAsync(fileOrApp);
+				return;
+			}
 
-				if ( !fileOrApp.Exists && MainConfig.CaseInsensitivePathing )
-					fileOrApp = PathHelper.GetCaseSensitivePath(fileOrApp);
-				if ( !fileOrApp.Exists )
-					throw new FileNotFoundException($"The file {fileOrApp} does not exist.");
+			// For Linux/macOS: Using chmod for setting execute permissions for the current user.
+			if ( fileOrApp is null )
+				throw new ArgumentNullException(nameof( fileOrApp ));
 
-				await Task.Run(
-					() =>
+			if ( !fileOrApp.Exists && MainConfig.CaseInsensitivePathing )
+				fileOrApp = PathHelper.GetCaseSensitivePath(fileOrApp);
+			if ( !fileOrApp.Exists )
+				throw new FileNotFoundException($"The file/app '{fileOrApp}' does not exist.");
+
+			await Task.Run(
+				() =>
+				{
+					var startInfo = new ProcessStartInfo
 					{
-						var startInfo = new ProcessStartInfo
+						FileName = "chmod",
+						Arguments = $"u+x \"{fileOrApp}\"",
+						RedirectStandardOutput = true,
+						RedirectStandardError = true,
+						UseShellExecute = false,
+						CreateNoWindow = true };
+
+					using ( var process = Process.Start(startInfo) )
+					{
+						if ( process == null )
+							throw new InvalidOperationException("Failed to start chmod process.");
+
+						process.WaitForExit();
+
+						if ( process.ExitCode != 0 )
 						{
-							FileName = "chmod",
-							Arguments = $"u+x \"{fileOrApp}\"",
-							RedirectStandardOutput = true,
-							RedirectStandardError = true,
-							UseShellExecute = false,
-							CreateNoWindow = true };
-
-						using ( var process = Process.Start(startInfo) )
-						{
-							if ( process == null )
-								throw new InvalidOperationException("Failed to start chmod process.");
-
-							process.WaitForExit();
-
-							if ( process.ExitCode != 0 )
-							{
-								throw new InvalidOperationException(
-									$"chmod failed with exit code {process.ExitCode}: {process.StandardError.ReadToEnd()}"
-								);
-							}
+							throw new InvalidOperationException(
+								$"chmod failed with exit code {process.ExitCode}: {process.StandardError.ReadToEnd()}"
+							);
 						}
 					}
-				);
-			}
+				}
+			);
 		}
 
-		[NotNull]
-		private static List<ProcessStartInfo> GetProcessStartInfos(
-			[NotNull] string programFile,
-			[CanBeNull] string cmdlineArgs
+		private static List<ProcessStartInfo> GetProcessStartInfo(
+			[CanBeNull] string programFile,
+			string args = "",
+			bool askAdmin = false,
+			bool? useShellExecute = null,
+			bool hideProcess = true
 		)
 		{
-			if ( programFile == null )
+			if ( programFile is null )
 				throw new ArgumentNullException(nameof( programFile ));
+			string verb = null;
+			string actualProgramFile = programFile;
+			string actualArgs = args;
+			ProcessWindowStyle windowStyle = ProcessWindowStyle.Hidden;
+			bool createNoWindow = true;
 
-			cmdlineArgs = cmdlineArgs ?? string.Empty;
-
-			return new List<ProcessStartInfo>
+			// Adjust settings for admin privileges
+			if ( askAdmin && !MainConfig.NoAdmin )
 			{
-				// top-level, preferred ProcessStartInfo args. Provides the most flexibility with our code.
-				new ProcessStartInfo
+				if (Utility.GetOperatingSystem() == OSPlatform.Windows)
 				{
-					FileName = programFile,
-					Arguments = cmdlineArgs,
-					UseShellExecute = false,
-					CreateNoWindow = true,
-					RedirectStandardOutput = true,
-					RedirectStandardError = true,
-					RedirectStandardInput = true,
-					ErrorDialog = false,
-					WindowStyle = ProcessWindowStyle.Hidden },
-				// perhaps the error dialog was the problem.
-				new ProcessStartInfo
+					verb = "runas";
+				}
+				else
 				{
-					FileName = programFile,
-					Arguments = cmdlineArgs,
-					UseShellExecute = false,
-					CreateNoWindow = false,
-					RedirectStandardOutput = true,
-					RedirectStandardError = true,
-					RedirectStandardInput = true,
-					WindowStyle = ProcessWindowStyle.Hidden },
-				// if it's not a console app or command, it needs a window.
-				new ProcessStartInfo
-				{
-					FileName = programFile,
-					Arguments = cmdlineArgs,
-					UseShellExecute = false,
-					RedirectStandardOutput = true,
-					RedirectStandardError = true,
-					RedirectStandardInput = true },
-				// try without redirecting output
-				new ProcessStartInfo
-				{
-					FileName = programFile, Arguments = cmdlineArgs, UseShellExecute = false,
-				},
-				// try using native shell (doesn't support output redirection, perhaps they need admin)
-				new ProcessStartInfo
-				{
-					FileName = programFile,
-					Arguments = cmdlineArgs,
-					UseShellExecute = IsShellExecutionSupported(), // not supported on all OS's.
-				},
+					actualProgramFile = "sudo";
+					string tempFile = programFile.Trim('"').Trim('\'');
+					actualArgs = $"\"{tempFile}\" {args}";
+					if ( MainConfig.NoAdmin )
+					{
+						actualArgs = $"-n true {actualArgs}";
+					}
+				}
+			}
+
+			// Adjust settings for visible process
+			if ( hideProcess is false )
+			{
+				windowStyle = ProcessWindowStyle.Normal;
+				createNoWindow = false;
+			}
+
+			var sameShellStartInfo = new ProcessStartInfo
+			{
+				FileName = actualProgramFile,
+				Arguments = actualArgs,
+				UseShellExecute = false,
+				CreateNoWindow = createNoWindow,
+				RedirectStandardOutput = true,
+				RedirectStandardError = true,
+				RedirectStandardInput = true,
+				ErrorDialog = false,
+				WindowStyle = windowStyle,
 			};
+
+			var shellExecuteStartInfo = new ProcessStartInfo
+			{
+				FileName = actualProgramFile,
+				Arguments = actualArgs,
+				UseShellExecute = true,
+				CreateNoWindow = createNoWindow,
+				ErrorDialog = false,
+				WindowStyle = windowStyle,
+				Verb = verb
+			};
+
+			// Select the appropriate ProcessStartInfo based on the conditions
+			return useShellExecute is true || askAdmin is true
+				? new List<ProcessStartInfo> { shellExecuteStartInfo }
+				: new List<ProcessStartInfo> { sameShellStartInfo, shellExecuteStartInfo };
 		}
 
 		public static async Task<(int, string, string)> ExecuteProcessAsync(
-			[CanBeNull] string programFile,
-			string cmdlineArgs = "",
+			[NotNull] string programFile,
+			string args = "",
 			long timeout = 0,
-			bool noAdmin = false
+			bool askAdmin = false,
+			bool? useShellExecute = null,
+			bool hideProcess = true,
+			bool noLogging = false
 		)
 		{
 			if ( programFile is null )
 				throw new ArgumentNullException(nameof( programFile ));
 
-			List<ProcessStartInfo> processStartInfosWithFallbacks = GetProcessStartInfos(programFile, cmdlineArgs);
+			List<ProcessStartInfo> processStartInfos = GetProcessStartInfo(
+				programFile: programFile,
+				args: args,
+				askAdmin: askAdmin,
+				useShellExecute: useShellExecute,
+				hideProcess: hideProcess
+			);
 
 			Exception ex = null;
 			bool? isAdmin = IsExecutorAdmin();
-			for ( int index = 0; index < processStartInfosWithFallbacks.Count; index++ )
+			for ( int index = 0; index < processStartInfos.Count; index++ )
 			{
-				ProcessStartInfo startInfo = processStartInfosWithFallbacks[index];
+				ProcessStartInfo startInfo = processStartInfos[index];
 				try
 				{
 					TimeSpan? thisTimeout = timeout != 0
@@ -424,7 +449,7 @@ namespace KOTORModSync.Core.Utility
 					using ( cancellationTokenSource )
 					using ( var process = new Process() )
 					{
-						if ( noAdmin && !startInfo.UseShellExecute )
+						if ( MainConfig.NoAdmin && !startInfo.UseShellExecute )
 							startInfo.EnvironmentVariables["__COMPAT_LAYER"] = "RunAsInvoker";
 
 						process.StartInfo = startInfo;
@@ -480,14 +505,14 @@ namespace KOTORModSync.Core.Utility
 									}
 
 									_ = output.AppendLine(e.Data);
-									_ = Logger.LogAsync(e.Data);
+									if ( noLogging is false )
+									{
+										_ = Logger.LogAsync(e.Data);
+									}
 								}
 								catch ( Exception exception )
 								{
-									_ = Logger.LogExceptionAsync(
-										exception,
-										$"Exception while gathering the output from '{programFile}'"
-									);
+									_ = Logger.LogExceptionAsync( exception, $"Exception while gathering the output from '{programFile}'" );
 								}
 							};
 							AutoResetEvent localOutputWaitHandle = outputWaitHandle;
@@ -515,10 +540,7 @@ namespace KOTORModSync.Core.Utility
 								}
 								catch ( Exception exception )
 								{
-									_ = Logger.LogExceptionAsync(
-										exception,
-										$"Exception while gathering the error output from '{programFile}'"
-									);
+									_ = Logger.LogExceptionAsync( exception, $"Exception while gathering the error output from '{programFile}'" );
 								}
 							};
 
@@ -541,10 +563,7 @@ namespace KOTORModSync.Core.Utility
 									}
 									catch ( Exception exception )
 									{
-										Logger.LogException(
-											exception,
-											customMessage: "Exception while running the process."
-										);
+										Logger.LogException( exception, customMessage: "Exception while running the process." );
 										return (-3, null, null); // unhandled internal exception
 									}
 								},
@@ -562,11 +581,20 @@ namespace KOTORModSync.Core.Utility
 					await Logger.LogVerboseAsync(
 						$"Exception occurred for startInfo: '{startInfo}', attempting to use different parameters"
 					);
-					if ( !noAdmin && isAdmin == true )
+					if (!MainConfig.NoAdmin && isAdmin is true)
 					{
-						startInfo.Verb = "runas";
-						index--;
-						continue;
+						if (Utility.GetOperatingSystem() == OSPlatform.Windows && startInfo.UseShellExecute && !startInfo.Verb.Equals("runas", StringComparison.InvariantCultureIgnoreCase))
+						{
+							startInfo.Verb = "runas";
+							index--;
+						}
+						else if (Utility.GetOperatingSystem() != OSPlatform.Windows && !startInfo.FileName.Equals("sudo", StringComparison.InvariantCultureIgnoreCase) )
+						{
+							startInfo.FileName = "sudo";
+							string tempFile = programFile.Trim('"').Trim('\'');
+							startInfo.Arguments = $"\"{tempFile}\" {args}";
+							index--;
+						}
 					}
 
 					if ( !MainConfig.DebugLogging )

@@ -10,7 +10,7 @@ using System.Linq;
 using Avalonia.Controls;
 using Avalonia.Threading;
 using KOTORModSync.Core;
-using KOTORModSync.Core.FileSystemPathing;
+using KOTORModSync.Core.FileSystemUtils;
 using KOTORModSync.Core.Utility;
 
 namespace KOTORModSync

@@ -62,7 +62,7 @@ namespace KOTORModSync.Core
 				IntPtr consoleHandle = GetStdHandle(-10); // STD_INPUT_HANDLE
 				if ( !GetConsoleMode(consoleHandle, out uint consoleMode) )
 				{
-					Logger.LogError("Could not get current console mode.");
+					Logger.LogWarning("Could not get current console mode. You can ignore this warning if you're piping your terminal to something other than cmd.exe and powershell.");
 					return;
 				}
 

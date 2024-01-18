@@ -7,7 +7,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
-namespace KOTORModSync.Core.FileSystemPathing
+namespace KOTORModSync.Core.FileSystemUtils
 {
 	public static class DirectoryInfoExtensions
 	{

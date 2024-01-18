@@ -15,7 +15,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
 using KOTORModSync.Core.Data;
-using KOTORModSync.Core.FileSystemPathing;
+using KOTORModSync.Core.FileSystemUtils;
 using KOTORModSync.Core.TSLPatcher;
 using KOTORModSync.Core.Utility;
 using Newtonsoft.Json;
@@ -377,8 +377,7 @@ namespace KOTORModSync.Core
 							{
 								(int, string, string) result = await PlatformAgnosticMethods.ExecuteProcessAsync(
 									thisArchive.FullName,
-									$" -o\"{thisArchive.DirectoryName}\" -y",
-									noAdmin: MainConfig.NoAdmin
+									$" -o\"{thisArchive.DirectoryName}\" -y"
 								);
 
 								if ( result.Item1 == 0 )
@@ -1078,8 +1077,7 @@ namespace KOTORModSync.Core
 					// ReSharper disable twice UnusedVariable
 					(int exitCode, string output, string error) = await PlatformAgnosticMethods.ExecuteProcessAsync(
 						patcherCliPath.FullName,
-						args,
-						noAdmin: MainConfig.NoAdmin
+						args
 					);
 					await Logger.LogVerboseAsync($"'{patcherCliPath.Name}' exited with exit code {exitCode}");
 					if ( exitCode != 0 )
@@ -1165,8 +1163,7 @@ namespace KOTORModSync.Core
 						(int childExitCode, string output, string error) =
 							await PlatformAgnosticMethods.ExecuteProcessAsync(
 								sourcePath,
-								noAdmin: MainConfig.NoAdmin,
-								cmdlineArgs: Utility.Utility.ReplaceCustomVariables(Arguments)
+								args: Utility.Utility.ReplaceCustomVariables(Arguments)
 							);
 
 						_ = Logger.LogVerboseAsync(output + Environment.NewLine + error);

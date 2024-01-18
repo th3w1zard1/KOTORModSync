@@ -6,7 +6,7 @@ using System.Linq;
 using Avalonia;
 using Avalonia.ReactiveUI;
 using KOTORModSync.Core;
-using KOTORModSync.Core.FileSystemPathing;
+using KOTORModSync.Core.FileSystemUtils;
 using KOTORModSync.Core.Utility;
 
 namespace KOTORModSync

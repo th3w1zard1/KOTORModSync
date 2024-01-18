@@ -8,7 +8,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using JetBrains.Annotations;
-using KOTORModSync.Core.FileSystemPathing;
+using KOTORModSync.Core.FileSystemUtils;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using SevenZip;

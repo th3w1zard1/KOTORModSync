@@ -21,37 +21,25 @@
         <converters:StringToVisibilityConverter x:Key="StringToVisibilityConverter" />
         <converters:ChooseActionVisibility x:Key="ChooseActionVisibility" />
         <converters:GuidListConverter x:Key="GuidListConverter" />
+        <converters:IsWindowsConverter x:Key="IsWindowsConverter" />
+        <converters:IsUnixConverter x:Key="IsUnixConverter" />
     </Window.Resources>
 
     <Window.Styles>
-        <StyleInclude Source="/Styles/Kotor2Style.axaml" />
+        <StyleInclude Source="/Styles/KotorStyle.axaml" />
     </Window.Styles>
+    <!--<Window.Styles>
+        <Style DataType="control:LogViewerControlViewModel">
+            <Setter Property="Template">
+                <ControlTemplate>
+                    <control:LogViewerControl />
+                </ControlTemplate>
+            </Setter>
+        </Style>
+    </Window.Styles>-->
 
     <Grid x:Name="MainGrid" MinWidth="200" RowDefinitions="Auto,*">
-        <!--<Menu>
-            <MenuItem Header="File">
-                <MenuItem Header="Open" />
-                <MenuItem Header="Save" />
-            </MenuItem>
-            <MenuItem Header="Tools">
-                <MenuItem Header="Fix file and folder permissions" />
-                <MenuItem Header="Create modbuild documentation." />
-                <MenuItem Header="Parse text instructions into TOML using Regex" />
-            </MenuItem>
-            <MenuItem Header="Help">
-                <MenuItem Header="About" />
-                <MenuItem Header="Discord">
-                    <MenuItem Header="DeadlyStream">
-
-                    </MenuItem>
-                </MenuItem>
-                <MenuItem Header="Websites">
-                    <MenuItem Header="DeadlyStream"></MenuItem>
-                    <MenuItem Header="DeadlyStream"></MenuItem>
-                </MenuItem>
-            </MenuItem>
-        </Menu>-->
-        <Menu Grid.Row="0" Grid.Column="0" x:Name="TopMenu"/>
+        <Menu Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" x:Name="TopMenu"/>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*" MinWidth="250" />
             <ColumnDefinition Width="*" />
@@ -789,7 +777,7 @@
                         ToolTip.Tip="Define your KOTOR install directory, and the folder where your mods are downloaded." />
                 <Button Grid.Row="2" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
                         Content="Pre-install Validation" Click="ValidateButton_Click"
-                        ToolTip.Tip="Validates all mods on disk, and their TOML instructions, to ensure instructions can logically execute." />
+                        ToolTip.Tip="Validates all mods on disk, and their TOMLIN instructions, to ensure instructions can logically execute." />
                 <Button Grid.Row="3" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
                         Content="Start Install" Click="StartInstall_Click"
                         ToolTip.Tip="Starts a full installation of all selected mods." />
@@ -799,22 +787,31 @@
 
             <!-- ReSharper disable once Xaml.BindingWithoutContextNotResolved -->
             <StackPanel x:Name="MainConfigStackPanel" DataContext="{Binding MainConfigInstance}">
-                <CheckBox Content="Verbose Logging" IsChecked="{Binding debugLogging}" />
-                <CheckBox Content="Auto-Fix Config Errors" IsChecked="{Binding attemptFixes}" />
+                <CheckBox Content="Verbose Logging" IsChecked="{Binding debugLogging}"
+                          ToolTip.Tip="Shows extra output in both the logfile and the output window."/>
+                <CheckBox Content="Auto-Fix Config Errors" IsChecked="{Binding attemptFixes}"
+                          ToolTip.Tip="Sometimes config files have simple mistakes, this attempts to use some common sense to fix common errors in a TOML file. This only
+executes when an error is detected during a validation." />
                 <CheckBox Content="Don't ask for Admin" IsChecked="{Binding noAdmin}"
-                          ToolTip.Tip="(Windows only) Do not prompt for admin on any instruction (NOT RECOMMENDED). If you're having problems, it's recommended you run KOTORModSync as admin instead." />
+                          ToolTip.Tip="Activating this toggles __COMPAT_LAYER=RunAsInvoker for 'TSLPatcher' and 'Execute' instructions. It signals Windows to
+launch executables as if they already have admin rights, preventing unnecessary UAC checks. Handy for older apps without an app.manifest (e.g. TSLPatcher). Note: enabling this
+setting might cause permission issues. Instead, running ModSync as administrator is recommended.
+On Linux/Mac this simply calls `sudo -n true` instead of `sudo` when relevant."/>
                 <CheckBox Content="Mock case-insensitive filesystem" IsChecked="{Binding caseInsensitivePathing}"
-                          ToolTip.Tip="(Linux/Mac only) Attempt to perform case-insensitive file/folder lookups for all instructions. Somewhat slow, especially on HDDs." />
-                <CheckBox Content="Use multiple threads for IO operations" IsChecked="{Binding useMultiThreadedIO}"
-                          ToolTip.Tip="Whether to concurrently perform disk IO work, or queue them one by one. Recommend this Unchecked if your mod dir or kotor dir is on a HDD. Check this if both dirs are on a SSD." />
+                          ToolTip.Tip="Attempt to perform case-insensitive file/folder lookups for all instructions. Somewhat slow, especially on HDDs.">
+                    <CheckBox.IsVisible>
+                        <Binding Converter="{StaticResource IsUnixConverter}" />
+                    </CheckBox.IsVisible>
+                </CheckBox>
                 <TextBlock Text="Patcher Option:"
-                           ToolTip.Tip="Mods are packaged with 'TSLPatcher.exe' by default. Use 'HoloPatcher' to reduce tedious clicking through tslpatcher windows." />
+                           ToolTip.Tip="Mods have been packaged with TSLPatcher for the last 20 years. However, TSLPatcher is only supported on Windows, and lacks a CLI for
+ModSync to use. Therefore, HoloPatcher is recommended for faster/more streamlined installations." />
                 <ComboBox HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
                           ItemsSource="{Binding AllAvailablePatchers}"
                           SelectedItem="{Binding patcherOptionString}"
                           IsTabStop="True" />
                 <TextBlock Text="Theme:" />
-                <ComboBox x:Name="StyleComboBox" SelectedIndex="2" HorizontalAlignment="Stretch"
+                <ComboBox x:Name="StyleComboBox" SelectedIndex="1" HorizontalAlignment="Stretch"
                           HorizontalContentAlignment="Center"
                           SelectionChanged="StyleComboBox_SelectionChanged">
                     <ComboBoxItem Content="Plain Style" Tag="default" />
@@ -827,5 +824,6 @@
                 <TextBlock Text="{Binding destinationPathFullName}" />
             </StackPanel>
         </StackPanel>
+        <!--<ContentControl Grid.Row="4" Content="{Binding LogViewer}" />-->
     </Grid>
 </Window>

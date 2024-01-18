@@ -12,11 +12,65 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
+using KOTORModSync.Core.Utility;
 
-namespace KOTORModSync.Core.FileSystemPathing
+namespace KOTORModSync.Core.FileSystemUtils
 {
 	public static class PathHelper
 	{
+		[CanBeNull]
+		public static Tuple<FileInfo, DirectoryInfo> TryGetValidFileSystemInfos([CanBeNull] string folderPath)
+		{
+			if ( string.IsNullOrWhiteSpace(folderPath) )
+				return null;
+
+			string formattedPath = FixPathFormatting(folderPath);
+			if ( !PathValidator.IsValidPath(formattedPath) )
+				return null;
+
+			OSPlatform thisOS = Utility.Utility.GetOperatingSystem();
+			FileInfo filePathInfo = null;
+			DirectoryInfo dirPathInfo = null;
+
+			try
+			{
+				if ( thisOS == OSPlatform.Windows )
+				{
+					if ( File.Exists(formattedPath) )
+					{
+						filePathInfo = new FileInfo(formattedPath);
+					}
+
+					if ( Directory.Exists(formattedPath) )
+					{
+						dirPathInfo = new DirectoryInfo(formattedPath);
+					}
+				}
+				else if ( thisOS == OSPlatform.Linux || thisOS == OSPlatform.OSX )
+				{
+					if ( File.Exists(formattedPath) )
+					{
+						filePathInfo = new FileInfo(formattedPath);
+					}
+					else if ( Directory.Exists(formattedPath) )
+					{
+						dirPathInfo = new DirectoryInfo(formattedPath);
+					}
+				}
+				else
+				{
+					throw new PlatformNotSupportedException("Unsupported platform.");
+				}
+
+				return Tuple.Create(filePathInfo, dirPathInfo);
+			}
+			catch ( Exception e )
+			{
+				Logger.LogException(e);
+				return null;
+			}
+		}
+
 		[CanBeNull]
 		public static DirectoryInfo TryGetValidDirectoryInfo([CanBeNull] string folderPath)
 		{
@@ -115,8 +169,7 @@ namespace KOTORModSync.Core.FileSystemPathing
 		}
 
 		[NotNull]
-		public static string GetRelativePath([NotNull] string relativeTo, [NotNull] string path) =>
-			GetRelativePath(relativeTo, path, StringComparison.OrdinalIgnoreCase);
+		public static string GetRelativePath([NotNull] string relativeTo, [NotNull] string path) => GetRelativePath(relativeTo, path, StringComparison.OrdinalIgnoreCase);
 
 		[NotNull]
 		private static string GetRelativePath(
@@ -189,10 +242,10 @@ namespace KOTORModSync.Core.FileSystemPathing
 			{
 				if ( sb.Length > 0 )
 				{
-					sb.Append(Path.DirectorySeparatorChar);
+					_ = sb.Append(Path.DirectorySeparatorChar);
 				}
 
-				sb.Append(path.Substring(commonLength, differenceLength));
+				_ = sb.Append(path.Substring(commonLength, differenceLength));
 			}
 
 			return sb.ToString();
@@ -203,8 +256,10 @@ namespace KOTORModSync.Core.FileSystemPathing
 			int firstRootLength = Path.GetPathRoot(first).Length;
 			int secondRootLength = Path.GetPathRoot(second).Length;
 
-			return firstRootLength == secondRootLength
-				&& 0 == string.Compare(first, indexA: 0, second, indexB: 0, firstRootLength, comparisonType);
+			return (
+				firstRootLength == secondRootLength
+				&& 0 == string.Compare(first, indexA: 0, second, indexB: 0, firstRootLength, comparisonType)
+			);
 		}
 
 		private static int GetCommonPathLength(string first, string second, bool ignoreCase)
@@ -217,8 +272,7 @@ namespace KOTORModSync.Core.FileSystemPathing
 				if ( first[i] != Path.DirectorySeparatorChar && second[i] != Path.DirectorySeparatorChar )
 					continue;
 
-				if ( 0
-					!= string.Compare(
+				if ( 0 != string.Compare(
 						first,
 						indexA: 0,
 						second,
@@ -300,29 +354,21 @@ namespace KOTORModSync.Core.FileSystemPathing
 				return (ConvertWindowsPathToCaseSensitive(formattedPath), false);
 
 			string[] parts = formattedPath.Split(
-				new[]
-				{
-					Path.DirectorySeparatorChar,
-				},
+				new[] { Path.DirectorySeparatorChar },
 				StringSplitOptions.RemoveEmptyEntries
 			);
 
 			// no path parts available (no separators found). Maybe it's a file/folder that exists in cur directory.
 			if ( parts.Length == 0 )
-				parts = new[]
-				{
-					formattedPath,
-				};
+				parts = new[] { formattedPath };
 
 			// insert the root into the list (will be / on unix, and drive name (e.g. C:\\ on windows)
 			string currentPath = Path.GetPathRoot(formattedPath);
 			if ( !string.IsNullOrEmpty(currentPath) && !Path.IsPathRooted(parts[0]) )
 			{
-				parts = new[]
-				{
-					currentPath,
-				}.Concat(parts).ToArray();
+				parts = new[] { currentPath }.Concat(parts).ToArray();
 			}
+
 			// append directory separator to drive roots
 			if ( parts[0].EndsWith(":") )
 				parts[0] += Path.DirectorySeparatorChar;
@@ -392,7 +438,7 @@ namespace KOTORModSync.Core.FileSystemPathing
 				throw new ArgumentException(message: "Value cannot be null or empty.", nameof( str1 ));
 			if ( string.IsNullOrEmpty(str2) )
 				throw new ArgumentException(message: "Value cannot be null or empty.", nameof( str2 ));
-			
+
 			// don't consider a match if any char in the paths are not case-insensitive matches.
 			if ( !str1.Equals(str2, StringComparison.OrdinalIgnoreCase) )
 				return -1;
@@ -471,6 +517,7 @@ namespace KOTORModSync.Core.FileSystemPathing
 							(string, bool?) returnTuple = GetCaseSensitivePath(formattedPath);
 							formattedPath = returnTuple.Item1;
 						}
+
 						if ( File.Exists(formattedPath) )
 							result.Add(formattedPath);
 
@@ -552,7 +599,6 @@ namespace KOTORModSync.Core.FileSystemPathing
 
 
 		private static bool ContainsWildcards([NotNull] string path) => path.Contains('*') || path.Contains('?');
-
 
 		public static bool WildcardPathMatch(string input, string patternInput)
 		{
@@ -721,7 +767,7 @@ namespace KOTORModSync.Core.FileSystemPathing
 			// build duplicate files/folders list
 			var fileList = new Dictionary<string, List<FileSystemInfo>>(StringComparer.OrdinalIgnoreCase);
 			var folderList = new Dictionary<string, List<FileSystemInfo>>(StringComparer.OrdinalIgnoreCase);
-			foreach ( FileInfo file in dirInfo.GetFilesSafely() )
+			foreach ( FileInfo file in dirInfo.EnumerateFilesSafely() )
 			{
 				if ( !file.Exists )
 					continue;

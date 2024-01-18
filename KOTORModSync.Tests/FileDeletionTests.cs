@@ -6,7 +6,7 @@
 
 using System.Runtime.InteropServices;
 using KOTORModSync.Core;
-using KOTORModSync.Core.FileSystemPathing;
+using KOTORModSync.Core.FileSystemUtils;
 using KOTORModSync.Core.Utility;
 
 // ReSharper disable ConvertToConstant.Local

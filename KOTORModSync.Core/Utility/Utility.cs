@@ -8,7 +8,7 @@ using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using JetBrains.Annotations;
-using KOTORModSync.Core.FileSystemPathing;
+using KOTORModSync.Core.FileSystemUtils;
 
 namespace KOTORModSync.Core.Utility
 {

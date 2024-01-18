@@ -63,7 +63,7 @@ namespace KOTORModSync.Core
 		}
 
 		[NotNull]
-		public static string CurrentVersion => "1.1.0b2";
+		public static string CurrentVersion => "1.1.0b3";
 
 		[UsedImplicitly]
 		[NotNull]
@@ -80,7 +80,7 @@ namespace KOTORModSync.Core
 		public bool noAdmin
 		{
 			get => NoAdmin;
-			set => NoAdmin = value && Utility.Utility.GetOperatingSystem() == OSPlatform.Windows;
+			set => NoAdmin = value;
 		}
 
 		public bool useCopyForMoveActions

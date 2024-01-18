@@ -66,14 +66,14 @@
   <ItemGroup>
     <ProjectCapability Include="Avalonia" />
     <TrimmerRootAssembly Include="Avalonia.Themes.Fluent" />
-    <PackageReference Include="Avalonia" Version="11.0.4" />
-    <PackageReference Include="Avalonia.Desktop" Version="11.0.4" />
-    <PackageReference Include="Avalonia.LinuxFramebuffer" Version="11.0.4" />
-    <PackageReference Include="Avalonia.Controls.ItemsRepeater" Version="11.0.4" />
-    <PackageReference Include="Avalonia.ReactiveUI" Version="11.0.4" />
-    <PackageReference Include="Avalonia.Themes.Fluent" Version="11.0.4" />
+    <PackageReference Include="Avalonia" Version="11.0.7" />
+    <PackageReference Include="Avalonia.Desktop" Version="11.0.7" />
+    <PackageReference Include="Avalonia.LinuxFramebuffer" Version="11.0.7" />
+    <PackageReference Include="Avalonia.Controls.ItemsRepeater" Version="11.0.7" />
+    <PackageReference Include="Avalonia.ReactiveUI" Version="11.0.7" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="11.0.7" />
     <!--Condition below is needed to remove Avalonia.Diagnostics package from build output in Release configuration.-->
-    <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="11.0.4" />
+    <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="11.0.7" />
     <PackageReference Include="Dotnet.Bundle" Version="*" />
   </ItemGroup>
   <ItemGroup>
@@ -158,6 +158,10 @@
     <TmlFiles Include="$(TargetDir)*.tml" />
     <TomlFiles Include="$(TargetDir)*.toml" />
     <LogFiles Include="$(TargetDir)*.log" />
+    <AvaloniaXaml Remove="Controls\LogViewer\**" />
+    <Compile Remove="Controls\LogViewer\**" />
+    <EmbeddedResource Remove="Controls\LogViewer\**" />
+    <None Remove="Controls\LogViewer\**" />
     <BackupFolder Include="$(SolutionDir)/logs_and_data_saved_from_dotnet_clean" />
   </ItemGroup>
   <Target Name="MyDistClean" AfterTargets="Clean">

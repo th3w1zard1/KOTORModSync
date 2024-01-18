@@ -10,7 +10,7 @@ using System.Linq;
 using Avalonia.Data.Converters;
 using JetBrains.Annotations;
 using KOTORModSync.Core;
-using KOTORModSync.Core.FileSystemPathing;
+using KOTORModSync.Core.FileSystemUtils;
 using KOTORModSync.Core.TSLPatcher;
 using KOTORModSync.Core.Utility;
 
@@ -46,8 +46,7 @@ namespace KOTORModSync.Converters
 			}
 		}
 
-		public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) =>
-			throw new NotImplementedException();
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) => throw new NotImplementedException();
 
 		[NotNull]
 		public List<string> GetAllArchivesFromInstructions([NotNull] Component parentComponent)

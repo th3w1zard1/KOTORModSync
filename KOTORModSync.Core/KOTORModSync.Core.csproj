@@ -20,17 +20,18 @@
   <ItemGroup>
     <PackageReference Include="Iesi.Collections" Version="4.0.5" />
     <PackageReference Include="ini-parser-netstandard" Version="2.5.2" />
-    <PackageReference Include="JetBrains.Annotations" Version="2023.2.0" />
+    <PackageReference Include="JetBrains.Annotations" Version="2023.3.0" />
+    <PackageReference Include="MegaApiClient" Version="1.10.3" />
     <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="SevenZip" Version="19.0.0" />
-    <PackageReference Include="SharpCompress" Version="0.33.0" />
+    <PackageReference Include="SharpCompress" Version="0.36.0" />
     <PackageReference Include="Squid-Box.SevenZipSharp" Version="1.6.1.23" />
     <PackageReference Include="System.Collections.Specialized" Version="4.3.0" />
     <PackageReference Include="System.Reflection.Emit" Version="4.7.0" />
     <PackageReference Include="System.Reflection.Emit.Lightweight" Version="4.7.0" />
     <PackageReference Include="System.Security.Principal.Windows" Version="5.0.0" />
-    <PackageReference Include="Tomlyn" Version="0.16.2" />
+    <PackageReference Include="Tomlyn" Version="0.17.0" />
   </ItemGroup>
 
   <ItemGroup>

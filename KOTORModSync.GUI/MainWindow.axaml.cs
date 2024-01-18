@@ -1242,10 +1242,10 @@ namespace KOTORModSync
 
 				foreach ( string folder in results )
 				{
-					var thisDir = PathHelper.TryGetValidDirectoryInfo(folder);
-					if ( !thisDir.Exists )
+					DirectoryInfo thisDir = PathHelper.TryGetValidDirectoryInfo(folder);
+					if ( thisDir is null || !thisDir.Exists )
 					{
-						_ = Logger.LogErrorAsync($"Directory not found: '{thisDir.FullName}', skipping...");
+						_ = Logger.LogErrorAsync($"Directory not found: '{folder}', skipping...");
 						continue;
 					}
 
@@ -1303,7 +1303,11 @@ namespace KOTORModSync
 				foreach ( FileInfo file in gameDirectory.GetFilesSafely() )
 				{
 					string lowercaseName = file.Name.ToLowerInvariant();
-					string lowercasePath = Path.Combine(file.DirectoryName, lowercaseName);
+					string dirName = file.DirectoryName;
+					if ( dirName is null )
+						continue;
+
+					string lowercasePath = Path.Combine(dirName, lowercaseName);
 					if ( lowercasePath != file.FullName )
 					{
 						await Logger.LogAsync($"Rename file '{file.FullName}' -> '{lowercasePath}'");
@@ -1316,7 +1320,11 @@ namespace KOTORModSync
 				foreach ( DirectoryInfo directory in gameDirectory.GetDirectoriesSafely() )
 				{
 					string lowercaseName = directory.Name.ToLowerInvariant();
-					string lowercasePath = Path.Combine(directory.Parent.FullName, lowercaseName);
+					string dirParentPath = directory.Parent?.FullName;
+					if ( dirParentPath is null )
+						continue;
+
+					string lowercasePath = Path.Combine(dirParentPath, lowercaseName);
 					if ( lowercasePath != directory.FullName )
 					{
 						await Logger.LogAsync($"Rename folder '{directory.FullName}' -> '{lowercasePath}'");
@@ -1356,8 +1364,7 @@ namespace KOTORModSync
 					return;
 
 				await Logger.LogAsync("Finding duplicate case-insensitive folders/files in the install destination...");
-				IEnumerable<FileSystemInfo> duplicates =
-					PathHelper.FindCaseInsensitiveDuplicates(MainConfig.DestinationPath.FullName);
+				IEnumerable<FileSystemInfo> duplicates = PathHelper.FindCaseInsensitiveDuplicates(MainConfig.DestinationPath.FullName);
 				var fileSystemInfos = duplicates.ToList();
 				foreach ( FileSystemInfo duplicate in fileSystemInfos )
 				{
@@ -1984,7 +1991,7 @@ namespace KOTORModSync
 						);
 
 						// If the result is true, the user confirmed they want to close the window
-						if ( result == true )
+						if ( result is true )
 						{
 							// Mark the window as in the process of closing
 							isClosingProgressWindow = true;
@@ -1998,8 +2005,7 @@ namespace KOTORModSync
 
 					Component.InstallExitCode exitCode = Component.InstallExitCode.UnknownError;
 
-					var selectedMods = MainConfig.AllComponents.Where(thisComponent => thisComponent.IsSelected)
-						.ToList();
+					var selectedMods = MainConfig.AllComponents.Where(thisComponent => thisComponent.IsSelected).ToList();
 					for ( int index = 0; index < selectedMods.Count; index++ )
 					{
 						if ( _progressWindowClosed )
@@ -3361,6 +3367,9 @@ namespace KOTORModSync
 		{
 			try
 			{
+				if ( Clipboard is null )
+					throw new NullReferenceException( nameof( Clipboard ) );
+
 				await Clipboard.SetTextAsync((string)((MenuItem)sender).DataContext);
 			}
 			catch ( Exception exception )

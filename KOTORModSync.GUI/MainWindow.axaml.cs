@@ -1453,14 +1453,7 @@ namespace KOTORModSync
 						{
 							Path.Combine(resourcesDir, "HoloPatcher.app", "Contents", "MacOS", "holopatcher"),
 							Path.Combine(resourcesDir, path2: "holopatcher"),
-							Path.Combine(
-								baseDir,
-								"Resources",
-								"HoloPatcher.app",
-								"Contents",
-								"MacOS",
-								"holopatcher"
-							),
+							Path.Combine(baseDir, "Resources", "HoloPatcher.app", "Contents", "MacOS", "holopatcher"),
 							Path.Combine(baseDir, path2: "Resources", path3: "holopatcher"),
 						};
 
@@ -1654,7 +1647,8 @@ namespace KOTORModSync
 				if ( !individuallyValidated )
 				{
 					informationMessage =
-						$"Some components failed to validate. Check the output/console window for details.{Environment.NewLine}If you are seeing this as an end user you most likely need to whitelist KOTORModSync and HoloPatcher in your antivirus, or download the missing mods.";
+						$"Some components failed to validate. Check the output/console window for details.{Environment.NewLine}"
+						+ "If you are seeing this as an end user you most likely need to whitelist KOTORModSync and HoloPatcher in your antivirus, or download the missing mods.";
 					await Logger.LogErrorAsync(informationMessage);
 				}
 

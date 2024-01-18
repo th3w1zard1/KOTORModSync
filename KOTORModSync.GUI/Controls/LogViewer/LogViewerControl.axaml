@@ -1,0 +1,58 @@
+<UserControl x:Class="LogViewer.Avalonia.LogViewerControl"
+             xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             
+             xmlns:converters="clr-namespace:LogViewer.Avalonia.Converters"
+
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             mc:Ignorable="d" d:DesignHeight="450" d:DesignWidth="800" DataContextChanged="OnDataContextChanged"
+             DetachedFromLogicalTree="OnDetachedFromLogicalTree">
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        <Grid.Resources>
+            <converters:ChangeColorTypeConverter x:Key="ColorConverter" />
+            <converters:EventIdConverter x:Key="EventIdConverter"/>
+            <SolidColorBrush x:Key="ColorBlack">Black</SolidColorBrush>
+            <SolidColorBrush x:Key="ColorTransparent">Transparent</SolidColorBrush>
+        </Grid.Resources>
+        <Grid.Styles>
+            <Style Selector="DataGridRow">
+                <Setter Property="Padding" Value="0" />
+                <Setter Property="Foreground" Value="{Binding Color.Foreground,
+                        Converter={StaticResource ColorConverter}, ConverterParameter={StaticResource ColorBlack}}" />
+                <Setter Property="Background" Value="{Binding Color.Background,
+                        Converter={StaticResource ColorConverter}, ConverterParameter={StaticResource ColorTransparent}}" />
+            </Style>
+            <Style Selector="DataGridCell.size">
+                <Setter Property="FontSize" Value="11" />
+                <Setter Property="Padding" Value="0" />
+            </Style>
+        </Grid.Styles>
+        <DataGrid x:Name="MyDataGrid"
+                  Items="{Binding DataStore.Entries}" AutoGenerateColumns="False"
+                  CanUserSortColumns="False"
+                  LayoutUpdated="OnLayoutUpdated">
+            <DataGrid.Columns>
+                <DataGridTextColumn CellStyleClasses="size" Header="Time" Width="150"  Binding="{Binding Timestamp}"/>
+                <DataGridTextColumn CellStyleClasses="size" Header="Level" Width="90" Binding="{Binding LogLevel}" />
+                <DataGridTextColumn CellStyleClasses="size" Header="Event Id" Width="120" Binding="{Binding EventId, Converter={StaticResource EventIdConverter}}" />
+                <DataGridTextColumn CellStyleClasses="size" Header="State" Width="300" Binding="{Binding State}" />
+                <DataGridTextColumn CellStyleClasses="size" Header="Exception" Width="300" Binding="{Binding Exception}" />
+            </DataGrid.Columns>
+        </DataGrid>
+
+        <CheckBox x:Name="CanAutoScroll"
+                  FontSize="11"
+                  Content="Auto Scroll log"
+                  IsChecked="True"
+                  Grid.Row="1"
+                  Margin="20 10" />
+
+    </Grid>
+
+</UserControl>

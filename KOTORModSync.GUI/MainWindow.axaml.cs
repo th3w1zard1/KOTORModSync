@@ -1382,8 +1382,7 @@ namespace KOTORModSync
 				if ( answer != true )
 					return;
 
-				IEnumerable<IGrouping<string, FileSystemInfo>> groupedDuplicates =
-					fileSystemInfos.GroupBy(fs => fs.Name.ToLowerInvariant());
+				IEnumerable<IGrouping<string, FileSystemInfo>> groupedDuplicates = fileSystemInfos.GroupBy(fs => fs.Name.ToLowerInvariant());
 
 				foreach ( IGrouping<string, FileSystemInfo> group in groupedDuplicates )
 				{
@@ -1492,16 +1491,16 @@ namespace KOTORModSync
 							"HoloPatcher could not be found in the Resources directory. Please ensure your AV isn't quarantining it and the file exists.");
 					}
 
-					await Logger.LogVerboseAsync("Ensuring the holopatcher binary has executable permissions...");
-					try
-					{
-						await PlatformAgnosticMethods.MakeExecutableAsync(patcherCliPath);
-					}
-					catch ( Exception e )
-					{
-						await Logger.LogExceptionAsync(e);
-						holopatcherIsExecutable = false;
-					}
+					//await Logger.LogVerboseAsync("Ensuring the holopatcher binary has executable permissions...");
+					//try
+					//{
+					//	await PlatformAgnosticMethods.MakeExecutableAsync(patcherCliPath);
+					//}
+					//catch ( Exception e )
+					//{
+					//	await Logger.LogExceptionAsync(e);
+					//	holopatcherIsExecutable = false;
+					//}
 
 					(int, string, string) result = await PlatformAgnosticMethods.ExecuteProcessAsync(
 						patcherCliPath.FullName,
@@ -1654,7 +1653,8 @@ namespace KOTORModSync
 				if ( !individuallyValidated )
 				{
 					informationMessage =
-						$"Some components failed to validate. Check the output/console window for details.{Environment.NewLine}If you are seeing this as an end user you most likely need to whitelist KOTORModSync and HoloPatcher in your antivirus, or download the missing mods.";
+						$"Some components failed to validate. Check the output/console window for details.{Environment.NewLine}If you are seeing this as an end user you most"
+						+ " likely need to whitelist KOTORModSync and HoloPatcher in your antivirus, or download the missing mods.";
 					await Logger.LogErrorAsync(informationMessage);
 				}
 
@@ -1738,11 +1738,11 @@ namespace KOTORModSync
 				// todo:
 				if ( MainConfig.AllComponents.Any(c => c.Dependencies.Any(g => g == CurrentComponent.Guid)) )
 				{
-					await InformationDialog.ShowInformationDialog(
+					if ( await ConfirmationDialog.ShowConfirmationDialog( // TODO: log the duplicated components.
 						this,
-						$"Cannot remove '{CurrentComponent.Name}', there are several components that rely on it. Please address this problem first."
-					);
-					return;
+						$"Cannot remove '{CurrentComponent.Name}', there are several components that rely on it. Please address this problem first. {Environment.NewLine} Continue removing anyway?"
+					) != true );
+						return;
 				}
 
 				// Remove the selected component from the collection

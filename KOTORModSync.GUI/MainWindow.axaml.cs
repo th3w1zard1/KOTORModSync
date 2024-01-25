@@ -1741,7 +1741,7 @@ namespace KOTORModSync
 					if ( await ConfirmationDialog.ShowConfirmationDialog( // TODO: log the duplicated components.
 						this,
 						$"Cannot remove '{CurrentComponent.Name}', there are several components that rely on it. Please address this problem first. {Environment.NewLine} Continue removing anyway?"
-					) != true );
+					) != true )
 						return;
 				}
 

@@ -2840,6 +2840,58 @@ namespace KOTORModSync
 			return header;
 		}
 
+		private TreeViewItem FindTreeViewItem(Component c)
+		{
+			return LeftTreeView.Items.OfType<TreeViewItem>()
+									 .FirstOrDefault(item => Equals(item.Tag, c));
+		}
+
+		private void HighlightAndNavigateToFailedComponent(Component failedComponent, int failedInstructionIndex)
+		{
+			TreeViewItem item = FindTreeViewItem(failedComponent);
+			if ( item != null )
+			{
+				item.IsSelected = true;
+				item.BringIntoView();
+				item.IsExpanded = true;
+			}
+
+			// Step 2: Load the failing component details
+			LoadComponentDetails(failedComponent);
+
+			SetTabInternal(TabControl, SummaryTabItem);
+
+			// Wait for the UI to update and then highlight the failed instruction
+			Dispatcher.UIThread.InvokeAsync(() => HighlightFailedInstruction(failedInstructionIndex), DispatcherPriority.Background);
+		}
+
+		// Step 4: Highlight the specific failed instruction
+		private void HighlightFailedInstruction(int failedInstructionIndex)
+		{
+			// Assuming 'instructionsSummaryRepeater' is the name of your ItemsRepeater inside the 'Summary' tab
+			var instructionsRepeater = SummaryTabItem.FindControl<ItemsRepeater>("instructionsSummaryRepeater");
+
+			// Assuming each instruction is a FrameworkElement and you can use Tag or DataContext to identify them
+			var instruction = instructionsRepeater.Children.(failedInstructionIndex) as FrameworkElement;
+			if ( instruction != null )
+			{
+				instruction.BorderBrush = Brushes.Red;
+				instruction.BorderThickness = new Thickness(2);
+
+				// Step 5: Add a temporary button
+				var tempButton = new Button { Content = "Fix", Margin = new Thickness(5, 0, 0, 0) };
+				tempButton.Click += (sender, e) =>
+				{
+					instruction.BorderBrush = Brushes.Transparent; // Remove border
+					(instruction.Parent as Panel)?.Children.Remove(tempButton); // Remove button
+																				// Navigate to a new tab or perform other actions
+				};
+
+				(instruction.Parent as Panel)?.Children.Add(tempButton);
+			}
+		}
+
+
 
 		private TreeViewItem CreateComponentItem([NotNull] Component component, int index)
 		{

@@ -194,6 +194,9 @@ namespace KOTORModSync.Core
 
 				if ( !noValidate )
 				{
+					if ( newSourcePaths.IsNullOrEmptyOrAllNull() )
+						throw new NullReferenceException(nameof( newSourcePaths ));  // todo: output strings in Source list
+
 					if ( newSourcePaths.Any(f => !File.Exists(f)) )
 					{
 						throw new FileNotFoundException(

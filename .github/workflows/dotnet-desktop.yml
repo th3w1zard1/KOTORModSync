@@ -100,7 +100,7 @@ jobs:
       id: generate-date
       run: |
         $date = Get-Date -Format yyyy-MM-dd
-        echo "::set-output name=date::$date"
+        Add-Content $env:GITHUB_OUTPUT ("date=$date")
 
     - name: Upload summary
       uses: actions/upload-artifact@v4

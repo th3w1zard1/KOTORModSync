@@ -16,10 +16,17 @@
 
   <!-- Target Platforms/Frameworks -->
   <PropertyGroup>
-    <TargetFrameworks>net6.0;net462</TargetFrameworks>
-    <RuntimeIdentifiers>win7-x86;win7-x64;win10-x86;win10-x64;linux-x64;osx-x64;osx-arm64</RuntimeIdentifiers>
+    <TargetFrameworks>net8.0;net462</TargetFrameworks>
     <Platforms>x86;x64</Platforms>
     <UseAppHost>true</UseAppHost>
+  </PropertyGroup>
+
+  <!-- RuntimeIdentifiers for both TargetFrameworks -->
+  <PropertyGroup Condition="'$(TargetFramework)'=='net8.0'">
+    <RuntimeIdentifiers>win-x86;win-x64;linux-x64;osx-x64;osx-arm64</RuntimeIdentifiers>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(TargetFramework)'=='net462'">
+    <RuntimeIdentifiers>win7-x86;win7-x64;win10-x86;win10-x64</RuntimeIdentifiers>
   </PropertyGroup>
 
   <!-- Release Configuration: Additional error handling, at the slight cost of performance. All optimizations enabled.-->
@@ -130,14 +137,14 @@
     <Move Condition=" '$(RuntimeIdentifier)' == 'osx-x64' OR '$(RuntimeIdentifier)' == 'osx-arm64' " SourceFiles="$(PublishDir)Resources$(DirectorySeparatorChar)HoloPatcher" DestinationFiles="$(PublishDir)Resources$(DirectorySeparatorChar)holopatcher" />
 
     <!-- For Linux -->
-    <Copy Condition=" '$(RuntimeIdentifier)' == 'linux-x64' " SourceFiles="$(SolutionDir)vendor$(DirectorySeparatorChar)bin$(DirectorySeparatorChar)holopatcher_linux" DestinationFolder="$(TargetDir)Resources$(DirectorySeparatorChar)" />
-    <Copy Condition=" '$(RuntimeIdentifier)' == 'linux-x64' " SourceFiles="$(SolutionDir)vendor$(DirectorySeparatorChar)bin$(DirectorySeparatorChar)holopatcher_linux" DestinationFolder="$(PublishDir)Resources$(DirectorySeparatorChar)" />
-    <Move Condition=" '$(RuntimeIdentifier)' == 'linux-x64' " SourceFiles="$(TargetDir)Resources$(DirectorySeparatorChar)holopatcher_linux" DestinationFiles="$(TargetDir)Resources$(DirectorySeparatorChar)holopatcher" />
-    <Move Condition=" '$(RuntimeIdentifier)' == 'linux-x64' " SourceFiles="$(PublishDir)Resources$(DirectorySeparatorChar)holopatcher_linux" DestinationFiles="$(PublishDir)Resources$(DirectorySeparatorChar)holopatcher" />
+    <Copy Condition=" '$(RuntimeIdentifier)' == 'linux-x64' " SourceFiles="$(SolutionDir)vendor$(DirectorySeparatorChar)bin$(DirectorySeparatorChar)HoloPatcher_linux" DestinationFolder="$(TargetDir)Resources$(DirectorySeparatorChar)" />
+    <Copy Condition=" '$(RuntimeIdentifier)' == 'linux-x64' " SourceFiles="$(SolutionDir)vendor$(DirectorySeparatorChar)bin$(DirectorySeparatorChar)HoloPatcher_linux" DestinationFolder="$(PublishDir)Resources$(DirectorySeparatorChar)" />
+    <Move Condition=" '$(RuntimeIdentifier)' == 'linux-x64' " SourceFiles="$(TargetDir)Resources$(DirectorySeparatorChar)HoloPatcher_linux" DestinationFiles="$(TargetDir)Resources$(DirectorySeparatorChar)holopatcher" />
+    <Move Condition=" '$(RuntimeIdentifier)' == 'linux-x64' " SourceFiles="$(PublishDir)Resources$(DirectorySeparatorChar)HoloPatcher_linux" DestinationFiles="$(PublishDir)Resources$(DirectorySeparatorChar)holopatcher" />
 
     <!-- For Windows -->
-    <Copy Condition=" '$(RuntimeIdentifier)' != 'linux-x64' AND '$(RuntimeIdentifier)' != 'osx-x64' AND '$(RuntimeIdentifier)' != 'osx-arm64' " SourceFiles="$(SolutionDir)vendor$(DirectorySeparatorChar)bin$(DirectorySeparatorChar)holopatcher.exe" DestinationFolder="$(TargetDir)Resources$(DirectorySeparatorChar)" />
-    <Copy Condition=" '$(RuntimeIdentifier)' != 'linux-x64' AND '$(RuntimeIdentifier)' != 'osx-x64' AND '$(RuntimeIdentifier)' != 'osx-arm64' " SourceFiles="$(SolutionDir)vendor$(DirectorySeparatorChar)bin$(DirectorySeparatorChar)holopatcher.exe" DestinationFolder="$(PublishDir)Resources$(DirectorySeparatorChar)" />
+    <Copy Condition=" '$(RuntimeIdentifier)' != 'linux-x64' AND '$(RuntimeIdentifier)' != 'osx-x64' AND '$(RuntimeIdentifier)' != 'osx-arm64' " SourceFiles="$(SolutionDir)vendor$(DirectorySeparatorChar)bin$(DirectorySeparatorChar)HoloPatcher.exe" DestinationFiles="$(TargetDir)Resources$(DirectorySeparatorChar)holopatcher.exe" />
+    <Copy Condition=" '$(RuntimeIdentifier)' != 'linux-x64' AND '$(RuntimeIdentifier)' != 'osx-x64' AND '$(RuntimeIdentifier)' != 'osx-arm64' " SourceFiles="$(SolutionDir)vendor$(DirectorySeparatorChar)bin$(DirectorySeparatorChar)HoloPatcher.exe" DestinationFiles="$(PublishDir)Resources$(DirectorySeparatorChar)holopatcher.exe" />
 
     <!-- For x64 Platform -->
     <Copy Condition=" '$(Platform)' == 'x64' " SourceFiles="$(SolutionDir)vendor$(DirectorySeparatorChar)lib$(DirectorySeparatorChar)7z_x64.dll" DestinationFolder="$(TargetDir)Resources$(DirectorySeparatorChar)" />

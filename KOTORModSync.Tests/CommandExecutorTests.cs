@@ -49,7 +49,7 @@ namespace KOTORModSync.Tests
 		}
 
 		[Test]
-		[Timeout(10000)]
+		[CancelAfter(10000)]
 		public void TryExecuteCommand_ShouldReturnSuccessAndOutput()
 		{
 			// Arrange

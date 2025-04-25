@@ -54,9 +54,8 @@ namespace KOTORModSync.Tests
 			};
 			object? serialized = Serializer.SerializeObject(list);
 
-			Assert.That(serialized, Is.InstanceOf<IList<object>>());
-			// ReSharper disable once AssignNullToNotNullAttribute
-			CollectionAssert.AllItemsAreInstancesOfType((IEnumerable<object>)serialized, typeof( string ));
+			Assert.That(serialized, Is.InstanceOf<IEnumerable<object>>());
+			Assert.That((IEnumerable<object>)serialized, Is.All.InstanceOf<string>());
 		}
 
 		[Test]

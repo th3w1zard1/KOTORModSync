@@ -72,8 +72,20 @@ namespace KOTORModSync.Core
 
 		[UsedImplicitly]
 		[NotNull]
-		public static IEnumerable<string> AllAvailablePatchers => Enum.GetValues(typeof( AvailablePatchers ))
-			.Cast<AvailablePatchers>().Select(patcher => patcher.ToString());
+		public static IEnumerable<string> AllAvailablePatchers
+		{
+			get
+			{
+				var patchers = Enum.GetValues(typeof(AvailablePatchers))
+					.Cast<AvailablePatchers>();
+				// If not on Windows, filter out TSLPatcher
+				if (Utility.Utility.GetOperatingSystem() != OSPlatform.Windows)
+				{
+					patchers = patchers.Where(p => p != AvailablePatchers.TSLPatcher);
+				}
+				return patchers.Select(patcher => patcher.ToString());
+			}
+		}
 
 		public static bool NoAdmin { get; private set; }
 

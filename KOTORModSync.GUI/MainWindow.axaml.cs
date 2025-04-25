@@ -1491,16 +1491,16 @@ namespace KOTORModSync
 							"HoloPatcher could not be found in the Resources directory. Please ensure your AV isn't quarantining it and the file exists.");
 					}
 
-					//await Logger.LogVerboseAsync("Ensuring the holopatcher binary has executable permissions...");
-					//try
-					//{
-					//	await PlatformAgnosticMethods.MakeExecutableAsync(patcherCliPath);
-					//}
-					//catch ( Exception e )
-					//{
-					//	await Logger.LogExceptionAsync(e);
-					//	holopatcherIsExecutable = false;
-					//}
+					await Logger.LogVerboseAsync("Ensuring the holopatcher binary has executable permissions...");
+					try
+					{
+						await PlatformAgnosticMethods.MakeExecutableAsync(patcherCliPath);
+					}
+					catch ( Exception e )
+					{
+						await Logger.LogExceptionAsync(e);
+						holopatcherIsExecutable = false;
+					}
 
 					(int, string, string) result = await PlatformAgnosticMethods.ExecuteProcessAsync(
 						patcherCliPath.FullName,

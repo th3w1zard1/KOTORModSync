@@ -18,15 +18,15 @@ defaults:
 
 jobs:
   lint_csharp:
-    runs-on: windows-2019
+    runs-on: windows-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
 
     - name: Set remote URL
       run: git remote set-url origin "https://github.com/${{ env.GITHUB_REPOSITORY }}.git"
 
     - name: Setup .NET Core
-      uses: actions/setup-dotnet@v2
+      uses: actions/setup-dotnet@v4
       with:
         dotnet-version: '6.0.x' # SDK Version to use;
 
